@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import TestimonialsSection from '@/components/ui/testimonials'
 
 export default function About() {
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -157,6 +158,11 @@ export default function About() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="mb-32 fade-in-element opacity-0 -mx-4 sm:-mx-6 lg:-mx-8">
+          <TestimonialsSection />
         </section>
 
         {/* CTA */}

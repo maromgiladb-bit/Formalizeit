@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
-import PrivateToolbar from '@/components/PrivateToolbar'
 
 interface NDA {
     id: string
@@ -138,18 +137,14 @@ export default function MyNDAsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                <PrivateToolbar />
-                <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-                </div>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
             </div>
         )
     }
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <PrivateToolbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
