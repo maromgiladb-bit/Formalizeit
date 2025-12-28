@@ -1453,17 +1453,17 @@ export default function FillNDAHTML() {
 							</div>
 
 							{/* Navigation Buttons */}
-							<div className="mt-8 flex items-center justify-between gap-4 pt-6 border-t border-gray-200">
-								<div className="flex gap-3">
+							<div className="mt-6 mb-2 flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
+								<div className="flex gap-2">
 									<button
 										onClick={goBack}
 										disabled={step === 0}
-										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${step === 0
+										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${step === 0
 											? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
+											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 											}`}
 									>
-										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
 										</svg>
 										Back
@@ -1471,56 +1471,54 @@ export default function FillNDAHTML() {
 									{step < steps.length - 1 && (
 										<button
 											onClick={goNext}
-											className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm flex items-center gap-2"
+											className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-all duration-200 flex items-center gap-2"
 										>
 											Next
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 											</svg>
 										</button>
 									)}
-									{step === steps.length - 1 && (
-										<>
-											{draftId && (
-												<button
-													onClick={sendForSignature}
-													className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm flex items-center gap-2"
-												>
-													<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-													</svg>
-													{hasEmptyPartyBFields() ? "Send to Party B" : "Continue to Sign"}
-												</button>
-											)}
-										</>
-									)}
 								</div>
-								<div className="flex gap-3">
+								<div className="flex gap-2">
+									{/* Send Button - always visible */}
+									<button
+										onClick={sendForSignature}
+										disabled={sendingForSignature}
+										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
+											? 'bg-gray-400 text-white cursor-not-allowed'
+											: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
+											}`}
+									>
+										{sendingForSignature ? (
+											<>
+												<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+													<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+													<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+												</svg>
+												Sending...
+											</>
+										) : (
+											<>
+												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+												</svg>
+												Send
+											</>
+										)}
+									</button>
 									<button
 										onClick={saveDraft}
 										disabled={saving}
-										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 ${saving
+										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${saving
 											? 'bg-gray-400 text-white cursor-not-allowed'
 											: 'bg-teal-600 text-white hover:bg-teal-700'
 											}`}
 									>
-										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
 										</svg>
-										{saving ? "Saving..." : "Save Draft"}
-									</button>
-									<button
-										onClick={() => {
-											if (JSON.stringify(values) === JSON.stringify(lastSavedValues) || window.confirm("any unsaved changes may be deleted")) {
-												router.push('/dashboard');
-											}
-										}}
-										className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 hover:shadow-md flex items-center gap-2"
-									>
-										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-										</svg>
-										Cancel
+										{saving ? "Saving..." : "Save"}
 									</button>
 								</div>
 							</div>
