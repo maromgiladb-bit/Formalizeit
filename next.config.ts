@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
   serverExternalPackages: ['docusign-esign'],
   webpack: (config, { isServer }) => {
     // Exclude docusign-esign from client-side bundle

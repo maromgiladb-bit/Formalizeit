@@ -13,6 +13,10 @@ export const PLAN_LIMITS: Record<BillingPlan, { maxUsers: number; maxActiveDraft
         maxUsers: 9999,
         maxActiveDrafts: 999999,
     },
+    DEV: {
+        maxUsers: Infinity,
+        maxActiveDrafts: Infinity,
+    },
 }
 
 export function resolveLimits(org: {

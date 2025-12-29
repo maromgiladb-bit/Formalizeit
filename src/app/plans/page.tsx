@@ -3,15 +3,74 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
+import { Pricing } from '@/components/ui/pricing'
+
+const pricingPlans = [
+  {
+    name: "Free",
+    price: "0",
+    yearlyPrice: "0",
+    period: "month",
+    features: [
+      "Up to 3 NDAs",
+      "Basic templates",
+      "E-signature support",
+      "Email support",
+      "7-day document storage",
+    ],
+    description: "Perfect for trying out Formalize It",
+    buttonText: "Get Started Free",
+    href: "/dashboard",
+    isPopular: false,
+  },
+  {
+    name: "Pro",
+    price: "20",
+    yearlyPrice: "16",
+    period: "month",
+    features: [
+      "Unlimited NDAs",
+      "All professional templates",
+      "E-signature support",
+      "Priority support",
+      "Advanced tracking & audit trail",
+      "Custom branding",
+      "Bidirectional editing",
+    ],
+    description: "Most popular for growing teams",
+    buttonText: "Upgrade to Pro",
+    href: "/dashboard",
+    isPopular: true,
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    yearlyPrice: "Custom",
+    period: "",
+    features: [
+      "Unlimited everything",
+      "Custom templates",
+      "Dedicated account manager",
+      "API access",
+      "SSO authentication",
+      "Custom integrations",
+      "SLA agreement",
+      "On-premise option",
+    ],
+    description: "For large organizations with specific needs",
+    buttonText: "Contact Sales",
+    href: "/contact",
+    isPopular: false,
+  },
+];
 
 export default function Plans() {
   const [mounted, setMounted] = useState(false)
-  const plansRef = useRef<HTMLDivElement>(null)
   const faqRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
-    
+
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -100px 0px'
@@ -25,7 +84,6 @@ export default function Plans() {
       })
     }, observerOptions)
 
-    if (plansRef.current) observer.observe(plansRef.current)
     if (faqRef.current) observer.observe(faqRef.current)
 
     return () => observer.disconnect()
@@ -50,21 +108,12 @@ export default function Plans() {
           to { opacity: 1; }
         }
 
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out forwards;
         }
 
         .animate-fade-in {
           animation: fadeIn 1s ease-out forwards;
-        }
-
-        .animate-pulse-slow {
-          animation: pulse-slow 2s ease-in-out infinite;
         }
 
         .fade-in-element {
@@ -76,8 +125,6 @@ export default function Plans() {
         }
 
         .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
 
         .bg-grid-pattern {
           background-image: 
@@ -91,11 +138,11 @@ export default function Plans() {
       <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden">
         {/* Grid Pattern Background */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
           {mounted && (
             <>
-              <h1 className="text-5xl sm:text-6xl font-bold mb-6 animate-fade-in-up">
+              <h1 className="text-5xl sm:text-6xl font-bold mb-4 animate-fade-in-up">
                 Choose Your Plan
               </h1>
               <p className="text-xl text-gray-300 max-w-2xl mx-auto animate-fade-in-up delay-100">
@@ -106,138 +153,13 @@ export default function Plans() {
         </div>
       </div>
 
-      {/* Plans Grid */}
-      <div className="py-20 bg-gray-50">
-        <div ref={plansRef} className="opacity-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-            {/* Free Plan */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
-              
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-gray-900">$0</span>
-                <span className="text-gray-500 text-lg">/month</span>
-              </div>
-              
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Up to <strong>3 NDAs</strong></span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Basic templates</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>E-signature support</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Email support</span>
-                </li>
-              </ul>
-              
-              <Link 
-                href="/dashboard"
-                className="block w-full text-center border border-gray-900 text-gray-900 py-3 px-4 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition-all duration-200"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* Pro Plan - Featured */}
-            <div className="relative bg-slate-900 rounded-xl p-8 shadow-xl transform lg:scale-105 z-10">
-              {/* Popular Badge */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-teal-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide">
-                  Popular
-                </div>
-              </div>
-
-              <h3 className="text-2xl font-bold text-white mb-2 mt-2">Pro</h3>
-              
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-white">$19.99</span>
-                <span className="text-gray-400 text-lg">/month</span>
-              </div>
-              
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Unlimited NDAs</strong></span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>All templates</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>E-signature support</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>Advanced tracking</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-300">
-                  <Check className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
-                  <span>Custom branding</span>
-                </li>
-              </ul>
-              
-              <button className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200">
-                Upgrade to Pro
-              </button>
-            </div>
-
-            {/* Enterprise Plan */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8 hover:border-teal-600 transition-all duration-300 hover:shadow-lg">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
-              
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-gray-900">Custom</span>
-              </div>
-              
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span><strong>Unlimited everything</strong></span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Custom templates</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Dedicated support</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>API access</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Account manager</span>
-                </li>
-                <li className="flex items-start gap-3 text-gray-700">
-                  <Check className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                  <span>Custom integrations</span>
-                </li>
-              </ul>
-              
-              <Link
-                href="/contact"
-                className="block w-full text-center border border-gray-900 text-gray-900 py-3 px-4 rounded-lg font-semibold hover:bg-gray-900 hover:text-white transition-all duration-200"
-              >
-                Contact Sales
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* Pricing Component */}
+      <div className="bg-gray-50 -mt-8">
+        <Pricing
+          plans={pricingPlans}
+          title=""
+          description=""
+        />
       </div>
 
       {/* Features Comparison */}

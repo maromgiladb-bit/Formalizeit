@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import TestimonialsSection from '@/components/ui/testimonials'
+import { FeatureSteps } from '@/components/ui/feature-section'
 
 export default function About() {
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -38,37 +40,32 @@ export default function About() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        {/* Why We Built It */}
-        <section className="mb-32 fade-in-element opacity-0">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-5xl font-bold text-teal-600 mb-6">Why we built it</h2>
-              <p className="text-xl text-gray-700 leading-relaxed">
-                NDAs shouldn&apos;t take hours to create. We kept seeing the same pain: unclear changes,
-                copy-paste errors, and endless back-and-forth. Formalize It makes NDAs collaborative
-                and accurate—without changing your legal language.
-              </p>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-teal-100 rounded-2xl transform rotate-3"></div>
-              <div className="relative bg-white rounded-2xl shadow-xl p-8 border-2 border-teal-200">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
-                    <span className="text-gray-700">Clear change tracking</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
-                    <span className="text-gray-700">Live preview</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
-                    <span className="text-gray-700">Instant collaboration</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Why We Built It - Feature Steps */}
+        <section className="mb-32 fade-in-element opacity-0 -mx-4 sm:-mx-6 lg:-mx-8">
+          <FeatureSteps
+            features={[
+              {
+                step: 'Step 1',
+                title: 'Save Time',
+                content: 'Create professional NDAs in minutes, not hours. Auto-fill company details, use proven templates, and skip the repetitive formatting work.',
+                image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop'
+              },
+              {
+                step: 'Step 2',
+                title: 'Live Preview',
+                content: 'See exactly what your NDA looks like as you fill it out. No surprises — what you see is what you get in the final PDF.',
+                image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop'
+              },
+              {
+                step: 'Step 3',
+                title: 'Easy Communication',
+                content: 'Share a secure link with the other party. They can review, suggest changes, and sign — all without creating an account or email ping-pong.',
+                image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop'
+              },
+            ]}
+            title="Why We Built Formalize It"
+            autoPlayInterval={5000}
+          />
         </section>
 
         {/* How It Works - Streamlined */}
@@ -157,6 +154,11 @@ export default function About() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="mb-32 fade-in-element opacity-0 -mx-4 sm:-mx-6 lg:-mx-8">
+          <TestimonialsSection />
         </section>
 
         {/* CTA */}

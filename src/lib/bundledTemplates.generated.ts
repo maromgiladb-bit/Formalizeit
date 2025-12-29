@@ -17,7 +17,7 @@ export const TEMPLATE_CONFIG = {
       "category": "mutual",
       "description": "Professional mutual confidentiality and non-disclosure agreement with comprehensive clauses",
       "templateFile": "mutual_nda_v1.hbs",
-      "isActive": true,
+      "isActive": false,
       "requiredFields": [
         "doc_title",
         "effective_date_long",
@@ -63,7 +63,7 @@ export const TEMPLATE_CONFIG = {
       "category": "mutual",
       "description": "Formal design with underlined headings, increased spacing, and highlighted fillable fields",
       "templateFile": "design_mutual_nda_v1.hbs",
-      "isActive": true,
+      "isActive": false,
       "requiredFields": [
         "doc_title",
         "effective_date_long",

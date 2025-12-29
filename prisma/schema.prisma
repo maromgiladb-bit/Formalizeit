@@ -13,6 +13,7 @@ enum BillingPlan {
   FREE
   PRO
   ENTERPRISE
+  DEV
 
   @@map("billing_plan")
 }

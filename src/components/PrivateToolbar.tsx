@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, UserButton } from '@clerk/nextjs'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 
 import OrgSwitcher from './OrgSwitcher'
+import { InteractiveHoverButton } from './ui/interactive-hover-button'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -28,26 +29,29 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
     { name: 'Fill NDA', href: '/templates', current: pathname === '/fillndahtml' || pathname === '/templates' },
     { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
-    { name: 'My Drafts', href: '/mydrafts', current: pathname === '/mydrafts' },
-    { name: 'Company Profile', href: '/companydetails', current: pathname === '/companydetails' },
-    { name: 'Settings', href: '/settings', current: pathname?.startsWith('/settings') },
   ]
 
-  const additionalLinks = [
+  const router = useRouter()
+
+  const primaryLinks = [
+    { name: 'Settings', href: '/settings' },
+    { name: 'Company Profile', href: '/companydetails' },
+    { name: 'Plans', href: '/plans' },
+  ]
+
+  const secondaryLinks = [
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
-    { name: 'Plans', href: '/plans' },
+    { name: 'Homepage', href: '/' },
   ]
 
   const devLinks = [
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
     { name: '🎨 Fill NDA (Design)', href: '/fillndahtml?templateId=design_mutual_nda_v1' },
+    { name: '📥 Fill NDA Public (Party B)', href: '/fillndahtml-public/dev' },
     { name: '📄 Sign PDF', href: '/sign-nda' },
     { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
     { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
-    { name: '📝 Review & Sign', href: '/review-nda/test-token-123' },
-    { name: '📋 Review NDA as Fill', href: '/review-nda-asfill/test-token-123' },
-    { name: '💡 Review Suggestions', href: '/review-suggestions/dev-test' },
     { name: '🏠 Homepage', href: '/' },
     { name: '📋 Templates', href: '/templates' },
   ]
@@ -105,7 +109,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
             */}
 
             {/* Desktop Navigation - Show first 4 items */}
-            <div className="hidden xl:ml-8 xl:flex xl:space-x-1">
+            <div className="hidden xl:ml-8 xl:flex xl:items-center xl:space-x-1">
               {navigation.slice(0, 4).map((item) => (
                 <Link
                   key={item.name}
@@ -118,6 +122,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   {item.name}
                 </Link>
               ))}
+
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
@@ -146,8 +151,18 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                           {item.name}
                         </Link>
                       ))}
+                      {primaryLinks.map((link) => (
+                        <Link
+                          key={link.name}
+                          href={link.href}
+                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
+                          onClick={() => setIsMoreMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
                       <div className="border-t-2 border-gray-200 my-1"></div>
-                      {additionalLinks.map((link) => (
+                      {secondaryLinks.map((link) => (
                         <Link
                           key={link.name}
                           href={link.href}
@@ -246,7 +261,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                         </Link>
                       ))}
                       <div className="border-t-2 border-gray-200 my-1"></div>
-                      {additionalLinks.map((link) => (
+                      {secondaryLinks.map((link: { name: string; href: string }) => (
                         <Link
                           key={link.name}
                           href={link.href}
@@ -303,15 +318,10 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
-            <Link
-              href="/templates"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-[var(--teal-600)] hover:bg-[var(--teal-700)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--teal-600)] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New NDA
-            </Link>
+            <InteractiveHoverButton
+              text="New NDA"
+              onClick={() => router.push('/templates')}
+            />
             <UserButton afterSignOutUrl="/" />
           </div>
 
@@ -356,7 +366,18 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 </Link>
               ))}
               <div className="border-t-2 border-gray-200 my-2"></div>
-              {additionalLinks.map((link) => (
+              {primaryLinks.map((link: { name: string; href: string }) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <div className="border-t-2 border-gray-200 my-2"></div>
+              {secondaryLinks.map((link: { name: string; href: string }) => (
                 <Link
                   key={link.name}
                   href={link.href}
@@ -406,6 +427,6 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
           </div>
         )
       }
-    </nav >
+    </nav>
   )
 }
