@@ -32,6 +32,12 @@ export async function GET(
       where: {
         id: id,
         createdByUserId: dbUser.id
+      },
+      include: {
+        revisions: {
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        }
       }
     })
     console.log('Draft found:', draft ? 'Yes' : 'No')

@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
             data: {
                 content: formData,
                 status: 'SENT',
+                workflowState: 'AWAITING_PARTY_B_SIGNATURE',
             },
         });
 
@@ -104,15 +105,18 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        const signer = existingSigner
-            ? await prisma.signer.update({
+        let signer;
+        if (existingSigner) {
+            signer = await prisma.signer.update({
                 where: { id: existingSigner.id },
                 data: {
                     status: 'PENDING',
                     role: 'SIGNER',
                 },
-            })
-            : await prisma.signer.create({
+            });
+        } else {
+            // Create Party B (SIGNER) record
+            signer = await prisma.signer.create({
                 data: {
                     signRequestId: signRequest.id,
                     email: partyBEmail,
@@ -120,6 +124,29 @@ export async function POST(request: NextRequest) {
                     status: 'PENDING',
                 },
             });
+
+            // Also ensure Party A (APPROVER) record exists for bidirectional email notifications
+            const existingApprover = await prisma.signer.findFirst({
+                where: {
+                    signRequestId: signRequest.id,
+                    role: 'APPROVER',
+                },
+            });
+
+            if (!existingApprover) {
+                const partyAEmail = (formData.party_a_email as string) || user.email;
+                const partyAName = (formData.party_a_signatory_name as string) || signerName || null;
+                await prisma.signer.create({
+                    data: {
+                        signRequestId: signRequest.id,
+                        email: partyAEmail,
+                        name: partyAName,
+                        role: 'APPROVER',
+                        status: 'PENDING',
+                    },
+                });
+            }
+        }
 
         // Generate PDF with Party A's signature
         console.log('📄 Generating PDF with Party A signature...');

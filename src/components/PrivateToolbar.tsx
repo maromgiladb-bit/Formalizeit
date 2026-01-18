@@ -52,8 +52,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
     { name: '📄 Sign PDF', href: '/sign-nda' },
     { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
     { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
+    { name: '📧 Email Templates', href: '/devemails' },
+    { name: '📋 NDA Templates', href: '/devtemplates' },
     { name: '🏠 Homepage', href: '/' },
-    { name: '📋 Templates', href: '/templates' },
   ]
 
   const isDev = process.env.NODE_ENV === 'development'

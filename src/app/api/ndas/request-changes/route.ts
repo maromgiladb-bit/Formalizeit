@@ -59,11 +59,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No signer found' }, { status: 400 })
         }
 
-        // Update workflow state back to awaiting input
+        // Update workflow state back to Party B review
         await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
-                workflowState: 'AWAITING_INPUT'
+                workflowState: 'AWAITING_PARTY_B_REVIEW',
+                lastEditedBy: 'party_a' // Party A is requesting changes
             }
         })
 
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            workflowState: 'AWAITING_INPUT'
+            workflowState: 'AWAITING_PARTY_B_REVIEW'
         })
     } catch (error) {
         console.error('Request changes error:', error)

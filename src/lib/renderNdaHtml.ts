@@ -30,6 +30,13 @@ export async function renderNdaHtml(
     // Prepare data with defaults
     const data = {
       ...formData,
+      // Map signature images to the structure expected by templates
+      partyASignature: {
+        signatureImage: formData.party_1_signature_image || (formData as any).partyASignature?.signatureImage
+      },
+      partyBSignature: {
+        signatureImage: formData.party_2_signature_image || (formData as any).partyBSignature?.signatureImage
+      },
       // Add any default values or transformations here
       current_date: formData.effective_date || new Date().toLocaleDateString('en-US', {
         year: 'numeric',

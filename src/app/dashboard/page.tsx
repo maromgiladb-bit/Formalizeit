@@ -18,6 +18,7 @@ export default async function DashboardPage() {
           signRequests: {
             include: {
               ndaPdfs: true,
+              signers: true,
             },
           },
         },
@@ -53,6 +54,7 @@ export default async function DashboardPage() {
               signRequests: {
                 include: {
                   ndaPdfs: true,
+                  signers: true,
                 },
               },
             },
@@ -82,6 +84,10 @@ export default async function DashboardPage() {
     // Find the latest sign request and its PDF
     const latestSignRequest = draft.signRequests?.[0];
     const sentPdf = latestSignRequest?.ndaPdfs?.find((pdf: { kind: string }) => pdf.kind === 'SENT');
+    const content = draft.content as Record<string, unknown> | null;
+
+    // Find Party A signer (APPROVER role) for sign link
+    const partyASigner = latestSignRequest?.signers?.find((s: { role: string }) => s.role === 'APPROVER');
 
     return {
       id: draft.id,
@@ -89,10 +95,13 @@ export default async function DashboardPage() {
       status: draft.status?.toLowerCase() || 'draft',
       workflowState: (draft as { workflowState?: string }).workflowState || 'FILLING',
       recipientEmail: (draft as { recipientEmail?: string }).recipientEmail || undefined,
+      partyBName: (content?.party_b_name as string) || undefined,
+      partyBEmail: (content?.party_b_email as string) || (draft as { recipientEmail?: string }).recipientEmail || undefined,
       createdAt: draft.createdAt || new Date(),
       signedAt: null,
       type: 'created' as const,
       pdfId: sentPdf?.id || null,
+      partyASignerId: (partyASigner as { id: string } | undefined)?.id || null,
     };
   });
 

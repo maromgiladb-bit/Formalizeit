@@ -326,21 +326,22 @@
     }
 
     .sign-box {
-      border: 2px dotted var(--rule-strong);
-      height: 80px;
+      border: none;
+      border-bottom: 2px dotted var(--ink);
+      height: 60px;
       margin: 6mm 0 3mm;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      color: var(--rule-strong);
+      padding-bottom: 4px;
+      color: var(--muted);
       font-family: var(--sans);
-      font-size: 10pt;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 9pt;
+      font-style: italic;
     }
 
     .sign-box img {
-      max-height: 70px;
+      max-height: 55px;
       max-width: 100%;
     }
 
@@ -484,8 +485,8 @@
       A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined
       below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
       "<span class="smallcaps">Receiving Party</span>" (<span
-        class="field {{#unless effective_date_long}}placeholder{{/unless}}">{{ph effective_date_long "Effective
-        Date"}}</span>); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone
+        class="field {{#unless party_2_name}}placeholder{{/unless}}">{{ph party_2_name "Party B Name"}}</span>); (with
+      regard to the Confidential Information disclosed to it by the other Party and/or anyone
       on its behalf)
       and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any
       of its Permitted Entities (as defined below), shall be referred to hereinafter as the
