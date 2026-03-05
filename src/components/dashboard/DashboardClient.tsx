@@ -107,24 +107,30 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
   const filteredNdas = localNdas.filter((nda) => {
     if (filter === 'all') return true;
-    if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending');
-    if (filter === 'received') return nda.type === 'received' && nda.status !== 'signed';
-    if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created';
-    if (filter === 'signed') return nda.status === 'signed';
-    if (filter === 'action') {
-      // Show NDAs that require user action (sign or review)
-      return ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '');
-    }
+    // Action Required: highest priority - NDA needs your action
+    const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '');
+    // Signed/Complete: takes priority over sent
+    const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
+
+    if (filter === 'action') return isActionRequired;
+    if (filter === 'signed') return isSigned && !isActionRequired;
+    if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created' && !isActionRequired && !isSigned;
+    if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending') && !isActionRequired && !isSigned;
+    if (filter === 'received') return nda.type === 'received' && !isSigned && !isActionRequired;
     return true;
   });
 
+  // Compute mutually exclusive stats
+  const actionRequired = (n: NDA) => ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '');
+  const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
+
   const stats = {
     total: localNdas.length,
-    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created').length,
-    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending')).length,
-    received: localNdas.filter((n) => n.type === 'received' && n.status !== 'signed').length,
-    signed: localNdas.filter((n) => n.status === 'signed').length,
-    action: localNdas.filter((n) => ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '')).length,
+    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created' && !actionRequired(n) && !isSigned(n)).length,
+    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending') && !actionRequired(n) && !isSigned(n)).length,
+    received: localNdas.filter((n) => n.type === 'received' && !isSigned(n) && !actionRequired(n)).length,
+    signed: localNdas.filter((n) => isSigned(n) && !actionRequired(n)).length,
+    action: localNdas.filter((n) => actionRequired(n)).length,
   };
 
   return (
@@ -408,7 +414,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {/* SENT/PENDING: View PDF */}
                     {(nda.status === 'sent' || nda.status === 'pending') && !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || '') && (
                       <button
-                        onClick={() => window.open(`/api/ndas/downloadpdf?draftId=${nda.id}`, '_blank')}
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
                         className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2"
                       >
                         <FileDown className="h-4 w-4" />
@@ -439,7 +445,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {/* COMPLETE/SIGNED: View PDF */}
                     {(nda.status === 'signed' || nda.workflowState === 'COMPLETE') && (
                       <button
-                        onClick={() => window.open(`/api/ndas/downloadpdf?draftId=${nda.id}`, '_blank')}
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
                         className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2"
                       >
                         <FileDown className="h-4 w-4" />

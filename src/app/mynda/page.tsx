@@ -49,6 +49,7 @@ export default function MyNDAsPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
     const [sortBy, setSortBy] = useState<SortBy>('newest')
+    const [selectedCategory, setSelectedCategory] = useState<'all' | 'action_required' | 'sent' | 'draft' | 'signed'>('all')
 
     useEffect(() => {
         if (isLoaded && userId) {
@@ -190,6 +191,193 @@ export default function MyNDAsPage() {
         return null
     }
 
+    // Categorize each NDA into exactly one bucket (mutually exclusive)
+    type NdaCategory = 'action_required' | 'sent' | 'draft' | 'signed'
+    const getNdaCategory = (nda: NDA): NdaCategory => {
+        // Action Required takes highest priority
+        if (['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '')) {
+            return 'action_required'
+        }
+        // Signed/Complete
+        if (nda.status === 'SIGNED' || nda.workflowState === 'COMPLETE') {
+            return 'signed'
+        }
+        // Sent (waiting on Party B)
+        if (nda.status === 'SENT') {
+            return 'sent'
+        }
+        // Everything else is a draft
+        return 'draft'
+    }
+
+    // Group NDAs by category
+    const categorizedNdas = {
+        action_required: filteredNdas.filter(nda => getNdaCategory(nda) === 'action_required'),
+        sent: filteredNdas.filter(nda => getNdaCategory(nda) === 'sent'),
+        draft: filteredNdas.filter(nda => getNdaCategory(nda) === 'draft'),
+        signed: filteredNdas.filter(nda => getNdaCategory(nda) === 'signed'),
+    }
+
+    // Category counts (unfiltered, for stats)
+    const allCategorized = {
+        action_required: ndas.filter(nda => getNdaCategory(nda) === 'action_required').length,
+        sent: ndas.filter(nda => getNdaCategory(nda) === 'sent').length,
+        draft: ndas.filter(nda => getNdaCategory(nda) === 'draft').length,
+        signed: ndas.filter(nda => getNdaCategory(nda) === 'signed').length,
+    }
+
+    // Render a single NDA card (shared across category sections)
+    const renderNdaCard = (nda: NDA) => (
+        <div
+            key={nda.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden"
+        >
+            {/* Card Header */}
+            <div className="p-5 border-b border-gray-100">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">{nda.title}</h3>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(nda.status)}`}>
+                                {nda.status}
+                            </span>
+                            {(() => {
+                                const workflowInfo = getWorkflowLabel(nda)
+                                return workflowInfo && (
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${workflowInfo.style}`}>
+                                        {workflowInfo.label}
+                                    </span>
+                                )
+                            })()}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => deleteDraft(nda.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-5 space-y-3 text-sm">
+                {(nda.partyBName || nda.partyBEmail) && (
+                    <div className="bg-teal-50 rounded-lg p-3 border border-teal-100">
+                        <div className="flex items-start gap-2">
+                            <svg className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            <div className="min-w-0 flex-1">
+                                <div className="text-xs font-medium text-teal-700 uppercase tracking-wide">To</div>
+                                {nda.partyBName && <div className="font-semibold text-gray-900 truncate">{nda.partyBName}</div>}
+                                {nda.partyBEmail && <div className="text-gray-600 truncate">{nda.partyBEmail}</div>}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {nda.partyAName && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="truncate"><strong>From:</strong> {nda.partyAName}</span>
+                    </div>
+                )}
+                <div className="flex items-center gap-2 text-gray-500 text-xs">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Created {new Date(nda.createdAt).toLocaleDateString()}</span>
+                </div>
+            </div>
+
+            {/* Card Footer */}
+            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
+                {/* DRAFT: Edit button */}
+                {nda.status === 'DRAFT' && (
+                    <Link
+                        href={`/fillndahtml?draftId=${nda.id}`}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                    </Link>
+                )}
+
+                {/* SENT: View PDF (only if not action-required) */}
+                {nda.status === 'SENT' && !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') && (
+                    <button
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View PDF
+                    </button>
+                )}
+
+                {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
+                {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
+                    <Link
+                        href={`/sign-nda-public/${nda.partyASignerId}`}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Sign Now
+                    </Link>
+                )}
+
+                {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
+                {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
+                    <Link
+                        href={`/fillndahtml-public/${nda.partyASignerId}`}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Review Changes
+                    </Link>
+                )}
+
+                {/* COMPLETE/SIGNED: View PDF */}
+                {(nda.status === 'SIGNED' || nda.workflowState === 'COMPLETE') && (
+                    <button
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View PDF
+                    </button>
+                )}
+
+                {/* Always show preview link */}
+                <Link
+                    href={`/preview-template?draftId=${nda.id}`}
+                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Preview
+                </Link>
+            </div>
+        </div>
+    )
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -307,23 +495,65 @@ export default function MyNDAsPage() {
                         </div>
 
                         {/* Stats Row */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                                <div className="text-2xl font-bold text-gray-900">{ndas.length}</div>
-                                <div className="text-sm text-gray-600">Total NDAs</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-sm border border-amber-200 p-4">
-                                <div className="text-2xl font-bold text-amber-600">{ndas.filter(n => n.status === 'DRAFT').length}</div>
-                                <div className="text-sm text-gray-600">Drafts</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-4">
-                                <div className="text-2xl font-bold text-blue-600">{ndas.filter(n => n.status === 'SENT').length}</div>
-                                <div className="text-sm text-gray-600">Pending</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-sm border border-emerald-200 p-4">
-                                <div className="text-2xl font-bold text-emerald-600">{ndas.filter(n => n.status === 'SIGNED').length}</div>
-                                <div className="text-sm text-gray-600">Signed</div>
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                            <button
+                                onClick={() => setSelectedCategory('all')}
+                                className={`text-left rounded-xl shadow-sm border p-4 transition-all focus:outline-none ${selectedCategory === 'all'
+                                        ? 'border-gray-800 bg-gray-50 ring-2 ring-gray-800 ring-offset-2'
+                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <div className="text-2xl font-bold text-gray-800">{filteredNdas.length}</div>
+                                <div className="text-sm text-gray-600 font-medium">All NDAs</div>
+                            </button>
+
+                            <button
+                                onClick={() => setSelectedCategory('action_required')}
+                                className={`text-left rounded-xl shadow-sm border p-4 transition-all focus:outline-none ${selectedCategory === 'action_required'
+                                        ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-500 ring-offset-2'
+                                        : allCategorized.action_required > 0
+                                            ? 'border-orange-300 bg-orange-50 hover:bg-orange-100'
+                                            : 'border-gray-200 bg-white hover:border-orange-200 hover:bg-orange-50'
+                                    }`}
+                            >
+                                <div className={`text-2xl font-bold ${allCategorized.action_required > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+                                    {allCategorized.action_required}
+                                </div>
+                                <div className="text-sm text-gray-600 font-medium">Action Required</div>
+                            </button>
+
+                            <button
+                                onClick={() => setSelectedCategory('sent')}
+                                className={`text-left rounded-xl shadow-sm border p-4 transition-all focus:outline-none ${selectedCategory === 'sent'
+                                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500 ring-offset-2'
+                                        : 'border-blue-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                                    }`}
+                            >
+                                <div className="text-2xl font-bold text-blue-600">{allCategorized.sent}</div>
+                                <div className="text-sm text-gray-600 font-medium">Sent</div>
+                            </button>
+
+                            <button
+                                onClick={() => setSelectedCategory('draft')}
+                                className={`text-left rounded-xl shadow-sm border p-4 transition-all focus:outline-none ${selectedCategory === 'draft'
+                                        ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-500 ring-offset-2'
+                                        : 'border-amber-200 bg-white hover:border-amber-300 hover:bg-amber-50'
+                                    }`}
+                            >
+                                <div className="text-2xl font-bold text-amber-600">{allCategorized.draft}</div>
+                                <div className="text-sm text-gray-600 font-medium">Drafts</div>
+                            </button>
+
+                            <button
+                                onClick={() => setSelectedCategory('signed')}
+                                className={`text-left rounded-xl shadow-sm border p-4 transition-all focus:outline-none ${selectedCategory === 'signed'
+                                        ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500 ring-offset-2'
+                                        : 'border-emerald-200 bg-white hover:border-emerald-300 hover:bg-emerald-50'
+                                    }`}
+                            >
+                                <div className="text-2xl font-bold text-emerald-600">{allCategorized.signed}</div>
+                                <div className="text-sm text-gray-600 font-medium">Signed</div>
+                            </button>
                         </div>
 
                         {/* Error State */}
@@ -336,7 +566,7 @@ export default function MyNDAsPage() {
                             </div>
                         )}
 
-                        {/* NDA Cards Grid */}
+                        {/* NDA Cards - Grouped by Category */}
                         {filteredNdas.length === 0 ? (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,162 +591,58 @@ export default function MyNDAsPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                {filteredNdas.map((nda) => (
-                                    <div
-                                        key={nda.id}
-                                        className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden"
-                                    >
-                                        {/* Card Header */}
-                                        <div className="p-5 border-b border-gray-100">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="text-lg font-semibold text-gray-900 truncate">{nda.title}</h3>
-                                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(nda.status)}`}>
-                                                            {nda.status}
-                                                        </span>
-                                                        {(() => {
-                                                            const workflowInfo = getWorkflowLabel(nda)
-                                                            return workflowInfo && (
-                                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${workflowInfo.style}`}>
-                                                                    {workflowInfo.label}
-                                                                </span>
-                                                            )
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => deleteDraft(nda.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                            <div className="space-y-8">
+                                {/* Action Required Section */}
+                                {(selectedCategory === 'all' || selectedCategory === 'action_required') && categorizedNdas.action_required.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-orange-500 rounded-full">{categorizedNdas.action_required.length}</span>
+                                            <h2 className="text-lg font-bold text-orange-800">Action Required</h2>
                                         </div>
-
-                                        {/* Card Body */}
-                                        <div className="p-5 space-y-3 text-sm">
-                                            {/* To: Party B section - prominent display */}
-                                            {(nda.partyBName || nda.partyBEmail) && (
-                                                <div className="bg-teal-50 rounded-lg p-3 border border-teal-100">
-                                                    <div className="flex items-start gap-2">
-                                                        <svg className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                                        </svg>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="text-xs font-medium text-teal-700 uppercase tracking-wide">To</div>
-                                                            {nda.partyBName && (
-                                                                <div className="font-semibold text-gray-900 truncate">{nda.partyBName}</div>
-                                                            )}
-                                                            {nda.partyBEmail && (
-                                                                <div className="text-gray-600 truncate">{nda.partyBEmail}</div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {nda.partyAName && (
-                                                <div className="flex items-center gap-2 text-gray-600">
-                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                    </svg>
-                                                    <span className="truncate"><strong>From:</strong> {nda.partyAName}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-2 text-gray-500 text-xs">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <span>Created {new Date(nda.createdAt).toLocaleDateString()}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Card Footer */}
-                                        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
-                                            {/* DRAFT: Edit button */}
-                                            {nda.status === 'draft' && (
-                                                <Link
-                                                    href={`/fillndahtml?draftId=${nda.id}`}
-                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    Edit
-                                                </Link>
-                                            )}
-
-                                            {/* SENT/PENDING: View PDF */}
-                                            {(nda.status === 'sent' || nda.status === 'pending') && !['AWAITING_PARTY_A_SIGNATURE', ' AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || '') && (
-                                                <button
-                                                    onClick={() => window.open(`/api/ndas/downloadpdf?draftId=${nda.id}`, '_blank')}
-                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    View PDF
-                                                </button>
-                                            )}
-
-                                            {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
-                                            {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
-                                                <Link
-                                                    href={`/sign-nda-public/${nda.partyASignerId}`}
-                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                    </svg>
-                                                    Sign Now
-                                                </Link>
-                                            )}
-
-                                            {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
-                                            {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
-                                                <Link
-                                                    href={`/fillndahtml-public/${nda.partyASignerId}`}
-                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                    Review Changes
-                                                </Link>
-                                            )}
-
-                                            {/* COMPLETE/SIGNED: View PDF */}
-                                            {(nda.status === 'signed' || nda.workflowState === 'COMPLETE') && (
-                                                <button
-                                                    onClick={() => window.open(`/api/ndas/downloadpdf?draftId=${nda.id}`, '_blank')}
-                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                                                >
-                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    View PDF
-                                                </button>
-                                            )}
-
-                                            {/* Always show preview link */}
-                                            <Link
-                                                href={`/preview-template?draftId=${nda.id}`}
-                                                className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                            >
-                                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                Preview
-                                            </Link>
+                                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                            {categorizedNdas.action_required.map((nda) => renderNdaCard(nda))}
                                         </div>
                                     </div>
-                                ))}
+                                )}
+
+                                {/* Sent Section */}
+                                {(selectedCategory === 'all' || selectedCategory === 'sent') && categorizedNdas.sent.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <h2 className="text-lg font-bold text-blue-800">Sent</h2>
+                                            <span className="text-sm text-gray-500">({categorizedNdas.sent.length})</span>
+                                        </div>
+                                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                            {categorizedNdas.sent.map((nda) => renderNdaCard(nda))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Drafts Section */}
+                                {(selectedCategory === 'all' || selectedCategory === 'draft') && categorizedNdas.draft.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <h2 className="text-lg font-bold text-amber-800">Drafts</h2>
+                                            <span className="text-sm text-gray-500">({categorizedNdas.draft.length})</span>
+                                        </div>
+                                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                            {categorizedNdas.draft.map((nda) => renderNdaCard(nda))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Signed Section */}
+                                {(selectedCategory === 'all' || selectedCategory === 'signed') && categorizedNdas.signed.length > 0 && (
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <h2 className="text-lg font-bold text-emerald-800">Signed</h2>
+                                            <span className="text-sm text-gray-500">({categorizedNdas.signed.length})</span>
+                                        </div>
+                                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                            {categorizedNdas.signed.map((nda) => renderNdaCard(nda))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

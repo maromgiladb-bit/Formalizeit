@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react'
 
 import OrgSwitcher from './OrgSwitcher'
 import { InteractiveHoverButton } from './ui/interactive-hover-button'
+import { NotificationIcon } from './ui/notification-icon'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -319,6 +320,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
+            <button className="p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center" aria-label="Notifications">
+              <NotificationIcon size={24} active={false} />
+            </button>
             <InteractiveHoverButton
               text="New NDA"
               onClick={() => router.push('/templates')}

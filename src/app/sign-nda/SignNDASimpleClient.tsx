@@ -334,11 +334,11 @@ export default function SignNDASimpleClient() {
         party_2_name: ndaData.partyBName,
       };
 
-      const response = await fetch('/api/ndas/preview-pdf', {
+      const response = await fetch('/api/ndas/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          formData: formData,
+          ...formData,
           signatureImage: signatureImage,
           signerName: partyASignature.name || 'John Doe',
           signerTitle: partyASignature.title || 'CEO',
@@ -347,13 +347,14 @@ export default function SignNDASimpleClient() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate preview PDF');
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to generate preview PDF');
       }
 
-      // Get the PDF blob and open in new tab
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const json = await response.json();
+      if (json.fileUrl) {
+        window.open(json.fileUrl, '_blank');
+      }
     } catch (error) {
       console.error('Preview PDF error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Failed to preview PDF');

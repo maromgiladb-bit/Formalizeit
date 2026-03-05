@@ -25,6 +25,7 @@ type FormValues = {
 	party_b_signatory_name: string;
 	party_b_title: string;
 	party_b_email: string;
+	purpose: string;
 	governing_law: string;
 	ip_ownership: string;
 	non_solicit: string;
@@ -55,6 +56,7 @@ const DEFAULTS: FormValues = {
 	party_b_signatory_name: "",
 	party_b_title: "",
 	party_b_email: "",
+	purpose: "evaluating a potential business relationship",
 	governing_law: "",
 	ip_ownership: "",
 	non_solicit: "",
@@ -164,6 +166,7 @@ export default function FillNDAHTML() {
 			party_b_signatory_name: "Jane Doe",
 			party_b_title: "Chief Technology Officer",
 			party_b_email: "maromgilad9@gmail.com",
+			purpose: "evaluating a potential business relationship between the parties",
 			governing_law: "California",
 			ip_ownership: "Each party retains ownership of their respective intellectual property",
 			non_solicit: "Neither party shall solicit the other's employees during the term and for 12 months after",
@@ -324,7 +327,7 @@ export default function FillNDAHTML() {
 		governing_law_full: sanitizeForHtml(values.governing_law),
 		term_years_number: values.term_months ? Math.floor(parseInt(values.term_months) / 12) : '',
 		term_years_words: values.term_months ? (Math.floor(parseInt(values.term_months) / 12) === 1 ? 'one' : 'two') : '',
-		purpose: 'evaluating a potential business relationship',
+		purpose: sanitizeForHtml(values.purpose),
 		information_scope_text: 'All information and materials',
 		// Sanitize other text fields that might have newlines
 		ip_ownership: sanitizeForHtml(values.ip_ownership),
@@ -1568,6 +1571,16 @@ export default function FillNDAHTML() {
 										</div>
 
 										<div className="space-y-4">
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Purpose of Confidential Information Swap</label>
+												<textarea
+													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+													rows={2}
+													value={values.purpose}
+													onChange={(e) => setField("purpose", e.target.value)}
+													placeholder="e.g., evaluating a potential business relationship"
+												/>
+											</div>
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Governing Law</label>
 												<input

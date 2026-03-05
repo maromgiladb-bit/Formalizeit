@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
                     // Continue without attachment - still send email with download link
                 }
 
-                const pdfDownloadLink = `${appUrl}/api/ndas/downloadpdf?draftId=${draft.id}`;
+                const pdfDownloadLink = `${appUrl}/api/ndas/viewpdf?draftId=${draft.id}`;
 
                 // Email Current Signer
                 await sendEmail({
