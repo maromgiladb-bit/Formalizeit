@@ -430,6 +430,80 @@ export default function FillNDAHTML() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
+	// Listen for click-to-field messages from the preview iframe
+	// Maps template field names to their form step numbers
+	const FIELD_STEP_MAP: Record<string, number> = {
+		effective_date: 0, term_months: 0, confidentiality_period_months: 0, docName: 0,
+		party_a_name: 1, party_a_address: 1, party_a_phone: 1, party_a_signatory_name: 1, party_a_title: 1, party_a_email: 1,
+		party_b_name: 2, party_b_address: 2, party_b_phone: 2, party_b_signatory_name: 2, party_b_title: 2, party_b_email: 2,
+		purpose: 3, governing_law: 3, ip_ownership: 3, non_solicit: 3, exclusivity: 3, additional_terms: 3,
+		information_scope_text: 3,
+	};
+
+	useEffect(() => {
+		const handleFieldClick = (e: MessageEvent) => {
+			if (e.data?.type === 'field-click' && e.data.field) {
+				const fieldName = e.data.field;
+
+				// Navigate to the correct step first
+				const targetStep = FIELD_STEP_MAP[fieldName];
+				if (targetStep !== undefined && step !== targetStep) {
+					setStep(targetStep);
+				}
+
+				// Find the input after a short delay (to allow step change to render)
+				setTimeout(() => {
+					// Search for the input by walking all inputs/textareas/selects
+					const allInputs = document.querySelectorAll('input, textarea, select');
+					for (const el of allInputs) {
+						const htmlEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+						// Match by checking if the element's value matches values[fieldName]
+						// or if a parent node contains the field name label
+						const parentDiv = htmlEl.closest('div');
+						if (parentDiv) {
+							const label = parentDiv.querySelector('label');
+							if (label) {
+								const labelText = label.textContent?.toLowerCase() || '';
+								const fieldLabels: Record<string, string[]> = {
+									effective_date: ['effective date'],
+									term_months: ['term'],
+									party_a_name: ['party name'],
+									party_a_address: ['address'],
+									party_a_phone: ['phone'],
+									party_a_signatory_name: ['signatory', 'authorized'],
+									party_a_title: ['title'],
+									party_a_email: ['email'],
+									party_b_name: ['party name', 'company'],
+									party_b_address: ['address'],
+									party_b_phone: ['phone'],
+									party_b_signatory_name: ['signatory', 'authorized'],
+									party_b_title: ['title'],
+									party_b_email: ['email'],
+									purpose: ['purpose'],
+									governing_law: ['governing law', 'jurisdiction'],
+									additional_terms: ['additional'],
+									information_scope_text: ['scope', 'information'],
+								};
+								const matchLabels = fieldLabels[fieldName];
+								if (matchLabels && matchLabels.some(ml => labelText.includes(ml))) {
+									htmlEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+									setTimeout(() => htmlEl.focus(), 300);
+									// Add a brief highlight animation
+									htmlEl.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
+									setTimeout(() => { htmlEl.style.boxShadow = ''; }, 2000);
+									return;
+								}
+							}
+						}
+					}
+				}, targetStep !== undefined && step !== targetStep ? 400 : 50);
+			}
+		};
+		window.addEventListener('message', handleFieldClick);
+		return () => window.removeEventListener('message', handleFieldClick);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [step]);
+
 	// D) Fix loadDraft - single setValues call to avoid double-set race
 	const loadDraft = async (id: string) => {
 		console.log('=== Loading draft ===')
@@ -1884,7 +1958,7 @@ export default function FillNDAHTML() {
 									className="w-full border-0"
 									style={{ minHeight: '1200px', height: 'auto' }}
 									title="NDA Preview"
-									sandbox="allow-same-origin"
+									sandbox="allow-same-origin allow-scripts"
 									onLoad={() => {
 										// Restore scroll position after reload
 										if (iframeRef.current && iframeRef.current.contentWindow) {

@@ -1061,7 +1061,7 @@ export default function FillNDAPublicClient({
                             </div>
                             <div className="flex-1 overflow-hidden p-4">
                                 <div className="bg-white rounded-xl shadow-lg h-full overflow-hidden">
-                                    <iframe srcDoc={previewHtml} title="NDA Preview" className="w-full h-full border-0" sandbox="allow-same-origin" />
+                                    <iframe srcDoc={previewHtml} title="NDA Preview" className="w-full h-full border-0" sandbox="allow-same-origin allow-scripts" />
                                 </div>
                             </div>
                         </div>

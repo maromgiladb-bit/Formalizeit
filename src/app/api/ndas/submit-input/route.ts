@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, ownerReviewEmailHtml, getAppUrl } from '@/lib/email'
+import { sendEmail, ownerReviewEmailHtml, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml } from '@/lib/email'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -260,13 +260,14 @@ export async function POST(request: NextRequest) {
                         ? `Review Required: Changes to ${draft.title || 'NDA'}`
                         : `Ready for Signature: ${draft.title || 'NDA'} - Party B provided information`,
                     html: hasSuggestions
-                        ? ownerReviewEmailHtml(
+                        ? partyBSuggestionsEmailHtml(
                             draft.title || 'Untitled NDA',
-                            1, // revision number
-                            reviewLink,
-                            changes.slice(0, 5)
+                            signer.name || signer.email,
+                            signer.email,
+                            (suggestedChanges as Record<string, string>) || {},
+                            reviewLink
                         )
-                        : completedInputEmailHtml(draft.title || 'Untitled NDA', reviewLink, signer.email)
+                        : recipientInputSubmittedEmailHtml(draft.title || 'Untitled NDA', signer.name || signer.email, reviewLink)
                 })
                 console.log('✅ Owner notification email sent')
             } catch (emailError) {
@@ -289,45 +290,3 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Email template when input is complete (no suggestions)
-function completedInputEmailHtml(
-    draftTitle: string,
-    reviewLink: string,
-    signerEmail: string
-): string {
-    return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
-          .content { background: #f9fafb; padding: 30px; border-radius: 8px; margin-bottom: 20px; }
-          .button { display: inline-block; background: linear-gradient(135deg, #16a34a, #15803d); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-          .success { color: #16a34a; font-size: 48px; text-align: center; margin-bottom: 20px; }
-          .footer { text-align: center; color: #6b7280; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">Formalize It</div>
-          </div>
-          <div class="content">
-            <div class="success">✓</div>
-            <h2 style="text-align: center;">Information Received</h2>
-            <p><strong>${draftTitle}</strong></p>
-            <p>${signerEmail} has provided all requested information for your NDA. The document is now ready to send for signatures.</p>
-            <a href="${reviewLink}" class="button">Review & Send for Signature</a>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `
-}

@@ -17,6 +17,9 @@ interface NDA {
   type: 'created' | 'received';
   pdfId?: string | null;
   partyASignerId?: string | null; // For sign link when waiting for Party A
+  signerId?: string | null; // For review link on incoming NDAs
+  senderName?: string; // Who sent the NDA (for incoming)
+  senderEmail?: string; // Sender email (for incoming)
 }
 
 interface DashboardClientProps {
@@ -42,7 +45,7 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
 
     // New states
     case 'AWAITING_PARTY_A_REVIEW':
-      return { label: 'ACTION REQ.', color: 'text-red-800', bgColor: 'bg-red-100' };
+      return { label: 'CHANGES TO REVIEW', color: 'text-red-800', bgColor: 'bg-red-100' };
     case 'AWAITING_PARTY_B_REVIEW':
       return { label: 'WAITING REVIEW', color: 'text-orange-800', bgColor: 'bg-orange-100' };
     case 'AWAITING_PARTY_A_SIGNATURE':
@@ -251,7 +254,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-600">Waiting for You</p>
+                <p className="text-sm font-semibold text-gray-600">Incoming NDAs</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.received}</p>
               </div>
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'received' ? 'bg-orange-600' : 'bg-orange-100'
@@ -350,8 +353,22 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         );
                       })()}
                     </div>
-                    {/* To: Party B info - always show if available */}
-                    {(nda.partyBName || nda.partyBEmail) && (
+                    {/* From: Sender info - for incoming NDAs */}
+                    {nda.type === 'received' && (nda.senderName || nda.senderEmail) && (
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mt-1">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span>
+                          <span className="text-gray-500">From:</span>{' '}
+                          {nda.senderName && <span className="font-semibold">{nda.senderName}</span>}
+                          {nda.senderName && nda.senderEmail && <span className="text-gray-400 mx-1">•</span>}
+                          {nda.senderEmail && <span className="text-gray-600">{nda.senderEmail}</span>}
+                        </span>
+                      </div>
+                    )}
+                    {/* To: Party B info - for outgoing NDAs */}
+                    {nda.type === 'created' && (nda.partyBName || nda.partyBEmail) && (
                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mt-1">
                         <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -453,13 +470,24 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </button>
                     )}
 
-                    {/* Always show preview link for reference */}
-                    <Link href={`/preview-template?draftId=${nda.id}`}>
-                      <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        Preview
-                      </button>
-                    </Link>
+                    {/* RECEIVED/INCOMING: Review + sender info */}
+                    {nda.type === 'received' && nda.signerId && (
+                      <Link href={`/fillndahtml-public/${nda.signerId}`}>
+                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Review
+                        </button>
+                      </Link>
+                    )}
+
+                    {/* Preview - placeholder for future */}
+                    <button
+                      className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2"
+                      onClick={() => { }}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </button>
                   </div>
                 </div>
               </div>

@@ -127,19 +127,25 @@ export function recipientEditEmailHtml(
     ${ownerMessage ? `<div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;"><strong style="color: #92400e; display: block; margin-bottom: 4px;">Note from sender:</strong><span style="color: #b45309;">${ownerMessage}</span></div>` : ''}
     
     <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 24px 0;">
-      <h3 style="margin-top: 0; font-size: 14px; color: #166534; font-weight: 600;">What to do next:</h3>
-      <ol style="margin: 0; padding-left: 20px; color: #15803d; font-size: 14px;">
-        <li style="margin-bottom: 8px;">Click the button below to open the document</li>
-        <li style="margin-bottom: 8px;">Review all terms and conditions carefully</li>
-        <li style="margin-bottom: 8px;">Make any changes or suggestions if needed</li>
-        <li>Submit when you're ready to proceed</li>
-      </ol>
+      <h3 style="margin-top: 0; font-size: 16px; color: #166534; font-weight: 600; margin-bottom: 12px;">As easy as 1, 2, 3:</h3>
+      <div style="margin-bottom: 12px; display: flex; align-items: flex-start;">
+        <div style="background-color: #22c55e; color: white; width: 24px; height: 24px; border-radius: 12px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; margin-right: 12px; flex-shrink: 0;">1</div>
+        <div style="color: #15803d; font-size: 15px; line-height: 24px;">Click the button below to open the secure document</div>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; align-items: flex-start;">
+        <div style="background-color: #22c55e; color: white; width: 24px; height: 24px; border-radius: 12px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; margin-right: 12px; flex-shrink: 0;">2</div>
+        <div style="color: #15803d; font-size: 15px; line-height: 24px;">Review the terms and suggest edits by directly clicking on any field</div>
+      </div>
+      <div style="display: flex; align-items: flex-start;">
+        <div style="background-color: #22c55e; color: white; width: 24px; height: 24px; border-radius: 12px; display: inline-flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; margin-right: 12px; flex-shrink: 0;">3</div>
+        <div style="color: #15803d; font-size: 15px; line-height: 24px;">Submit it back or sign it when you're ready to proceed</div>
+      </div>
     </div>
     
     <div style="text-align: center;">
       <a href="${editLink}" class="button">Review Document</a>
     </div>
-    <p style="text-align: center; margin-top: 24px; font-size: 14px; color: #6b7280;">This secure link is valid for 30 days.</p>
+    <p style="text-align: center; margin-top: 24px; font-size: 14px; color: #6b7280;">This secure link is valid for 30 days. No account required.</p>
   `
   return getBaseEmailHtml('New NDA for Your Review', content)
 }
@@ -241,4 +247,85 @@ export function congratulationsEmailHtml(
     </div>
   `
   return getBaseEmailHtml('Congratulations! NDA Completed', content)
+}
+
+export function partyBSuggestionsEmailHtml(
+  draftTitle: string,
+  partyBName: string,
+  partyBEmail: string,
+  suggestions: Record<string, string>,
+  reviewLink: string
+): string {
+  const suggestionsList = Object.entries(suggestions)
+    .filter(([, value]) => value && value.trim())
+    .map(([key, value]) => {
+      const fieldName = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      return `<li style="margin-bottom: 8px;"><strong>${fieldName}:</strong> <span style="color: #0d9488; font-weight: 500;">${value}</span></li>`;
+    })
+    .join("");
+
+  const content = `
+    <h2>Review Requested</h2>
+    <p><strong>${partyBName}</strong> (<a href="mailto:${partyBEmail}">${partyBEmail}</a>) has reviewed your NDA and suggested some changes:</p>
+    <p class="highlight">${draftTitle}</p>
+    
+    <div style="background-color: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px; padding: 20px; margin: 24px 0;">
+      <h3 style="margin-top: 0; font-size: 16px; color: #0f766e; margin-bottom: 12px;">Suggested Changes:</h3>
+      <ul style="margin: 0; padding-left: 20px; color: #115e59; font-size: 15px;">
+        ${suggestionsList}
+      </ul>
+    </div>
+    
+    <p>You can review these suggestions and choose to accept them, edit the information yourself, or keep your original values.</p>
+    
+    <div style="text-align: center;">
+      <a href="${reviewLink}" class="button">Review Suggestions</a>
+    </div>
+  `
+  return getBaseEmailHtml('Partner Suggested Changes', content)
+}
+
+export function partyARequestChangesEmailHtml(
+  draftTitle: string,
+  message: string,
+  editLink: string
+): string {
+  const content = `
+    <h2>Further Updates Requested</h2>
+    <p>The sender has reviewed your submission for the following NDA and requested some updates:</p>
+    <p class="highlight">${draftTitle}</p>
+    
+    <div style="background-color: #fffbeb; border-left: 4px solid #fbbf24; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <strong style="color: #b45309; display: block; margin-bottom: 4px;">Note from the sender:</strong>
+      <span style="color: #92400e; font-size: 15px;">${message}</span>
+    </div>
+    
+    <p>Please review their request and update the NDA accordingly.</p>
+    
+    <div style="text-align: center;">
+      <a href="${editLink}" class="button">Review & Update NDA</a>
+    </div>
+  `
+  return getBaseEmailHtml('Updates Requested', content)
+}
+
+export function recipientInputSubmittedEmailHtml(
+  draftTitle: string,
+  partyBName: string,
+  reviewLink: string
+): string {
+  const content = `
+    <h2>Information Submitted</h2>
+    <p><strong>${partyBName}</strong> has filled in their required details for the NDA:</p>
+    <p class="highlight">${draftTitle}</p>
+    
+    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+      <p style="color: #4b5563; margin: 0; font-size: 15px;">No changes were suggested to your existing terms. Please review their submitted information to complete the process or proceed to signing.</p>
+    </div>
+    
+    <div style="text-align: center;">
+      <a href="${reviewLink}" class="button">Review Submission</a>
+    </div>
+  `
+  return getBaseEmailHtml('Information Submitted', content)
 }

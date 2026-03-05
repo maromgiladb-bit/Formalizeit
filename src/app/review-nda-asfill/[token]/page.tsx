@@ -89,7 +89,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	const [showPdfPreview, setShowPdfPreview] = useState(false);
 	const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
 	const [generatingPdf, setGeneratingPdf] = useState(false);
-	
+
 	// Suggestions system for grayed-out fields
 	const [suggestions, setSuggestions] = useState<FieldSuggestion[]>([]);
 	const [currentSuggestionField, setCurrentSuggestionField] = useState<string | null>(null);
@@ -109,7 +109,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		try {
 			const response = await fetch(`/api/ndas/review/${token}`);
 			const data = await response.json();
-			
+
 			if (!response.ok) {
 				if (response.status === 410) {
 					setTokenExpired(true);
@@ -124,7 +124,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			setValues(data.formData);
 			setOriginalValues(data.formData);
 			setTemplateId(data.templateId || "professional_mutual_nda_v1");
-			
+
 			console.log('✅ Loaded NDA from token:', data);
 		} catch (error) {
 			console.error('Error loading NDA:', error);
@@ -144,7 +144,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		// If it's filled, it's not editable (show suggest button instead)
 		return !value || value === '';
 	};
-	
+
 	// Check if field was filled by sender (has value)
 	const isFieldFilled = (fieldName: string): boolean => {
 		const value = values[fieldName as keyof FormValues];
@@ -154,21 +154,20 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	// Render "Suggest a change" button for filled (non-editable) fields
 	const renderSuggestButton = (fieldName: string) => {
 		if (!isFieldFilled(fieldName)) return null;
-		
+
 		const hasSuggestion = suggestions.some(s => s.fieldName === fieldName);
 		const isOpen = currentSuggestionField === fieldName;
-		
+
 		return (
 			<button
 				type="button"
 				onClick={() => openSuggestionModal(fieldName)}
-				className={`ml-2 text-xs px-3 py-1 rounded-md transition-colors duration-200 flex items-center gap-1 ${
-					isOpen 
-						? 'bg-teal-600 text-white' 
+				className={`ml-2 text-xs px-3 py-1 rounded-md transition-colors duration-200 flex items-center gap-1 ${isOpen
+						? 'bg-teal-600 text-white'
 						: hasSuggestion
-						? 'bg-green-100 text-green-700 hover:bg-green-200'
-						: 'bg-teal-100 text-teal-700 hover:bg-teal-200'
-				}`}
+							? 'bg-green-100 text-green-700 hover:bg-green-200'
+							: 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+					}`}
 			>
 				<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -177,11 +176,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			</button>
 		);
 	};
-	
+
 	// Render inline suggestion form below the field
 	const renderInlineSuggestion = (fieldName: string) => {
 		if (currentSuggestionField !== fieldName) return null;
-		
+
 		return (
 			<div className="mt-2 p-4 bg-teal-50 border-2 border-teal-200 rounded-lg shadow-sm animate-fadeIn">
 				<div className="space-y-3">
@@ -241,7 +240,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			setSuggestionComment("");
 			return;
 		}
-		
+
 		// Load existing suggestion if any
 		const existing = suggestions.find(s => s.fieldName === fieldName);
 		setCurrentSuggestionField(fieldName);
@@ -252,33 +251,33 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	// Save suggestion from inline form
 	const saveSuggestion = () => {
 		if (!currentSuggestionField) return;
-		
+
 		// Require suggested value
 		if (!suggestionValue) {
 			setWarning("Please enter a suggested value");
 			setTimeout(() => setWarning(""), 2000);
 			return;
 		}
-		
+
 		const newSuggestion: FieldSuggestion = {
 			fieldName: currentSuggestionField,
 			originalValue: originalValues[currentSuggestionField as keyof FormValues]?.toString() || '',
 			suggestedValue: suggestionValue,
 			comment: suggestionComment,
 		};
-		
+
 		setSuggestions(prev => {
 			const filtered = prev.filter(s => s.fieldName !== currentSuggestionField);
 			return [...filtered, newSuggestion];
 		});
-		
+
 		setCurrentSuggestionField(null);
 		setSuggestionValue("");
 		setSuggestionComment("");
 		setWarning(`✅ Suggestion saved for ${currentSuggestionField}`);
 		setTimeout(() => setWarning(""), 3000);
 	};
-	
+
 	// Cancel inline suggestion
 	const cancelSuggestion = () => {
 		setCurrentSuggestionField(null);
@@ -299,7 +298,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			setWarning("No changes made. Please fill in empty fields or suggest changes before sending back.");
 			return;
 		}
-		
+
 		setSaving(true);
 		try {
 			const response = await fetch(`/api/ndas/review/${token}/submit`, {
@@ -310,14 +309,14 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 					suggestions
 				})
 			});
-			
+
 			const data = await response.json();
-			
+
 			if (!response.ok) {
 				setWarning(data.error || "Failed to send back changes");
 				return;
 			}
-			
+
 			// Show success and redirect
 			setWarning("✅ Changes sent back successfully! The sender will be notified.");
 			setTimeout(() => router.push('/'), 3000);
@@ -347,14 +346,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				<label className="block text-sm font-semibold text-gray-700 mb-2">
 					{label} {required && <span className="text-red-500">*</span>}
 				</label>
-				
+
 				{type === "textarea" ? (
 					<textarea
-						className={`w-full rounded-lg shadow-sm transition-all ${
-							editable
+						className={`w-full rounded-lg shadow-sm transition-all ${editable
 								? "p-3 border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 								: "p-3 border border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
-						}`}
+							}`}
 						rows={3}
 						value={value}
 						onChange={(e) => editable && setField(fieldName, e.target.value)}
@@ -364,27 +362,25 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				) : (
 					<input
 						type={type}
-						className={`w-full rounded-lg shadow-sm transition-all ${
-							editable
+						className={`w-full rounded-lg shadow-sm transition-all ${editable
 								? "p-3 border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
 								: "p-3 border border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
-						}`}
+							}`}
 						value={value}
 						onChange={(e) => editable && setField(fieldName, e.target.value)}
 						placeholder={editable ? placeholder : ""}
 						disabled={!editable}
 					/>
 				)}
-				
+
 				{!editable && (
 					<button
 						type="button"
 						onClick={() => openSuggestionModal(fieldName)}
-						className={`mt-2 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
-							hasSuggestion
+						className={`mt-2 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${hasSuggestion
 								? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
 								: "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
-						}`}
+							}`}
 					>
 						<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -400,39 +396,39 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	const previewPDF = async () => {
 		setGeneratingPdf(true);
 		try {
-		console.log("📄 Generating PDF preview with data:", values);
-		console.log("📋 Using template:", templateId);
-		
-		// Always use current form data for preview (not draft from DB)
-		// This ensures the preview matches what you see in the HTML preview
-		const payload = { ...templateData };  // templateData already includes templateId
-		
-		console.log("📦 Sending payload to PDF API:", {
-			hasTemplateId: !!payload.templateId,
-			templateId: payload.templateId,
-			hasDraftId: false
-		});			// Use PDF preview endpoint (supports both draftId and direct data)
+			console.log("📄 Generating PDF preview with data:", values);
+			console.log("📋 Using template:", templateId);
+
+			// Always use current form data for preview (not draft from DB)
+			// This ensures the preview matches what you see in the HTML preview
+			const payload = { ...templateData };  // templateData already includes templateId
+
+			console.log("📦 Sending payload to PDF API:", {
+				hasTemplateId: !!payload.templateId,
+				templateId: payload.templateId,
+				hasDraftId: false
+			});			// Use PDF preview endpoint (supports both draftId and direct data)
 			const res = await fetch("/api/ndas/preview", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
 			});
-			
+
 			const json = await res.json();
 			console.log("PDF Preview response:", json);
-			
+
 			if (!res.ok) {
 				console.error("❌ PDF preview failed:", json);
 				console.error("❌ Error details:", json.details);
 				setWarning(json.error || json.details || "PDF preview failed");
 				return;
 			}
-			
+
 			// fileUrl contains the data:application/pdf;base64,... string
 			if (!json.fileUrl || !json.fileUrl.startsWith("data:application/pdf;base64,")) {
 				throw new Error("Invalid PDF data received");
 			}
-			
+
 			// Open PDF in new tab
 			const newWindow = window.open();
 			if (newWindow) {
@@ -457,7 +453,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				setPdfPreviewUrl(json.fileUrl);
 				setShowPdfPreview(true);
 			}
-			
+
 			console.log("✅ PDF preview opened successfully");
 			setWarning(""); // Clear any previous warnings
 		} catch (e) {
@@ -502,7 +498,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		ip_ownership: sanitizeForHtml(values.ip_ownership),
 		additional_terms: sanitizeForHtml(values.additional_terms),
 	};
-	
+
 	const { data: liveData, loading: previewLoading, error: previewError } = useDebouncedPreview(
 		"/api/ndas/preview-html",
 		templateData,
@@ -531,7 +527,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	const getFieldClass = (fieldName: string, baseClass: string = "p-2 border") => {
 		const filled = isFieldFilled(fieldName);
 		const editable = isFieldEditable(fieldName);
-		
+
 		if (filled) {
 			// Filled fields: gray background, not editable
 			return `${baseClass} border-gray-300 bg-gray-100 cursor-not-allowed text-gray-600`;
@@ -766,7 +762,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 						{tokenExpired ? "Link Expired" : "Invalid Link"}
 					</h2>
 					<p className="text-gray-600 mb-6">
-						{tokenExpired 
+						{tokenExpired
 							? "This review link has expired. Please contact the sender for a new link."
 							: "This review link is invalid. Please check the link or contact the sender."
 						}
@@ -785,7 +781,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 	return (
 		<div className="min-h-screen bg-gray-50">
 			<PublicToolbar />
-			
+
 			{/* Main Container with Fixed Layout */}
 			<div className="flex h-[calc(100vh-64px)]">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
@@ -834,9 +830,9 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									<span className="text-sm font-bold text-teal-600">{computeCompletionPercent()}%</span>
 								</div>
 								<div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-									<div 
-										className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full" 
-										style={{ width: `${computeCompletionPercent()}%` }} 
+									<div
+										className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full"
+										style={{ width: `${computeCompletionPercent()}%` }}
 									/>
 								</div>
 							</div>
@@ -890,18 +886,17 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 								<div className="flex items-center justify-between gap-2">
 									{steps.map((s, i) => (
 										<div key={s} className="flex-1 relative">
-											<button 
-												onClick={() => goToStep(i)} 
+											<button
+												onClick={() => goToStep(i)}
 												className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`}
 											>
 												<div className="flex flex-col items-center">
-													<div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
-														i === step 
-															? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100' 
+													<div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${i === step
+															? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100'
 															: isStepComplete(i)
-															? 'bg-teal-500 text-white shadow-md'
-															: 'bg-gray-200 text-gray-500'
-													}`}>
+																? 'bg-teal-500 text-white shadow-md'
+																: 'bg-gray-200 text-gray-500'
+														}`}>
 														{isStepComplete(i) ? (
 															<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
 																<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -910,19 +905,17 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 															<span className="font-bold">{i + 1}</span>
 														)}
 													</div>
-													<span className={`text-xs font-medium text-center transition-all duration-300 ${
-														i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'
-													}`}>
+													<span className={`text-xs font-medium text-center transition-all duration-300 ${i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'
+														}`}>
 														{s}
 													</span>
 												</div>
 											</button>
 											{i < steps.length - 1 && (
 												<div className="absolute top-6 left-[calc(50%+24px)] right-[calc(-50%+24px)] h-0.5 bg-gray-200 -z-10">
-													<div 
-														className={`h-full bg-teal-600 transition-all duration-500 ${
-															isStepComplete(i) ? 'w-full' : 'w-0'
-														}`}
+													<div
+														className={`h-full bg-teal-600 transition-all duration-500 ${isStepComplete(i) ? 'w-full' : 'w-0'
+															}`}
 													/>
 												</div>
 											)}
@@ -953,10 +946,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Document Title *</span>
 													{renderSuggestButton("docName")}
 												</label>
-												<input 
-													className={`${getFieldClass("docName")} w-full rounded-lg shadow-sm transition-all`} 
-													value={values.docName} 
-													onChange={(e) => setField("docName", e.target.value)} 
+												<input
+													className={`${getFieldClass("docName")} w-full rounded-lg shadow-sm transition-all`}
+													value={values.docName}
+													onChange={(e) => setField("docName", e.target.value)}
 													placeholder="e.g., Partnership NDA 2025"
 													disabled={isFieldFilled("docName")}
 												/>
@@ -967,10 +960,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Effective Date <span className="text-gray-700">*</span></span>
 													{renderSuggestButton("effective_date")}
 												</label>
-												<input 
-													type="date" 
-													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-lg shadow-sm transition-all")}`} 
-													value={values.effective_date} 
+												<input
+													type="date"
+													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-lg shadow-sm transition-all")}`}
+													value={values.effective_date}
 													onChange={(e) => setField("effective_date", e.target.value)}
 													disabled={isFieldFilled("effective_date")}
 													required
@@ -983,11 +976,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Term (months) *</span>
 													{renderSuggestButton("term_months")}
 												</label>
-												<input 
+												<input
 													type="number"
-													className={`${getFieldClass("term_months")} w-full rounded-lg shadow-sm transition-all`} 
-													value={values.term_months} 
-													onChange={(e) => setField("term_months", e.target.value)} 
+													className={`${getFieldClass("term_months")} w-full rounded-lg shadow-sm transition-all`}
+													value={values.term_months}
+													onChange={(e) => setField("term_months", e.target.value)}
 													placeholder="e.g., 12"
 													disabled={isFieldFilled("term_months")}
 												/>
@@ -998,11 +991,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Confidentiality Period (months) *</span>
 													{renderSuggestButton("confidentiality_period_months")}
 												</label>
-												<input 
+												<input
 													type="number"
-													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-lg shadow-sm transition-all`} 
-													value={values.confidentiality_period_months} 
-													onChange={(e) => setField("confidentiality_period_months", e.target.value)} 
+													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-lg shadow-sm transition-all`}
+													value={values.confidentiality_period_months}
+													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
 													placeholder="e.g., 24"
 													disabled={isFieldFilled("confidentiality_period_months")}
 												/>
@@ -1032,10 +1025,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Party Name *</span>
 													{renderSuggestButton("party_a_name")}
 												</label>
-												<input 
-													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-lg shadow-sm transition-all`} 
-													value={values.party_a_name} 
-													onChange={(e) => setField("party_a_name", e.target.value)} 
+												<input
+													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
+													value={values.party_a_name}
+													onChange={(e) => setField("party_a_name", e.target.value)}
 													placeholder="Enter party name"
 													disabled={isFieldFilled("party_a_name")}
 												/>
@@ -1046,11 +1039,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Address</span>
 													{renderSuggestButton("party_a_address")}
 												</label>
-												<textarea 
+												<textarea
 													className={`${getFieldClass("party_a_address", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
 													rows={3}
-													value={values.party_a_address} 
-													onChange={(e) => setField("party_a_address", e.target.value)} 
+													value={values.party_a_address}
+													onChange={(e) => setField("party_a_address", e.target.value)}
 													placeholder="Enter full address"
 													disabled={isFieldFilled("party_a_address")}
 												/>
@@ -1061,11 +1054,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Phone Number</span>
 													{renderSuggestButton("party_a_phone")}
 												</label>
-												<input 
+												<input
 													type="tel"
 													className={`${getFieldClass("party_a_phone", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-													value={values.party_a_phone} 
-													onChange={(e) => setField("party_a_phone", e.target.value)} 
+													value={values.party_a_phone}
+													onChange={(e) => setField("party_a_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 													disabled={isFieldFilled("party_a_phone")}
 												/>
@@ -1077,10 +1070,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 														<span>Signatory Name</span>
 														{renderSuggestButton("party_a_signatory_name")}
 													</label>
-													<input 
+													<input
 														className={`${getFieldClass("party_a_signatory_name", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-														value={values.party_a_signatory_name} 
-														onChange={(e) => setField("party_a_signatory_name", e.target.value)} 
+														value={values.party_a_signatory_name}
+														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
 														placeholder="Full name"
 														disabled={isFieldFilled("party_a_signatory_name")}
 													/>
@@ -1091,10 +1084,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 														<span>Title</span>
 														{renderSuggestButton("party_a_title")}
 													</label>
-													<input 
+													<input
 														className={`${getFieldClass("party_a_title", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-														value={values.party_a_title} 
-														onChange={(e) => setField("party_a_title", e.target.value)} 
+														value={values.party_a_title}
+														onChange={(e) => setField("party_a_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
 														disabled={isFieldFilled("party_a_title")}
 													/>
@@ -1125,10 +1118,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Party Name *</span>
 													{renderSuggestButton("party_b_name")}
 												</label>
-												<input 
+												<input
 													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-													value={values.party_b_name} 
-													onChange={(e) => setField("party_b_name", e.target.value)} 
+													value={values.party_b_name}
+													onChange={(e) => setField("party_b_name", e.target.value)}
 													placeholder="Enter party name"
 													disabled={isFieldFilled("party_b_name")}
 												/>
@@ -1139,11 +1132,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Address</span>
 													{renderSuggestButton("party_b_address")}
 												</label>
-												<textarea 
+												<textarea
 													className={`${getFieldClass("party_b_address", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
 													rows={3}
-													value={values.party_b_address} 
-													onChange={(e) => setField("party_b_address", e.target.value)} 
+													value={values.party_b_address}
+													onChange={(e) => setField("party_b_address", e.target.value)}
 													placeholder="Enter full address"
 													disabled={isFieldFilled("party_b_address")}
 												/>
@@ -1154,11 +1147,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Phone Number</span>
 													{renderSuggestButton("party_b_phone")}
 												</label>
-												<input 
+												<input
 													type="tel"
 													className={`${getFieldClass("party_b_phone", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-													value={values.party_b_phone} 
-													onChange={(e) => setField("party_b_phone", e.target.value)} 
+													value={values.party_b_phone}
+													onChange={(e) => setField("party_b_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 													disabled={isFieldFilled("party_b_phone")}
 												/>
@@ -1170,10 +1163,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 														<span>Signatory Name</span>
 														{renderSuggestButton("party_b_signatory_name")}
 													</label>
-													<input 
+													<input
 														className={`${getFieldClass("party_b_signatory_name", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-														value={values.party_b_signatory_name} 
-														onChange={(e) => setField("party_b_signatory_name", e.target.value)} 
+														value={values.party_b_signatory_name}
+														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 														placeholder="Full name"
 														disabled={isFieldFilled("party_b_signatory_name")}
 													/>
@@ -1184,10 +1177,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 														<span>Title</span>
 														{renderSuggestButton("party_b_title")}
 													</label>
-													<input 
+													<input
 														className={`${getFieldClass("party_b_title", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-														value={values.party_b_title} 
-														onChange={(e) => setField("party_b_title", e.target.value)} 
+														value={values.party_b_title}
+														onChange={(e) => setField("party_b_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
 														disabled={isFieldFilled("party_b_title")}
 													/>
@@ -1199,11 +1192,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Email Address *</span>
 													{renderSuggestButton("party_b_email")}
 												</label>
-												<input 
+												<input
 													type="email"
 													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-													value={values.party_b_email} 
-													onChange={(e) => setField("party_b_email", e.target.value)} 
+													value={values.party_b_email}
+													onChange={(e) => setField("party_b_email", e.target.value)}
 													placeholder="email@example.com"
 													disabled={isFieldFilled("party_b_email")}
 												/>
@@ -1233,10 +1226,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Governing Law</span>
 													{renderSuggestButton("governing_law")}
 												</label>
-												<input 
+												<input
 													className={`${getFieldClass("governing_law", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
-													value={values.governing_law} 
-													onChange={(e) => setField("governing_law", e.target.value)} 
+													value={values.governing_law}
+													onChange={(e) => setField("governing_law", e.target.value)}
 													placeholder="e.g., State of California"
 													disabled={isFieldFilled("governing_law")}
 												/>
@@ -1247,11 +1240,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>IP Ownership Clause</span>
 													{renderSuggestButton("ip_ownership")}
 												</label>
-												<textarea 
+												<textarea
 													className={`${getFieldClass("ip_ownership", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
 													rows={3}
-													value={values.ip_ownership} 
-													onChange={(e) => setField("ip_ownership", e.target.value)} 
+													value={values.ip_ownership}
+													onChange={(e) => setField("ip_ownership", e.target.value)}
 													placeholder="Specify intellectual property ownership terms..."
 													disabled={isFieldFilled("ip_ownership")}
 												/>
@@ -1262,11 +1255,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Non-Solicitation Clause</span>
 													{renderSuggestButton("non_solicit")}
 												</label>
-												<textarea 
+												<textarea
 													className={`${getFieldClass("non_solicit", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
 													rows={3}
-													value={values.non_solicit} 
-													onChange={(e) => setField("non_solicit", e.target.value)} 
+													value={values.non_solicit}
+													onChange={(e) => setField("non_solicit", e.target.value)}
 													placeholder="Define non-solicitation terms..."
 													disabled={isFieldFilled("non_solicit")}
 												/>
@@ -1277,11 +1270,11 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													<span>Exclusivity Clause</span>
 													{renderSuggestButton("exclusivity")}
 												</label>
-												<textarea 
+												<textarea
 													className={`${getFieldClass("exclusivity", "p-3 border")} w-full rounded-lg shadow-sm transition-all`}
 													rows={3}
-													value={values.exclusivity} 
-													onChange={(e) => setField("exclusivity", e.target.value)} 
+													value={values.exclusivity}
+													onChange={(e) => setField("exclusivity", e.target.value)}
 													placeholder="Specify exclusivity arrangements..."
 													disabled={isFieldFilled("exclusivity")}
 												/>
@@ -1365,14 +1358,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 							{/* Navigation Buttons */}
 							<div className="mt-8 flex items-center justify-between gap-4 pt-6 border-t border-gray-200">
 								<div className="flex gap-3">
-									<button 
-										onClick={goBack} 
-										disabled={step === 0} 
-										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
-											step === 0 
-												? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+									<button
+										onClick={goBack}
+										disabled={step === 0}
+										className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${step === 0
+												? 'bg-gray-100 text-gray-400 cursor-not-allowed'
 												: 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
-										}`}
+											}`}
 									>
 										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1380,8 +1372,8 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										Back
 									</button>
 									{step < steps.length - 1 && (
-										<button 
-											onClick={goNext} 
+										<button
+											onClick={goNext}
 											className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm flex items-center gap-2"
 										>
 											Next
@@ -1391,14 +1383,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										</button>
 									)}
 									{step === steps.length - 1 && (
-										<button 
-											onClick={sendBackWithChanges} 
+										<button
+											onClick={sendBackWithChanges}
 											disabled={saving}
-											className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-sm flex items-center gap-2 ${
-												saving
+											className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-sm flex items-center gap-2 ${saving
 													? 'bg-gray-400 text-white cursor-not-allowed'
 													: 'bg-teal-600 text-white hover:bg-teal-700'
-											}`}
+												}`}
 										>
 											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -1490,7 +1481,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									className="w-full border-0"
 									style={{ minHeight: '1200px', height: 'auto' }}
 									title="NDA Preview"
-									sandbox="allow-same-origin"
+									sandbox="allow-same-origin allow-scripts"
 								/>
 							) : !previewLoading && !previewError ? (
 								<div className="text-center py-20 text-gray-400">
@@ -1521,12 +1512,12 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									<p className="text-xs text-gray-600">Generated NDA document</p>
 								</div>
 							</div>
-							<button 
-								className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg" 
+							<button
+								className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg"
 								onClick={() => {
 									setShowPdfPreview(false);
 									setPdfPreviewUrl('');
-								}} 
+								}}
 								aria-label="Close preview"
 							>
 								<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
