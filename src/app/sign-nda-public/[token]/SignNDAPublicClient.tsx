@@ -41,6 +41,7 @@ export default function SignNDAPublicClient({
     const [signatureMode, setSignatureMode] = useState<'draw' | 'type' | 'upload'>('type');
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const signatureCardRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [typedSignature, setTypedSignature] = useState('');
     const [loading, setLoading] = useState(false);
@@ -55,6 +56,41 @@ export default function SignNDAPublicClient({
         console.log('🎨 Initial HTML loaded from server');
         setPreviewHtml(initialHtml);
     }, [initialHtml]);
+
+    // Listen for sign-box click-to-field messages from the preview iframe
+    // Only reacts to signature box IDs; ignores all other NDA field clicks
+    useEffect(() => {
+        const handleSignBoxClick = (e: MessageEvent) => {
+            if (
+                e.data?.type === 'field-click' &&
+                (e.data.field === 'party-a-signature' || e.data.field === 'party-b-signature')
+            ) {
+                // Switch to type mode so the signature input is visible
+                setSignatureMode('type');
+
+                // Highlight the signature card
+                if (signatureCardRef.current) {
+                    signatureCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    signatureCardRef.current.style.boxShadow = '0 0 0 4px rgba(251, 191, 36, 0.6)';
+                    setTimeout(() => {
+                        if (signatureCardRef.current) signatureCardRef.current.style.boxShadow = '';
+                    }, 2000);
+                }
+
+                // Focus the typed signature input after mode switch renders
+                setTimeout(() => {
+                    const sigInput = document.querySelector<HTMLInputElement>('input[placeholder="Type your name"]');
+                    if (sigInput) {
+                        sigInput.focus();
+                        sigInput.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
+                        setTimeout(() => { sigInput.style.boxShadow = ''; }, 2000);
+                    }
+                }, 300);
+            }
+        };
+        window.addEventListener('message', handleSignBoxClick);
+        return () => window.removeEventListener('message', handleSignBoxClick);
+    }, []);
 
     // Canvas drawing handlers
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -269,7 +305,7 @@ export default function SignNDAPublicClient({
                             <p className="text-gray-600 text-sm">{ndaTitle}</p>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
+                        <div ref={signatureCardRef} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
                             <h2 className="text-lg font-bold text-gray-900 mb-3">Your Signature</h2>
 
                             {/* Form Fields */}
@@ -351,7 +387,7 @@ export default function SignNDAPublicClient({
                                         />
                                         {typedSignature && (
                                             <div className="p-3 border-2 border-gray-300 rounded bg-white overflow-hidden flex items-center justify-center flex-1">
-                                                <p className={`${greatVibes.className} text-3xl text-center break-words`}>{typedSignature}</p>
+                                                <p className={`${greatVibes.className} text-3xl text-center wrap-break-word`}>{typedSignature}</p>
                                             </div>
                                         )}
                                     </div>

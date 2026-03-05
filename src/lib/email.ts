@@ -200,17 +200,114 @@ export function recipientSignRequestEmailHtml(
   draftTitle: string,
   signLink: string
 ): string {
-  const content = `
-    <h2>Action Required: Sign NDA</h2>
-    <p>The following NDA is ready for your signature:</p>
-    <p class="highlight">${draftTitle}</p>
-    <p>Please review the document and provide your signature to finalize the agreement.</p>
-    <div style="text-align: center;">
-      <a href="${signLink}" class="button">Review & Sign NDA</a>
-    </div>
-    <p style="text-align: center; margin-top: 24px; font-size: 14px; color: #6b7280;">This link will expire in 30 days.</p>
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background: #f3f4f6; }
+          .wrapper { background: #f3f4f6; padding: 40px 20px; }
+          .container { max-width: 600px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 24px; }
+          .logo { font-size: 22px; font-weight: 800; color: #0d9488; letter-spacing: -0.5px; }
+          .tagline { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+          .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 16px; }
+          .card-header { background: linear-gradient(135deg, #0d9488, #0891b2); padding: 28px 32px; }
+          .card-header h1 { margin: 0; color: white; font-size: 20px; font-weight: 700; }
+          .card-header p { margin: 6px 0 0; color: rgba(255,255,255,0.85); font-size: 14px; }
+          .card-body { padding: 28px 32px; }
+          .doc-row { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; }
+          .doc-row p { margin: 0; font-size: 14px; color: #134e4a; }
+          .doc-name { font-size: 17px; font-weight: 700; color: #0d9488; margin: 4px 0 0; }
+          .what-is { background: #f0f9ff; border-radius: 10px; padding: 14px 18px; margin: 18px 0; font-size: 14px; color: #0c4a6e; }
+          .what-is strong { display: block; margin-bottom: 4px; color: #075985; }
+          .steps-title { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 22px 0 12px; }
+          .steps { margin: 0; padding: 0; list-style: none; }
+          .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+          .step-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+          .step-1 { background: #e0f2fe; }
+          .step-2 { background: #fef3c7; }
+          .step-3 { background: #dcfce7; }
+          .step-text strong { display: block; font-size: 14px; color: #111827; margin-bottom: 2px; }
+          .step-text span { font-size: 13px; color: #6b7280; }
+          .cta-wrap { text-align: center; padding: 24px 0 8px; }
+          .button { display: inline-block; background: #0d9488; color: white !important; padding: 15px 36px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; }
+          .reassurance { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; }
+          .reassurance span { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+          .footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 8px 0 24px; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="container">
+            <div class="header">
+              <div class="logo">Formalize It</div>
+              <div class="tagline">Smart NDA workflows</div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h1>You're invited to sign an NDA ✍️</h1>
+                <p>Read, review and sign — no account needed, takes just a minute</p>
+              </div>
+              <div class="card-body">
+
+                <div class="doc-row">
+                  <p>The following NDA is ready and waiting for your signature:</p>
+                  <p class="doc-name">${draftTitle}</p>
+                </div>
+
+                <div class="what-is">
+                  <strong>📋 What's a Mutual NDA?</strong>
+                  A Non-Disclosure Agreement (NDA) is a short legal document where both parties agree to keep each other's confidential information private. Signing takes about 60 seconds.
+                </div>
+
+                <div class="steps-title">Here's what to expect</div>
+                <ul class="steps">
+                  <li class="step">
+                    <div class="step-icon step-1">📄</div>
+                    <div class="step-text">
+                      <strong>Read the document</strong>
+                      <span>You'll see the full NDA so you know exactly what you're signing. No surprises.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-2">✍️</div>
+                    <div class="step-text">
+                      <strong>Add your signature</strong>
+                      <span>Type your name, draw it, or upload an image — whichever you prefer.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-3">🎉</div>
+                    <div class="step-text">
+                      <strong>Done — you'll get a copy</strong>
+                      <span>Once all parties have signed, everyone receives a copy of the fully executed NDA by email.</span>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="cta-wrap">
+                  <a href="${signLink}" class="button">Review &amp; Sign the NDA →</a>
+                </div>
+
+                <div class="reassurance">
+                  <span>🔒 Secure link</span>
+                  <span>📧 No account required</span>
+                  <span>⏱ Expires in 30 days</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
   `
-  return getBaseEmailHtml('Sign NDA', content)
 }
 
 export function timeToSignEmailHtml(

@@ -284,47 +284,115 @@ function reviewRequestEmailHtml(
       <head>
         <meta charset="utf-8">
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #0d9488; }
-          .content { background: #f9fafb; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
-          .button { display: inline-block; background: #0d9488; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-          .steps { background: white; padding: 20px; border-radius: 8px; margin: 15px 0; }
-          .step { display: flex; align-items: center; margin: 10px 0; }
-          .step-num { background: #0d9488; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; }
-          .message { background: white; padding: 15px; border-left: 4px solid #0d9488; margin: 15px 0; }
-          .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background: #f3f4f6; }
+          .wrapper { background: #f3f4f6; padding: 40px 20px; }
+          .container { max-width: 600px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 24px; }
+          .logo { font-size: 22px; font-weight: 800; color: #0d9488; letter-spacing: -0.5px; }
+          .tagline { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+          .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 16px; }
+          .card-header { background: linear-gradient(135deg, #0d9488, #0891b2); padding: 28px 32px; }
+          .card-header h1 { margin: 0; color: white; font-size: 20px; font-weight: 700; }
+          .card-header p { margin: 6px 0 0; color: rgba(255,255,255,0.85); font-size: 14px; }
+          .card-body { padding: 28px 32px; }
+          .sender-box { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; }
+          .sender-box p { margin: 0; font-size: 15px; color: #134e4a; }
+          .doc-name { font-size: 17px; font-weight: 700; color: #0d9488; margin: 0 0 4px; }
+          .message-box { background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 18px 0; font-size: 14px; color: #78350f; }
+          .what-is { background: #f0f9ff; border-radius: 10px; padding: 14px 18px; margin: 18px 0; font-size: 14px; color: #0c4a6e; }
+          .what-is strong { display: block; margin-bottom: 4px; color: #075985; }
+          .steps-title { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 22px 0 12px; }
+          .steps { margin: 0; padding: 0; list-style: none; }
+          .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+          .step-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+          .step-1 { background: #e0f2fe; }
+          .step-2 { background: #fef3c7; }
+          .step-3 { background: #dcfce7; }
+          .step-4 { background: #ede9fe; }
+          .step-text strong { display: block; font-size: 14px; color: #111827; margin-bottom: 2px; }
+          .step-text span { font-size: 13px; color: #6b7280; }
+          .cta-wrap { text-align: center; padding: 24px 0 8px; }
+          .button { display: inline-block; background: #0d9488; color: white !important; padding: 15px 36px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; }
+          .reassurance { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; }
+          .reassurance span { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+          .footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 8px 0 24px; }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">Formalize It</div>
-          </div>
-          <div class="content">
-            <h2 style="margin-top: 0;">Review NDA Request</h2>
-            <p><strong>${senderName}</strong> has sent you an NDA for review:</p>
-            <p style="font-size: 18px; font-weight: 600; color: #0d9488;">${draftTitle}</p>
-            
-            <div class="message">${message}</div>
-            
-            <div class="steps">
-              <div class="step"><div class="step-num">1</div>Review the NDA details</div>
-              <div class="step"><div class="step-num">2</div>Fill in your company information</div>
-              <div class="step"><div class="step-num">3</div>Approve or suggest changes</div>
+        <div class="wrapper">
+          <div class="container">
+            <div class="header">
+              <div class="logo">Formalize It</div>
+              <div class="tagline">Smart NDA workflows</div>
             </div>
-            
-            <p style="text-align: center;">
-              <a href="${reviewLink}" class="button">Review NDA Now</a>
-            </p>
-            
-            <p style="color: #6b7280; font-size: 14px; text-align: center;">
-              No account required. This link expires in 30 days.
-            </p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
+
+            <div class="card">
+              <div class="card-header">
+                <h1>You've been invited to review an NDA ✉️</h1>
+                <p>It only takes a few minutes — no account needed</p>
+              </div>
+              <div class="card-body">
+
+                <div class="sender-box">
+                  <p><strong>${senderName}</strong> has shared the following NDA with you:</p>
+                  <p class="doc-name">${draftTitle}</p>
+                </div>
+
+                ${message ? `<div class="message-box">💬 <em>${message}</em></div>` : ''}
+
+                <div class="what-is">
+                  <strong>📋 What's a Mutual NDA?</strong>
+                  A Non-Disclosure Agreement (NDA) is a simple legal document that protects confidential information shared between two parties. Both sides agree to keep things private.
+                </div>
+
+                <div class="steps-title">Here's what happens next</div>
+                <ul class="steps">
+                  <li class="step">
+                    <div class="step-icon step-1">👀</div>
+                    <div class="step-text">
+                      <strong>Review the draft</strong>
+                      <span>See exactly what you're agreeing to — every clause is visible in a live preview.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-2">✏️</div>
+                    <div class="step-text">
+                      <strong>Fill in your information</strong>
+                      <span>Add your company name, address, and contact details. Takes about 2 minutes.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-3">💬</div>
+                    <div class="step-text">
+                      <strong>Approve or suggest edits</strong>
+                      <span>Happy with everything? Proceed to sign. Want to change something? Suggest it — ${senderName} will review your feedback.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-4">🎉</div>
+                    <div class="step-text">
+                      <strong>Sign & you're done</strong>
+                      <span>Once both parties have signed, you'll each receive a copy of the fully executed NDA.</span>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="cta-wrap">
+                  <a href="${reviewLink}" class="button">Review the NDA →</a>
+                </div>
+
+                <div class="reassurance">
+                  <span>🔒 Secure link</span>
+                  <span>📧 No account required</span>
+                  <span>⏱ Expires in 30 days</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
+              <p style="margin-top:4px;">You received this because ${senderName} used Formalize It to send you an NDA.</p>
+            </div>
           </div>
         </div>
       </body>

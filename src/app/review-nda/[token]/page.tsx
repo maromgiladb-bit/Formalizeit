@@ -941,7 +941,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										<button
 											type="button"
 											onClick={() => setStep(step + 1)}
-											className="px-8 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+											className="px-8 py-3 bg-linear-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
 										>
 											<span>Next Step</span>
 											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -975,7 +975,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="button"
 											onClick={submitForReview}
 											disabled={saving}
-											className="px-8 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+											className="px-8 py-3 bg-linear-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
 										>
 											{saving ? (
 												<>

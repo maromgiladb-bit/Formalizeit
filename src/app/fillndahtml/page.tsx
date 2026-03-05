@@ -686,7 +686,7 @@ export default function FillNDAHTML() {
 							<span className="text-xs text-amber-600 uppercase tracking-wide">Suggested:</span>
 							<span className="text-sm font-medium text-gray-800 truncate">{suggestion.newValue}</span>
 						</div>
-						<div className="flex items-center gap-1 flex-shrink-0">
+						<div className="flex items-center gap-1 shrink-0">
 							<button
 								onClick={() => acceptSuggestion(field)}
 								className="w-7 h-7 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
@@ -1294,7 +1294,7 @@ export default function FillNDAHTML() {
 							</div>
 
 							{/* Form Content */}
-							<div className="bg-gray-50 rounded-xl p-6 min-h-[400px] border border-gray-200">
+							<div className="bg-gray-50 rounded-xl p-6 min-h-100 border border-gray-200">
 								{step === 0 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
@@ -1391,7 +1391,7 @@ export default function FillNDAHTML() {
 										{/* Info box about company profile */}
 										<div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
 											<div className="flex gap-3">
-												<svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
 												<div>
@@ -1996,7 +1996,7 @@ export default function FillNDAHTML() {
 						}}
 					>
 						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-							<div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6">
+							<div className="bg-linear-to-r from-orange-500 to-amber-500 p-6">
 								<div className="flex items-center gap-3">
 									<div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
 										<svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2034,7 +2034,7 @@ export default function FillNDAHTML() {
 									<button
 										onClick={handleSendForInput}
 										disabled={sendingForInput || !inputRecipientEmail.trim()}
-										className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition disabled:opacity-50"
+										className="flex-1 px-4 py-3 bg-linear-to-r from-orange-500 to-amber-500 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-amber-600 transition disabled:opacity-50"
 									>
 										{sendingForInput ? "Sending..." : "Send Now"}
 									</button>
@@ -2088,7 +2088,7 @@ export default function FillNDAHTML() {
 							<div className="p-6">
 								{/* Email Sent Success Message */}
 								<div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-									<svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-6 h-6 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 									</svg>
 									<div>
@@ -2191,7 +2191,7 @@ export default function FillNDAHTML() {
 
 									<div className="mt-6 p-4 bg-teal-50 rounded-lg border border-teal-200">
 										<div className="flex gap-3">
-											<svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 											</svg>
 											<div className="text-sm text-blue-800">
@@ -2230,7 +2230,7 @@ export default function FillNDAHTML() {
 				{showVerifyEmailModal && (
 					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
 						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden">
-							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-teal-600 to-teal-700">
+							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-linear-to-r from-teal-600 to-teal-700">
 								<div className="flex items-center gap-3">
 									<div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
 										<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2275,7 +2275,7 @@ export default function FillNDAHTML() {
 
 								<div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
 									<div className="flex gap-3">
-										<svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 										</svg>
 										<p className="text-sm text-teal-700">

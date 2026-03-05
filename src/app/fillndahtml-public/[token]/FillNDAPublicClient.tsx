@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -130,6 +130,77 @@ export default function FillNDAPublicClient({
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
     const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
+
+    // Maps template field names → form step numbers (mirrors internal fillndahtml)
+    const FIELD_STEP_MAP: Record<string, number> = {
+        effective_date: 0, term_months: 0, confidentiality_period_months: 0, docName: 0,
+        party_a_name: 1, party_a_address: 1, party_a_phone: 1, party_a_signatory_name: 1, party_a_title: 1, party_a_email: 1,
+        party_b_name: 2, party_b_address: 2, party_b_phone: 2, party_b_signatory_name: 2, party_b_title: 2, party_b_email: 2,
+        purpose: 3, governing_law: 3, ip_ownership: 3, non_solicit: 3, exclusivity: 3, additional_terms: 3,
+        information_scope_text: 3,
+    };
+
+    // Listen for click-to-field messages from the preview iframe
+    useEffect(() => {
+        const handleFieldClick = (e: MessageEvent) => {
+            if (e.data?.type === 'field-click' && e.data.field) {
+                const fieldName = e.data.field as string;
+                const targetStep = FIELD_STEP_MAP[fieldName];
+                if (targetStep !== undefined && step !== targetStep) {
+                    setStep(targetStep);
+                }
+                setTimeout(() => {
+                    const fieldLabels: Record<string, string[]> = {
+                        effective_date: ['effective date'],
+                        term_months: ['term'],
+                        confidentiality_period_months: ['confidentiality period'],
+                        docName: ['document title'],
+                        party_a_name: ['party name', 'company'],
+                        party_a_address: ['address'],
+                        party_a_phone: ['phone'],
+                        party_a_signatory_name: ['signatory', 'authorized'],
+                        party_a_title: ['title'],
+                        party_a_email: ['email'],
+                        party_b_name: ['party name', 'company'],
+                        party_b_address: ['address'],
+                        party_b_phone: ['phone'],
+                        party_b_signatory_name: ['signatory', 'authorized'],
+                        party_b_title: ['title'],
+                        party_b_email: ['email'],
+                        purpose: ['purpose'],
+                        governing_law: ['governing law', 'jurisdiction'],
+                        ip_ownership: ['ip ownership'],
+                        non_solicit: ['non-solicit'],
+                        exclusivity: ['exclusivity'],
+                        additional_terms: ['additional'],
+                        information_scope_text: ['scope', 'information'],
+                    };
+                    const allInputs = document.querySelectorAll('input, textarea, select');
+                    for (const el of allInputs) {
+                        const htmlEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+                        const parentDiv = htmlEl.closest('div');
+                        if (parentDiv) {
+                            const label = parentDiv.querySelector('label');
+                            if (label) {
+                                const labelText = label.textContent?.toLowerCase() || '';
+                                const matchLabels = fieldLabels[fieldName];
+                                if (matchLabels && matchLabels.some(ml => labelText.includes(ml))) {
+                                    htmlEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => htmlEl.focus(), 300);
+                                    htmlEl.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
+                                    setTimeout(() => { htmlEl.style.boxShadow = ''; }, 2000);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }, targetStep !== undefined && step !== targetStep ? 400 : 50);
+            }
+        };
+        window.addEventListener('message', handleFieldClick);
+        return () => window.removeEventListener('message', handleFieldClick);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step]);
 
     // Prepare template data for preview
     // First, merge form values with any suggestions
@@ -462,7 +533,7 @@ export default function FillNDAPublicClient({
                                     <span className="text-xs text-amber-600 uppercase tracking-wide">Suggested:</span>
                                     <span className="text-sm font-medium text-gray-800 truncate">{incoming.newValue}</span>
                                 </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1 shrink-0">
                                     <button
                                         onClick={() => acceptSuggestion(field)}
                                         className="w-7 h-7 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
@@ -747,7 +818,7 @@ export default function FillNDAPublicClient({
                             </div>
 
                             {/* Form Content */}
-                            <div className="bg-gray-50 rounded-xl p-6 mx-6 mb-6 min-h-[400px] border border-gray-200">
+                            <div className="bg-gray-50 rounded-xl p-6 mx-6 mb-6 min-h-100 border border-gray-200">
                                 {/* Step 0: Document Details */}
                                 {step === 0 && (
                                     <div className="space-y-6">
@@ -808,7 +879,7 @@ export default function FillNDAPublicClient({
                                         {pendingInputFields.some(f => f.startsWith("party_b")) && (
                                             <div className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
                                                 <div className="flex gap-3">
-                                                    <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <p className="text-sm text-orange-800"><strong>Action required!</strong> Fields marked with ⏳ need your input.</p>
@@ -893,7 +964,7 @@ export default function FillNDAPublicClient({
                                         {getPendingSuggestionsCount() > 0 && (
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <div>
@@ -912,7 +983,7 @@ export default function FillNDAPublicClient({
                                         {validationErrors.length > 0 && (
                                             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                                     </svg>
                                                     <div>
@@ -952,7 +1023,7 @@ export default function FillNDAPublicClient({
                                                             onClick={handleProceedToSign}
                                                             disabled={!canProceedToSign}
                                                             className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${canProceedToSign
-                                                                ? "text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl"
+                                                                ? "text-white bg-linear-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl"
                                                                 : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
                                                                 }`}
                                                             suppressHydrationWarning
@@ -1052,7 +1123,7 @@ export default function FillNDAPublicClient({
                 {showLivePreview && (
                     <div className="hidden lg:block lg:w-[55%] bg-gray-100 border-l border-gray-200">
                         <div className="sticky top-0 h-full overflow-hidden flex flex-col">
-                            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+                            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-2">
                                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                     <span className="font-medium text-gray-700">Live Preview</span>

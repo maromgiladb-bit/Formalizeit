@@ -878,6 +878,12 @@
         if (fieldName && window.parent !== window) {
           window.parent.postMessage({ type: 'field-click', field: fieldName }, '*');
         }
+        return;
+      }
+      var signBox = e.target.closest('.sign-box[id]');
+      if (signBox && window.parent !== window) {
+        var boxId = signBox.getAttribute('id');
+        window.parent.postMessage({ type: 'field-click', field: boxId }, '*');
       }
     });
   </script>
