@@ -245,15 +245,6 @@ export async function POST(request: NextRequest) {
         // If Party A is acting (isPartyA), we handled email to Party B above if needed.
         if (reviewLink && !isPartyA) {
             try {
-                // Only include fields that actually changed
-                const changes = filledFields ? Object.entries(filledFields)
-                    .map(([field, value]) => ({
-                        field: field.replace(/_/g, ' ').replace('party b ', ''),
-                        before: (currentContent[field] as string) || '(empty)',
-                        after: value as string
-                    }))
-                    .filter(change => change.before !== change.after) : []
-
                 await sendEmail({
                     to: owner.email,
                     subject: hasSuggestions

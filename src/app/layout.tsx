@@ -32,27 +32,29 @@ export default async function RootLayout({
   let organizationData = null
 
   if (userId) {
-    const user = await prisma.user.findUnique({
-      where: { externalId: userId },
-      include: {
-        memberships: {
-          include: { organization: true }
+    try {
+      const user = await prisma.user.findUnique({
+        where: { externalId: userId },
+        include: {
+          memberships: {
+            include: { organization: true }
+          }
+        }
+      })
+
+      if (user && user.memberships.length > 0) {
+        const activeMembership = await getActiveOrganization()
+        organizationData = {
+          organizations: user.memberships.map((m: any) => ({
+            id: m.organization.id,
+            name: m.organization.name,
+            slug: m.organization.slug
+          })),
+          activeOrgId: activeMembership?.organizationId || user.memberships[0].organizationId
         }
       }
-    })
-
-    if (user && user.memberships.length > 0) {
-      const activeMembership = await getActiveOrganization()
-      organizationData = {
-        organizations: user.memberships.map((m: any) => ({
-          // Temporary any cast or just rely on inference if imports are clean, 
-          // but 'any' is safest for quick fix without importing Prisma types fully
-          id: m.organization.id,
-          name: m.organization.name,
-          slug: m.organization.slug
-        })),
-        activeOrgId: activeMembership?.organizationId || user.memberships[0].organizationId
-      }
+    } catch (error) {
+      console.error('Database unavailable, continuing without org data:', error)
     }
   }
 

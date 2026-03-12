@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
             { flag: 'party_b_email_ask_receiver', field: 'party_b_email', label: 'Email' },
         ]
 
-        for (const { flag, field, label } of askReceiverFields) {
+        for (const { flag, field } of askReceiverFields) {
             if (content[flag] === true) {
                 pendingInputFields.push(field)
             }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
-                workflowState: 'AWAITING_INPUT',
+                workflowState: 'AWAITING_PARTY_B_REVIEW',
                 pendingInputFields: pendingInputFields,
                 recipientEmail: recipientEmail,
                 status: 'SENT'

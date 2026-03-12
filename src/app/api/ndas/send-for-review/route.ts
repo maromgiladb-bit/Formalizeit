@@ -93,7 +93,8 @@ export async function POST(request: NextRequest) {
                     draftId: draftId,
                     createdByUserId: user.id,
                     status: 'SENT',
-                }
+                },
+                include: { signers: true }
             })
 
             // Create Party B (SIGNER) record

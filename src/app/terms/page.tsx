@@ -1,22 +1,16 @@
 "use client";
 
 import { Scale } from "lucide-react";
+import PageHero from "@/components/ui/page-hero";
 
 export default function TermsPage() {
 	return (
 		<div className="min-h-screen bg-gray-50">
-			{/* Hero Section */}
-			<div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20">
-				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<Scale className="w-16 h-16 mx-auto mb-6 text-teal-400" />
-					<h1 className="text-4xl md:text-5xl font-bold mb-6">
-						Terms of Service
-					</h1>
-					<p className="text-xl text-gray-300">
-						Last updated: November 23, 2025
-					</p>
-				</div>
-			</div>
+			<PageHero
+				icon={Scale}
+				title="Terms of Service"
+				subtitle="Last updated: November 23, 2025"
+			/>
 
 			{/* Content */}
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

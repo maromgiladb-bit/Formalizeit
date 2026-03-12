@@ -1,22 +1,16 @@
 "use client";
 
 import { Lock, Server, Key, FileCheck } from "lucide-react";
+import PageHero from "@/components/ui/page-hero";
 
 export default function SecurityPage() {
 	return (
 		<div className="min-h-screen bg-gray-50">
-			{/* Hero Section */}
-			<div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20">
-				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<Lock className="w-16 h-16 mx-auto mb-6 text-teal-400" />
-					<h1 className="text-4xl md:text-5xl font-bold mb-6">
-						Security
-					</h1>
-					<p className="text-xl text-gray-300">
-						Your data security is our top priority
-					</p>
-				</div>
-			</div>
+			<PageHero
+				icon={Lock}
+				title="Security"
+				subtitle="Your data security is our top priority"
+			/>
 
 			{/* Security Features */}
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

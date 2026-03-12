@@ -86,13 +86,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (signRequest) {
-            const partyASigner = await prisma.signer.findFirst({
-                where: {
-                    signRequestId: signRequest.id,
-                    role: 'APPROVER'
-                },
-                orderBy: { createdAt: 'desc' }
-            });
+            const partyASigner = signRequest.signers.find(s => s.role === 'APPROVER');
             if (partyASigner) {
                 await prisma.signer.update({
                     where: { id: partyASigner.id },

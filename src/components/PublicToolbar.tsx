@@ -30,7 +30,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0" onClick={onLinkClick}>
+            <Link href="/" className="shrink-0" onClick={onLinkClick}>
               <div className="flex items-center">
                 <Image
                   src="/formalizeIt-logo.png"
@@ -45,17 +45,23 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
 
             {/* Desktop Navigation */}
             <div className="hidden md:ml-8 md:flex md:space-x-2">
-              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
+              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
                 Home
               </Link>
-              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
+              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
                 About
               </Link>
-              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
+              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
                 Plans
               </Link>
-              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)] text-sm font-semibold transition-all">
+              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
                 Contact
+              </Link>
+              <Link href="/faq" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+                FAQ
+              </Link>
+              <Link href="/help" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+                Help
               </Link>
             </div>
           </div>
@@ -63,12 +69,12 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             <SignInButton mode="modal">
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-200 text-sm font-semibold rounded-lg text-[var(--navy-700)] bg-white hover:bg-gray-50 hover:border-gray-300 transition-all">
+              <button className="inline-flex items-center px-5 py-2.5 border border-gray-200 text-sm font-semibold rounded-lg text-(--navy-700) bg-white hover:bg-gray-50 hover:border-gray-300 transition-all">
                 Sign In
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-[var(--teal-600)] hover:bg-[var(--teal-700)] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+              <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-(--teal-600) hover:bg-(--teal-700) transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                 Get Started →
               </button>
             </SignUpButton>
@@ -127,6 +133,20 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
               onClick={handleLinkClick}
             >
               Contact
+            </Link>
+            <Link
+              href="/faq"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              onClick={handleLinkClick}
+            >
+              FAQ
+            </Link>
+            <Link
+              href="/help"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              onClick={handleLinkClick}
+            >
+              Help
             </Link>
           </div>
           <div className="pt-4 pb-4 border-t-2 border-gray-200">

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { renderNdaHtml } from '@/lib/renderNdaHtml';
-import { htmlToPdf } from '@/lib/htmlToPdf';
-import { storeNdaPdf } from '@/lib/storeNdaPdf';
+import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
@@ -42,7 +40,7 @@ export async function POST(request: NextRequest) {
 
         // Extract form data from draft
         const draft = signer.signRequest.draft;
-        const formData = (draft.content as Record<string, any>) || {};
+        const formData = (draft.content as Prisma.JsonObject) || {};
 
         // Update draft content with signature
         let updatedContent = { ...formData };
@@ -65,8 +63,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Determine next state
-        let newWorkflowState = 'COMPLETE';
-        let newStatus = 'SIGNED'; // Draft status
+        let newWorkflowState: NdaWorkflowState = NdaWorkflowState.COMPLETE;
+        let newStatus: NdaStatus = NdaStatus.SIGNED;
 
         // Find the OTHER signer
         const otherSignerRole = isPartyA ? 'SIGNER' : 'APPROVER';
@@ -118,12 +116,12 @@ export async function POST(request: NextRequest) {
         const otherPartyHasSigned = otherSigner?.status === 'SIGNED';
 
         if (otherPartyHasSigned) {
-            newWorkflowState = 'COMPLETE';
-            newStatus = 'SIGNED';
+            newWorkflowState = NdaWorkflowState.COMPLETE;
+            newStatus = NdaStatus.SIGNED;
         } else {
             // Other party hasn't signed yet
-            newStatus = 'SENT';
-            newWorkflowState = isPartyA ? 'AWAITING_PARTY_B_SIGNATURE' : 'AWAITING_PARTY_A_SIGNATURE';
+            newStatus = NdaStatus.SENT;
+            newWorkflowState = isPartyA ? NdaWorkflowState.AWAITING_PARTY_B_SIGNATURE : NdaWorkflowState.AWAITING_PARTY_A_SIGNATURE;
         }
 
         // Update draft
@@ -131,8 +129,8 @@ export async function POST(request: NextRequest) {
             where: { id: draft.id },
             data: {
                 content: updatedContent,
-                status: newStatus as any, // Cast to avoid TS enum mismatch for now
-                workflowState: newWorkflowState as any, // Cast to avoid TS enum mismatch for now
+                status: newStatus,
+                workflowState: newWorkflowState,
             },
         });
 
@@ -163,7 +161,7 @@ export async function POST(request: NextRequest) {
                 console.log('📄 Both parties signed - generating final PDF with signatures...');
 
                 // Generate final PDF with both signatures
-                let pdfAttachment: any = null;
+                let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
                 try {
                     const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
                     const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
@@ -236,8 +234,8 @@ export async function POST(request: NextRequest) {
 
             } else {
                 // Partial signature - Email the OTHER party to come sign
-                let recipientEmail = otherSigner?.email || otherPartyEmail;
-                let recipientName = otherSigner?.name || otherPartyName;
+                const recipientEmail = otherSigner?.email || otherPartyEmail;
+                const recipientName = otherSigner?.name || otherPartyName;
                 let recipientSignerId = otherSigner?.id;
 
                 console.log('📧 Preparing to send email to:', recipientEmail);

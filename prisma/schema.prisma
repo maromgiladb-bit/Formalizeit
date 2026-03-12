@@ -93,6 +93,10 @@ enum NdaEventType {
   VIEWED
   SIGNED
   CANCELLED
+  CHANGES_SUGGESTED  // Party B submitted suggestions/edits
+  CHANGES_ACCEPTED   // Party A accepted Party B suggestions
+  CHANGES_REQUESTED  // Party A sent changes back to Party B
+  PDF_EXPORTED       // PDF was generated/exported
 
   @@map("nda_event_type")
 }
@@ -218,6 +222,7 @@ model NdaTemplate {
   createdBy    User         @relation("TemplateCreator", fields: [createdByUserId], references: [id])
   drafts       NdaDraft[]
 
+  @@index([organizationId])
   @@map("nda_templates")
 }
 
@@ -245,19 +250,27 @@ model NdaDraft {
   auditEvents  AuditEvent[]
   notifications Notification[]
 
+  @@index([createdByUserId])
+  @@index([organizationId])
+  @@index([templateId])
   @@map("nda_drafts")
 }
 
 model NdaRevision {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  draftId   String   @map("draft_id") @db.Uuid
-  content   Json
-  createdAt DateTime @default(now()) @map("created_at")
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  draftId       String   @map("draft_id") @db.Uuid
+  content       Json
+  authorEmail   String?  @map("author_email")
+  authorName    String?  @map("author_name")
+  authorRole    String?  @map("author_role") // "party_a" | "party_b"
+  activityLabel String?  @map("activity_label") // human-readable e.g. "Party B updated: company name"
+  createdAt     DateTime @default(now()) @map("created_at")
 
   // Relations
   draft        NdaDraft      @relation(fields: [draftId], references: [id], onDelete: Cascade)
   signRequests SignRequest[]
 
+  @@index([draftId])
   @@map("nda_revisions")
 }
 
@@ -280,6 +293,8 @@ model SignRequest {
   ndaPdfs      NdaPdf[]
   auditEvents  AuditEvent[]
 
+  @@index([draftId])
+  @@index([organizationId])
   @@map("sign_requests")
 }
 
@@ -299,6 +314,9 @@ model Signer {
   user        User?        @relation(fields: [userId], references: [id])
   auditEvents AuditEvent[]
 
+  @@index([signRequestId])
+  @@index([userId])
+  @@index([email])
   @@map("signers")
 }
 
@@ -321,6 +339,8 @@ model AuditEvent {
   signRequest  SignRequest? @relation(fields: [signRequestId], references: [id])
   signer       Signer?      @relation(fields: [signerId], references: [id])
 
+  @@index([draftId])
+  @@index([organizationId])
   @@map("audit_events")
 }
 

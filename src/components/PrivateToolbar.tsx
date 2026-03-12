@@ -43,6 +43,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const secondaryLinks = [
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
+    { name: 'FAQ', href: '/faq' },
+    { name: 'Help', href: '/help' },
     { name: 'Homepage', href: '/' },
   ]
 
