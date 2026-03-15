@@ -100,17 +100,24 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log('🔍 Looking for other signer with role:', otherSignerRole);
-        console.log('🔍 Other signer found:', otherSigner ? otherSigner.email : 'NOT FOUND');
+        if (process.env.NODE_ENV === 'development') {
+            console.log('🔍 Looking for other signer with role:', otherSignerRole);
+            console.log('🔍 Other signer found:', otherSigner ? otherSigner.email : 'NOT FOUND');
+        }
 
         // Fallback: If Party B signed but no APPROVER record exists, get Party A email from draft content
         let otherPartyEmail: string | null = null;
         let otherPartyName: string | null = null;
 
-        console.log('📧 Debug: isPartyA =', isPartyA);
-        console.log('📧 Debug: otherSigner =', otherSigner ? { email: otherSigner.email, status: otherSigner.status } : 'null');
-        console.log('📧 Debug: formData.party_a_email =', formData.party_a_email);
-        console.log('📧 Debug: formData keys =', Object.keys(formData));
+        if (process.env.NODE_ENV === 'development') {
+            console.log('📧 Debug: isPartyA =', isPartyA);
+            console.log(
+                '📧 Debug: otherSigner =',
+                otherSigner ? { email: otherSigner.email, status: otherSigner.status } : 'null'
+            );
+            console.log('📧 Debug: formData.party_a_email =', formData.party_a_email);
+            console.log('📧 Debug: formData keys =', Object.keys(formData));
+        }
 
         if (otherSigner) {
             // Use the signer record if it exists
@@ -119,9 +126,14 @@ export async function POST(request: NextRequest) {
         } else if (!isPartyA) {
             // Party B signed, but Party A signer record doesn't exist
             // Try to get Party A's email from the draft content
-            otherPartyEmail = formData.party_a_email as string || null;
-            otherPartyName = formData.party_a_signatory_name as string || formData.party_a_name as string || null;
-            console.log('🔍 Fallback: Getting Party A email from draft content:', otherPartyEmail);
+            otherPartyEmail = (formData.party_a_email as string) || null;
+            otherPartyName =
+                (formData.party_a_signatory_name as string) ||
+                (formData.party_a_name as string) ||
+                null;
+            if (process.env.NODE_ENV === 'development') {
+                console.log('🔍 Fallback: Getting Party A email from draft content:', otherPartyEmail);
+            }
         }
 
         const otherPartyHasSigned = otherSigner?.status === 'SIGNED';
