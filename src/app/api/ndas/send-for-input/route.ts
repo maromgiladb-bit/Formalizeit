@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
             { flag: 'party_b_email_ask_receiver', field: 'party_b_email', label: 'Email' },
         ]
 
-        for (const { flag, field, label } of askReceiverFields) {
+        for (const { flag, field } of askReceiverFields) {
             if (content[flag] === true) {
                 pendingInputFields.push(field)
             }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
-                workflowState: 'AWAITING_INPUT',
+                workflowState: 'AWAITING_PARTY_B_REVIEW',
                 pendingInputFields: pendingInputFields,
                 recipientEmail: recipientEmail,
                 status: 'SENT'
@@ -166,33 +166,101 @@ function inputRequestEmailHtml(
       <head>
         <meta charset="utf-8">
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #2563eb; }
-          .content { background: #f9fafb; padding: 30px; border-radius: 8px; margin-bottom: 20px; }
-          .button { display: inline-block; background: linear-gradient(135deg, #2563eb, #9333ea); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-          .badge { display: inline-block; background: #fbbf24; color: #78350f; padding: 4px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
-          .message { background: white; padding: 15px; border-left: 4px solid #2563eb; margin: 15px 0; }
-          .footer { text-align: center; color: #6b7280; font-size: 14px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background: #f3f4f6; }
+          .wrapper { background: #f3f4f6; padding: 40px 20px; }
+          .container { max-width: 600px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 24px; }
+          .logo { font-size: 22px; font-weight: 800; color: #0d9488; letter-spacing: -0.5px; }
+          .tagline { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+          .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 16px; }
+          .card-header { background: linear-gradient(135deg, #0d9488, #0891b2); padding: 28px 32px; }
+          .card-header h1 { margin: 0; color: white; font-size: 20px; font-weight: 700; }
+          .card-header p { margin: 6px 0 0; color: rgba(255,255,255,0.85); font-size: 14px; }
+          .card-body { padding: 28px 32px; }
+          .doc-row { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; }
+          .doc-row p { margin: 0; font-size: 15px; color: #134e4a; }
+          .doc-name { font-size: 17px; font-weight: 700; color: #0d9488; margin: 0 0 4px; }
+          .badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; border: 1px solid #fde68a; }
+          .message-box { background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 18px 0; font-size: 14px; color: #78350f; }
+          .steps-title { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 22px 0 12px; }
+          .steps { margin: 0; padding: 0; list-style: none; }
+          .step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+          .step-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+          .step-1 { background: #e0f2fe; }
+          .step-2 { background: #fef3c7; }
+          .step-3 { background: #dcfce7; }
+          .step-text strong { display: block; font-size: 14px; color: #111827; margin-bottom: 2px; }
+          .step-text span { font-size: 13px; color: #6b7280; }
+          .cta-wrap { text-align: center; padding: 24px 0 8px; }
+          .button { display: inline-block; background: #0d9488; color: white !important; padding: 15px 36px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; }
+          .reassurance { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; }
+          .reassurance span { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
+          .footer { text-align: center; color: #9ca3af; font-size: 12px; padding: 8px 0 24px; }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="header">
-            <div class="logo">Formalize It</div>
-          </div>
-          <div class="content">
-            <h2>Complete Your Information</h2>
-            <p><strong>${draftTitle}</strong></p>
-            <p>You've been asked to provide information for an NDA. <span class="badge">${fieldCount} field${fieldCount > 1 ? 's' : ''} to fill</span></p>
-            <div class="message">${message}</div>
-            <p>Click the button below to review the NDA and fill in your information:</p>
-            <a href="${inputLink}" class="button">Complete NDA Information</a>
-            <p style="color: #6b7280; font-size: 14px;">This link will expire in 30 days. No account required.</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
+        <div class="wrapper">
+          <div class="container">
+            <div class="header">
+              <div class="logo">Formalize It</div>
+              <div class="tagline">Smart NDA workflows</div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h1>Quick action needed on an NDA ✏️</h1>
+                <p>Just ${fieldCount} field${fieldCount > 1 ? 's' : ''} to fill in — won't take long!</p>
+              </div>
+              <div class="card-body">
+
+                <div class="doc-row">
+                  <p>You've been asked to add your details to:</p>
+                  <p class="doc-name">${draftTitle}</p>
+                  <p style="margin: 8px 0 0; font-size: 13px; color: #6b7280;">Fields to complete: <span class="badge">${fieldCount} field${fieldCount > 1 ? 's' : ''}</span></p>
+                </div>
+
+                ${message ? `<div class="message-box">💬 <em>${message}</em></div>` : ''}
+
+                <div class="steps-title">Here's how it works</div>
+                <ul class="steps">
+                  <li class="step">
+                    <div class="step-icon step-1">👀</div>
+                    <div class="step-text">
+                      <strong>Review the NDA</strong>
+                      <span>See the full document in a live preview so you know exactly what you're filling in.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-2">✏️</div>
+                    <div class="step-text">
+                      <strong>Fill in your ${fieldCount} field${fieldCount > 1 ? 's' : ''}</strong>
+                      <span>We'll highlight exactly which fields need your input — no guessing required.</span>
+                    </div>
+                  </li>
+                  <li class="step">
+                    <div class="step-icon step-3">🚀</div>
+                    <div class="step-text">
+                      <strong>Submit & move forward</strong>
+                      <span>Once you submit, the NDA moves to the signing stage. Nearly there!</span>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="cta-wrap">
+                  <a href="${inputLink}" class="button">Complete My Part →</a>
+                </div>
+
+                <div class="reassurance">
+                  <span>🔒 Secure link</span>
+                  <span>📧 No account required</span>
+                  <span>⏱ Expires in 30 days</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </body>

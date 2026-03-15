@@ -3,7 +3,7 @@ import { BillingPlan } from "@prisma/client"
 export const PLAN_LIMITS: Record<BillingPlan, { maxUsers: number; maxActiveDrafts: number }> = {
     FREE: {
         maxUsers: 3,
-        maxActiveDrafts: 10,
+        maxActiveDrafts: 3,
     },
     PRO: {
         maxUsers: 20,

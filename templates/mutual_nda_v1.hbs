@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <title>{{docName}}</title>
@@ -10,44 +11,139 @@
       size: A4;
       margin: 0;
     }
-    
+
     /* Force exact color rendering in PDF */
     * {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    
+
     :root {
-      --text:#111; --muted:#444; --line:#ddd;
-      --page-bg:#fff; --page-shadow:0 4px 30px rgba(0,0,0,.08);
+      --text: #111;
+      --muted: #444;
+      --line: #ddd;
+      --page-bg: #fff;
+      --page-shadow: 0 4px 30px rgba(0, 0, 0, .08);
       --font: "Georgia", "Times New Roman", serif;
     }
-    html,body { margin:0; padding:0; background:#fafafa; color:var(--text); }
-    .page {
-      box-sizing:border-box; margin:24px auto; background:var(--page-bg);
-      box-shadow:var(--page-shadow); padding:28mm 22mm; 
-      width: 210mm; max-width: 210mm; min-height: 297mm;
-      font-family: var(--font); line-height:1.45; font-size:12.2pt;
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: var(--text);
     }
-    h1 { font-size:20pt; letter-spacing:.3px; text-align:center; margin:0 0 10mm; }
-    .lead { font-size:12.2pt; margin:0 0 6mm; color:var(--muted); }
-    .smallcaps { font-variant: small-caps; letter-spacing:.5px; }
-    .section { margin:6mm 0; page-break-inside:avoid; }
-    .section h2 { font-size:12.8pt; margin:0 0 2mm; }
-    .num { font-weight:bold; margin-right:4px; }
-    .clause { margin:3mm 0; }
-    .indent { margin-left:6mm; }
-    .def { font-style:italic; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
-    .table { width:100%; border-collapse:collapse; margin:4mm 0; }
-    .table th, .table td { border:1px solid var(--line); padding:6px 8px; vertical-align:top; }
-    hr { border:none; border-top:1px solid var(--line); margin:10mm 0 6mm; }
-    .sign { margin-top:10mm; display:grid; grid-template-columns:1fr 1fr; gap:18mm; }
-    .line { border-bottom:1px solid #333; height:0; margin:8mm 0 2mm; }
-    .muted { color:var(--muted); }
-    .center { text-align:center; }
-    .nowrap { white-space:nowrap; }
-    
+
+    .page {
+      box-sizing: border-box;
+      margin: 24px auto;
+      background: var(--page-bg);
+      box-shadow: var(--page-shadow);
+      padding: 28mm 22mm;
+      width: 210mm;
+      max-width: 210mm;
+      min-height: 297mm;
+      font-family: var(--font);
+      line-height: 1.45;
+      font-size: 12.2pt;
+    }
+
+    h1 {
+      font-size: 20pt;
+      letter-spacing: .3px;
+      text-align: center;
+      margin: 0 0 10mm;
+    }
+
+    .lead {
+      font-size: 12.2pt;
+      margin: 0 0 6mm;
+      color: var(--muted);
+    }
+
+    .smallcaps {
+      font-variant: small-caps;
+      letter-spacing: .5px;
+    }
+
+    .section {
+      margin: 6mm 0;
+      page-break-inside: avoid;
+    }
+
+    .section h2 {
+      font-size: 12.8pt;
+      margin: 0 0 2mm;
+    }
+
+    .num {
+      font-weight: bold;
+      margin-right: 4px;
+    }
+
+    .clause {
+      margin: 3mm 0;
+    }
+
+    .indent {
+      margin-left: 6mm;
+    }
+
+    .def {
+      font-style: italic;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4mm 0;
+    }
+
+    .table th,
+    .table td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 10mm 0 6mm;
+    }
+
+    .sign {
+      margin-top: 10mm;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18mm;
+    }
+
+    .line {
+      border-bottom: 1px solid #333;
+      height: 0;
+      margin: 8mm 0 2mm;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
     /* @media print - DISABLED for 1:1 HTML/PDF matching */
     /* PDF uses SCREEN media type for exact visual match */
     /*
@@ -61,6 +157,7 @@
     */
   </style>
 </head>
+
 <body>
   <div class="page">
     <h1>MUTUAL CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT</h1>
@@ -77,9 +174,12 @@
     </p>
 
     <p class="lead">
-      A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
-      “<span class="smallcaps">Receiving Party</span>” ({{party_b_name}}); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone on its behalf)
-       and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any of its Permitted Entities (as defined below), shall be referred to hereinafter as the
+      A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined
+      below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
+      “<span class="smallcaps">Receiving Party</span>” ({{party_b_name}}); (with regard to the Confidential Information
+      disclosed to it by the other Party and/or anyone on its behalf)
+      and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any
+      of its Permitted Entities (as defined below), shall be referred to hereinafter as the
       “<span class="smallcaps">Disclosing Party</span>” ({{party_a_name}}).
     </p>
 
@@ -88,12 +188,18 @@
       <h2><span class="num">1.</span> Confidential Information</h2>
       <div class="clause">
         {{information_scope_text}} disclosed to the Receiving Party, whether or not designated by the Disclosing Party
-        as confidential, shall be “<span class="def">Confidential Information</span>” of the Disclosing Party. In particular, Confidential Information shall include, but not be limited to,
-        the Disclosing Party’s know-how, research, development, development methodology, trade secrets, general business operations, methods of doing business, pricing, 
-        prices paid for materials, charges for services and products; financial information, including costs, profits and sales; marketing strategies; names of suppliers, personnel, 
-        customers, clients and potential clients; negotiations or other business contacts with suppliers personnel, customers, clients and potential clients; form and content of bids, 
-        proposals and contracts; the Disclosing Party's internal reporting methods; technical and business data documentation and drawings; software programs, however, embodied, 
-        manufacturing processes, inventions, and information obtained by or given to the Disclosing Party about or belonging to third parties.
+        as confidential, shall be “<span class="def">Confidential Information</span>” of the Disclosing Party. In
+        particular, Confidential Information shall include, but not be limited to,
+        the Disclosing Party’s know-how, research, development, development methodology, trade secrets, general business
+        operations, methods of doing business, pricing,
+        prices paid for materials, charges for services and products; financial information, including costs, profits
+        and sales; marketing strategies; names of suppliers, personnel,
+        customers, clients and potential clients; negotiations or other business contacts with suppliers personnel,
+        customers, clients and potential clients; form and content of bids,
+        proposals and contracts; the Disclosing Party's internal reporting methods; technical and business data
+        documentation and drawings; software programs, however, embodied,
+        manufacturing processes, inventions, and information obtained by or given to the Disclosing Party about or
+        belonging to third parties.
       </div>
     </div>
 
@@ -101,17 +207,23 @@
     <div class="section">
       <h2><span class="num">2.</span> Exclusions</h2>
       <div class="clause">
-        “<span class="smallcaps">Confidential Information</span>” shall not include information the Receiving Party demonstrates:
+        “<span class="smallcaps">Confidential Information</span>” shall not include information the Receiving Party
+        demonstrates:
       </div>
       <div class="indent">
         (i) is now, through no act or failure to act on the part of the Receiving Party, in the public domain; or
         (ii) is authorized by the Disclosing Party, in writing, for disclosure; or
         (iii) was in the possession of the Receiving Party prior to receipt thereof from the Disclosing Party; or
-        (iv) was received by the Receiving Party, from a third party which, to the best of the Receiving Party's knowledge, was not bound at the time of its disclosure to the Receiving Party by a confidentiality undertaking towards the Disclosing Party; or
-        (v) was developed independently by the Receiving Party, without using the Confidential Information which it received from the Disclosing Party; or
+        (iv) was received by the Receiving Party, from a third party which, to the best of the Receiving Party's
+        knowledge, was not bound at the time of its disclosure to the Receiving Party by a confidentiality undertaking
+        towards the Disclosing Party; or
+        (v) was developed independently by the Receiving Party, without using the Confidential Information which it
+        received from the Disclosing Party; or
         (vi) is required to be disclosed by the Receiving Party or any of its affiliates by a court of
-        competent jurisdiction or under any applicable law or by the order, decree, regulation or rule of a government authority or under any rule of any securities regulatory authority
-        or any recognized stock exchange (by deposition, interrogatory, request for documents, subpoena, civil investigative demand or similar process);.
+        competent jurisdiction or under any applicable law or by the order, decree, regulation or rule of a government
+        authority or under any rule of any securities regulatory authority
+        or any recognized stock exchange (by deposition, interrogatory, request for documents, subpoena, civil
+        investigative demand or similar process);.
       </div>
     </div>
 
@@ -119,34 +231,43 @@
     <div class="section">
       <h2><span class="num">3.</span> Use of the Confidential Information</h2>
       <div class="clause">
-        Receiving Party may use the Confidential Information only to the extent required in connection with and furtherance of
-        {{purpose}} (the “<span class="smallcaps">Purpose</span>”) and for no other purpose whatsoever (the “<span class="smallcaps">Purpose</span>”).
+        Receiving Party may use the Confidential Information only to the extent required in connection with and
+        furtherance of
+        {{purpose}} (the “<span class="smallcaps">Purpose</span>”) and for no other purpose whatsoever (the “<span
+          class="smallcaps">Purpose</span>”).
       </div>
       <div class="clause">
-        The Receiving Party shall maintain all Confidential Information in trust and confidence and shall not use, 
-        publish, disseminate or otherwise disclose any Confidential Information to any third party without 
-        the written consent of the Disclosing Party. Without derogating from the foregoing, the Receiving Party 
-        agrees and undertakes that it shall protect the Confidential Information against disclosure, at least in 
-        the same manner and with the same degree of care which the Receiving Party protects confidential information 
-        of its own, but not less than a reasonable degree of care. Receiving Party shall not use, duplicate, copy, 
-        or imitate any Confidential Information of the Disclosing Party without the prior written consent of the Disclosing Party, 
+        The Receiving Party shall maintain all Confidential Information in trust and confidence and shall not use,
+        publish, disseminate or otherwise disclose any Confidential Information to any third party without
+        the written consent of the Disclosing Party. Without derogating from the foregoing, the Receiving Party
+        agrees and undertakes that it shall protect the Confidential Information against disclosure, at least in
+        the same manner and with the same degree of care which the Receiving Party protects confidential information
+        of its own, but not less than a reasonable degree of care. Receiving Party shall not use, duplicate, copy,
+        or imitate any Confidential Information of the Disclosing Party without the prior written consent of the
+        Disclosing Party,
         except as necessary for the Purpose (as defined above).
       </div>
       <div class="clause">
-        The Receiving Party may only disclose Confidential Information to those employees, officers, advisors, 
-        agents or Affiliated Companies of the Receiving Party <span class="smallcaps">("Permitted Entities")</span> with a need to know in 
-        connection with the Purpose, as defined above, and only after such Permitted Entities have been advised 
-        of the confidential nature of such information and are legally bound by an obligation of confidentiality to the Receiving Party.
+        The Receiving Party may only disclose Confidential Information to those employees, officers, advisors,
+        agents or Affiliated Companies of the Receiving Party <span class="smallcaps">("Permitted Entities")</span> with
+        a need to know in
+        connection with the Purpose, as defined above, and only after such Permitted Entities have been advised
+        of the confidential nature of such information and are legally bound by an obligation of confidentiality to the
+        Receiving Party.
       </div>
       <div class="clause">
-        In this Agreement, the term <span class="smallcaps">"Affiliated Companies"</span> means an entity which either controls or is controlled by a Party
-        or is under common control with a Party, where “control” means the power to direct or cause the direction of an entity’s management 
+        In this Agreement, the term <span class="smallcaps">"Affiliated Companies"</span> means an entity which either
+        controls or is controlled by a Party
+        or is under common control with a Party, where “control” means the power to direct or cause the direction of an
+        entity’s management
         and policies through ownership or control of at least 50% of its voting securities or ownership interest.
       </div>
       <div class="clause">
-        The Receiving Party shall immediately, after it becomes aware, give notice to the Disclosing Party of any unauthorized use or disclosure of the 
-        Disclosing Party’s Confidential Information. The Receiving Party agrees to assist the Disclosing Party in remedying any such unauthorized use 
-        or disclosure of Disclosing Party’s Confidential Information. 
+        The Receiving Party shall immediately, after it becomes aware, give notice to the Disclosing Party of any
+        unauthorized use or disclosure of the
+        Disclosing Party’s Confidential Information. The Receiving Party agrees to assist the Disclosing Party in
+        remedying any such unauthorized use
+        or disclosure of Disclosing Party’s Confidential Information.
       </div>
     </div>
 
@@ -154,17 +275,17 @@
     <div class="section">
       <h2><span class="num">4.</span> Ownership of Rights</h2>
       <div class="clause">
-        All Confidential Information (including all copies thereof) is and shall at all times remain the sole 
-        and exclusive property of the Disclosing Party and shall be destroyed or returned to the Disclosing 
+        All Confidential Information (including all copies thereof) is and shall at all times remain the sole
+        and exclusive property of the Disclosing Party and shall be destroyed or returned to the Disclosing
         Party upon the Disclosing Party's first written request.
       </div>
       <div class="clause">
-        Notwithstanding the foregoing, the Receiving Party may retain copies of the Confidential Information, 
-        and such copies of any notes, analyses and memoranda containing Confidential Information, as may be 
-        required by it for: (i) legal purposes, including for the purpose of defending any claim related to 
-        this Agreement or any transaction related hereto; and/or (ii) the maintenance of proper professional 
-        records or as may be required in accordance with its respective regulatory, 
-        compliance and/or automated backup archiving requirements and/or practices, 
+        Notwithstanding the foregoing, the Receiving Party may retain copies of the Confidential Information,
+        and such copies of any notes, analyses and memoranda containing Confidential Information, as may be
+        required by it for: (i) legal purposes, including for the purpose of defending any claim related to
+        this Agreement or any transaction related hereto; and/or (ii) the maintenance of proper professional
+        records or as may be required in accordance with its respective regulatory,
+        compliance and/or automated backup archiving requirements and/or practices,
         provided that it will protect such Confidential Information in accordance with the provisions of this Agreement.
       </div>
     </div>
@@ -174,16 +295,20 @@
       <div class="clause">
         The Receiving Party agrees, undertakes and acknowledges that (i) the Confidential Information is
         provided on an "AS-IS" basis only, without any warranty, representation and/or liability on the part
-        of the Disclosing Party, (ii) no representation or warranty, express or implied, is made by the 
-        Disclosing Party as to the truth, accuracy, completeness or reasonableness of any Confidential 
-        Information and neither the Disclosing Party nor any of its directors, officers, employees, 
-        accountants, advisers, attorneys, shareholders, representatives or other agents, shall have any liability 
-        to the Receiving Party nor to any third party nor to any of the directors, officers, employees, 
-        accountants, advisers, attorneys, shareholders, representatives or other agents of the Receiving Party or any third party, 
-        resulting from the use of Confidential Information; (iii) no right or license, of any kind, is granted to the Receiving 
-        Party in relation to Confidential Information other than the right to use Confidential Information strictly in accordance 
-        with the terms of this Agreement and for the Purpose (iv) the Receiving Party is acting as principal on its own account and 
-        not on behalf of any other party in respect of the Purpose. 
+        of the Disclosing Party, (ii) no representation or warranty, express or implied, is made by the
+        Disclosing Party as to the truth, accuracy, completeness or reasonableness of any Confidential
+        Information and neither the Disclosing Party nor any of its directors, officers, employees,
+        accountants, advisers, attorneys, shareholders, representatives or other agents, shall have any liability
+        to the Receiving Party nor to any third party nor to any of the directors, officers, employees,
+        accountants, advisers, attorneys, shareholders, representatives or other agents of the Receiving Party or any
+        third party,
+        resulting from the use of Confidential Information; (iii) no right or license, of any kind, is granted to the
+        Receiving
+        Party in relation to Confidential Information other than the right to use Confidential Information strictly in
+        accordance
+        with the terms of this Agreement and for the Purpose (iv) the Receiving Party is acting as principal on its own
+        account and
+        not on behalf of any other party in respect of the Purpose.
       </div>
     </div>
 
@@ -191,10 +316,11 @@
     <div class="section">
       <h2><span class="num">6.</span> Limited Relationship</h2>
       <div class="clause">
-        Neither this Agreement nor receipt of Confidential Information shall be deemed as obligating each Party 
-        (i) to disclose information to the other Party, or (ii) to enter into an agreement with the other Party or 
-        any third party regarding the Purpose, or otherwise, or (iii) to establish a partnership or a joint venture or 
-        any other commercial relationship, with the other Party or any third party, or (iv) to imply any principal/agent, 
+        Neither this Agreement nor receipt of Confidential Information shall be deemed as obligating each Party
+        (i) to disclose information to the other Party, or (ii) to enter into an agreement with the other Party or
+        any third party regarding the Purpose, or otherwise, or (iii) to establish a partnership or a joint venture or
+        any other commercial relationship, with the other Party or any third party, or (iv) to imply any
+        principal/agent,
         employee/employer and/or ownership relationship and/or promise.
       </div>
     </div>
@@ -203,14 +329,19 @@
     <div class="section">
       <h2><span class="num">7.</span> Governing Law and Jurisdiction</h2>
       <div class="clause">
-        (a) This Agreement shall be governed by and construed in accordance with the laws of the State of {{governing_law_full}},
-        without giving effect to principles of conflicts of law, and all claims relating to or arising out of this Agreement, or the breach thereof,
-         whether sounding in contract, tort or otherwise, shall likewise be governed by and construed in accordance with the laws of the State of {{governing_law_full}},
-         without giving effect to principles of conflicts of law.
+        (a) This Agreement shall be governed by and construed in accordance with the laws of the State of
+        {{governing_law_full}},
+        without giving effect to principles of conflicts of law, and all claims relating to or arising out of this
+        Agreement, or the breach thereof,
+        whether sounding in contract, tort or otherwise, shall likewise be governed by and construed in accordance with
+        the laws of the State of {{governing_law_full}},
+        without giving effect to principles of conflicts of law.
       </div>
       <div class="clause">
-        (b)	Any dispute arising out of, relating to, or in connection with this Agreement, including any question regarding its existence, 
-        validity, or termination, is hereby submitted to the sole and exclusive jurisdiction of the competent courts in {{governing_law_full}}, 
+        (b) Any dispute arising out of, relating to, or in connection with this Agreement, including any question
+        regarding its existence,
+        validity, or termination, is hereby submitted to the sole and exclusive jurisdiction of the competent courts in
+        {{governing_law_full}},
         and the Parties waive the right to raise forum non convenient or any similar objection.
       </div>
     </div>
@@ -219,8 +350,10 @@
     <div class="section">
       <h2><span class="num">8.</span> Successors</h2>
       <div class="clause">
-        The Parties’ rights and obligations under this Agreement will bind and inure to the benefit of their respective successors, 
-        heirs, executors and administrators and permitted assigns. Neither Party shall assign or delegate its obligations under this 
+        The Parties’ rights and obligations under this Agreement will bind and inure to the benefit of their respective
+        successors,
+        heirs, executors and administrators and permitted assigns. Neither Party shall assign or delegate its
+        obligations under this
         Agreement either in whole or in part without the prior written consent of the other Party.
       </div>
     </div>
@@ -229,9 +362,12 @@
     <div class="section">
       <h2><span class="num">9.</span> Severability</h2>
       <div class="clause">
-        In the event that any covenant, condition, term, restriction or other provision contained in this Agreement, or any portion thereof, 
-        shall be held by a court of competent jurisdiction to be invalid, illegal or unenforceable for any reason whatsoever, 
-        such provision or portion thereof shall be modified or deleted in such a manner so as to make this Agreement, as modified, 
+        In the event that any covenant, condition, term, restriction or other provision contained in this Agreement, or
+        any portion thereof,
+        shall be held by a court of competent jurisdiction to be invalid, illegal or unenforceable for any reason
+        whatsoever,
+        such provision or portion thereof shall be modified or deleted in such a manner so as to make this Agreement, as
+        modified,
         legal and enforceable to the fullest extent permitted under applicable laws.
       </div>
     </div>
@@ -240,9 +376,11 @@
     <div class="section">
       <h2><span class="num">10.</span> Entire Agreement</h2>
       <div class="clause">
-        This Agreement contains the final, complete and exclusive agreement of the Parties relative to the subject matter hereof and 
-        supersedes all prior and contemporaneous understandings and agreements relating to its subject matter. 
-        This Agreement may not be changed, modified, amended or supplemented except by a written instrument signed by the Parties.
+        This Agreement contains the final, complete and exclusive agreement of the Parties relative to the subject
+        matter hereof and
+        supersedes all prior and contemporaneous understandings and agreements relating to its subject matter.
+        This Agreement may not be changed, modified, amended or supplemented except by a written instrument signed by
+        the Parties.
       </div>
     </div>
 
@@ -250,8 +388,8 @@
     <div class="section">
       <h2><span class="num">11.</span> Notices</h2>
       <div class="clause">
-        a) All notices authorized or required between the Parties by any of the provisions of this 
-        Agreement shall be in writing and shall be delivered to the other Party by hand, commercially 
+        a) All notices authorized or required between the Parties by any of the provisions of this
+        Agreement shall be in writing and shall be delivered to the other Party by hand, commercially
         reputable international carrier, fax or e-mail, at such address set forth below:
       </div>
       <table class="table">
@@ -277,18 +415,27 @@
         </tbody>
       </table>
       <div class="clause muted">
-        b) Notices delivered personally shall be deemed received when so delivered; Notices delivered by registered mail shall
-        be deemed received three (3) days after the date of mailing; Notices sent by e-mail shall be deemed received the day
-        following their dispatch upon telephone confirmation that the e-mail has been received; Notices sent by hand delivery
+        b) Notices delivered personally shall be deemed received when so delivered; Notices delivered by registered mail
+        shall
+        be deemed received three (3) days after the date of mailing; Notices sent by e-mail shall be deemed received the
+        day
+        following their dispatch upon telephone confirmation that the e-mail has been received; Notices sent by hand
+        delivery
         shall be deemed received upon their receipt.
       </div>
       <div class="clause muted">
-        c) Notwithstanding the aforementioned, notices and correspondents which are given within the ordinary course of business 
-        (e.g., notices and correspondents which are not: (a) related to a breach and/or termination of this this Agreement, to a requirement to 
-        disclose Confidential Information under applicable law by the Receiving Party or any of its Affiliated Companies, and/or to any 
-        dispute arising out of, relating to, or in connection with this Agreement; and/or (b) any other notice that may be substantial 
-        in consequences to a Party to whom the notice is directed and/or that the Party who sent the notice intends to relay on the fact that such 
-        notice received by the other Party) – could be delivered by the Parties by digital/electronic communication (e.g., e-mails) without the
+        c) Notwithstanding the aforementioned, notices and correspondents which are given within the ordinary course of
+        business
+        (e.g., notices and correspondents which are not: (a) related to a breach and/or termination of this this
+        Agreement, to a requirement to
+        disclose Confidential Information under applicable law by the Receiving Party or any of its Affiliated
+        Companies, and/or to any
+        dispute arising out of, relating to, or in connection with this Agreement; and/or (b) any other notice that may
+        be substantial
+        in consequences to a Party to whom the notice is directed and/or that the Party who sent the notice intends to
+        relay on the fact that such
+        notice received by the other Party) – could be delivered by the Parties by digital/electronic communication
+        (e.g., e-mails) without the
         requirement to confirm the reception of such notices and correspondents by the other Party.
       </div>
     </div>
@@ -297,8 +444,9 @@
     <div class="section">
       <h2><span class="num">12.</span> Liability</h2>
       <div class="clause">
-        The Receiving Party was informed that the Disclosing Party may be irreparably harmed if the Receiving Party 
-        violates or threatens to violate any of its obligations, undertakings and/or representations under this Agreement. 
+        The Receiving Party was informed that the Disclosing Party may be irreparably harmed if the Receiving Party
+        violates or threatens to violate any of its obligations, undertakings and/or representations under this
+        Agreement.
       </div>
     </div>
 
@@ -306,8 +454,9 @@
     <div class="section">
       <h2><span class="num">13.</span> Counterparts</h2>
       <div class="clause">
-        This Agreement may be executed in counterparts, each of which shall be an original, 
-        and all of which shall constitute together but one and the same document. For purposes hereof, a facsimile or digital copy of this 
+        This Agreement may be executed in counterparts, each of which shall be an original,
+        and all of which shall constitute together but one and the same document. For purposes hereof, a facsimile or
+        digital copy of this
         Agreement shall be deemed to be an original.
       </div>
     </div>
@@ -325,14 +474,15 @@
     <div class="section">
       <h2><span class="num">15.</span> No Third-Party Rights</h2>
       <div class="clause">
-        This Agreement is for the sole benefit of the Parties and shall not be construed as conferring any 
+        This Agreement is for the sole benefit of the Parties and shall not be construed as conferring any
         rights on any third party.
       </div>
     </div>
 
     <hr />
 
-    <p class="center"><strong>IN WITNESS WHEREOF</strong>, the Parties have caused this Agreement to be executed as of the Effective Date.</p>
+    <p class="center"><strong>IN WITNESS WHEREOF</strong>, the Parties have caused this Agreement to be executed as of
+      the Effective Date.</p>
 
     <div class="sign">
       <div>
@@ -349,5 +499,24 @@
       </div>
     </div>
   </div>
+  <!-- Click-to-field handler for preview integration -->
+  <script>
+    document.addEventListener('click', function (e) {
+      var field = e.target.closest('[data-field]');
+      if (field) {
+        var fieldName = field.getAttribute('data-field');
+        if (fieldName && window.parent !== window) {
+          window.parent.postMessage({ type: 'field-click', field: fieldName }, '*');
+        }
+        return;
+      }
+      var signBox = e.target.closest('.sign-box[id], .line[id]');
+      if (signBox && window.parent !== window) {
+        var boxId = signBox.getAttribute('id');
+        window.parent.postMessage({ type: 'field-click', field: boxId }, '*');
+      }
+    });
+  </script>
 </body>
+
 </html>

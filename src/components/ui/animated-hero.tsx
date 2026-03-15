@@ -34,7 +34,7 @@ function AnimatedHero({ onLearnMore }: AnimatedHeroProps) {
                 <div className="flex gap-8 py-20 lg:py-32 items-center justify-center flex-col">
                     <div className="flex gap-4 flex-col">
                         <h1 className="text-5xl md:text-7xl max-w-4xl tracking-tight text-center font-bold">
-                            <span className="text-white">Make NDAs</span>
+                            <span className="text-[var(--navy-900)]">Make NDAs</span>
                             <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
                                 &nbsp;
                                 {titles.map((title, index) => (
@@ -61,7 +61,7 @@ function AnimatedHero({ onLearnMore }: AnimatedHeroProps) {
                             </span>
                         </h1>
 
-                        <p className="text-lg md:text-xl leading-relaxed tracking-tight text-gray-300 max-w-3xl text-center mx-auto">
+                        <p className="text-lg md:text-xl leading-relaxed tracking-tight text-gray-900 max-w-3xl text-center mx-auto">
                             Streamline your confidentiality agreements with our intuitive platform.
                             Generate, customize, and manage NDAs with just a few clicks.
                         </p>
@@ -70,13 +70,13 @@ function AnimatedHero({ onLearnMore }: AnimatedHeroProps) {
                         <Button
                             size="lg"
                             variant="outline"
-                            className="gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                            className="gap-2 border-[var(--navy-700)] text-[var(--navy-800)] hover:bg-slate-100"
                             onClick={onLearnMore}
                         >
                             Learn More
                         </Button>
                         <SignUpButton mode="modal">
-                            <Button size="lg" className="gap-2 bg-teal-600 hover:bg-teal-700 text-white">
+                            <Button size="lg" className="gap-2 bg-gray-900 hover:bg-gray-800 text-white">
                                 Get Started Free <MoveRight className="w-4 h-4" />
                             </Button>
                         </SignUpButton>

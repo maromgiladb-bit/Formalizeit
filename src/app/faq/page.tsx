@@ -1,101 +1,113 @@
-"use client";
+import { HelpCircle, MessageCircle } from "lucide-react";
+import PageHero from "@/components/ui/page-hero";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 
-import { useState } from "react";
-import { ChevronDown, HelpCircle } from "lucide-react";
+const faqs = [
+	{
+		question: "What is FormalizeIt?",
+		answer:
+			"FormalizeIt helps you create and review NDAs faster by starting from a reliable template and focusing only on the practical details that usually change, like names, dates, parties, and confidentiality periods.",
+	},
+	{
+		question: "Is FormalizeIt a law firm?",
+		answer:
+			"No. FormalizeIt is a document workflow tool. It helps streamline NDA drafting and review, but it does not provide legal advice.",
+	},
+	{
+		question: "Does FormalizeIt replace a lawyer?",
+		answer:
+			"Not completely. It is designed to save time on standard NDA workflows, especially when most of the agreement stays the same. For unusual, high-risk, or highly negotiated situations, legal review may still be appropriate.",
+	},
+	{
+		question: "Do I need to start from scratch every time?",
+		answer:
+			"No. That is one of the main benefits of FormalizeIt. Instead of recreating the whole document for each deal, you start from a known structure and update only the key terms that matter.",
+	},
+	{
+		question: "What kinds of changes can I make?",
+		answer:
+			"You can update the practical parts of the NDA, such as party names, dates, confidentiality period, governing details, and other deal-specific terms depending on the template and workflow.",
+	},
+	{
+		question: "Why is this faster than editing a document manually?",
+		answer:
+			"Because most NDAs do not need a completely different format every time. FormalizeIt keeps the template consistent so you and your partners only need to review the important changes, not the same repeated language again and again.",
+	},
+	{
+		question: "Can multiple people review the same document?",
+		answer:
+			"If collaboration is enabled in your workspace, yes. FormalizeIt is designed to make review easier by keeping the structure familiar and making changes easier to spot.",
+	},
+	{
+		question: "Can I see what changed?",
+		answer:
+			"Yes. FormalizeIt is built around a workflow where the important edits are easier to review, instead of forcing you to re-read an entire NDA each time.",
+	},
+	{
+		question: "Can I export the document?",
+		answer:
+			"Depending on your plan and available features, you may be able to export your document in formats such as PDF or Word.",
+	},
+	{
+		question: "Is my information secure?",
+		answer:
+			"FormalizeIt is designed to handle business documents responsibly and securely. For more detail, users should refer to the Privacy Policy and Terms.",
+	},
+	{
+		question: "Can I use FormalizeIt for any legal document?",
+		answer:
+			"FormalizeIt is best used for the specific workflows and templates it supports. It is not meant to replace full legal drafting for every type of agreement.",
+	},
+	{
+		question: "What happens after I pay?",
+		answer:
+			"After payment, your account or workspace features are upgraded according to your plan. This may include access to premium templates, exports, collaboration tools, or other paid functionality.",
+	},
+	{
+		question: "Can I cancel later?",
+		answer:
+			"Billing and cancellation depend on your plan terms. You can find the exact rules on your billing page once payments are live.",
+	},
+	{
+		question: "Who should use FormalizeIt?",
+		answer:
+			"FormalizeIt is useful for founders, operators, business teams, and anyone who deals with recurring NDA workflows and wants a faster, cleaner review process.",
+	},
+];
 
 export default function FAQPage() {
-	const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-	const faqs = [
-		{
-			question: "What is an NDA?",
-			answer: "A Non-Disclosure Agreement (NDA) is a legally binding contract that establishes a confidential relationship between parties. It's used to protect sensitive information from being shared with third parties."
-		},
-		{
-			question: "How do I create an NDA?",
-			answer: "Simply sign up for an account, choose a template from our library, fill in the required information, and customize it to your needs. You can then send it for signature or download it as a PDF."
-		},
-		{
-			question: "Are the NDAs legally binding?",
-			answer: "Yes, our templates are created based on standard legal frameworks. However, we recommend consulting with a legal professional for specific situations or jurisdictions."
-		},
-		{
-			question: "Can I customize the templates?",
-			answer: "Absolutely! All our templates are fully customizable. You can modify clauses, add specific terms, and adjust the document to fit your exact requirements."
-		},
-		{
-			question: "How do I send an NDA for signature?",
-			answer: "After creating your NDA, click the 'Send' button, enter the recipient's email address, and we'll send them a secure link to review and sign the document electronically."
-		},
-		{
-			question: "What's the difference between unilateral and mutual NDAs?",
-			answer: "A unilateral NDA protects information shared by one party, while a mutual NDA protects information shared by both parties. Choose based on whether one or both parties will be sharing confidential information."
-		},
-		{
-			question: "Can I track the status of my NDAs?",
-			answer: "Yes! Your dashboard shows the status of all your NDAs - draft, sent, pending signature, signed, or expired. You'll also receive email notifications when actions are taken."
-		},
-		{
-			question: "How long does an NDA last?",
-			answer: "The duration is customizable and specified in the agreement. Common terms range from 1-5 years, but you can set any timeframe that suits your needs."
-		},
-		{
-			question: "Is my data secure?",
-			answer: "Yes, we use industry-standard encryption and security measures to protect your data. All documents are stored securely and transmitted over encrypted connections."
-		},
-		{
-			question: "Can I cancel my subscription anytime?",
-			answer: "Yes, you can cancel your subscription at any time. You'll retain access to your account until the end of your current billing period."
-		}
-	];
 
 	return (
 		<div className="min-h-screen bg-gray-50">
-			{/* Hero Section */}
-			<div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20">
-				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<HelpCircle className="w-16 h-16 mx-auto mb-6 text-teal-400" />
-					<h1 className="text-4xl md:text-5xl font-bold mb-6">
-						Frequently Asked Questions
-					</h1>
-					<p className="text-xl text-gray-300">
-						Find answers to common questions about our NDA platform
-					</p>
-				</div>
-			</div>
+			<PageHero
+				icon={HelpCircle}
+				title="Frequently Asked Questions"
+				subtitle="Everything you need to know about FormalizeIt and how it helps you work with NDAs faster."
+			/>
 
 			{/* FAQ Section */}
-			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-				<div className="space-y-4">
+			<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+				<Accordion type="single" collapsible className="bg-white rounded-xl shadow-sm border border-gray-200 px-6">
 					{faqs.map((faq, index) => (
-						<div
-							key={index}
-							className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-						>
-							<button
-								onClick={() => setOpenIndex(openIndex === index ? null : index)}
-								className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-							>
-								<span className="font-semibold text-gray-900 pr-8">
-									{faq.question}
-								</span>
-								<ChevronDown
-									className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${
-										openIndex === index ? "transform rotate-180" : ""
-									}`}
-								/>
-							</button>
-							{openIndex === index && (
-								<div className="px-6 pb-4 text-gray-600">
-									{faq.answer}
-								</div>
-							)}
-						</div>
+						<AccordionItem key={index} value={`item-${index}`}>
+							<AccordionTrigger className="text-gray-900 text-base">
+								{faq.question}
+							</AccordionTrigger>
+							<AccordionContent className="text-gray-600 leading-relaxed">
+								{faq.answer}
+							</AccordionContent>
+						</AccordionItem>
 					))}
-				</div>
+				</Accordion>
 
 				{/* Contact Section */}
-				<div className="mt-16 text-center bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+				<div className="mt-16 text-center bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+					<MessageCircle className="w-10 h-10 mx-auto mb-4 text-teal-500" />
 					<h2 className="text-2xl font-bold text-gray-900 mb-4">
 						Still have questions?
 					</h2>

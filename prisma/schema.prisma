@@ -47,12 +47,12 @@ enum NdaStatus {
 }
 
 enum NdaWorkflowState {
-  FILLING           // Party A is filling the NDA
-  AWAITING_INPUT    // Waiting for Party B to fill requested fields
-  REVIEWING_CHANGES // Party A is reviewing Party B's changes
-  READY_TO_SIGN     // All fields filled, ready for signatures
-  AWAITING_SIGNATURE // Waiting for Party B to sign
-  SIGNING_COMPLETE  // Both parties have signed
+  DRAFT                       // Party A is creating/editing
+  AWAITING_PARTY_B_REVIEW     // Sent to Party B for review/edit
+  AWAITING_PARTY_A_REVIEW     // Party B made changes, waiting for A to review
+  AWAITING_PARTY_B_SIGNATURE  // Ready for Party B to sign (B signs first - no changes by B)
+  AWAITING_PARTY_A_SIGNATURE  // Ready for Party A to sign (A signs first - after approving B's changes, or after B signed)
+  COMPLETE                    // Both parties have signed
 
   @@map("nda_workflow_state")
 }
@@ -93,6 +93,10 @@ enum NdaEventType {
   VIEWED
   SIGNED
   CANCELLED
+  CHANGES_SUGGESTED  // Party B submitted suggestions/edits
+  CHANGES_ACCEPTED   // Party A accepted Party B suggestions
+  CHANGES_REQUESTED  // Party A sent changes back to Party B
+  PDF_EXPORTED       // PDF was generated/exported
 
   @@map("nda_event_type")
 }
@@ -102,6 +106,15 @@ enum PdfKind {
   SIGNED
 
   @@map("pdf_kind")
+}
+
+enum NotificationType {
+  NDA_SIGNED           // Other party signed the NDA
+  NDA_CHANGES_REQUESTED // Other party sent changes
+  NDA_COMPLETED        // NDA fully signed by both parties
+  NDA_SENT_TO_YOU      // NDA was sent to you for review/sign
+
+  @@map("notification_type")
 }
 
 // Models
@@ -124,6 +137,7 @@ model User {
   createdSignRequests SignRequest[]  @relation("SignRequestCreator")
   signers             Signer[]
   auditEvents         AuditEvent[]
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -208,6 +222,7 @@ model NdaTemplate {
   createdBy    User         @relation("TemplateCreator", fields: [createdByUserId], references: [id])
   drafts       NdaDraft[]
 
+  @@index([organizationId])
   @@map("nda_templates")
 }
 
@@ -218,9 +233,10 @@ model NdaDraft {
   createdByUserId String    @map("created_by_user_id") @db.Uuid
   title           String?
   status          NdaStatus @default(DRAFT)
-  workflowState   NdaWorkflowState @default(FILLING) @map("workflow_state")
+  workflowState   NdaWorkflowState @default(DRAFT) @map("workflow_state")
   pendingInputFields Json?  @map("pending_input_fields") // Fields Party B needs to fill
   recipientEmail  String?   @map("recipient_email") // Party B email for sending
+  lastEditedBy    String?   @map("last_edited_by") // "party_a" or "party_b" - for dynamic sign order
   content         Json? // Storing form data/content
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -232,20 +248,29 @@ model NdaDraft {
   revisions    NdaRevision[]
   signRequests SignRequest[]
   auditEvents  AuditEvent[]
+  notifications Notification[]
 
+  @@index([createdByUserId])
+  @@index([organizationId])
+  @@index([templateId])
   @@map("nda_drafts")
 }
 
 model NdaRevision {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  draftId   String   @map("draft_id") @db.Uuid
-  content   Json
-  createdAt DateTime @default(now()) @map("created_at")
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  draftId       String   @map("draft_id") @db.Uuid
+  content       Json
+  authorEmail   String?  @map("author_email")
+  authorName    String?  @map("author_name")
+  authorRole    String?  @map("author_role") // "party_a" | "party_b"
+  activityLabel String?  @map("activity_label") // human-readable e.g. "Party B updated: company name"
+  createdAt     DateTime @default(now()) @map("created_at")
 
   // Relations
   draft        NdaDraft      @relation(fields: [draftId], references: [id], onDelete: Cascade)
   signRequests SignRequest[]
 
+  @@index([draftId])
   @@map("nda_revisions")
 }
 
@@ -268,6 +293,8 @@ model SignRequest {
   ndaPdfs      NdaPdf[]
   auditEvents  AuditEvent[]
 
+  @@index([draftId])
+  @@index([organizationId])
   @@map("sign_requests")
 }
 
@@ -287,6 +314,9 @@ model Signer {
   user        User?        @relation(fields: [userId], references: [id])
   auditEvents AuditEvent[]
 
+  @@index([signRequestId])
+  @@index([userId])
+  @@index([email])
   @@map("signers")
 }
 
@@ -309,6 +339,8 @@ model AuditEvent {
   signRequest  SignRequest? @relation(fields: [signRequestId], references: [id])
   signer       Signer?      @relation(fields: [signerId], references: [id])
 
+  @@index([draftId])
+  @@index([organizationId])
   @@map("audit_events")
 }
 
@@ -332,4 +364,24 @@ model NdaPdf {
   @@index([organizationId])
   @@index([signRequestId])
   @@map("nda_pdfs")
+}
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String
+  message   String
+  link      String?          // Link to navigate when clicked
+  draftId   String?          @map("draft_id") @db.Uuid
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  draft NdaDraft? @relation(fields: [draftId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

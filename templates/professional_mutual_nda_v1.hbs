@@ -326,21 +326,22 @@
     }
 
     .sign-box {
-      border: 2px dotted var(--rule-strong);
-      height: 80px;
+      border: none;
+      border-bottom: 2px dotted var(--ink);
+      height: 60px;
       margin: 6mm 0 3mm;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      color: var(--rule-strong);
+      padding-bottom: 4px;
+      color: var(--muted);
       font-family: var(--sans);
-      font-size: 10pt;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 9pt;
+      font-style: italic;
     }
 
     .sign-box img {
-      max-height: 70px;
+      max-height: 55px;
       max-width: 100%;
     }
 
@@ -367,8 +368,15 @@
       box-shadow: none;
       font-weight: 600;
       border: 0;
-      border-bottom: 1px dotted var(--rule-strong);
+      border-bottom: 2px solid #FBBF24;
+      background-image: linear-gradient(to top, rgba(251, 191, 36, 0.25) 40%, transparent 40%);
       color: var(--ink);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .field:hover {
+      background-color: rgba(251, 191, 36, 0.35);
     }
 
     /* Placeholder look when value is missing */
@@ -466,13 +474,18 @@
 
     <p class="lead">
       THIS CONFIDENTIALITY AND NON-DISCLOSURE AGREEMENT (this "<span class="smallcaps">Agreement</span>")
-      is made effective as of <span class="field {{#unless effective_date_long}}placeholder{{/unless}}">{{ph
+      is made effective as of <span class="field {{#unless effective_date_long}}placeholder{{/unless}}"
+        data-field="effective_date">{{ph
         effective_date_long "Effective Date"}}</span> (the "<span class="smallcaps">Effective Date</span>"),
-      by and between <span class="field {{#unless party_1_name}}placeholder{{/unless}}">{{ph party_1_name "Party A
-        Name"}}</span>, of <span class="field {{#unless party_1_address}}placeholder{{/unless}}">{{ph party_1_address
+      by and between <span class="field {{#unless party_1_name}}placeholder{{/unless}}" data-field="party_a_name">{{ph
+        party_1_name "Party A
+        Name"}}</span>, of <span class="field {{#unless party_1_address}}placeholder{{/unless}}"
+        data-field="party_a_address">{{ph party_1_address
         "Party A Address"}}</span>,
-      and <span class="field {{#unless party_2_name}}placeholder{{/unless}}">{{ph party_2_name "Party B Name"}}</span>,
-      of <span class="field {{#unless party_2_address}}placeholder{{/unless}}">{{ph party_2_address "Party B
+      and <span class="field {{#unless party_2_name}}placeholder{{/unless}}" data-field="party_b_name">{{ph party_2_name
+        "Party B Name"}}</span>,
+      of <span class="field {{#unless party_2_address}}placeholder{{/unless}}" data-field="party_b_address">{{ph
+        party_2_address "Party B
         Address"}}</span>
       to assure the protection and preservation of any confidential or proprietary information to be
       disclosed or made available by one party to the other (individually a "<span class="smallcaps">Party</span>"
@@ -484,20 +497,23 @@
       A Party, and/or any of its Permitted Entities (as defined below) receiving Confidential Information (as defined
       below) from the other Party hereof and/or anyone on its behalf, shall be referred to hereinafter as the
       "<span class="smallcaps">Receiving Party</span>" (<span
-        class="field {{#unless effective_date_long}}placeholder{{/unless}}">{{ph effective_date_long "Effective
-        Date"}}</span>); (with regard to the Confidential Information disclosed to it by the other Party and/or anyone
+        class="field {{#unless party_2_name}}placeholder{{/unless}}" data-field="party_b_name">{{ph party_2_name "Party
+        B Name"}}</span>); (with
+      regard to the Confidential Information disclosed to it by the other Party and/or anyone
       on its behalf)
       and a Party hereof and/or anyone on its behalf disclosing Confidential Information to the other Party, and/or any
       of its Permitted Entities (as defined below), shall be referred to hereinafter as the
       "<span class="smallcaps">Disclosing Party</span>" (<span
-        class="field {{#unless party_1_name}}placeholder{{/unless}}">{{ph party_1_name "Party A Name"}}</span>).
+        class="field {{#unless party_1_name}}placeholder{{/unless}}" data-field="party_a_name">{{ph party_1_name "Party
+        A Name"}}</span>).
     </p>
 
     <!-- 1 -->
     <div class="section">
       <h2><span class="num">1) </span><strong>Confidential Information</strong></h2>
       <div class="clause">
-        <span class="field {{#unless information_scope_text}}placeholder{{/unless}}">{{ph information_scope_text
+        <span class="field {{#unless information_scope_text}}placeholder{{/unless}}"
+          data-field="information_scope_text">{{ph information_scope_text
           "Information Scope"}}</span> disclosed to the Receiving Party, whether or not designated by the Disclosing
         Party
         as confidential, shall be "<span class="def">Confidential Information</span>" of the Disclosing Party. In
@@ -547,9 +563,9 @@
       <div class="clause">
         Receiving Party may use the Confidential Information only to the extent required in connection with and
         furtherance of
-        <span class="field {{#unless purpose}}placeholder{{/unless}}">{{ph purpose "Purpose"}}</span> (the "<span
-          class="smallcaps">Purpose</span>") and for no other purpose whatsoever (the "<span
-          class="smallcaps">Purpose</span>").
+        <span class="field {{#unless purpose}}placeholder{{/unless}}" data-field="purpose">{{ph purpose
+          "Purpose"}}</span> (the "<span class="smallcaps">Purpose</span>") and for no other purpose whatsoever (the
+        "<span class="smallcaps">Purpose</span>").
       </div>
       <div class="clause">
         The Receiving Party shall maintain all Confidential Information in trust and confidence and shall not use,
@@ -646,12 +662,14 @@
       <h2><span class="num">7) </span><strong>Governing Law and Jurisdiction</strong></h2>
       <div class="clause">
         <strong>(a)</strong> This Agreement shall be governed by and construed in accordance with the laws of the State
-        of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph governing_law_full "Governing
+        of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}" data-field="governing_law">{{ph
+          governing_law_full "Governing
           Law"}}</span>,
         without giving effect to principles of conflicts of law, and all claims relating to or arising out of this
         Agreement, or the breach thereof,
         whether sounding in contract, tort or otherwise, shall likewise be governed by and construed in accordance with
-        the laws of the State of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph
+        the laws of the State of <span class="field {{#unless governing_law_full}}placeholder{{/unless}}"
+          data-field="governing_law">{{ph
           governing_law_full "Governing Law"}}</span>,
         without giving effect to principles of conflicts of law.
       </div>
@@ -659,7 +677,8 @@
         <strong>(b)</strong> Any dispute arising out of, relating to, or in connection with this Agreement, including
         any question regarding its existence,
         validity, or termination, is hereby submitted to the sole and exclusive jurisdiction of the competent courts in
-        <span class="field {{#unless governing_law_full}}placeholder{{/unless}}">{{ph governing_law_full "Governing
+        <span class="field {{#unless governing_law_full}}placeholder{{/unless}}" data-field="governing_law">{{ph
+          governing_law_full "Governing
           Law"}}</span>,
         and the Parties waive the right to raise forum non convenient or any similar objection.
       </div>
@@ -784,9 +803,11 @@
     <div class="section">
       <h2><span class="num">14) </span><strong>Term</strong></h2>
       <div class="clause">
-        This Agreement shall expire <span class="field {{#unless term_years_number}}placeholder{{/unless}}">{{ph
+        This Agreement shall expire <span class="field {{#unless term_years_number}}placeholder{{/unless}}"
+          data-field="term_months">{{ph
           term_years_number "Term Years Number"}}</span> (<span
-          class="field {{#unless term_years_words}}placeholder{{/unless}}">{{ph term_years_words "Term Years
+          class="field {{#unless term_years_words}}placeholder{{/unless}}" data-field="term_months">{{ph
+          term_years_words "Term Years
           Words"}}</span>) years
         from the Effective Date.
       </div>
@@ -805,7 +826,8 @@
     <div class="section">
       <h2><span class="num">16) </span><strong>Additional Clauses</strong></h2>
       <div class="clause">
-        <span class="field {{#unless additional_terms}}placeholder{{/unless}}">{{ph additional_terms "for any other
+        <span class="field {{#unless additional_terms}}placeholder{{/unless}}" data-field="additional_terms">{{ph
+          additional_terms "for any other
           input you want to add. for simplycity of reading and signing, we do not recommend using this feture unless
           neccessery"}}</span>
       </div>
@@ -818,7 +840,8 @@
 
     <div class="sign">
       <div>
-        <div class="clause"><strong><span class="field {{#unless party_1_name}}placeholder{{/unless}}">{{ph party_1_name
+        <div class="clause"><strong><span class="field {{#unless party_1_name}}placeholder{{/unless}}"
+              data-field="party_a_name">{{ph party_1_name
               "Party A Name"}}</span></strong></div>
         <div class="sign-box" id="party-a-signature">
           {{#if partyASignature.signatureImage}}
@@ -831,7 +854,8 @@
         <div class="muted">Title: {{party_1_signatory_title}}</div>
       </div>
       <div>
-        <div class="clause"><strong><span class="field {{#unless party_2_name}}placeholder{{/unless}}">{{ph party_2_name
+        <div class="clause"><strong><span class="field {{#unless party_2_name}}placeholder{{/unless}}"
+              data-field="party_b_name">{{ph party_2_name
               "Party B Name"}}</span></strong></div>
         <div class="sign-box" id="party-b-signature">
           {{#if partyBSignature.signatureImage}}
@@ -845,6 +869,24 @@
       </div>
     </div>
   </div>
+  <!-- Click-to-field handler for preview integration -->
+  <script>
+    document.addEventListener('click', function (e) {
+      var field = e.target.closest('.field[data-field]');
+      if (field) {
+        var fieldName = field.getAttribute('data-field');
+        if (fieldName && window.parent !== window) {
+          window.parent.postMessage({ type: 'field-click', field: fieldName }, '*');
+        }
+        return;
+      }
+      var signBox = e.target.closest('.sign-box[id]');
+      if (signBox && window.parent !== window) {
+        var boxId = signBox.getAttribute('id');
+        window.parent.postMessage({ type: 'field-click', field: boxId }, '*');
+      }
+    });
+  </script>
 </body>
 
 </html>

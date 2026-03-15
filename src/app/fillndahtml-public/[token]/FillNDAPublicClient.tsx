@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
-import PublicToolbar from "@/components/PublicToolbar";
 
 // All required fields (except additional_terms)
 const REQUIRED_FIELDS = [
@@ -60,6 +61,7 @@ interface FillNDAPublicClientProps {
     incomingSuggestions: Suggestions;
     initialHtml: string;
     draftId: string;
+    isPartyA?: boolean;
 }
 
 // Field labels for display
@@ -80,6 +82,7 @@ const FIELD_LABELS: Record<string, string> = {
     party_b_signatory_name: "Signatory Name",
     party_b_title: "Signatory Title",
     party_b_email: "Email Address",
+    purpose: "Purpose of Confidential Information Swap",
     governing_law: "Governing Law",
     ip_ownership: "IP Ownership Clause",
     non_solicit: "Non-Solicitation Clause",
@@ -99,6 +102,7 @@ export default function FillNDAPublicClient({
     incomingSuggestions,
     initialHtml,
     draftId,
+    isPartyA = false,
 }: FillNDAPublicClientProps) {
     const router = useRouter();
 
@@ -127,38 +131,120 @@ export default function FillNDAPublicClient({
 
     const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
+    // Maps template field names → form step numbers (mirrors internal fillndahtml)
+    const FIELD_STEP_MAP: Record<string, number> = {
+        effective_date: 0, term_months: 0, confidentiality_period_months: 0, docName: 0,
+        party_a_name: 1, party_a_address: 1, party_a_phone: 1, party_a_signatory_name: 1, party_a_title: 1, party_a_email: 1,
+        party_b_name: 2, party_b_address: 2, party_b_phone: 2, party_b_signatory_name: 2, party_b_title: 2, party_b_email: 2,
+        purpose: 3, governing_law: 3, ip_ownership: 3, non_solicit: 3, exclusivity: 3, additional_terms: 3,
+        information_scope_text: 3,
+    };
+
+    // Listen for click-to-field messages from the preview iframe
+    useEffect(() => {
+        const handleFieldClick = (e: MessageEvent) => {
+            if (e.data?.type === 'field-click' && e.data.field) {
+                const fieldName = e.data.field as string;
+                const targetStep = FIELD_STEP_MAP[fieldName];
+                if (targetStep !== undefined && step !== targetStep) {
+                    setStep(targetStep);
+                }
+                setTimeout(() => {
+                    const fieldLabels: Record<string, string[]> = {
+                        effective_date: ['effective date'],
+                        term_months: ['term'],
+                        confidentiality_period_months: ['confidentiality period'],
+                        docName: ['document title'],
+                        party_a_name: ['party name', 'company'],
+                        party_a_address: ['address'],
+                        party_a_phone: ['phone'],
+                        party_a_signatory_name: ['signatory', 'authorized'],
+                        party_a_title: ['title'],
+                        party_a_email: ['email'],
+                        party_b_name: ['party name', 'company'],
+                        party_b_address: ['address'],
+                        party_b_phone: ['phone'],
+                        party_b_signatory_name: ['signatory', 'authorized'],
+                        party_b_title: ['title'],
+                        party_b_email: ['email'],
+                        purpose: ['purpose'],
+                        governing_law: ['governing law', 'jurisdiction'],
+                        ip_ownership: ['ip ownership'],
+                        non_solicit: ['non-solicit'],
+                        exclusivity: ['exclusivity'],
+                        additional_terms: ['additional'],
+                        information_scope_text: ['scope', 'information'],
+                    };
+                    const allInputs = document.querySelectorAll('input, textarea, select');
+                    for (const el of allInputs) {
+                        const htmlEl = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+                        const parentDiv = htmlEl.closest('div');
+                        if (parentDiv) {
+                            const label = parentDiv.querySelector('label');
+                            if (label) {
+                                const labelText = label.textContent?.toLowerCase() || '';
+                                const matchLabels = fieldLabels[fieldName];
+                                if (matchLabels && matchLabels.some(ml => labelText.includes(ml))) {
+                                    htmlEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => htmlEl.focus(), 300);
+                                    htmlEl.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
+                                    setTimeout(() => { htmlEl.style.boxShadow = ''; }, 2000);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }, targetStep !== undefined && step !== targetStep ? 400 : 50);
+            }
+        };
+        window.addEventListener('message', handleFieldClick);
+        return () => window.removeEventListener('message', handleFieldClick);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step]);
+
     // Prepare template data for preview
-    const templateData = {
+    // First, merge form values with any suggestions
+    const mergedValues = {
         ...formValues,
+        // Apply my suggestions (overwrite existing values)
+        ...Object.fromEntries(
+            Object.entries(mySuggestions).filter(([, v]) => v).map(([k, v]) => [k, v])
+        ),
+    };
+
+    const templateData = {
+        ...mergedValues,
         templateId,
-        // Map to template fields
-        party_1_name: sanitizeForHtml(formValues.party_a_name as string || ""),
-        party_1_address: sanitizeForHtml(formValues.party_a_address as string || ""),
-        party_1_signatory_name: sanitizeForHtml(formValues.party_a_signatory_name as string || ""),
-        party_1_signatory_title: sanitizeForHtml(formValues.party_a_title as string || ""),
-        party_1_phone: sanitizeForHtml(formValues.party_a_phone as string || ""),
-        party_1_emails_joined: sanitizeForHtml(formValues.party_a_email as string || ""),
-        party_2_name: sanitizeForHtml(formValues.party_b_name as string || ""),
-        party_2_address: sanitizeForHtml(formValues.party_b_address as string || ""),
-        party_2_signatory_name: sanitizeForHtml(formValues.party_b_signatory_name as string || ""),
-        party_2_signatory_title: sanitizeForHtml(formValues.party_b_title as string || ""),
-        party_2_phone: sanitizeForHtml(formValues.party_b_phone as string || ""),
-        party_2_emails_joined: sanitizeForHtml(formValues.party_b_email as string || ""),
-        effective_date_long: formValues.effective_date ? new Date(formValues.effective_date as string).toLocaleDateString('en-US', {
+        // Map to template fields using merged values (including suggestions)
+        party_1_name: sanitizeForHtml(mySuggestions.party_a_name || mergedValues.party_a_name as string || ""),
+        party_1_address: sanitizeForHtml(mySuggestions.party_a_address || mergedValues.party_a_address as string || ""),
+        party_1_signatory_name: sanitizeForHtml(mySuggestions.party_a_signatory_name || mergedValues.party_a_signatory_name as string || ""),
+        party_1_signatory_title: sanitizeForHtml(mySuggestions.party_a_title || mergedValues.party_a_title as string || ""),
+        party_1_phone: sanitizeForHtml(mySuggestions.party_a_phone || mergedValues.party_a_phone as string || ""),
+        party_1_emails_joined: sanitizeForHtml(mySuggestions.party_a_email || mergedValues.party_a_email as string || ""),
+        party_2_name: sanitizeForHtml(mySuggestions.party_b_name || mergedValues.party_b_name as string || ""),
+        party_2_address: sanitizeForHtml(mySuggestions.party_b_address || mergedValues.party_b_address as string || ""),
+        party_2_signatory_name: sanitizeForHtml(mySuggestions.party_b_signatory_name || mergedValues.party_b_signatory_name as string || ""),
+        party_2_signatory_title: sanitizeForHtml(mySuggestions.party_b_title || mergedValues.party_b_title as string || ""),
+        party_2_phone: sanitizeForHtml(mySuggestions.party_b_phone || mergedValues.party_b_phone as string || ""),
+        party_2_emails_joined: sanitizeForHtml(mySuggestions.party_b_email || mergedValues.party_b_email as string || ""),
+        effective_date_long: mergedValues.effective_date ? new Date(mergedValues.effective_date as string).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         }) : '',
-        governing_law_full: sanitizeForHtml(formValues.governing_law as string || ""),
-        // Apply my suggestions for preview
-        ...Object.fromEntries(
-            Object.entries(mySuggestions).filter(([, v]) => v).map(([k, v]) => [k, sanitizeForHtml(v)])
-        ),
+        governing_law_full: sanitizeForHtml(mySuggestions.governing_law || mergedValues.governing_law as string || ""),
+        term_years_number: mergedValues.term_months ? Math.floor(parseInt(mergedValues.term_months as string) / 12) : '',
+        term_years_words: mergedValues.term_months ? (Math.floor(parseInt(mergedValues.term_months as string) / 12) === 1 ? 'one' : 'two') : '',
+        purpose: sanitizeForHtml(mySuggestions.purpose || mergedValues.purpose as string || ""),
+        information_scope_text: 'All information and materials',
+        ip_ownership: sanitizeForHtml(mySuggestions.ip_ownership || mergedValues.ip_ownership as string || ""),
+        additional_terms: sanitizeForHtml(mySuggestions.additional_terms || mergedValues.additional_terms as string || ""),
     };
 
-    // Debounced preview
+    // Debounced preview (using public endpoint for unauthenticated users)
     const { data: previewData, loading: previewLoading } = useDebouncedPreview(
-        "/api/ndas/preview-html",
+        "/api/ndas/preview-html-public",
         templateData,
         500
     );
@@ -203,6 +289,21 @@ export default function FillNDAPublicClient({
         return { isValid: missingFields.length === 0, missingFields };
     };
 
+    // Check if Party B made any changes (suggestions or filled requested fields)
+    const hasPartyBMadeChanges = (): boolean => {
+        // Check for suggestions
+        const hasSuggestions = Object.values(mySuggestions).some(v => v?.trim());
+
+        // Check if any editable fields (Party A asked to fill) were filled/changed
+        const filledRequestedFields = pendingInputFields.some(field => {
+            const initialValue = initialFormData[field] as string || '';
+            const currentValue = formValues[field] as string || '';
+            return initialValue !== currentValue && currentValue.trim() !== '';
+        });
+
+        return hasSuggestions || filledRequestedFields;
+    };
+
     // Handle proceed to sign
     const handleProceedToSign = () => {
         setError(null);
@@ -226,7 +327,7 @@ export default function FillNDAPublicClient({
             partyBName: formValues.party_b_name,
         }));
 
-        // Redirect to public sign page
+        // Always redirect to sign-nda-public for both parties (Party A and Party B)
         router.push(`/sign-nda-public/${signerId}`);
     };
 
@@ -322,6 +423,12 @@ export default function FillNDAPublicClient({
                 throw new Error(data.error || "Failed to submit");
             }
 
+            if (data.redirectUrl) {
+                // Redirect to signing page (or reload if same URL but different state)
+                window.location.href = data.redirectUrl;
+                return;
+            }
+
             setSubmitSuccess(true);
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
@@ -402,77 +509,145 @@ export default function FillNDAPublicClient({
 
         return (
             <div key={field} className="mb-4">
-                {/* Pending suggestion - yellow highlight with accept/reject */}
+                {/* Field label - always show */}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {label}
+                    {state === "pending_suggestion" && <span className="ml-2 text-amber-500 text-xs font-normal">💬 Suggestion pending</span>}
+                    {isEditable && <span className="ml-2 text-orange-500 text-xs font-normal">⏳ Required</span>}
+                </label>
+
+                {/* Pending suggestion - compact inline design */}
                 {state === "pending_suggestion" && incoming && !suggestionResponses[field] && (
-                    <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-2">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-yellow-600 text-lg">💬</span>
-                            <span className="font-medium text-yellow-800">Change Suggested for {label}</span>
-                        </div>
-                        <div className="mb-3">
-                            <p className="text-sm text-gray-600">
-                                <span className="line-through">{incoming.oldValue || "(empty)"}</span>
-                                {" → "}
-                                <span className="font-semibold text-yellow-700">{incoming.newValue}</span>
-                            </p>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                            <button onClick={() => acceptSuggestion(field)} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-sm">✓ Accept</button>
-                            <button onClick={() => rejectSuggestion(field)} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium text-sm">✗ Reject</button>
-                            <button onClick={() => setShowingSuggestionFor(prev => new Set([...prev, field]))} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm">↩ Counter</button>
-                        </div>
-                        {showingSuggestionFor.has(field) && (
-                            <div className="mt-3">
-                                <input type="text" value={counterValues[field] || ""} onChange={(e) => setCounterValues(prev => ({ ...prev, [field]: e.target.value }))} placeholder="Your counter-proposal..." className="w-full p-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500" />
-                                <button onClick={() => counterSuggestion(field, counterValues[field])} className="mt-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-sm">Submit Counter</button>
+                    <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
+                        {/* Original value - strikethrough */}
+                        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 uppercase tracking-wide">Current:</span>
+                                <span className="text-sm text-gray-500 line-through">{incoming.oldValue || "(empty)"}</span>
                             </div>
-                        )}
+                        </div>
+                        {/* Suggested value with actions */}
+                        <div className="bg-amber-50/50 px-3 py-2">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <span className="text-xs text-amber-600 uppercase tracking-wide">Suggested:</span>
+                                    <span className="text-sm font-medium text-gray-800 truncate">{incoming.newValue}</span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                        onClick={() => acceptSuggestion(field)}
+                                        className="w-7 h-7 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors"
+                                        title="Accept"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={() => rejectSuggestion(field)}
+                                        className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                                        title="Reject"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowingSuggestionFor(prev => new Set([...prev, field]))}
+                                        className="w-7 h-7 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors"
+                                        title="Counter-suggest"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Counter-suggest input */}
+                            {showingSuggestionFor.has(field) && (
+                                <div className="mt-2 flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={counterValues[field] || ""}
+                                        onChange={(e) => setCounterValues(prev => ({ ...prev, [field]: e.target.value }))}
+                                        placeholder="Your counter-proposal..."
+                                        className="flex-1 px-2 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                    />
+                                    <button
+                                        onClick={() => counterSuggestion(field, counterValues[field])}
+                                        className="px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm font-medium transition-colors"
+                                    >
+                                        Send
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
-                {/* Response shown */}
+                {/* Response shown - compact badge */}
                 {suggestionResponses[field] && (
-                    <div className={`px-3 py-2 rounded-lg mb-2 text-sm ${suggestionResponses[field] === "accepted" ? "bg-green-100 text-green-700" : suggestionResponses[field] === "rejected" ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"}`}>
-                        {suggestionResponses[field] === "accepted" && `✓ Accepted change for ${label}`}
-                        {suggestionResponses[field] === "rejected" && `✗ Rejected change for ${label}`}
-                        {suggestionResponses[field] === "countered" && `↩ Counter for ${label}: ${counterValues[field]}`}
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-2 ${suggestionResponses[field] === "accepted" ? "bg-emerald-100 text-emerald-700" :
+                        suggestionResponses[field] === "rejected" ? "bg-red-100 text-red-700" :
+                            "bg-amber-100 text-amber-700"
+                        }`}>
+                        {suggestionResponses[field] === "accepted" && (
+                            <>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Accepted
+                            </>
+                        )}
+                        {suggestionResponses[field] === "rejected" && (
+                            <>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Rejected
+                            </>
+                        )}
+                        {suggestionResponses[field] === "countered" && (
+                            <>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Counter sent
+                            </>
+                        )}
                     </div>
                 )}
 
-                {/* Regular field row */}
-                {state !== "pending_suggestion" && (
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-semibold text-gray-700">
-                            {label}
-                            {isEditable && <span className="ml-2 text-orange-500 text-xs font-normal">⏳ Required</span>}
-                        </label>
-                        {state === "readonly" && !suggestionResponses[field] && (
-                            <button onClick={() => toggleSuggestion(field)} className={`px-3 py-1 rounded-lg font-medium text-xs whitespace-nowrap ${showingSuggestionFor.has(field) ? "bg-gray-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}>
-                                {showingSuggestionFor.has(field) ? "Cancel" : "✏️ Suggest Change"}
-                            </button>
-                        )}
+                {/* Suggest Change button for readonly fields */}
+                {state === "readonly" && !suggestionResponses[field] && (
+                    <div className="mb-2">
+                        <button onClick={() => toggleSuggestion(field)} className={`px-3 py-1 rounded-lg font-medium text-xs whitespace-nowrap ${showingSuggestionFor.has(field) ? "bg-gray-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`} suppressHydrationWarning>
+                            {showingSuggestionFor.has(field) ? "Cancel" : "✏️ Suggest Change"}
+                        </button>
                     </div>
                 )}
 
                 {/* Input field */}
-                {state !== "pending_suggestion" && (
+                {(state !== "pending_suggestion" || suggestionResponses[field]) && (
                     useTextarea ? (
                         <textarea
                             value={value}
                             onChange={(e) => setFormValues(prev => ({ ...prev, [field]: e.target.value }))}
-                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all`}
+                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''}`}
                             rows={3}
                             placeholder={isEditable ? `Please enter ${label.toLowerCase()}` : ""}
                             disabled={!isEditable}
+                            suppressHydrationWarning
                         />
                     ) : (
                         <input
                             type={field.includes("email") ? "email" : field.includes("phone") ? "tel" : field.includes("date") ? "date" : field.includes("month") ? "number" : "text"}
                             value={value}
                             onChange={(e) => setFormValues(prev => ({ ...prev, [field]: e.target.value }))}
-                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all`}
+                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''}`}
                             placeholder={isEditable ? `Please enter ${label.toLowerCase()}` : ""}
                             disabled={!isEditable}
+                            suppressHydrationWarning
                         />
                     )
                 )}
@@ -482,12 +657,54 @@ export default function FillNDAPublicClient({
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <label className="block text-sm text-blue-700 mb-1">Your suggested value:</label>
                         {useTextarea ? (
-                            <textarea value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={2} placeholder={`Suggest a new value for ${label.toLowerCase()}`} />
+                            <textarea value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={2} placeholder={`Suggest a new value for ${label.toLowerCase()}`} suppressHydrationWarning />
                         ) : (
-                            <input type="text" value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder={`Suggest a new value for ${label.toLowerCase()}`} />
+                            <input type="text" value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder={`Suggest a new value for ${label.toLowerCase()}`} suppressHydrationWarning />
                         )}
                     </div>
                 )}
+            </div>
+        );
+    };
+
+    // Success actions component - shows different buttons based on auth status
+    const SuccessActions = () => {
+        const { isSignedIn } = useAuth();
+
+        if (isSignedIn) {
+            return (
+                <Link
+                    href="/mynda"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Go to Dashboard
+                </Link>
+            );
+        }
+
+        return (
+            <div className="space-y-3">
+                <Link
+                    href="/"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Back to Homepage
+                </Link>
+                <Link
+                    href="/about"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-white text-teal-700 border-2 border-teal-200 rounded-lg font-medium hover:bg-teal-50 transition-all"
+                >
+                    Learn more about Formalize It
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </Link>
             </div>
         );
     };
@@ -503,7 +720,9 @@ export default function FillNDAPublicClient({
                         </svg>
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Submitted Successfully!</h1>
-                    <p className="text-gray-600">Your information has been submitted. The other party will review and you&apos;ll be notified of next steps.</p>
+                    <p className="text-gray-600 mb-6">Your information has been submitted. The other party will review and you&apos;ll be notified of next steps.</p>
+
+                    <SuccessActions />
                 </div>
             </div>
         );
@@ -511,7 +730,6 @@ export default function FillNDAPublicClient({
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <PublicToolbar />
 
             {/* Main Container with Fixed Layout */}
             <div className="flex h-[calc(100vh-64px)]">
@@ -533,7 +751,7 @@ export default function FillNDAPublicClient({
                                             <p className="text-blue-100 text-sm">Complete your information to proceed</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border border-white/30" title={showLivePreview ? "Hide Preview" : "Show Preview"}>
+                                    <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border border-white/30" title={showLivePreview ? "Hide Preview" : "Show Preview"} suppressHydrationWarning>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             {showLivePreview ? (
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -575,7 +793,7 @@ export default function FillNDAPublicClient({
                                 <div className="flex items-center justify-between gap-1 mb-6">
                                     {steps.map((s, i) => (
                                         <div key={s} className="flex-1 relative">
-                                            <button onClick={() => goToStep(i)} className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`}>
+                                            <button onClick={() => goToStep(i)} className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`} suppressHydrationWarning>
                                                 <div className="flex flex-col items-center">
                                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${i === step ? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100' : i < step ? 'bg-teal-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}>
                                                         {i < step ? (
@@ -600,7 +818,7 @@ export default function FillNDAPublicClient({
                             </div>
 
                             {/* Form Content */}
-                            <div className="bg-gray-50 rounded-xl p-6 mx-6 mb-6 min-h-[400px] border border-gray-200">
+                            <div className="bg-gray-50 rounded-xl p-6 mx-6 mb-6 min-h-100 border border-gray-200">
                                 {/* Step 0: Document Details */}
                                 {step === 0 && (
                                     <div className="space-y-6">
@@ -661,7 +879,7 @@ export default function FillNDAPublicClient({
                                         {pendingInputFields.some(f => f.startsWith("party_b")) && (
                                             <div className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
                                                 <div className="flex gap-3">
-                                                    <svg className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <p className="text-sm text-orange-800"><strong>Action required!</strong> Fields marked with ⏳ need your input.</p>
@@ -746,7 +964,7 @@ export default function FillNDAPublicClient({
                                         {getPendingSuggestionsCount() > 0 && (
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <div>
@@ -765,7 +983,7 @@ export default function FillNDAPublicClient({
                                         {validationErrors.length > 0 && (
                                             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                                     </svg>
                                                     <div>
@@ -785,16 +1003,50 @@ export default function FillNDAPublicClient({
 
                                         {/* Action Buttons */}
                                         <div className="space-y-3">
-                                            {/* Proceed to Sign Button */}
-                                            <button
-                                                onClick={handleProceedToSign}
-                                                className="w-full py-4 px-6 rounded-lg font-semibold text-white text-lg transition-all bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                </svg>
-                                                Proceed to Sign
-                                            </button>
+                                            {(() => {
+                                                // Check for unresolved (not responded to) or non-accepted (rejected/countered) incoming suggestions
+                                                const hasUnresolvedIncoming = Object.keys(incomingSuggestions || {}).some(
+                                                    key => !suggestionResponses[key]
+                                                );
+                                                const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
+                                                    r => r === 'rejected' || r === 'countered'
+                                                );
+
+                                                // Check if Party B made any changes (suggestions or filled requested fields)
+                                                const partyBMadeChanges = !isPartyA && hasPartyBMadeChanges();
+
+                                                const canProceedToSign = !partyBMadeChanges && !hasUnresolvedIncoming && !hasRejectionsOrCounters;
+
+                                                return (
+                                                    <div className="space-y-2">
+                                                        <button
+                                                            onClick={handleProceedToSign}
+                                                            disabled={!canProceedToSign}
+                                                            className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${canProceedToSign
+                                                                ? "text-white bg-linear-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl"
+                                                                : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
+                                                                }`}
+                                                            suppressHydrationWarning
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                            </svg>
+                                                            Proceed to Sign
+                                                        </button>
+                                                        {!canProceedToSign && (
+                                                            <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 text-center">
+                                                                {partyBMadeChanges ? (
+                                                                    "You have made changes (suggestions or filled fields). Please send back for Party A to review."
+                                                                ) : hasUnresolvedIncoming ? (
+                                                                    "Please accept or reject all suggestions before signing."
+                                                                ) : hasRejectionsOrCounters ? (
+                                                                    "You rejected or countered suggestions. You must send back for review."
+                                                                ) : ""}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* Divider */}
                                             <div className="flex items-center gap-3">
@@ -804,41 +1056,53 @@ export default function FillNDAPublicClient({
                                             </div>
 
                                             {/* Send Back with Changes Button */}
-                                            <button
-                                                onClick={handleSendBackWithChanges}
-                                                disabled={isSubmitting}
-                                                className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${isSubmitting
-                                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                        : "bg-orange-100 text-orange-700 border-2 border-orange-300 hover:bg-orange-200 hover:border-orange-400"
-                                                    }`}
-                                            >
-                                                {isSubmitting ? (
-                                                    <>
-                                                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                        </svg>
-                                                        Sending...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                                        </svg>
-                                                        Send Back with Changes
-                                                        {getPendingSuggestionsCount() > 0 && (
-                                                            <span className="ml-1 px-2 py-0.5 bg-orange-200 text-orange-800 rounded-full text-sm">
-                                                                {getPendingSuggestionsCount()}
-                                                            </span>
+                                            {(() => {
+                                                // Check if Party B has changes (suggestions, filled fields, or rejected/countered)
+                                                const partyBChanges = !isPartyA && hasPartyBMadeChanges();
+                                                const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
+                                                    r => r === 'rejected' || r === 'countered'
+                                                );
+                                                const canSendBack = partyBChanges || hasRejectionsOrCounters;
+
+                                                return (
+                                                    <button
+                                                        onClick={handleSendBackWithChanges}
+                                                        disabled={isSubmitting || !canSendBack}
+                                                        className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${isSubmitting || !canSendBack
+                                                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                            : "bg-orange-100 text-orange-700 border-2 border-orange-300 hover:bg-orange-200 hover:border-orange-400"
+                                                            }`}
+                                                        suppressHydrationWarning
+                                                    >
+                                                        {isSubmitting ? (
+                                                            <>
+                                                                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                </svg>
+                                                                Sending...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                                </svg>
+                                                                Send Back with Changes
+                                                                {(getPendingSuggestionsCount() > 0) && (
+                                                                    <span className="ml-1 px-2 py-0.5 bg-orange-200 text-orange-800 rounded-full text-sm">
+                                                                        {getPendingSuggestionsCount()}
+                                                                    </span>
+                                                                )}
+                                                            </>
                                                         )}
-                                                    </>
-                                                )}
-                                            </button>
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
 
                                         <p className="text-xs text-gray-500 text-center">
-                                            <strong>Proceed to Sign:</strong> All fields required (except Additional Terms).<br />
-                                            <strong>Send Back with Changes:</strong> Suggest modifications for the other party to review.
+                                            <strong>Proceed to Sign:</strong> All fields required. All changes must be accepted.<br />
+                                            <strong>Send Back with Changes:</strong> Only available if you suggest changes or reject/counter proposals.
                                         </p>
                                     </div>
                                 )}
@@ -846,9 +1110,9 @@ export default function FillNDAPublicClient({
 
                             {/* Navigation Buttons */}
                             <div className="flex justify-between p-6 pt-0">
-                                <button onClick={goBack} disabled={step === 0} className={`px-6 py-3 rounded-lg font-semibold transition-all ${step === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>← Back</button>
+                                <button onClick={goBack} disabled={step === 0} className={`px-6 py-3 rounded-lg font-semibold transition-all ${step === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} suppressHydrationWarning>← Back</button>
                                 {step < steps.length - 1 && (
-                                    <button onClick={goNext} className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md">Next →</button>
+                                    <button onClick={goNext} className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md" suppressHydrationWarning>Next →</button>
                                 )}
                             </div>
                         </div>
@@ -859,7 +1123,7 @@ export default function FillNDAPublicClient({
                 {showLivePreview && (
                     <div className="hidden lg:block lg:w-[55%] bg-gray-100 border-l border-gray-200">
                         <div className="sticky top-0 h-full overflow-hidden flex flex-col">
-                            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+                            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-2">
                                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                     <span className="font-medium text-gray-700">Live Preview</span>
@@ -868,7 +1132,7 @@ export default function FillNDAPublicClient({
                             </div>
                             <div className="flex-1 overflow-hidden p-4">
                                 <div className="bg-white rounded-xl shadow-lg h-full overflow-hidden">
-                                    <iframe srcDoc={previewHtml} title="NDA Preview" className="w-full h-full border-0" sandbox="allow-same-origin" />
+                                    <iframe srcDoc={previewHtml} title="NDA Preview" className="w-full h-full border-0" sandbox="allow-same-origin allow-scripts" />
                                 </div>
                             </div>
                         </div>

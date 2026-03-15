@@ -55,6 +55,9 @@ export default function SignNDASimpleClient() {
       setPreviewHtml(parsed.htmlContent); // Initialize preview HTML
       setPartyASignature(prev => ({ ...prev, name: parsed.partyAName || "" }));
       setTypedSignature(parsed.partyAName || "");
+      if (parsed.partyBEmail && parsed.partyBName) {
+        setPartyBInfo({ email: parsed.partyBEmail, name: parsed.partyBName });
+      }
     }
   }, []);
 
@@ -252,7 +255,7 @@ export default function SignNDASimpleClient() {
 
       setSubmitStatus('success');
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/sign-nda/success');
       }, 2000);
     } catch (error) {
       setSubmitStatus('error');
@@ -306,7 +309,7 @@ export default function SignNDASimpleClient() {
 
       setSubmitStatus('success');
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/sign-nda/success');
       }, 2000);
     } catch (error) {
       setSubmitStatus('error');
@@ -331,11 +334,11 @@ export default function SignNDASimpleClient() {
         party_2_name: ndaData.partyBName,
       };
 
-      const response = await fetch('/api/ndas/preview-pdf', {
+      const response = await fetch('/api/ndas/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          formData: formData,
+          ...formData,
           signatureImage: signatureImage,
           signerName: partyASignature.name || 'John Doe',
           signerTitle: partyASignature.title || 'CEO',
@@ -344,13 +347,14 @@ export default function SignNDASimpleClient() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate preview PDF');
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to generate preview PDF');
       }
 
-      // Get the PDF blob and open in new tab
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const json = await response.json();
+      if (json.fileUrl) {
+        window.open(json.fileUrl, '_blank');
+      }
     } catch (error) {
       console.error('Preview PDF error:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Failed to preview PDF');
@@ -415,7 +419,7 @@ export default function SignNDASimpleClient() {
       setSubmitStatus('success');
       setShowSendModal(false);
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/sign-nda/success');
       }, 2000);
     } catch (error) {
       setSubmitStatus('error');
@@ -662,29 +666,19 @@ export default function SignNDASimpleClient() {
       {showSendModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Send NDA for Signature</h2>
-            <p className="text-gray-600 mb-6">Enter the recipient's details to send this NDA for signature.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Confirm & Send NDA</h2>
+            <p className="text-gray-600 mb-6">Review the recipient details below and send for signature.</p>
 
             <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Name *</label>
-                <input
-                  type="text"
-                  value={partyBInfo.name}
-                  onChange={(e) => setPartyBInfo({ ...partyBInfo, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
-                  placeholder="Full name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                <input
-                  type="email"
-                  value={partyBInfo.email}
-                  onChange={(e) => setPartyBInfo({ ...partyBInfo, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600"
-                  placeholder="email@example.com"
-                />
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="mb-3">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Recipient Name</label>
+                  <p className="font-semibold text-gray-900">{partyBInfo.name}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Email Address</label>
+                  <p className="font-semibold text-gray-900">{partyBInfo.email}</p>
+                </div>
               </div>
             </div>
 
@@ -700,16 +694,16 @@ export default function SignNDASimpleClient() {
                   setShowSendModal(false);
                   setErrorMessage('');
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg font-bold hover:bg-gray-50 transition-all"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendNDA}
                 disabled={submitStatus === 'submitting'}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 transition-all"
+                className="flex-1 px-4 py-3 bg-[var(--teal-600)] text-white rounded-lg font-bold hover:bg-[var(--teal-700)] disabled:opacity-50 transition-all shadow-md"
               >
-                {submitStatus === 'submitting' ? 'Sending...' : 'Send Email'}
+                {submitStatus === 'submitting' ? 'Sending...' : 'Confirm & Send'}
               </button>
             </div>
           </div>

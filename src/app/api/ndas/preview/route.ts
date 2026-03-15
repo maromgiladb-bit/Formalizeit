@@ -34,8 +34,16 @@ export async function POST(request: NextRequest) {
         }, { status: 401 })
       }
 
-      const draft = await prisma.nDA.findFirst({
-        where: { id: body.draftId, userId }
+      const dbUser = await prisma.user.findUnique({
+        where: { externalId: userId }
+      })
+
+      if (!dbUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      const draft = await prisma.ndaDraft.findFirst({
+        where: { id: body.draftId, createdByUserId: dbUser.id }
       })
 
       if (!draft) {
@@ -61,77 +69,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-      // Process "ask receiver to fill" placeholders
-      const processedData = { ...formData }
+    // renderNdaHtml's normalizeFormData handles all field mapping
+    // (party_a→party_1, ask_receiver_fill placeholders, etc.)
+    console.log('📄 Rendering HTML from template:', templateId)
+    const html = await renderNdaHtml(formData, templateId)
 
-      if (formData.party_a_ask_receiver_fill) {
-        processedData.party_a_name = formData.party_a_name || "[To be filled by receiving party]"
-        processedData.party_a_address = formData.party_a_address || "[To be filled by receiving party]"
-        processedData.party_a_signatory_name = formData.party_a_signatory_name || "[To be filled by receiving party]"
-        processedData.party_a_title = formData.party_a_title || "[To be filled by receiving party]"
-        console.log('📄 Party A: ask receiver to fill')
-      }
+    console.log('📄 Converting HTML to PDF with 1:1 rendering...')
+    const pdfBuffer = await renderHtmlToPdf(html, {
+      pageWidthPx: 900,  // Match preview container width
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+      isA4: true,
+      debugScreenshot: false,  // Set to true to save debug screenshot
+    })
 
-      if (formData.party_b_ask_receiver_fill) {
-        processedData.party_b_name = formData.party_b_name || "[To be filled by receiving party]"
-        processedData.party_b_address = formData.party_b_address || "[To be filled by receiving party]"
-        processedData.party_b_signatory_name = formData.party_b_signatory_name || "[To be filled by receiving party]"
-        processedData.party_b_title = formData.party_b_title || "[To be filled by receiving party]"
-        processedData.party_b_email = formData.party_b_email || "[To be filled by receiving party]"
-        console.log('📄 Party B: ask receiver to fill')
-      }
+    console.log('✅ PDF generated successfully')
 
-      // Transform party_a/party_b to party_1/party_2 if needed (for templates that use party_1/party_2 naming)
-      // This ensures compatibility with all template formats
-      if (!processedData.party_1_name && processedData.party_a_name) {
-        processedData.party_1_name = processedData.party_a_name
-        processedData.party_1_address = processedData.party_a_address
-        processedData.party_1_signatory_name = processedData.party_a_signatory_name
-        processedData.party_1_signatory_title = processedData.party_a_title
-        processedData.party_1_phone = processedData.party_a_phone || ''
-        processedData.party_1_emails_joined = processedData.party_a_email || ''
-        console.log('📄 Mapped party_a_* to party_1_*')
-      }
+    // Return as base64 data URL for compatibility with existing UI
+    const base64 = pdfBuffer.toString('base64')
+    const dataUrl = `data:application/pdf;base64,${base64}`
 
-      if (!processedData.party_2_name && processedData.party_b_name) {
-        processedData.party_2_name = processedData.party_b_name
-        processedData.party_2_address = processedData.party_b_address
-        processedData.party_2_signatory_name = processedData.party_b_signatory_name
-        processedData.party_2_signatory_title = processedData.party_b_title
-        processedData.party_2_phone = processedData.party_b_phone || ''
-        processedData.party_2_emails_joined = processedData.party_b_email || ''
-        console.log('📄 Mapped party_b_* to party_2_*')
-      }
+    return NextResponse.json({
+      fileUrl: dataUrl,
+      base64,
+      mime: 'application/pdf',
+      filename: `${formData.docName || 'NDA'}.pdf`
+    })
 
-      console.log('📄 Rendering HTML from template:', templateId)
-      const html = await renderNdaHtml(processedData, templateId)
-
-      console.log('📄 Converting HTML to PDF with 1:1 rendering...')
-      const pdfBuffer = await renderHtmlToPdf(html, {
-        pageWidthPx: 900,  // Match preview container width
-        baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
-        isA4: true,
-        debugScreenshot: false,  // Set to true to save debug screenshot
-      })
-
-      console.log('✅ PDF generated successfully')
-
-      // Return as base64 data URL for compatibility with existing UI
-      const base64 = pdfBuffer.toString('base64')
-      const dataUrl = `data:application/pdf;base64,${base64}`
-
-      return NextResponse.json({
-        fileUrl: dataUrl,
-        base64,
-        mime: 'application/pdf',
-        filename: `${formData.docName || 'NDA'}.pdf`
-      })
-
-    } catch (error) {
-      console.error('❌ Error generating preview:', error)
-      return NextResponse.json({
-        error: 'Failed to generate preview',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }, { status: 500 })
-    }
+  } catch (error) {
+    console.error('❌ Error generating preview:', error)
+    return NextResponse.json({
+      error: 'Failed to generate preview',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
+}

@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import SignNDAPublicClient from './SignNDAPublicClient';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
@@ -82,27 +82,100 @@ export default async function SignNDAPublicPage({
 
     // Check if already signed
     if (signer.status === 'SIGNED') {
+        redirect(`/sign-nda-public/${signer.id}/success`);
+    }
+
+    // Check workflow state - Party B can sign when reviewing or when explicitly awaiting signature
+    const draft = signer.signRequest.draft;
+    const workflowState = (draft as typeof draft & { workflowState?: string }).workflowState || 'DRAFT';
+
+    // Determine if this is Party A (APPROVER) or Party B (SIGNER)
+    const isPartyA = signer.role === 'APPROVER';
+
+    // Allow signing logic
+    let canSign = false;
+
+    if (isPartyA) {
+        // Party A can sign when awaiting their signature OR when reviewing changes (approve & sign)
+        canSign = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(workflowState);
+    } else {
+        // Party B can sign when reviewing or awaiting signature
+        canSign = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_PARTY_B_SIGNATURE'].includes(workflowState);
+    }
+
+    if (!canSign) {
+        // Show appropriate message based on state
+        let title = 'Not Ready for Signature';
+        let message = 'This NDA is not ready for your signature yet.';
+
+        if (workflowState === 'COMPLETE') {
+            title = 'NDA Complete';
+            message = 'This NDA has been fully signed by both parties.';
+        } else if (isPartyA) {
+            if (['AWAITING_PARTY_B_REVIEW', 'AWAITING_PARTY_B_SIGNATURE'].includes(workflowState)) {
+                title = 'Waiting for Party B';
+                message = 'Party B is currently reviewing or signing. You will be notified when it is your turn.';
+            }
+        } else {
+            // Party B
+            if (['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE'].includes(workflowState)) {
+                title = 'Waiting for Other Party';
+                message = 'The other party is currently reviewing or signing. You will be notified when it is your turn.';
+            }
+        }
+
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="text-6xl mb-4">✓</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                        Already Signed
-                    </h1>
-                    <p className="text-gray-600">
-                        This NDA has already been signed. Thank you!
-                    </p>
+                    <div className="text-6xl mb-4">ℹ️</div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
+                    <p className="text-gray-600">{message}</p>
                 </div>
             </div>
         );
     }
 
-    const draft = signer.signRequest.draft;
     const formData = (draft.content as Record<string, unknown>) || {};
     const templateId = (formData.templateId as string) || 'professional_mutual_nda_v1';
 
-    // Generate HTML server-side
-    const initialHtml = await renderNdaHtml(formData, templateId);
+    // Determine signer role
+    const signerRole = isPartyA ? 'partyA' : 'partyB';
+
+    // Generate HTML server-side with proper field mappings
+    // Include existing signatures from previous signers
+    const templateData = {
+        ...formData,
+        // Map party_a fields to party_1 for template compatibility
+        party_1_name: formData.party_a_name || '',
+        party_1_address: formData.party_a_address || '',
+        party_1_signatory_name: formData.party_a_signatory_name || '',
+        party_1_signatory_title: formData.party_a_title || '',
+        party_1_phone: formData.party_a_phone || '',
+        party_1_emails_joined: formData.party_a_email || '',
+        // Include existing Party A signature if present
+        party_1_signature_image: formData.party_1_signature_image || '',
+        // Map party_b fields to party_2 for template compatibility
+        party_2_name: formData.party_b_name || '',
+        party_2_address: formData.party_b_address || '',
+        party_2_signatory_name: formData.party_b_signatory_name || '',
+        party_2_signatory_title: formData.party_b_title || '',
+        party_2_phone: formData.party_b_phone || '',
+        party_2_emails_joined: formData.party_b_email || '',
+        // Include existing Party B signature if present
+        party_2_signature_image: formData.party_2_signature_image || '',
+        // Additional computed fields
+        effective_date_long: formData.effective_date ? new Date(formData.effective_date as string).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) : '',
+        governing_law_full: formData.governing_law || '',
+        term_years_number: formData.term_months ? Math.floor(parseInt(formData.term_months as string) / 12) : '',
+        term_years_words: formData.term_months ? (Math.floor(parseInt(formData.term_months as string) / 12) === 1 ? 'one' : 'two') : '',
+        purpose: 'evaluating a potential business relationship',
+        information_scope_text: 'All information and materials',
+    };
+    const initialHtml = await renderNdaHtml(templateData, templateId);
 
     return (
         <SignNDAPublicClient
@@ -113,6 +186,7 @@ export default async function SignNDAPublicPage({
             formData={formData}
             templateId={templateId}
             initialHtml={initialHtml}
+            signerRole={signerRole}
         />
     );
 }

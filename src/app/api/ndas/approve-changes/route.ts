@@ -31,13 +31,15 @@ export async function POST(request: NextRequest) {
         }
 
         // Update draft workflow state
+        // Since Party B made changes and Party A is approving, Party A signs first
         const draft = await prisma.ndaDraft.update({
             where: {
                 id: draftId,
                 createdByUserId: user.id
             },
             data: {
-                workflowState: 'READY_TO_SIGN'
+                workflowState: 'AWAITING_PARTY_A_SIGNATURE',
+                lastEditedBy: 'party_a' // Party A approved
             }
         })
 
@@ -50,14 +52,14 @@ export async function POST(request: NextRequest) {
                 eventType: 'UPDATED',
                 metadata: {
                     action: 'approved_changes',
-                    newWorkflowState: 'READY_TO_SIGN'
+                    newWorkflowState: 'AWAITING_PARTY_A_SIGNATURE'
                 }
             }
         })
 
         return NextResponse.json({
             success: true,
-            workflowState: 'READY_TO_SIGN'
+            workflowState: 'AWAITING_PARTY_A_SIGNATURE'
         })
     } catch (error) {
         console.error('Approve changes error:', error)

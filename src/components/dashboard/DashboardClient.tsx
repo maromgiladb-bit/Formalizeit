@@ -10,10 +10,16 @@ interface NDA {
   status: string;
   workflowState?: string; // Workflow-specific state
   recipientEmail?: string; // Party B email
+  partyBName?: string; // Party B company/person name
+  partyBEmail?: string; // Party B email from form
   createdAt: Date;
   signedAt: Date | null;
   type: 'created' | 'received';
   pdfId?: string | null;
+  partyASignerId?: string | null; // For sign link when waiting for Party A
+  signerId?: string | null; // For review link on incoming NDAs
+  senderName?: string; // Who sent the NDA (for incoming)
+  senderEmail?: string; // Sender email (for incoming)
 }
 
 interface DashboardClientProps {
@@ -34,7 +40,19 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
     case 'AWAITING_SIGNATURE':
       return { label: 'AWAITING SIGNATURE', color: 'text-purple-800', bgColor: 'bg-purple-100' };
     case 'SIGNING_COMPLETE':
+    case 'COMPLETE':
       return { label: 'COMPLETE', color: 'text-green-800', bgColor: 'bg-green-100' };
+
+    // New states
+    case 'AWAITING_PARTY_A_REVIEW':
+      return { label: 'CHANGES TO REVIEW', color: 'text-red-800', bgColor: 'bg-red-100' };
+    case 'AWAITING_PARTY_B_REVIEW':
+      return { label: 'WAITING REVIEW', color: 'text-orange-800', bgColor: 'bg-orange-100' };
+    case 'AWAITING_PARTY_A_SIGNATURE':
+      return { label: 'SIGN NOW', color: 'text-red-800', bgColor: 'bg-red-100' };
+    case 'AWAITING_PARTY_B_SIGNATURE':
+      return { label: 'WAITING SIG.', color: 'text-purple-800', bgColor: 'bg-purple-100' };
+
     case 'FILLING':
     default:
       // Fall back to status-based display
@@ -49,7 +67,7 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
 }
 
 export default function DashboardClient({ ndas }: DashboardClientProps) {
-  const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed'>('all');
+  const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action'>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -92,19 +110,30 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
   const filteredNdas = localNdas.filter((nda) => {
     if (filter === 'all') return true;
-    if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending');
-    if (filter === 'received') return nda.type === 'received' && nda.status !== 'signed';
-    if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created';
-    if (filter === 'signed') return nda.status === 'signed';
+    // Action Required: highest priority - NDA needs your action
+    const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '');
+    // Signed/Complete: takes priority over sent
+    const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
+
+    if (filter === 'action') return isActionRequired;
+    if (filter === 'signed') return isSigned && !isActionRequired;
+    if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created' && !isActionRequired && !isSigned;
+    if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending') && !isActionRequired && !isSigned;
+    if (filter === 'received') return nda.type === 'received' && !isSigned && !isActionRequired;
     return true;
   });
 
+  // Compute mutually exclusive stats
+  const actionRequired = (n: NDA) => ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '');
+  const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
+
   const stats = {
     total: localNdas.length,
-    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created').length,
-    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending')).length,
-    received: localNdas.filter((n) => n.type === 'received' && n.status !== 'signed').length,
-    signed: localNdas.filter((n) => n.status === 'signed').length,
+    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created' && !actionRequired(n) && !isSigned(n)).length,
+    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending') && !actionRequired(n) && !isSigned(n)).length,
+    received: localNdas.filter((n) => n.type === 'received' && !isSigned(n) && !actionRequired(n)).length,
+    signed: localNdas.filter((n) => isSigned(n) && !actionRequired(n)).length,
+    action: localNdas.filter((n) => actionRequired(n)).length,
   };
 
   return (
@@ -154,7 +183,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
         )}
 
         {/* Stats Cards - Now clickable filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
           <button
             onClick={() => setFilter('all')}
             className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'all'
@@ -225,13 +254,39 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-600">Waiting for You</p>
+                <p className="text-sm font-semibold text-gray-600">Incoming NDAs</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.received}</p>
               </div>
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'received' ? 'bg-orange-600' : 'bg-orange-100'
                 }`}>
                 <svg className={`w-6 h-6 ${filter === 'received' ? 'text-white' : 'text-orange-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setFilter('action')}
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'action'
+              ? 'bg-red-50 border-red-500'
+              : 'bg-white border-gray-200 hover:border-red-300'
+              }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-600">Action Required</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {stats.action}
+                  {stats.action > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">!</span>
+                  )}
+                </p>
+              </div>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'action' ? 'bg-red-600' : 'bg-red-100'
+                }`}>
+                <svg className={`w-6 h-6 ${filter === 'action' ? 'text-white' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
             </div>
@@ -297,12 +352,35 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                           </span>
                         );
                       })()}
-                      {nda.recipientEmail && nda.workflowState === 'AWAITING_INPUT' && (
-                        <span className="text-xs text-gray-500">
-                          → {nda.recipientEmail}
-                        </span>
-                      )}
                     </div>
+                    {/* From: Sender info - for incoming NDAs */}
+                    {nda.type === 'received' && (nda.senderName || nda.senderEmail) && (
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mt-1">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span>
+                          <span className="text-gray-500">From:</span>{' '}
+                          {nda.senderName && <span className="font-semibold">{nda.senderName}</span>}
+                          {nda.senderName && nda.senderEmail && <span className="text-gray-400 mx-1">•</span>}
+                          {nda.senderEmail && <span className="text-gray-600">{nda.senderEmail}</span>}
+                        </span>
+                      </div>
+                    )}
+                    {/* To: Party B info - for outgoing NDAs */}
+                    {nda.type === 'created' && (nda.partyBName || nda.partyBEmail) && (
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mt-1">
+                        <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        <span>
+                          <span className="text-gray-500">To:</span>{' '}
+                          {nda.partyBName && <span className="font-semibold">{nda.partyBName}</span>}
+                          {nda.partyBName && nda.partyBEmail && <span className="text-gray-400 mx-1">•</span>}
+                          {nda.partyBEmail && <span className="text-gray-600">{nda.partyBEmail}</span>}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 font-medium">
                       <span className="flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -321,21 +399,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/preview-template?draftId=${nda.id}`}>
-                      <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        View
-                      </button>
-                    </Link>
-                    {(nda.status === 'sent' || nda.status === 'pending') && nda.pdfId && (
-                      <button
-                        onClick={() => window.open(`/api/nda-pdfs/${nda.pdfId}/view`, '_blank')}
-                        className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        View PDF
-                      </button>
-                    )}
+                    {/* DRAFT: Edit + Delete */}
                     {nda.status === 'draft' && (
                       <>
                         <Link href={`/fillndahtml?draftId=${nda.id}`}>
@@ -363,6 +427,67 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         </button>
                       </>
                     )}
+
+                    {/* SENT/PENDING: View PDF */}
+                    {(nda.status === 'sent' || nda.status === 'pending') && !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || '') && (
+                      <button
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
+                        className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        View PDF
+                      </button>
+                    )}
+
+                    {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
+                    {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
+                      <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
+                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                          <Edit className="h-4 w-4" />
+                          Sign Now
+                        </button>
+                      </Link>
+                    )}
+
+                    {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
+                    {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
+                      <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
+                        <button className="px-4 py-2 bg-yellow-500 border-2 border-yellow-500 rounded-xl text-white font-semibold hover:bg-yellow-600 transition-all flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Review Changes
+                        </button>
+                      </Link>
+                    )}
+
+                    {/* COMPLETE/SIGNED: View PDF */}
+                    {(nda.status === 'signed' || nda.workflowState === 'COMPLETE') && (
+                      <button
+                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
+                        className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2"
+                      >
+                        <FileDown className="h-4 w-4" />
+                        View PDF
+                      </button>
+                    )}
+
+                    {/* RECEIVED/INCOMING: Review + sender info */}
+                    {nda.type === 'received' && nda.signerId && (
+                      <Link href={`/fillndahtml-public/${nda.signerId}`}>
+                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          Review
+                        </button>
+                      </Link>
+                    )}
+
+                    {/* Preview - placeholder for future */}
+                    <button
+                      className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2"
+                      onClick={() => { }}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Preview
+                    </button>
                   </div>
                 </div>
               </div>

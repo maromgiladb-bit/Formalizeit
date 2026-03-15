@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Great_Vibes } from 'next/font/google';
-import PublicToolbar from '@/components/PublicToolbar';
 
 const greatVibes = Great_Vibes({
     weight: '400',
@@ -19,6 +18,7 @@ interface SignNDAPublicClientProps {
     formData: Record<string, unknown>;
     templateId: string;
     initialHtml: string;
+    signerRole?: 'partyA' | 'partyB';
 }
 
 export default function SignNDAPublicClient({
@@ -29,6 +29,7 @@ export default function SignNDAPublicClient({
     formData,
     templateId,
     initialHtml,
+    signerRole = 'partyB',
 }: SignNDAPublicClientProps) {
     const router = useRouter();
     const [signature, setSignature] = useState({
@@ -40,8 +41,9 @@ export default function SignNDAPublicClient({
     const [signatureMode, setSignatureMode] = useState<'draw' | 'type' | 'upload'>('type');
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const signatureCardRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [typedSignature, setTypedSignature] = useState(initialName);
+    const [typedSignature, setTypedSignature] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -54,6 +56,41 @@ export default function SignNDAPublicClient({
         console.log('🎨 Initial HTML loaded from server');
         setPreviewHtml(initialHtml);
     }, [initialHtml]);
+
+    // Listen for sign-box click-to-field messages from the preview iframe
+    // Only reacts to signature box IDs; ignores all other NDA field clicks
+    useEffect(() => {
+        const handleSignBoxClick = (e: MessageEvent) => {
+            if (
+                e.data?.type === 'field-click' &&
+                (e.data.field === 'party-a-signature' || e.data.field === 'party-b-signature')
+            ) {
+                // Switch to type mode so the signature input is visible
+                setSignatureMode('type');
+
+                // Highlight the signature card
+                if (signatureCardRef.current) {
+                    signatureCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    signatureCardRef.current.style.boxShadow = '0 0 0 4px rgba(251, 191, 36, 0.6)';
+                    setTimeout(() => {
+                        if (signatureCardRef.current) signatureCardRef.current.style.boxShadow = '';
+                    }, 2000);
+                }
+
+                // Focus the typed signature input after mode switch renders
+                setTimeout(() => {
+                    const sigInput = document.querySelector<HTMLInputElement>('input[placeholder="Type your name"]');
+                    if (sigInput) {
+                        sigInput.focus();
+                        sigInput.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
+                        setTimeout(() => { sigInput.style.boxShadow = ''; }, 2000);
+                    }
+                }, 300);
+            }
+        };
+        window.addEventListener('message', handleSignBoxClick);
+        return () => window.removeEventListener('message', handleSignBoxClick);
+    }, []);
 
     // Canvas drawing handlers
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -104,7 +141,7 @@ export default function SignNDAPublicClient({
     useEffect(() => {
         if (!previewHtml) return;
 
-        console.log('🔄 Updating preview HTML, signatureImage exists:', !!signatureImage);
+        console.log('🔄 Updating preview HTML, signatureImage exists:', !!signatureImage, 'signerRole:', signerRole);
 
         let updatedHtml = previewHtml;
 
@@ -112,37 +149,39 @@ export default function SignNDAPublicClient({
         if (signatureImage) {
             let injected = false;
 
-            // Try different template patterns in order of specificity
+            // Determine the signature box ID based on signer role
+            const signatureBoxId = signerRole === 'partyA' ? 'party-a-signature' : 'party-b-signature';
+            const signatureBoxIndex = signerRole === 'partyA' ? 1 : 2;
 
-            // Pattern 1: Professional template - <div class="sign-box" id="party-b-signature">
-            const professionalPattern = /(<div class="sign-box" id="party-b-signature">)([\s\S]*?)(<\/div>)/;
+            // Pattern 1: Professional template - <div class="sign-box" id="party-X-signature">
+            const professionalPattern = new RegExp(`(<div class="sign-box" id="${signatureBoxId}">)([\\s\\S]*?)(</div>)`);
             if (professionalPattern.test(updatedHtml)) {
                 updatedHtml = updatedHtml.replace(
                     professionalPattern,
                     `$1<img src="${signatureImage}" alt="Signature" style="max-height: 70px; max-width: 100%; display: block; margin: auto;" />$3`
                 );
                 injected = true;
-                console.log('✅ Signature injected using Professional template pattern (party-b-signature)');
+                console.log(`✅ Signature injected using Professional template pattern (${signatureBoxId})`);
             }
 
-            // Pattern 2: Look for second signature box if pattern 1 didn't match
+            // Pattern 2: Look for Nth signature box if pattern 1 didn't match
             if (!injected) {
                 const signBoxes = updatedHtml.match(/<div class="sign-box"[^>]*>([\s\S]*?)<\/div>/g);
-                if (signBoxes && signBoxes.length > 1) {
-                    // Replace the second signature box
+                if (signBoxes && signBoxes.length >= signatureBoxIndex) {
+                    // Replace the appropriate signature box
                     let count = 0;
                     updatedHtml = updatedHtml.replace(
                         /<div class="sign-box"([^>]*)>([\s\S]*?)<\/div>/g,
                         (match, attrs, content) => {
                             count++;
-                            if (count === 2) {
+                            if (count === signatureBoxIndex) {
                                 return `<div class="sign-box"${attrs}><img src="${signatureImage}" alt="Signature" style="max-height: 70px; max-width: 100%; display: block; margin: auto;" /></div>`;
                             }
                             return match;
                         }
                     );
                     injected = true;
-                    console.log('✅ Signature injected into second sign-box');
+                    console.log(`✅ Signature injected into sign-box ${signatureBoxIndex}`);
                 }
             }
 
@@ -165,7 +204,7 @@ export default function SignNDAPublicClient({
 
             setPreviewHtml(updatedHtml);
         }
-    }, [signatureImage, previewHtml]);
+    }, [signatureImage, previewHtml, signerRole]);
 
     // Check if scrolled to bottom
     const handleScroll = () => {
@@ -208,10 +247,6 @@ export default function SignNDAPublicClient({
 
     // Submit signature
     const handleSubmit = async () => {
-        if (!hasScrolledToBottom) {
-            setError('Please read the entire document before signing');
-            return;
-        }
 
         if (!signature.name || !signature.title) {
             setError('Please fill in all required fields');
@@ -247,8 +282,8 @@ export default function SignNDAPublicClient({
 
             setSuccess(true);
             setTimeout(() => {
-                router.push('/');
-            }, 3000);
+                router.push(`/sign-nda-public/${signerId}/success`);
+            }, 1000);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to submit signature');
         } finally {
@@ -256,31 +291,10 @@ export default function SignNDAPublicClient({
         }
     };
 
-    if (success) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="text-6xl mb-4">✓</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                        Thank You!
-                    </h1>
-                    <p className="text-gray-600 mb-4">
-                        Your signature has been submitted successfully.
-                    </p>
-                    <p className="text-sm text-gray-500">
-                        Redirecting to homepage...
-                    </p>
-                </div>
-            </div>
-        );
-    }
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <div className="flex-none">
-                <PublicToolbar />
-            </div>
-
             {/* Main Container with Fixed Layout */}
             <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden">
                 {/* LEFT SIDE: Signature Form (No Scroll) */}
@@ -291,7 +305,7 @@ export default function SignNDAPublicClient({
                             <p className="text-gray-600 text-sm">{ndaTitle}</p>
                         </div>
 
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
+                        <div ref={signatureCardRef} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
                             <h2 className="text-lg font-bold text-gray-900 mb-3">Your Signature</h2>
 
                             {/* Form Fields */}
@@ -373,7 +387,7 @@ export default function SignNDAPublicClient({
                                         />
                                         {typedSignature && (
                                             <div className="p-3 border-2 border-gray-300 rounded bg-white overflow-hidden flex items-center justify-center flex-1">
-                                                <p className={`${greatVibes.className} text-3xl text-center break-words`}>{typedSignature}</p>
+                                                <p className={`${greatVibes.className} text-3xl text-center wrap-break-word`}>{typedSignature}</p>
                                             </div>
                                         )}
                                     </div>
@@ -444,12 +458,6 @@ export default function SignNDAPublicClient({
                 >
                     <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-4 py-3 z-10">
                         <h3 className="font-semibold text-gray-900 text-sm">Document Preview</h3>
-                        {!hasScrolledToBottom && (
-                            <p className="text-xs text-yellow-600">⚠️ Scroll to bottom to sign</p>
-                        )}
-                        {hasScrolledToBottom && (
-                            <p className="text-xs text-green-600">✓ Ready to sign</p>
-                        )}
                     </div>
                     <div className="p-6">
                         {previewHtml ? (

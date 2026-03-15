@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react'
 
 import OrgSwitcher from './OrgSwitcher'
 import { InteractiveHoverButton } from './ui/interactive-hover-button'
+import { NotificationIcon } from './ui/notification-icon'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -42,6 +43,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const secondaryLinks = [
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
+    { name: 'FAQ', href: '/faq' },
+    { name: 'Help', href: '/help' },
     { name: 'Homepage', href: '/' },
   ]
 
@@ -52,8 +55,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
     { name: '📄 Sign PDF', href: '/sign-nda' },
     { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
     { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
+    { name: '📧 Email Templates', href: '/devemails' },
+    { name: '📋 NDA Templates', href: '/devtemplates' },
     { name: '🏠 Homepage', href: '/' },
-    { name: '📋 Templates', href: '/templates' },
   ]
 
   const isDev = process.env.NODE_ENV === 'development'
@@ -318,6 +322,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
+            <button className="p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center" aria-label="Notifications">
+              <NotificationIcon size={24} active={false} />
+            </button>
             <InteractiveHoverButton
               text="New NDA"
               onClick={() => router.push('/templates')}

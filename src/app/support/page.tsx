@@ -2,22 +2,16 @@
 
 import { Mail, MessageSquare, Book, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import PageHero from "@/components/ui/page-hero";
 
 export default function SupportPage() {
 	return (
 		<div className="min-h-screen bg-gray-50">
-			{/* Hero Section */}
-			<div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-20">
-				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-					<HelpCircle className="w-16 h-16 mx-auto mb-6 text-teal-400" />
-					<h1 className="text-4xl md:text-5xl font-bold mb-6">
-						Support Center
-					</h1>
-					<p className="text-xl text-gray-300">
-						We're here to help you succeed with your NDAs
-					</p>
-				</div>
-			</div>
+			<PageHero
+				icon={HelpCircle}
+				title="Support Center"
+				subtitle="We're here to help you succeed with your NDAs"
+			/>
 
 			{/* Support Options */}
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

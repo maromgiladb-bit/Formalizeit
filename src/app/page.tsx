@@ -84,16 +84,10 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <main>
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-br from-[var(--navy-900)] to-[var(--navy-800)] text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)',
-              backgroundSize: '50px 50px'
-            }}></div>
-          </div>
+        <div className="relative bg-gray-50 border-b border-gray-200 overflow-hidden">
           <div className="relative">
             {mounted && (
               <AnimatedHero onLearnMore={() => router.push("/about")} />
@@ -103,7 +97,7 @@ export default function Home() {
 
         {/* Stats Section */}
         <motion.div
-          className="bg-gray-50 py-16"
+          className="bg-white py-10"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -133,7 +127,7 @@ export default function Home() {
 
         {/* Features Section */}
         <motion.div
-          className="py-24 bg-white"
+          className="py-12 bg-gray-50"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -141,7 +135,7 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
-              className="text-center mb-16"
+              className="text-center mb-10"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -183,7 +177,7 @@ export default function Home() {
 
         {/* CTA Section */}
         <motion.div
-          className="bg-gradient-to-br from-[var(--navy-900)] to-[var(--navy-800)] py-24"
+          className="bg-gray-100 py-12"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -191,7 +185,7 @@ export default function Home() {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.h2
-              className="text-4xl lg:text-5xl font-bold text-white mb-6"
+              className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -200,7 +194,7 @@ export default function Home() {
               Ready to streamline your NDAs?
             </motion.h2>
             <motion.p
-              className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto"
+              className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -215,7 +209,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <SignUpButton mode="modal">
-                <button className="group px-10 py-5 bg-teal-600 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-teal-700 transition-all duration-200 hover:scale-105">
+                <button className="group px-10 py-5 bg-gray-900 text-white text-lg font-semibold rounded-lg shadow-xl hover:bg-gray-800 transition-all duration-200 hover:scale-105">
                   Start Creating NDAs Today
                   <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, getAppUrl } from "@/lib/email";
+import { sendEmail, getAppUrl, partyBSuggestionsEmailHtml } from "@/lib/email";
 import { renderNdaHtml } from "@/lib/renderNdaHtml";
 import { htmlToPdf } from "@/lib/htmlToPdf";
 import { randomBytes } from "crypto";
@@ -117,17 +117,17 @@ export async function POST(
 
 		// Send email to Party A (owner) with PDF attachment
 		const reviewLink = `${getAppUrl()}/review-suggestions/${reviewToken}`;
-		
+
 		// Generate PDF with current data for Party A to review
 		const formData = draft.data as Record<string, unknown>;
 		const html = await renderNdaHtml(formData, draft.template_id);
 		const pdfBuffer = await htmlToPdf(html);
 		const pdfBase64 = pdfBuffer.toString("base64");
-		
+
 		await sendEmail({
 			to: owner.email,
 			subject: `${party_b_name} has suggested changes to your NDA – ${draft.title || 'NDA'}`,
-			html: generateOwnerReviewEmail(
+			html: partyBSuggestionsEmailHtml(
 				draft.title || "Untitled NDA",
 				party_b_name,
 				party_b_email,
@@ -170,76 +170,3 @@ function generateReviewToken(): string {
 	return randomBytes(32).toString("hex");
 }
 
-function generateOwnerReviewEmail(
-	docTitle: string,
-	partyBName: string,
-	partyBEmail: string,
-	suggestions: Record<string, string>,
-	reviewLink: string
-): string {
-	const suggestionsList = Object.entries(suggestions)
-		.filter(([, value]) => value && value.trim())
-		.map(([key, value]) => {
-			const fieldName = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-			return `<li><strong>${fieldName}:</strong> ${value}</li>`;
-		})
-		.join("");
-
-	return `
-<!DOCTYPE html>
-<html>
-<head>
-	<style>
-		body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-		.container { max-width: 600px; margin: 0 auto; padding: 20px; }
-		.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-		.content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-		.suggestions { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
-		.suggestions h3 { margin-top: 0; color: #856404; }
-		.suggestions ul { margin: 10px 0; padding-left: 20px; }
-		.button { display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
-		.footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-	</style>
-</head>
-<body>
-	<div class="container">
-		<div class="header">
-			<h1>📋 Review Requested</h1>
-		</div>
-		<div class="content">
-			<p>Hello,</p>
-			
-			<p><strong>${partyBName}</strong> (${partyBEmail}) has reviewed your NDA <strong>"${docTitle}"</strong> and suggested some changes to the information you provided.</p>
-			
-			<div class="suggestions">
-				<h3>💡 Suggested Changes:</h3>
-				<ul>
-					${suggestionsList}
-				</ul>
-			</div>
-			
-			<p>You can review these suggestions and choose to:</p>
-			<ul>
-				<li>✅ <strong>Accept</strong> the suggestions and update the NDA</li>
-				<li>✏️ <strong>Edit</strong> the information yourself</li>
-				<li>❌ <strong>Keep</strong> your original information</li>
-			</ul>
-			
-			<center>
-				<a href="${reviewLink}" class="button">
-					Review Suggestions
-				</a>
-			</center>
-			
-			<p style="margin-top: 30px; font-size: 14px; color: #666;">
-				This link will expire in 7 days. After reviewing, you can send the updated NDA back to ${partyBName} for final signature.
-			</p>
-		</div>
-		<div class="footer">
-			<p>This is an automated message from your NDA management system.</p>
-		</div>
-	</div>
-</body>
-</html>
-	`;
-}

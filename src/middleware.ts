@@ -13,6 +13,8 @@ const isPublicRoute = createRouteMatcher([
   '/fillndahtml-public(.*)',
   '/api/s3-test',
   '/api/ndas/submit-input',
+  '/api/ndas/sign-public',
+  '/api/ndas/preview-html-public',
 ])
 
 export default clerkMiddleware(async (auth, req) => {
