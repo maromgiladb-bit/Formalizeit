@@ -18,7 +18,7 @@ export default function FillNDAPublicDevPage() {
         party_a_phone: "+1-555-123-4567",
         party_a_signatory_name: "John Smith",
         party_a_title: "CEO",
-        party_a_email: "maromgiladb@gmail.com",
+        party_a_email: "party-a@example.com",
         // Party B (empty - to be filled by user)
         party_b_name: "",
         party_b_address: "",
