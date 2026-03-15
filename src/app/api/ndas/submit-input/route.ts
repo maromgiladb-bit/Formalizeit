@@ -38,11 +38,20 @@ export async function POST(request: NextRequest) {
         // Verify draft is in correct state
         const allowedStates = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT', 'DRAFT', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE']
         if (!allowedStates.includes(draft.workflowState)) {
-            // Allow if in AWAITING_PARTY_A_REVIEW and it's Party A
-            if (draft.workflowState === 'AWAITING_PARTY_A_REVIEW' && !isPartyA) {
-                return NextResponse.json({ error: 'Draft is awaiting Party A review' }, { status: 400 })
+            return NextResponse.json({ error: 'Draft is in an invalid workflow state for input submission' }, { status: 400 })
+        }
+
+        // Explicitly validate signer role vs workflow state
+        if (isPartyA) {
+            const partyAStates = ['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE']
+            if (!partyAStates.includes(draft.workflowState)) {
+                return NextResponse.json({ error: 'Party A is not allowed to submit input in the current workflow state' }, { status: 400 })
             }
-            // For other states, check strict match if needed, but for now relying on signer role check implicitly
+        } else {
+            const partyBStates = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT', 'DRAFT']
+            if (!partyBStates.includes(draft.workflowState)) {
+                return NextResponse.json({ error: 'Party B is not allowed to submit input in the current workflow state' }, { status: 400 })
+            }
         }
 
         // Merge filled fields into draft content
