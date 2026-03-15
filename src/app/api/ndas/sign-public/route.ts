@@ -35,6 +35,17 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Signer not found' }, { status: 404 });
         }
 
+        // Idempotency: if this signer has already signed, do not process again
+        if (signer.status === 'SIGNED') {
+            return NextResponse.json(
+                {
+                    message: 'Signature already submitted',
+                    status: 'SIGNED',
+                },
+                { status: 200 }
+            );
+        }
+
         // Check if signer role is Party A (APPROVER) or Party B (SIGNER)
         const isPartyA = signer.role === 'APPROVER';
 
