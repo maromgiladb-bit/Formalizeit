@@ -34,8 +34,16 @@ export async function POST(request: NextRequest) {
         }, { status: 401 })
       }
 
+      const dbUser = await prisma.user.findUnique({
+        where: { externalId: userId }
+      })
+
+      if (!dbUser) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
       const draft = await prisma.ndaDraft.findFirst({
-        where: { id: body.draftId, createdByUserId: userId }
+        where: { id: body.draftId, createdByUserId: dbUser.id }
       })
 
       if (!draft) {
