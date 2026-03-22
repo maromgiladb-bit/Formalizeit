@@ -5,8 +5,8 @@ import ToolbarSwitcher from '@/components/ToolbarSwitcher'
 import FooterWrapper from '@/components/FooterWrapper'
 import './globals.css'
 import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
+import { ensureDbUser } from '@/lib/db-user'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -33,24 +33,18 @@ export default async function RootLayout({
 
   if (userId) {
     try {
-      const user = await prisma.user.findUnique({
-        where: { externalId: userId },
-        include: {
-          memberships: {
-            include: { organization: true }
-          }
-        }
-      })
+      const user = await ensureDbUser(userId)
 
       if (user && user.memberships.length > 0) {
         const activeMembership = await getActiveOrganization()
+        const [firstMembership] = user.memberships
         organizationData = {
           organizations: user.memberships.map((m: any) => ({
             id: m.organization.id,
             name: m.organization.name,
             slug: m.organization.slug
           })),
-          activeOrgId: activeMembership?.organizationId || user.memberships[0].organizationId
+          activeOrgId: activeMembership?.organizationId || firstMembership.organizationId
         }
       }
     } catch (error) {

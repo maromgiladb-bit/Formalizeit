@@ -107,7 +107,7 @@ export async function POST(
 			},
 		});
 
-		// Send notification email to Party A (owner) with signed PDF
+		// Send notification email to Party A (owner) without PDF attachment - PDF will be attached only in final completion email
 		try {
 			// Get the owner's email
 			const owner = await prisma.users.findUnique({
@@ -115,16 +115,9 @@ export async function POST(
 			});
 
 			if (owner?.email) {
-				console.log("📧 Preparing to send signed document to Party A:", owner.email);
+				console.log("📧 Preparing to send notification to Party A:", owner.email);
 
-				// Generate PDF with all signatures
-				const html = await renderNdaHtml(updatedData, draft.template_id);
-				const pdfBuffer = await htmlToPdf(html);
-				const pdfBase64 = pdfBuffer.toString("base64");
-
-				console.log("📄 Signed PDF generated, size:", pdfBuffer.length, "bytes");
-
-				// Send email with signed PDF
+				// Send email without PDF attachment
 				await sendEmail({
 					to: owner.email,
 					subject: `✅ NDA Signed – ${draft.title || "NDA"}`,
@@ -133,17 +126,10 @@ export async function POST(
 						party_b_signatory_name,
 						signRequest.signers.email,
 						`${getAppUrl()}/dashboard`
-					),
-					attachments: [
-						{
-							filename: `${draft.title || "NDA"}-SIGNED-${draft.id.substring(0, 8)}.pdf`,
-							content: pdfBase64,
-							contentType: "application/pdf",
-						},
-					],
+					)
 				});
 
-				console.log("✅ Signed document notification sent to Party A");
+				console.log("✅ Notification sent to Party A");
 			}
 		} catch (emailError) {
 			console.error("❌ Failed to send signed document notification:", emailError);

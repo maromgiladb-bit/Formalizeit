@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const APP_URL = 'http://localhost:3000' // TESTING: Force localhost for local testing
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000'
 const MAIL_FROM = process.env.MAIL_FROM || 'noreply@formalizeit.app'
 
 export interface EmailAttachment {
@@ -415,14 +415,106 @@ export function recipientInputSubmittedEmailHtml(
     <h2>Information Submitted</h2>
     <p><strong>${partyBName}</strong> has filled in their required details for the NDA:</p>
     <p class="highlight">${draftTitle}</p>
-    
+
     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
       <p style="color: #4b5563; margin: 0; font-size: 15px;">No changes were suggested to your existing terms. Please review their submitted information to complete the process or proceed to signing.</p>
     </div>
-    
+
     <div style="text-align: center;">
       <a href="${reviewLink}" class="button">Review Submission</a>
     </div>
   `
   return getBaseEmailHtml('Information Submitted', content)
+}
+
+export function inviteEmailHtml(
+  orgName: string,
+  inviterName: string,
+  role: string,
+  signUpLink: string
+): string {
+  const roleLabel = role === 'APPROVER' ? 'Approver' : 'Contributor'
+  const roleDesc =
+    role === 'APPROVER'
+      ? 'You can create and send NDAs, approve submissions, and sign on behalf of the company.'
+      : 'You can create and edit NDA drafts. An approver will review them before they are sent externally.'
+  const content = `
+    <h2>You've been invited to ${orgName}</h2>
+    <p><strong>${inviterName}</strong> has invited you to join <strong>${orgName}</strong> on Formalize It as a <strong>${roleLabel}</strong>.</p>
+
+    <div style="background-color: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 24px 0;">
+      <strong style="color: #0f766e; display: block; margin-bottom: 4px;">Your role: ${roleLabel}</strong>
+      <span style="color: #115e59; font-size: 14px;">${roleDesc}</span>
+    </div>
+
+    <p>Click the button below to create your account and get started. If you already have an account, sign in and you'll automatically be added to the organization.</p>
+
+    <div style="text-align: center;">
+      <a href="${signUpLink}" class="button">Accept Invitation →</a>
+    </div>
+  `
+  return getBaseEmailHtml(`Invitation to ${orgName}`, content)
+}
+
+export function approvalRequestEmailHtml(
+  draftTitle: string,
+  submitterName: string,
+  reviewLink: string
+): string {
+  const content = `
+    <h2>NDA Awaiting Your Approval</h2>
+    <p><strong>${submitterName}</strong> has submitted the following NDA draft for your review and approval:</p>
+    <p class="highlight">${draftTitle}</p>
+
+    <p>As an approver, you can review the draft, request changes, or approve it so it can be sent to the other party.</p>
+
+    <div style="text-align: center;">
+      <a href="${reviewLink}" class="button">Review Draft →</a>
+    </div>
+  `
+  return getBaseEmailHtml('Approval Required', content)
+}
+
+export function approvalApprovedEmailHtml(
+  draftTitle: string,
+  approverName: string,
+  draftLink: string
+): string {
+  const content = `
+    <h2>Your NDA Has Been Approved</h2>
+    <p><strong>${approverName}</strong> has approved your NDA draft:</p>
+    <p class="highlight">${draftTitle}</p>
+
+    <p>The draft is now ready to be sent to the other party for review and signature.</p>
+
+    <div style="text-align: center;">
+      <a href="${draftLink}" class="button">View Draft →</a>
+    </div>
+  `
+  return getBaseEmailHtml('Draft Approved', content)
+}
+
+export function approvalRejectedEmailHtml(
+  draftTitle: string,
+  approverName: string,
+  message: string,
+  draftLink: string
+): string {
+  const content = `
+    <h2>Changes Requested on Your NDA Draft</h2>
+    <p><strong>${approverName}</strong> has reviewed your NDA draft and requested changes:</p>
+    <p class="highlight">${draftTitle}</p>
+
+    <div style="background-color: #fffbeb; border-left: 4px solid #fbbf24; padding: 16px; margin: 24px 0; border-radius: 4px;">
+      <strong style="color: #b45309; display: block; margin-bottom: 4px;">Feedback:</strong>
+      <span style="color: #92400e; font-size: 15px;">${message || 'Please review and update the draft.'}</span>
+    </div>
+
+    <p>Please update the draft and resubmit for approval when ready.</p>
+
+    <div style="text-align: center;">
+      <a href="${draftLink}" class="button">Edit Draft →</a>
+    </div>
+  `
+  return getBaseEmailHtml('Changes Requested', content)
 }

@@ -260,10 +260,8 @@ export default function FillNDAPublicClient({
         return Math.round((filled / pendingInputFields.length) * 100);
     };
 
-    // Get field state
+    // Get field state — driven entirely by the fieldStates computed server-side
     const getFieldState = (field: string): FieldState => {
-        if (incomingSuggestions[field]) return "pending_suggestion";
-        if (pendingInputFields.includes(field)) return "editable";
         return initialFieldStates[field] || "readonly";
     };
 
@@ -289,6 +287,24 @@ export default function FillNDAPublicClient({
         return { isValid: missingFields.length === 0, missingFields };
     };
 
+    const getChangedTextFields = (): Record<string, string> => {
+        const changed: Record<string, string> = {};
+
+        for (const [field, value] of Object.entries(formValues)) {
+            if (typeof value !== "string") continue;
+
+            const initialValue = typeof initialFormData[field] === "string"
+                ? (initialFormData[field] as string)
+                : "";
+
+            if (value !== initialValue) {
+                changed[field] = value;
+            }
+        }
+
+        return changed;
+    };
+
     // Check if Party B made any changes (suggestions or filled requested fields)
     const hasPartyBMadeChanges = (): boolean => {
         // Check for suggestions
@@ -305,7 +321,7 @@ export default function FillNDAPublicClient({
     };
 
     // Handle proceed to sign
-    const handleProceedToSign = () => {
+    const handleProceedToSign = async () => {
         setError(null);
         setValidationErrors([]);
 
@@ -315,6 +331,52 @@ export default function FillNDAPublicClient({
             setValidationErrors(missingFields);
             setError(`Please fill in all required fields. Missing: ${missingFields.slice(0, 3).join(", ")}${missingFields.length > 3 ? ` and ${missingFields.length - 3} more` : ""}`);
             return;
+        }
+
+        if (isPartyA) {
+            setIsSubmitting(true);
+
+            try {
+                const changedFields = getChangedTextFields();
+                const responses: Record<string, { action: string; counterValue?: string }> = {};
+
+                for (const [field, action] of Object.entries(suggestionResponses)) {
+                    responses[field] = { action };
+                    if (action === "countered") {
+                        responses[field].counterValue = counterValues[field];
+                    }
+                }
+
+                const response = await fetch("/api/ndas/submit-input", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        signerId,
+                        draftId,
+                        filledFields: Object.keys(changedFields).length > 0 ? changedFields : undefined,
+                        suggestionResponses: Object.keys(responses).length > 0 ? responses : undefined,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Failed to save changes before signing");
+                }
+
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                    return;
+                }
+
+                window.location.href = `/sign-nda-public/${signerId}`;
+                return;
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "An error occurred");
+                return;
+            } finally {
+                setIsSubmitting(false);
+            }
         }
 
         // Store form data in sessionStorage for the sign page
@@ -437,9 +499,9 @@ export default function FillNDAPublicClient({
         }
     };
 
-    // Handle send back with changes
+    // Handle send back with changes (works for both Party A and Party B)
     const handleSendBackWithChanges = async () => {
-        // Collect all suggestions
+        // Collect outgoing suggestions (fields the current user wants to change)
         const suggestedChanges: Record<string, string> = {};
         for (const [field, value] of Object.entries(mySuggestions)) {
             if (value?.trim()) {
@@ -447,7 +509,20 @@ export default function FillNDAPublicClient({
             }
         }
 
-        if (Object.keys(suggestedChanges).length === 0) {
+        // Collect responses to incoming suggestions (rejected / countered)
+        const responses: Record<string, { action: string; counterValue?: string }> = {};
+        for (const [field, action] of Object.entries(suggestionResponses)) {
+            responses[field] = { action };
+            if (action === "countered") {
+                responses[field].counterValue = counterValues[field];
+            }
+        }
+
+        // Must have at least one outgoing suggestion or a rejection/counter
+        const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
+            r => r === 'rejected' || r === 'countered'
+        );
+        if (Object.keys(suggestedChanges).length === 0 && !hasRejectionsOrCounters) {
             setError("Please suggest at least one change before sending back. Use the '✏️ Suggest Change' button next to any field you want to modify.");
             return;
         }
@@ -456,12 +531,14 @@ export default function FillNDAPublicClient({
         setError(null);
 
         try {
-            // Fill any required pending fields first
+            // For Party B: also send filled required fields alongside suggestions
             const filledFields: Record<string, string> = {};
-            for (const field of pendingInputFields) {
-                const value = formValues[field] as string;
-                if (value?.trim()) {
-                    filledFields[field] = value;
+            if (!isPartyA) {
+                for (const field of pendingInputFields) {
+                    const value = formValues[field] as string;
+                    if (value?.trim()) {
+                        filledFields[field] = value;
+                    }
                 }
             }
 
@@ -472,8 +549,9 @@ export default function FillNDAPublicClient({
                     signerId,
                     draftId,
                     filledFields: Object.keys(filledFields).length > 0 ? filledFields : undefined,
-                    suggestedChanges,
-                    sendBackForReview: true, // Flag to notify Party A
+                    suggestedChanges: Object.keys(suggestedChanges).length > 0 ? suggestedChanges : undefined,
+                    suggestionResponses: Object.keys(responses).length > 0 ? responses : undefined,
+                    sendBackForReview: true,
                 }),
             });
 
@@ -517,7 +595,7 @@ export default function FillNDAPublicClient({
                 </label>
 
                 {/* Pending suggestion - compact inline design */}
-                {state === "pending_suggestion" && incoming && !suggestionResponses[field] && (
+                {incoming && state === "pending_suggestion" && !suggestionResponses[field] && (
                     <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
                         {/* Original value - strikethrough */}
                         <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
@@ -853,7 +931,8 @@ export default function FillNDAPublicClient({
                                             </div>
                                             <div>
                                                 <h2 className="text-xl font-bold text-gray-800">Party A Information</h2>
-                                                <p className="text-sm text-gray-600">Details of the first party (read-only)</p>
+                                                <p className="text-sm text-gray-600">Details of the first party — use ✏️ Suggest Change to propose edits
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="space-y-4">
@@ -1011,11 +1090,17 @@ export default function FillNDAPublicClient({
                                                 const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
                                                     r => r === 'rejected' || r === 'countered'
                                                 );
+                                                const hasOutgoingSuggestions = Object.values(mySuggestions).some(v => v?.trim());
 
                                                 // Check if Party B made any changes (suggestions or filled requested fields)
                                                 const partyBMadeChanges = !isPartyA && hasPartyBMadeChanges();
 
-                                                const canProceedToSign = !partyBMadeChanges && !hasUnresolvedIncoming && !hasRejectionsOrCounters;
+                                                const requiresSuggestionResolution = true; // always resolve suggestions before signing
+
+                                                const canProceedToSign =
+                                                    !partyBMadeChanges &&
+                                                    !hasOutgoingSuggestions &&
+                                                    (!requiresSuggestionResolution || (!hasUnresolvedIncoming && !hasRejectionsOrCounters));
 
                                                 return (
                                                     <div className="space-y-2">
@@ -1035,7 +1120,9 @@ export default function FillNDAPublicClient({
                                                         </button>
                                                         {!canProceedToSign && (
                                                             <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 text-center">
-                                                                {partyBMadeChanges ? (
+                                                                {hasOutgoingSuggestions ? (
+                                                                    "You have suggested edits. Send back for review before signing."
+                                                                ) : partyBMadeChanges ? (
                                                                     "You have made changes (suggestions or filled fields). Please send back for Party A to review."
                                                                 ) : hasUnresolvedIncoming ? (
                                                                     "Please accept or reject all suggestions before signing."
@@ -1058,11 +1145,12 @@ export default function FillNDAPublicClient({
                                             {/* Send Back with Changes Button */}
                                             {(() => {
                                                 // Check if Party B has changes (suggestions, filled fields, or rejected/countered)
+                                                const hasOutgoingSuggestions = Object.values(mySuggestions).some(v => v?.trim());
                                                 const partyBChanges = !isPartyA && hasPartyBMadeChanges();
                                                 const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
                                                     r => r === 'rejected' || r === 'countered'
                                                 );
-                                                const canSendBack = partyBChanges || hasRejectionsOrCounters;
+                                                const canSendBack = partyBChanges || hasRejectionsOrCounters || hasOutgoingSuggestions;
 
                                                 return (
                                                     <button

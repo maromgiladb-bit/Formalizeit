@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import { getActiveOrganization } from '@/lib/db-organization';
 
 // GET - Retrieve company profile
 export async function GET() {
@@ -11,34 +12,29 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find the user and their organization
-    const user = await prisma.user.findUnique({
-      where: { externalId: userId },
-      include: { memberships: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Assuming single organization for now or taking the first one
-    const membership = user.memberships[0];
-    if (!membership) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 404 });
+    const activeMembership = await getActiveOrganization();
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization found' }, { status: 404 });
     }
 
     // Get company profile for this organization
     const profile = await prisma.companyProfile.findUnique({
       where: {
-        organizationId: membership.organizationId
+        organizationId: activeMembership.organizationId
       }
     });
 
     if (!profile) {
-      return NextResponse.json({ profile: null }, { status: 200 });
+      return NextResponse.json({ 
+        profile: null,
+        canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'APPROVER'
+      }, { status: 200 });
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({ 
+      profile,
+      canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'APPROVER'
+    });
   } catch (error) {
     console.error('Error fetching company profile:', error);
     return NextResponse.json(
@@ -59,25 +55,20 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json();
 
-    // Find the user and their organization
-    const user = await prisma.user.findUnique({
-      where: { externalId: userId },
-      include: { memberships: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const activeMembership = await getActiveOrganization();
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization found' }, { status: 404 });
     }
 
-    const membership = user.memberships[0];
-    if (!membership) {
-      return NextResponse.json({ error: 'No organization found' }, { status: 404 });
+    const role = activeMembership.role
+    if (role !== 'OWNER' && role !== 'APPROVER') {
+      return NextResponse.json({ error: 'Only owners and approvers can update company profile' }, { status: 403 });
     }
 
     // Check if profile exists
     const existingProfile = await prisma.companyProfile.findUnique({
       where: {
-        organizationId: membership.organizationId
+        organizationId: activeMembership.organizationId
       }
     });
 
@@ -107,7 +98,7 @@ export async function POST(request: NextRequest) {
       // Create new profile
       profile = await prisma.companyProfile.create({
         data: {
-          organizationId: membership.organizationId,
+          organizationId: activeMembership.organizationId,
           companyName: data.companyname,
           email: data.email,
           phone: data.phone || null,

@@ -114,7 +114,52 @@ export async function POST(request: NextRequest) {
             const appUrl = getAppUrl();
 
             if (newWorkflowState === 'COMPLETE') {
-                // Both signed - Send Congratulations to BOTH parties
+                // Both signed - Generate final PDF with both signatures
+                let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
+
+                try {
+                    const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
+                    const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
+
+                    console.log('📄 Generating final PDF with both signatures...');
+
+                    const html = await renderNdaHtml(updatedContent, draft.templateId || 'professional_mutual_nda_v1');
+                    const pdfBuffer = await renderHtmlToPdf(html, {
+                        pageWidthPx: 900,
+                        baseUrl: appUrl,
+                        isA4: true,
+                    });
+
+                    const pdfBase64 = pdfBuffer.toString('base64');
+                    pdfAttachment = [{
+                        filename: `${draft.title || 'NDA'}_Signed.pdf`,
+                        content: pdfBase64,
+                        contentType: 'application/pdf'
+                    }];
+
+                    console.log('✅ Final PDF generated with both signatures');
+
+                    // Store SIGNED PDF to S3
+                    if (signRequest) {
+                        try {
+                            const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                            await storeNdaPdf({
+                                signRequestId: signRequest.id,
+                                kind: 'SIGNED',
+                                pdfBuffer: pdfBuffer,
+                            });
+                            console.log('✅ SIGNED PDF stored in S3');
+                        } catch (s3Error) {
+                            console.error('❌ Failed to store PDF to S3:', s3Error);
+                            // Continue - S3 storage failure shouldn't block completion
+                        }
+                    }
+                } catch (pdfError) {
+                    console.error('❌ Failed to generate PDF:', pdfError);
+                    // Continue without attachment
+                }
+
+                // Send Congratulations to BOTH parties
                 const dashboardLink = `${appUrl}/mynda`;
 
                 // Email Party A (current signer)
@@ -123,6 +168,7 @@ export async function POST(request: NextRequest) {
                         to: signerEmail || user.email,
                         subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', dashboardLink),
+                        attachments: pdfAttachment
                     });
                     console.log('📧 Congratulations email sent to Party A:', signerEmail || user.email);
                 }
@@ -133,6 +179,7 @@ export async function POST(request: NextRequest) {
                         to: partyBSigner.email,
                         subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', dashboardLink),
+                        attachments: pdfAttachment
                     });
                     console.log('📧 Congratulations email sent to Party B:', partyBSigner.email);
                 }

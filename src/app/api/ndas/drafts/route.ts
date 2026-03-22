@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { createDraftWithLimitCheck } from '@/organizations/limits'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canContributeToDrafts } from '@/lib/organizationRoles'
 
 export async function POST(req: Request) {
   try {
@@ -31,9 +33,20 @@ export async function POST(req: Request) {
     }
 
     let organizationId: string
+    const activeMembership = await getActiveOrganization()
 
-    if (dbUser.memberships.length > 0) {
-      organizationId = dbUser.memberships[0].organizationId
+    if (activeMembership) {
+      if (!canContributeToDrafts(activeMembership.role)) {
+        return NextResponse.json({ error: 'Only contributors and admins can modify drafts in this organization' }, { status: 403 })
+      }
+      organizationId = activeMembership.organizationId
+    } else if (dbUser.memberships.length > 0) {
+      // Fallback when cookie context is unavailable
+      const fallbackMembership = dbUser.memberships[0]
+      if (!canContributeToDrafts(fallbackMembership.role)) {
+        return NextResponse.json({ error: 'Only contributors and admins can modify drafts in this organization' }, { status: 403 })
+      }
+      organizationId = fallbackMembership.organizationId
     } else {
       // Create default org
       const orgName = dbUser.email.split('@')[0]
@@ -74,8 +87,19 @@ export async function POST(req: Request) {
     let draft
     if (draftId) {
       // Update existing draft
+      const existingDraft = await prisma.ndaDraft.findFirst({
+        where: {
+          id: draftId,
+          organizationId,
+        },
+      })
+
+      if (!existingDraft) {
+        return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+      }
+
       draft = await prisma.ndaDraft.update({
-        where: { id: draftId, createdByUserId: dbUser.id },
+        where: { id: draftId },
         data: { title, content: content }
       })
     } else {
@@ -91,14 +115,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ draft, draftId: draft.id, id: draft.id })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Draft creation/update error:', error)
-    if (error.message && error.message.includes('maximum number of NDAs')) {
-      return NextResponse.json({ error: error.message, code: 'LIMIT_REACHED' }, { status: 403 })
+    const errorMessage = error instanceof Error ? error.message : ''
+    if (errorMessage.includes('maximum number of NDAs')) {
+      return NextResponse.json({ error: errorMessage, code: 'LIMIT_REACHED' }, { status: 403 })
     }
     return NextResponse.json({
       error: 'Failed to save draft',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: errorMessage || 'Unknown error'
     }, { status: 500 })
   }
 }
@@ -121,8 +146,13 @@ export async function GET() {
       return NextResponse.json({ drafts: [] })
     }
 
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ drafts: [] })
+    }
+
     const drafts = await prisma.ndaDraft.findMany({
-      where: { createdByUserId: dbUser.id },
+      where: { organizationId: activeMembership.organizationId },
       orderBy: { updatedAt: 'desc' },
       include: {
         signRequests: {

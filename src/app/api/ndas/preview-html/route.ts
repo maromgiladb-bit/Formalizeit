@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
+import { getActiveOrganization } from '@/lib/db-organization'
 // Note: JSDOM/DOMPurify removed - causing serverless issues
 // Sanitization is done client-side via iframe sandbox
 
@@ -25,18 +26,15 @@ export async function POST(request: NextRequest) {
       // Load from database
       console.log('🌐 Loading draft from database:', body.draftId)
 
-      const user = await prisma.user.findUnique({
-        where: { externalId: userId }
-      })
-
-      if (!user) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      const activeMembership = await getActiveOrganization()
+      if (!activeMembership) {
+        return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
       }
 
-      const draft = await prisma.ndaDraft.findUnique({
+      const draft = await prisma.ndaDraft.findFirst({
         where: {
           id: body.draftId,
-          createdByUserId: user.id
+          organizationId: activeMembership.organizationId
         }
       })
 

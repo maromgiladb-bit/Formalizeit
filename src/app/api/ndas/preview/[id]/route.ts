@@ -5,6 +5,7 @@ import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { htmlToPdf } from '@/lib/htmlToPdf'
 import fs from 'fs'
 import path from 'path'
+import { getActiveOrganization } from '@/lib/db-organization'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -29,11 +30,16 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+    }
+
     // Load draft from database
-    const draft = await prisma.ndaDraft.findUnique({
+    const draft = await prisma.ndaDraft.findFirst({
       where: {
         id: params.id,
-        createdByUserId: user.id
+        organizationId: activeMembership.organizationId
       }
     })
 

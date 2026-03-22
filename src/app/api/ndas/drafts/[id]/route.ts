@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canContributeToDrafts, canApproveAndSend, isOrganizationOwner } from '@/lib/organizationRoles'
 
 export async function GET(
   request: NextRequest,
@@ -28,10 +30,15 @@ export async function GET(
     const { id } = await params
     console.log('Draft ID:', id)
 
-    const draft = await prisma.ndaDraft.findUnique({
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+    }
+
+    const draft = await prisma.ndaDraft.findFirst({
       where: {
         id: id,
-        createdByUserId: dbUser.id
+        organizationId: activeMembership.organizationId
       },
       include: {
         revisions: {
@@ -74,13 +81,32 @@ export async function PUT(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+    }
+
+    if (!canContributeToDrafts(activeMembership.role)) {
+      return NextResponse.json({ error: 'Only contributors and admins can update drafts in this organization' }, { status: 403 })
+    }
+
     const { id } = await params
     const { title, data } = await request.json()
 
-    const draft = await prisma.ndaDraft.update({
+    const existingDraft = await prisma.ndaDraft.findFirst({
       where: {
         id,
-        createdByUserId: dbUser.id
+        organizationId: activeMembership.organizationId
+      }
+    })
+
+    if (!existingDraft) {
+      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+    }
+
+    const draft = await prisma.ndaDraft.update({
+      where: {
+        id
       },
       data: {
         title,
@@ -116,11 +142,36 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+    }
+
     const { id } = await params
-    await prisma.ndaDraft.delete({
+
+    const existingDraft = await prisma.ndaDraft.findFirst({
       where: {
         id,
-        createdByUserId: dbUser.id
+        organizationId: activeMembership.organizationId
+      }
+    })
+
+    if (!existingDraft) {
+      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+    }
+
+    const canDelete =
+      isOrganizationOwner(activeMembership.role) ||
+      canApproveAndSend(activeMembership) ||
+      existingDraft.createdByUserId === dbUser.id
+
+    if (!canDelete) {
+      return NextResponse.json({ error: 'You do not have permission to delete this draft' }, { status: 403 })
+    }
+
+    await prisma.ndaDraft.delete({
+      where: {
+        id
       }
     })
 

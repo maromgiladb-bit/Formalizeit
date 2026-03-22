@@ -225,6 +225,20 @@ export async function POST(request: NextRequest) {
                     }];
 
                     console.log('✅ Final PDF generated with both signatures');
+
+                    // Store SIGNED PDF to S3
+                    try {
+                        const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                        await storeNdaPdf({
+                            signRequestId: signer.signRequestId,
+                            kind: 'SIGNED',
+                            pdfBuffer: pdfBuffer,
+                        });
+                        console.log('✅ SIGNED PDF stored in S3');
+                    } catch (s3Error) {
+                        console.error('❌ Failed to store PDF to S3:', s3Error);
+                        // Continue - S3 storage failure shouldn't block completion
+                    }
                 } catch (pdfError) {
                     console.error('❌ Failed to generate PDF:', pdfError);
                     // Continue without attachment - still send email with download link

@@ -13,6 +13,7 @@ export async function getActiveOrganization() {
         where: { externalId: userId },
         include: {
             memberships: {
+                where: { status: 'ACTIVE' },
                 include: { organization: true }
             }
         }

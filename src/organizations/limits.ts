@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { resolveLimits } from "@/billing/planLimits"
+import { DbMembershipRole } from '@/lib/organizationRoles'
 
 export async function assertCanAddMember(organizationId: string) {
     const org = await prisma.organization.findUnique({
@@ -24,12 +25,13 @@ export async function assertCanAddMember(organizationId: string) {
 export async function addMemberToOrganization(
     organizationId: string,
     userId: string,
-    role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER" = "MEMBER"
+    role: DbMembershipRole = "CONTRIBUTOR",
+    status: "ACTIVE" | "PENDING_INVITE" = "ACTIVE"
 ) {
     await assertCanAddMember(organizationId)
 
     return prisma.membership.create({
-        data: { userId, organizationId, role },
+        data: { userId, organizationId, role, status },
     })
 }
 
@@ -56,7 +58,7 @@ export async function createDraftWithLimitCheck(data: {
     createdByUserId: string
     templateId?: string | null
     title?: string | null
-    content?: any
+    content?: unknown
 }) {
     await assertCanCreateDraft(data.organizationId)
 

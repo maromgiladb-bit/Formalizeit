@@ -111,15 +111,15 @@ export default function TemplateSelectionPage() {
 
         {/* Templates Grid */}
         {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
             {filteredTemplates.map(template => (
               <div
                 key={template.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-200"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-200 w-full md:w-[calc(50%-2rem)] lg:w-[380px] flex flex-col"
                 onClick={() => handleSelectTemplate(template.id)}
               >
                 {/* Preview Image or Placeholder */}
-                <div className="h-48 bg-gradient-to-br from-teal-500 to-blue-600 relative overflow-hidden">
+                <div className="h-48 bg-gradient-to-br from-teal-500 to-blue-600 relative overflow-hidden shrink-0">
                   {template.previewImage ? (
                     <Image
                       src={template.previewImage}
@@ -143,14 +143,14 @@ export default function TemplateSelectionPage() {
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
                       {template.name}
                     </h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
                     {template.description}
                   </p>
 
@@ -172,7 +172,7 @@ export default function TemplateSelectionPage() {
                       e.stopPropagation();
                       handleSelectTemplate(template.id);
                     }}
-                    className="w-full py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-auto"
                   >
                     <span>Use This Template</span>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,6 +182,17 @@ export default function TemplateSelectionPage() {
                 </div>
               </div>
             ))}
+            
+            {/* Placeholder for future templates */}
+            <div className="bg-gray-50 rounded-xl shadow-sm border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-500 mb-2">More Templates Coming Soon</h3>
+              <p className="text-gray-400 text-sm">We are working hard to bring you more legally sound templates.</p>
+            </div>
           </div>
         )}
 

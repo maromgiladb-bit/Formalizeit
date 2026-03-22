@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, EmailAttachment } from '@/lib/email'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { renderHtmlToPdf } from '@/lib/htmlToPdf'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canApproveAndSend } from '@/lib/organizationRoles'
 
 /**
  * Send NDA for Party B review
@@ -33,11 +35,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Get draft and verify ownership
-        const draft = await prisma.ndaDraft.findUnique({
+        const activeMembership = await getActiveOrganization()
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can send NDAs for review.' }, { status: 403 })
+        }
+
+        // Get draft and verify organization access
+        const draft = await prisma.ndaDraft.findFirst({
             where: {
                 id: draftId,
-                createdByUserId: user.id
+                organizationId: activeMembership.organizationId
             }
         })
 
@@ -195,50 +206,6 @@ export async function POST(request: NextRequest) {
         console.log('📄 All fields filled:', allFieldsFilled)
         console.log('📄 Has ask receiver flags:', hasAskReceiverFlags)
 
-        let attachments: EmailAttachment[] = []
-
-        if (allFieldsFilled) {
-            try {
-                console.log('📄 Generating PDF for email attachment...')
-
-                // Prepare template data with party mappings
-                const templateData = {
-                    ...updatedContent,
-                    party_1_name: updatedContent.party_a_name,
-                    party_1_address: updatedContent.party_a_address,
-                    party_1_signatory_name: updatedContent.party_a_signatory_name,
-                    party_1_signatory_title: updatedContent.party_a_title,
-                    party_1_phone: updatedContent.party_a_phone || '',
-                    party_1_emails_joined: updatedContent.party_a_email || '',
-                    party_2_name: updatedContent.party_b_name,
-                    party_2_address: updatedContent.party_b_address,
-                    party_2_signatory_name: updatedContent.party_b_signatory_name,
-                    party_2_signatory_title: updatedContent.party_b_title,
-                    party_2_phone: updatedContent.party_b_phone || '',
-                    party_2_emails_joined: updatedContent.party_b_email || recipientEmail,
-                }
-
-                const html = await renderNdaHtml(templateData, 'professional_mutual_nda_v1')
-                const pdfBuffer = await renderHtmlToPdf(html, {
-                    pageWidthPx: 900,
-                    baseUrl: getAppUrl(),
-                    isA4: true,
-                })
-
-                const pdfBase64 = pdfBuffer.toString('base64')
-                attachments = [{
-                    filename: `${draft.title || 'NDA'}.pdf`,
-                    content: pdfBase64,
-                    contentType: 'application/pdf'
-                }]
-
-                console.log('✅ PDF generated and attached')
-            } catch (pdfError) {
-                console.error('❌ Failed to generate PDF:', pdfError)
-                // Continue without attachment
-            }
-        }
-
         try {
             await sendEmail({
                 to: recipientEmail,
@@ -248,10 +215,9 @@ export async function POST(request: NextRequest) {
                     reviewLink,
                     (updatedContent.party_a_name as string) || 'Sender',
                     message || 'Please review the NDA and fill in your information.'
-                ),
-                attachments: attachments.length > 0 ? attachments : undefined
+                )
             })
-            console.log('✅ Review request email sent' + (attachments.length > 0 ? ' with PDF attachment' : ''))
+            console.log('✅ Review request email sent')
         } catch (emailError) {
             console.error('❌ Failed to send email:', emailError)
             // Don't fail the request - log the link for testing

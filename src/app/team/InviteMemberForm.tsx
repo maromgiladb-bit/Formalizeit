@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { inviteMember } from '@/actions/team'
 import { useFormStatus } from 'react-dom'
+import { ORGANIZATION_ROLE_OPTIONS } from '@/lib/organizationRoles'
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -10,7 +11,7 @@ function SubmitButton() {
         <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[var(--teal-600)] hover:bg-[var(--teal-700)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--teal-600)] disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-(--teal-600) hover:bg-(--teal-700) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--teal-600) disabled:opacity-50"
         >
             {pending ? 'Inviting...' : 'Invite Member'}
         </button>
@@ -48,7 +49,7 @@ export default function InviteMemberForm() {
                             name="email"
                             id="email"
                             required
-                            className="shadow-sm focus:ring-[var(--teal-600)] focus:border-[var(--teal-600)] block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                            className="shadow-sm focus:ring-(--teal-600) focus:border-(--teal-600) block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                             placeholder="colleague@example.com"
                         />
                     </div>
@@ -62,12 +63,15 @@ export default function InviteMemberForm() {
                         <select
                             id="role"
                             name="role"
+                            defaultValue="CONTRIBUTOR"
                             required
-                            className="shadow-sm focus:ring-[var(--teal-600)] focus:border-[var(--teal-600)] block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                            className="shadow-sm focus:ring-(--teal-600) focus:border-(--teal-600) block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                         >
-                            <option value="MEMBER">Member</option>
-                            <option value="ADMIN">Admin</option>
-                            <option value="VIEWER">Viewer</option>
+                            {ORGANIZATION_ROLE_OPTIONS.map((roleOption) => (
+                                <option key={roleOption.value} value={roleOption.value}>
+                                    {roleOption.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
