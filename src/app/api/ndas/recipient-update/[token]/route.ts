@@ -180,7 +180,7 @@ export async function PATCH(
       }
     })
 
-    // Send email to owner
+    // Send email to owner (without PDF attachment - PDF will be attached only in final completion email)
     const reviewLink = `${getAppUrl()}/review/${reviewToken}`
     const changesSummary = changes.map(c => ({
       field: formatFieldPath(c.path),
@@ -188,20 +188,10 @@ export async function PATCH(
       after: String(c.after || '')
     }))
 
-    // Generate PDF with updated data
-    const html = await renderNdaHtml(newForm, draft.template_id)
-    const pdfBuffer = await htmlToPdf(html)
-    const pdfBase64 = pdfBuffer.toString('base64')
-
     await sendEmail({
       to: draft.users.email,
       subject: `Review requested: changes to ${draft.title} (R${revNum})`,
-      html: ownerReviewEmailHtml(draft.title || 'Untitled NDA', revNum, reviewLink, changesSummary),
-      attachments: [{
-        filename: `${draft.title || 'NDA'}-R${revNum}-${draft.id.substring(0, 8)}.pdf`,
-        content: pdfBase64,
-        contentType: 'application/pdf'
-      }]
+      html: ownerReviewEmailHtml(draft.title || 'Untitled NDA', revNum, reviewLink, changesSummary)
     })
 
     return NextResponse.json({

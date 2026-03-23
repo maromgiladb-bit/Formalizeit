@@ -114,16 +114,49 @@ export async function POST(
         }
       })
 
-      // TODO: Generate final PDF and store
+      // Generate final PDF with all signatures
       const finalPdfUrl = `${getAppUrl()}/api/ndas/${draft.id}/download`
 
-      // Send final signed email to all parties
+      let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
+      try {
+        const formData = draft.data as Record<string, unknown>
+        const html = await renderNdaHtml(formData, draft.template_id)
+        const pdfBuffer = await htmlToPdf(html)
+        const pdfBase64 = pdfBuffer.toString('base64')
+
+        pdfAttachment = [{
+          filename: `${draft.title || 'NDA'}_Signed.pdf`,
+          content: pdfBase64,
+          contentType: 'application/pdf'
+        }]
+        console.log('✅ Final PDF generated for attachment')
+
+        // Store SIGNED PDF to S3
+        try {
+          const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+          await storeNdaPdf({
+            signRequestId: signRequest.id,
+            kind: 'SIGNED',
+            pdfBuffer: pdfBuffer,
+          });
+          console.log('✅ SIGNED PDF stored in S3');
+        } catch (s3Error) {
+          console.error('❌ Failed to store PDF to S3:', s3Error);
+          // Continue - S3 storage failure shouldn't block completion
+        }
+      } catch (pdfError) {
+        console.error('❌ Failed to generate PDF:', pdfError)
+        // Continue without attachment
+      }
+
+      // Send final signed email to all parties with PDF attachment
       const allSigners = draft.signers
       for (const signer of allSigners) {
         await sendEmail({
           to: signer.email,
           subject: `Fully signed NDA – ${draft.title}`,
-          html: finalSignedEmailHtml(draft.title || 'Untitled NDA', finalPdfUrl)
+          html: finalSignedEmailHtml(draft.title || 'Untitled NDA', finalPdfUrl),
+          attachments: pdfAttachment
         })
       }
 
@@ -160,24 +193,13 @@ export async function POST(
           }
         })
 
-        // Send sign request email with PDF attachment
+        // Send sign request email without PDF attachment - PDF will be attached only in final completion email
         const signLink = `${getAppUrl()}/sign/${signToken}`
-        
-        // Generate PDF for Party B to review before signing
-        const formData = draft.data as Record<string, unknown>
-        const html = await renderNdaHtml(formData, draft.template_id)
-        const pdfBuffer = await htmlToPdf(html)
-        const pdfBase64 = pdfBuffer.toString('base64')
-        
+
         await sendEmail({
           to: recipientSigner.email,
           subject: `Please review & sign your NDA – ${draft.title}`,
-          html: recipientSignRequestEmailHtml(draft.title || 'Untitled NDA', signLink),
-          attachments: [{
-            filename: `${draft.title || 'NDA'}-${draft.id.substring(0, 8)}.pdf`,
-            content: pdfBase64,
-            contentType: 'application/pdf'
-          }]
+          html: recipientSignRequestEmailHtml(draft.title || 'Untitled NDA', signLink)
         })
       }
 

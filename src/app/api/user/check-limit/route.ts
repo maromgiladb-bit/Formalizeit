@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-
-const FREE_PLAN_LIMIT = 3
+import { getActiveOrganization } from '@/lib/db-organization'
+import { resolveLimits } from '@/billing/planLimits'
 
 export async function GET() {
   try {
@@ -11,30 +11,41 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { externalId: userId }
-    })
-
-    if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
     }
 
-    // Get count of NDAs created by user
-    const ndaCount = await prisma.ndaDraft.count({
-      where: { createdByUserId: dbUser.id }
+    const organization = await prisma.organization.findUnique({
+      where: { id: activeMembership.organizationId }
     })
 
-    const plan = dbUser.plan || 'FREE'
+    if (!organization) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
 
-    // Developer and Pro plans have unlimited access
-    const canCreate = plan === 'DEVELOPER' || plan === 'PRO' || plan === 'ENTERPRISE' || (plan === 'FREE' && ndaCount < FREE_PLAN_LIMIT)
+    const limits = resolveLimits(organization)
+
+    // Check organization-wide active draft count (not per-user)
+    const ndaCount = await prisma.ndaDraft.count({
+      where: {
+        organizationId: organization.id,
+        NOT: { status: 'CANCELLED' }
+      }
+    })
+
+    const plan = organization.billingPlan
+    const isUnlimited = !Number.isFinite(limits.maxActiveDrafts)
+    const canCreate = isUnlimited || ndaCount < limits.maxActiveDrafts
+
+    const finiteLimit = isUnlimited ? null : limits.maxActiveDrafts
 
     return NextResponse.json({
       plan,
       ndaCount,
-      limit: plan === 'FREE' ? FREE_PLAN_LIMIT : null,
+      limit: finiteLimit,
       canCreate,
-      remaining: plan === 'FREE' ? Math.max(0, FREE_PLAN_LIMIT - ndaCount) : null
+      remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount)
     })
   } catch (error) {
     console.error('Check limit error:', error)

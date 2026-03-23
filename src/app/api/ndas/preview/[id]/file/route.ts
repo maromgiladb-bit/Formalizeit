@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'
 import path from 'path'
+import { getActiveOrganization } from '@/lib/db-organization'
 
 export async function GET(
   request: NextRequest,
@@ -23,10 +24,15 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const draft = await prisma.ndaDraft.findUnique({
+    const activeMembership = await getActiveOrganization()
+    if (!activeMembership) {
+      return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+    }
+
+    const draft = await prisma.ndaDraft.findFirst({
       where: {
         id: params.id,
-        createdByUserId: user.id
+        organizationId: activeMembership.organizationId
       }
     })
 

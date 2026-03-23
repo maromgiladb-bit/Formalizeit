@@ -109,24 +109,13 @@ export async function POST(
       }
     })
 
-    // Send email to recipient with PDF attachment
+    // Send email to recipient (without PDF attachment - PDF will be attached only in final completion email)
     const editLink = `${getAppUrl()}/sign/${editToken}`
-    
-    // Generate PDF for Party B to review
-    const formData = draft.data as Record<string, unknown>
-    const html = await renderNdaHtml(formData, draft.template_id)
-    const pdfBuffer = await htmlToPdf(html)
-    const pdfBase64 = pdfBuffer.toString('base64')
-    
+
     await sendEmail({
       to: recipientSigner.email,
       subject: `Changes requested on your NDA – ${draft.title}`,
-      html: recipientEditEmailHtml(draft.title || 'Untitled NDA', editLink, message),
-      attachments: [{
-        filename: `${draft.title || 'NDA'}-${draft.id.substring(0, 8)}.pdf`,
-        content: pdfBase64,
-        contentType: 'application/pdf'
-      }]
+      html: recipientEditEmailHtml(draft.title || 'Untitled NDA', editLink, message)
     })
 
     return NextResponse.json({

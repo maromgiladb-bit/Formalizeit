@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
 import { htmlToPdf } from '@/lib/htmlToPdf';
 import { storeNdaPdf } from '@/lib/storeNdaPdf';
+import { getActiveOrganization } from '@/lib/db-organization';
+import { canApproveAndSend } from '@/lib/organizationRoles';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -33,11 +35,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get the draft and verify ownership
-        const draft = await prisma.ndaDraft.findUnique({
+        const activeMembership = await getActiveOrganization();
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can generate and save NDAs' }, { status: 403 });
+        }
+
+        // Get the draft in active organization
+        const draft = await prisma.ndaDraft.findFirst({
             where: {
                 id: draftId,
-                createdByUserId: user.id,
+                organizationId: activeMembership.organizationId,
             },
         });
 

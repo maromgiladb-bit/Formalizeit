@@ -121,13 +121,21 @@ export async function POST(request: NextRequest) {
         }
 
         // Create revision to track changes
+        // IMPORTANT: for the review UI, the other party needs to see ALL changes as "suggestions".
+        // We store suggestedChanges = merge of filledFields + explicit suggestedChanges.
+        // This way page.tsx can surface them all as incomingSuggestions for the reviewer.
+        const allChangesAssuggested: Record<string, string> = {
+            ...(filledFields || {}),
+            ...(suggestedChanges || {}),
+        };
+
         const revision = await prisma.ndaRevision.create({
             data: {
                 draftId: draft.id,
                 content: {
-                    filledFields,
-                    suggestedChanges,
-                    suggestionResponses, // Track responses
+                    filledFields,          // keep raw filled fields for history
+                    suggestedChanges: allChangesAssuggested,  // merged, used by review UI
+                    suggestionResponses,   // Track responses
                     submittedBy: signer.email,
                     submittedAt: new Date().toISOString()
                 }

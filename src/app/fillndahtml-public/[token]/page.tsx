@@ -22,7 +22,10 @@ interface Suggestions {
 /**
  * Public page for Party B to fill/review NDA fields
  * Token is the Signer ID
- * Supports bidirectional editing loop
+ * Supports bidirectional editing loop — both parties use the same review UI:
+ *   - Incoming changes from the other party appear as "pending_suggestion" (accept/reject/counter)
+ *   - All other fields are "readonly" with a "Suggest Change" button
+ *   - Party B's empty pendingInputFields are "editable" (fields Party A asked B to fill)
  */
 export default async function FillNDAPublicPage({
     params,
@@ -69,7 +72,6 @@ export default async function FillNDAPublicPage({
         lastEditedBy?: string;
     };
     const workflowState = extendedDraft.workflowState || 'AWAITING_PARTY_B_REVIEW';
-    const lastEditedBy = extendedDraft.lastEditedBy || 'party_a';
 
     // Determine if this is Party A (APPROVER) or Party B (SIGNER)
     const isPartyA = signer.role === 'APPROVER';
@@ -104,10 +106,6 @@ export default async function FillNDAPublicPage({
     const templateId = (formData.templateId as string) || 'professional_mutual_nda_v1';
     const pendingInputFields = (extendedDraft.pendingInputFields as string[]) || [];
 
-    // Compute field states
-    // Only fields that are in pendingInputFields AND are empty should be editable
-    // Fields with values (even if in pendingInputFields) should be readonly with "Suggest Change"
-    const fieldStates: FieldStates = {};
     const allFields = [
         "docName", "effective_date", "term_months", "confidentiality_period_months",
         "party_a_name", "party_a_address", "party_a_phone",
@@ -117,67 +115,90 @@ export default async function FillNDAPublicPage({
         "governing_law", "ip_ownership", "non_solicit", "exclusivity", "additional_terms",
     ];
 
-    for (const field of allFields) {
-        const fieldValue = formData[field] as string | undefined;
-        const isEmpty = !fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim());
-
-        // Only empty fields in pendingInputFields are editable
-        if (pendingInputFields.includes(field) && isEmpty) {
-            fieldStates[field] = "editable";
-        } else {
-            fieldStates[field] = "readonly";
-        }
-    }
-
-    // Get incoming suggestions from latest revision
+    // ── Build incoming suggestions ──────────────────────────────────────────
+    // These come from the OTHER party's latest revision:
+    //   Party A reviewing → sees Party B's filledFields + suggestedChanges
+    //   Party B reviewing → sees Party A's suggestedChanges (counter-proposals)
+    // We merge filledFields + suggestedChanges so ALL other-party changes are visible.
     const incomingSuggestions: Suggestions = {};
     const latestRevision = draft.revisions[0];
     if (latestRevision) {
         const revContent = latestRevision.content as Record<string, unknown>;
-        const revSuggestions = revContent.suggestedChanges as Record<string, string> | undefined;
-
-        // Check who made this revision
         const submittedBy = revContent.submittedBy as string | undefined;
 
-        // Show suggestions from the OTHER party
-        // If current viewer is Party A (APPROVER), show Party B's suggestions
-        // If current viewer is Party B (SIGNER), show Party A's suggestions
+        // Only show suggestions from the OTHER party
         const isFromOtherParty = isPartyA
-            ? submittedBy !== signer.email  // Party A sees suggestions not from themselves
-            : submittedBy === signer.email ? false : true;  // Party B sees suggestions from Party A
+            ? submittedBy !== signer.email  // Party A sees submissions not from themselves
+            : submittedBy !== signer.email; // Party B sees submissions not from themselves
 
-        if (revSuggestions && isFromOtherParty) {
-            for (const [field, newValue] of Object.entries(revSuggestions)) {
+        if (isFromOtherParty) {
+            const revSuggestions = revContent.suggestedChanges as Record<string, string> | undefined;
+            const revFilledFields = revContent.filledFields as Record<string, string> | undefined;
+
+            // Merge: filledFields are what Party B directly typed into requested fields;
+            // suggestedChanges are explicit suggestions for locked fields.
+            // Both should surface as "suggestions" for the reviewing party.
+            const allChanges: Record<string, string> = {
+                ...(revFilledFields || {}),
+                ...(revSuggestions || {}),
+            };
+
+            for (const [field, newValue] of Object.entries(allChanges)) {
                 if (newValue?.trim()) {
-                    incomingSuggestions[field] = {
-                        oldValue: (formData[field] as string) || "",
-                        newValue,
-                        suggestedBy: isPartyA ? "party_b" : "party_a"
-                    };
-                    fieldStates[field] = "pending_suggestion";
+                    const currentValue = (formData[field] as string) || "";
+                    // Only surface as suggestion if the value actually differs
+                    if (newValue !== currentValue) {
+                        incomingSuggestions[field] = {
+                            oldValue: currentValue,
+                            newValue,
+                            suggestedBy: isPartyA ? "party_b" : "party_a"
+                        };
+                    }
                 }
             }
+        }
+    }
+
+    // ── Compute field states ────────────────────────────────────────────────
+    // Both parties use the same review model:
+    //   pending_suggestion → field changed by other party (accept/reject/counter)
+    //   editable           → Party B only: empty fields Party A asked B to fill
+    //   readonly           → everything else (locked, but "Suggest Change" is available)
+    const fieldStates: FieldStates = {};
+
+    for (const field of allFields) {
+        if (incomingSuggestions[field]) {
+            fieldStates[field] = "pending_suggestion";
+        } else if (!isPartyA) {
+            // Party B: fields Party A asked to fill that are still empty → editable
+            const fieldValue = formData[field] as string | undefined;
+            const isEmpty = !fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim());
+            if (pendingInputFields.includes(field) && isEmpty) {
+                fieldStates[field] = "editable";
+            } else {
+                fieldStates[field] = "readonly";
+            }
+        } else {
+            // Party A: no directly editable fields — use suggestions only
+            fieldStates[field] = "readonly";
         }
     }
 
     // Generate HTML preview server-side with proper field mappings
     const templateData = {
         ...formData,
-        // Map party_a fields to party_1 for template compatibility
         party_1_name: formData.party_a_name || '',
         party_1_address: formData.party_a_address || '',
         party_1_signatory_name: formData.party_a_signatory_name || '',
         party_1_signatory_title: formData.party_a_title || '',
         party_1_phone: formData.party_a_phone || '',
         party_1_emails_joined: formData.party_a_email || '',
-        // Map party_b fields to party_2 for template compatibility
         party_2_name: formData.party_b_name || '',
         party_2_address: formData.party_b_address || '',
         party_2_signatory_name: formData.party_b_signatory_name || '',
         party_2_signatory_title: formData.party_b_title || '',
         party_2_phone: formData.party_b_phone || '',
         party_2_emails_joined: formData.party_b_email || '',
-        // Additional computed fields
         effective_date_long: formData.effective_date ? new Date(formData.effective_date as string).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',

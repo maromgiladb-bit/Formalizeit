@@ -29,9 +29,8 @@ enum BillingStatus {
 
 enum MembershipRole {
   OWNER
-  ADMIN
-  MEMBER
-  VIEWER
+  APPROVER
+  CONTRIBUTOR
 
   @@map("membership_role")
 }
@@ -47,12 +46,13 @@ enum NdaStatus {
 }
 
 enum NdaWorkflowState {
-  DRAFT                       // Party A is creating/editing
-  AWAITING_PARTY_B_REVIEW     // Sent to Party B for review/edit
-  AWAITING_PARTY_A_REVIEW     // Party B made changes, waiting for A to review
-  AWAITING_PARTY_B_SIGNATURE  // Ready for Party B to sign (B signs first - no changes by B)
-  AWAITING_PARTY_A_SIGNATURE  // Ready for Party A to sign (A signs first - after approving B's changes, or after B signed)
-  COMPLETE                    // Both parties have signed
+  DRAFT                        // Party A is creating/editing
+  PENDING_INTERNAL_APPROVAL    // Submitted by contributor, waiting for org approver
+  AWAITING_PARTY_B_REVIEW      // Sent to Party B for review/edit
+  AWAITING_PARTY_A_REVIEW      // Party B made changes, waiting for A to review
+  AWAITING_PARTY_B_SIGNATURE   // Ready for Party B to sign (B signs first - no changes by B)
+  AWAITING_PARTY_A_SIGNATURE   // Ready for Party A to sign (A signs first - after approving B's changes, or after B signed)
+  COMPLETE                     // Both parties have signed
 
   @@map("nda_workflow_state")
 }
@@ -109,10 +109,13 @@ enum PdfKind {
 }
 
 enum NotificationType {
-  NDA_SIGNED           // Other party signed the NDA
-  NDA_CHANGES_REQUESTED // Other party sent changes
-  NDA_COMPLETED        // NDA fully signed by both parties
-  NDA_SENT_TO_YOU      // NDA was sent to you for review/sign
+  NDA_SIGNED             // Other party signed the NDA
+  NDA_CHANGES_REQUESTED  // Other party sent changes
+  NDA_COMPLETED          // NDA fully signed by both parties
+  NDA_SENT_TO_YOU        // NDA was sent to you for review/sign
+  NDA_APPROVAL_REQUESTED // Contributor submitted draft for internal approval
+  NDA_APPROVAL_APPROVED  // Draft approved by approver, ready to send
+  NDA_APPROVAL_REJECTED  // Draft rejected by approver, needs rework
 
   @@map("notification_type")
 }
@@ -166,13 +169,22 @@ model Organization {
   @@map("organizations")
 }
 
+enum MembershipStatus {
+  PENDING_INVITE
+  ACTIVE
+
+  @@map("membership_status")
+}
+
 model Membership {
-  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId         String         @map("user_id") @db.Uuid
-  organizationId String         @map("organization_id") @db.Uuid
-  role           MembershipRole @default(MEMBER) @map("role")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  role           MembershipRole   @default(CONTRIBUTOR) @map("role")
+  status         MembershipStatus @default(ACTIVE) @map("status")
+  isApprover     Boolean          @default(false) @map("is_approver")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
 
   // Relations
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

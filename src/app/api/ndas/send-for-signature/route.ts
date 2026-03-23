@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { renderNdaHtml } from '@/lib/renderNdaHtml';
-import { htmlToPdf } from '@/lib/htmlToPdf';
-import { storeNdaPdf } from '@/lib/storeNdaPdf';
 import { sendEmail, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email';
-
-export const runtime = 'nodejs'; // Required for Puppeteer
+import { getActiveOrganization } from '@/lib/db-organization';
+import { canApproveAndSend } from '@/lib/organizationRoles';
 
 export async function POST(request: NextRequest) {
     try {
@@ -50,11 +47,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get draft
-        const draft = await prisma.ndaDraft.findUnique({
+        const activeMembership = await getActiveOrganization();
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can send NDAs for signature' }, { status: 403 });
+        }
+
+        // Get draft in active organization
+        const draft = await prisma.ndaDraft.findFirst({
             where: {
                 id: draftId,
-                createdByUserId: user.id,
+                organizationId: activeMembership.organizationId,
             },
         });
 
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update draft status and content
-        const updatedDraft = await prisma.ndaDraft.update({
+        await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
                 content: formData,
@@ -148,49 +154,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Generate PDF with Party A's signature
-        console.log('📄 Generating PDF with Party A signature...');
-        let html = await renderNdaHtml(formData);
-
-        // Inject Party A's signature
-        if (signatureImage) {
-            const patterns = [
-                /<div class="sign-box" id="party-a-signature">([\s\S]*?)<\/div>/,
-                /<div class="line"><\/div>/,
-            ];
-
-            for (const pattern of patterns) {
-                if (pattern.test(html)) {
-                    const signatureHtml = `
-            <div style="margin-top: 10px;">
-              <img src="${signatureImage}" alt="Signature" style="max-height: 60px; display: block;" />
-              <div style="margin-top: 5px; font-size: 14px;">
-                <div><strong>${signerName}</strong></div>
-                <div>${signerTitle}</div>
-                <div>${signerDate}</div>
-              </div>
-            </div>
-          `;
-
-                    html = html.replace(pattern, (match) => {
-                        return match.replace(/<\/div>$/, `${signatureHtml}</div>`);
-                    });
-                    break;
-                }
-            }
-        }
-
-        const pdfBuffer = await htmlToPdf(html);
-        console.log('📄 PDF generated, size:', pdfBuffer.length, 'bytes');
-
-        // Store SENT PDF in S3
-        await storeNdaPdf({
-            signRequestId: signRequest.id,
-            kind: 'SENT',
-            pdfBuffer: pdfBuffer,
-        });
-        console.log('✅ SENT PDF stored in S3');
-
         // Create audit event
         await prisma.auditEvent.create({
             data: {
@@ -206,9 +169,8 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Send email with PDF attachment
+        // Send email (without PDF attachment - PDF will be attached only in final completion email)
         const signLink = `${getAppUrl()}/sign-nda-public/${signer.id}`;
-        const pdfBase64 = pdfBuffer.toString('base64');
 
         try {
             await sendEmail({
@@ -217,14 +179,7 @@ export async function POST(request: NextRequest) {
                 html: recipientSignRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     signLink
-                ),
-                attachments: [
-                    {
-                        filename: `${draft.title || 'NDA'}-${draft.id.substring(0, 8)}.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf',
-                    },
-                ],
+                )
             });
             console.log('✅ Email sent successfully to:', partyBEmail);
         } catch (emailError) {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl } from '@/lib/email'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canApproveAndSend } from '@/lib/organizationRoles'
 
 /**
  * Send NDA for Party B input (not signature)
@@ -31,11 +33,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Get draft and verify ownership
-        const draft = await prisma.ndaDraft.findUnique({
+        const activeMembership = await getActiveOrganization()
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can send NDAs for input.' }, { status: 403 })
+        }
+
+        // Get draft in active organization
+        const draft = await prisma.ndaDraft.findFirst({
             where: {
                 id: draftId,
-                createdByUserId: user.id
+            organizationId: activeMembership.organizationId
             }
         })
 
@@ -140,7 +151,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            draft: { id: draft.id, workflowState: 'AWAITING_INPUT' },
+          draft: { id: draft.id, workflowState: 'AWAITING_PARTY_B_REVIEW' },
             signer: { id: signer.id, email: recipientEmail },
             inputLink,
             pendingFieldsCount: pendingInputFields.length

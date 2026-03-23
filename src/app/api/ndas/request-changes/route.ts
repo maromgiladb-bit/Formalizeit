@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, partyARequestChangesEmailHtml } from '@/lib/email'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canApproveAndSend } from '@/lib/organizationRoles'
 
 /**
  * Request changes from Party B
@@ -31,11 +33,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Get draft with sign request and signer
-        const draft = await prisma.ndaDraft.findUnique({
+        const activeMembership = await getActiveOrganization()
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can request changes' }, { status: 403 })
+        }
+
+        // Get draft with sign request and signer in active organization
+        const draft = await prisma.ndaDraft.findFirst({
             where: {
                 id: draftId,
-                createdByUserId: user.id
+                organizationId: activeMembership.organizationId
             },
             include: {
                 signRequests: {
@@ -53,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         const latestSignRequest = draft.signRequests[0]
-        const signer = latestSignRequest?.signers[0]
+        const signer = latestSignRequest?.signers.find(s => s.role === 'SIGNER')
 
         if (!signer) {
             return NextResponse.json({ error: 'No signer found' }, { status: 400 })
@@ -74,7 +85,7 @@ export async function POST(request: NextRequest) {
                 organizationId: draft.organizationId,
                 draftId: draft.id,
                 userId: user.id,
-                eventType: 'UPDATED',
+                eventType: 'CHANGES_REQUESTED',
                 metadata: {
                     action: 'requested_changes',
                     message,

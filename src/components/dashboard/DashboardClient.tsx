@@ -53,6 +53,9 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
     case 'AWAITING_PARTY_B_SIGNATURE':
       return { label: 'WAITING SIG.', color: 'text-purple-800', bgColor: 'bg-purple-100' };
 
+    case 'PENDING_INTERNAL_APPROVAL':
+      return { label: 'AWAITING APPROVAL', color: 'text-amber-800', bgColor: 'bg-amber-100' };
+
     case 'FILLING':
     default:
       // Fall back to status-based display
@@ -428,17 +431,6 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </>
                     )}
 
-                    {/* SENT/PENDING: View PDF */}
-                    {(nda.status === 'sent' || nda.status === 'pending') && !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || '') && (
-                      <button
-                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
-                        className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        View PDF
-                      </button>
-                    )}
-
                     {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
                     {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
                       <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
@@ -459,19 +451,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </Link>
                     )}
 
-                    {/* COMPLETE/SIGNED: View PDF */}
-                    {(nda.status === 'signed' || nda.workflowState === 'COMPLETE') && (
-                      <button
-                        onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
-                        className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2"
-                      >
-                        <FileDown className="h-4 w-4" />
-                        View PDF
-                      </button>
-                    )}
-
                     {/* RECEIVED/INCOMING: Review + sender info */}
-                    {nda.type === 'received' && nda.signerId && (
+                    {nda.type === 'received' && nda.signerId && !['COMPLETE', 'SIGNING_COMPLETE'].includes(nda.workflowState || '') && (
                       <Link href={`/fillndahtml-public/${nda.signerId}`}>
                         <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
                           <Eye className="h-4 w-4" />
@@ -480,14 +461,40 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </Link>
                     )}
 
-                    {/* Preview - placeholder for future */}
-                    <button
-                      className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2"
-                      onClick={() => { }}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Preview
-                    </button>
+                    {/* VIEW BUTTON: Different behavior based on status */}
+                    {(() => {
+                      const isComplete = nda.workflowState === 'COMPLETE' || nda.workflowState === 'SIGNING_COMPLETE' || nda.status === 'signed';
+                      const isDraft = nda.status === 'draft';
+                      const hasActionButton = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '');
+                      const isReceivedWithReview = nda.type === 'received' && nda.signerId && !isComplete;
+
+                      // COMPLETE: View PDF from S3
+                      if (isComplete) {
+                        return (
+                          <button
+                            onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
+                            className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2"
+                          >
+                            <FileDown className="h-4 w-4" />
+                            View PDF
+                          </button>
+                        );
+                      }
+
+                      // NOT COMPLETE: View in public fillnda page (for created NDAs that aren't draft and don't have action buttons)
+                      if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created' && nda.partyASignerId) {
+                        return (
+                          <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
+                            <button className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              View
+                            </button>
+                          </Link>
+                        );
+                      }
+
+                      return null;
+                    })()}
                   </div>
                 </div>
               </div>

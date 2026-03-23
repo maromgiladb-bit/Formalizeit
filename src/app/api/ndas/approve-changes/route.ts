@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { getActiveOrganization } from '@/lib/db-organization'
+import { canApproveAndSend } from '@/lib/organizationRoles'
 
 /**
  * Approve changes submitted by Party B
@@ -30,12 +32,31 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
+        const activeMembership = await getActiveOrganization()
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
+        }
+
+        if (!canApproveAndSend(activeMembership)) {
+            return NextResponse.json({ error: 'Only approvers can approve changes' }, { status: 403 })
+        }
+
+        const existingDraft = await prisma.ndaDraft.findFirst({
+            where: {
+                id: draftId,
+                organizationId: activeMembership.organizationId
+            }
+        })
+
+        if (!existingDraft) {
+            return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+        }
+
         // Update draft workflow state
         // Since Party B made changes and Party A is approving, Party A signs first
         const draft = await prisma.ndaDraft.update({
             where: {
-                id: draftId,
-                createdByUserId: user.id
+                id: draftId
             },
             data: {
                 workflowState: 'AWAITING_PARTY_A_SIGNATURE',
@@ -49,7 +70,7 @@ export async function POST(request: NextRequest) {
                 organizationId: draft.organizationId,
                 draftId: draft.id,
                 userId: user.id,
-                eventType: 'UPDATED',
+                eventType: 'CHANGES_ACCEPTED',
                 metadata: {
                     action: 'approved_changes',
                     newWorkflowState: 'AWAITING_PARTY_A_SIGNATURE'

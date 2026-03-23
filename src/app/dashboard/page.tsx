@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from '@/components/dashboard/DashboardClient';
+import { getActiveOrganization } from '@/lib/db-organization';
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -43,52 +44,30 @@ export default async function DashboardPage() {
   });
 
   if (!user) {
-    // If auth exists but checking DB failed to find user, try to sync/create
-    const { email } = await currentUser().then(u => ({ email: u?.emailAddresses[0]?.emailAddress }));
-
-    if (email) {
-      user = await prisma.user.create({
-        data: {
-          externalId: userId,
-          email: email
-        },
-        include: {
-          createdDrafts: {
-            include: {
-              signRequests: {
-                include: {
-                  ndaPdfs: true,
-                  signers: true,
-                },
-              },
-            },
-            orderBy: { createdAt: 'desc' }
-          },
-          signers: {
-            include: {
-              signRequest: {
-                include: {
-                  draft: {
-                    include: {
-                      createdBy: true,
-                    }
-                  },
-                  ndaPdfs: true,
-                }
-              }
-            },
-            orderBy: { createdAt: 'desc' }
-          }
-        }
-      });
-    } else {
-      // connecting issues or no email
-      redirect('/');
-    }
+    // ensureDbUser() in layout guarantees the user exists;
+    // if somehow missing, redirect to team settings
+    redirect('/settings/team');
   }
 
+  // Fetch org-scoped drafts if user belongs to an organization
+  const membership = await getActiveOrganization();
+  const draftSource = membership
+    ? await prisma.ndaDraft.findMany({
+        where: { organizationId: membership.organizationId },
+        include: {
+          signRequests: {
+            include: {
+              ndaPdfs: true,
+              signers: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+    : user.createdDrafts;
+
   // Transform created/sent NDAs
-  const createdNdas = user.createdDrafts.map((draft) => {
+  const createdNdas = draftSource.map((draft) => {
     // Find the latest sign request and its PDF
     const latestSignRequest = draft.signRequests?.[0];
     const sentPdf = latestSignRequest?.ndaPdfs?.find((pdf: { kind: string }) => pdf.kind === 'SENT');

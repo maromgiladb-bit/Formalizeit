@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { renderHtmlToPdf } from '@/lib/htmlToPdf'
+import { getActiveOrganization } from '@/lib/db-organization'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -34,16 +35,13 @@ export async function POST(request: NextRequest) {
         }, { status: 401 })
       }
 
-      const dbUser = await prisma.user.findUnique({
-        where: { externalId: userId }
-      })
-
-      if (!dbUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      const activeMembership = await getActiveOrganization()
+      if (!activeMembership) {
+        return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
       }
 
       const draft = await prisma.ndaDraft.findFirst({
-        where: { id: body.draftId, createdByUserId: dbUser.id }
+        where: { id: body.draftId, organizationId: activeMembership.organizationId }
       })
 
       if (!draft) {

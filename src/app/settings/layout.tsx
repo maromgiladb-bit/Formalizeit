@@ -13,6 +13,7 @@ export default function SettingsLayout({
     const navigation = [
         { name: 'General', href: '/settings', current: pathname === '/settings' },
         { name: 'Team', href: '/settings/team', current: pathname === '/settings/team' },
+        { name: 'Company Profile', href: '/settings/company-profile', current: pathname === '/settings/company-profile' },
         { name: 'Billing', href: '/settings/billing', current: pathname === '/settings/billing' },
     ]
 

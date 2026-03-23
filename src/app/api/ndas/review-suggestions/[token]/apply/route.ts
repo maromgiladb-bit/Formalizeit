@@ -113,13 +113,8 @@ export async function POST(
 			data: { consumed_at: new Date() },
 		});
 
-		// Send email to Party B with PDF attachment
+		// Send email to Party B without PDF attachment - PDF will be attached only in final completion email
 		const reviewLink = `${getAppUrl()}/review-nda/${newToken}`;
-
-		// Generate PDF with updated data for Party B to review
-		const html = await renderNdaHtml(updatedData, draft.template_id);
-		const pdfBuffer = await htmlToPdf(html);
-		const pdfBase64 = pdfBuffer.toString("base64");
 
 		await sendEmail({
 			to: party_b_email,
@@ -129,14 +124,7 @@ export async function POST(
 				party_b_name,
 				acceptedFields as string[],
 				reviewLink
-			),
-			attachments: [
-				{
-					filename: `${draft.title || "NDA"}-Updated-${draft.id.substring(0, 8)}.pdf`,
-					content: pdfBase64,
-					contentType: "application/pdf",
-				},
-			],
+			)
 		});
 
 		console.log("✅ Updated NDA sent back to Party B");

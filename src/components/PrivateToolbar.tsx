@@ -36,7 +36,6 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
   const primaryLinks = [
     { name: 'Settings', href: '/settings' },
-    { name: 'Company Profile', href: '/companydetails' },
     { name: 'Plans', href: '/plans' },
   ]
 

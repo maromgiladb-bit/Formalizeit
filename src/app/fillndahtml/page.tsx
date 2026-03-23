@@ -1,12 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
-
-export const dynamic = 'force-dynamic';
 
 type FormValues = {
 	docName: string;
@@ -142,6 +140,27 @@ export default function FillNDAHTML() {
 	const [showPdfPreview, setShowPdfPreview] = useState(false);
 	const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
 	const [generatingPdf, setGeneratingPdf] = useState(false);
+
+	// Role-based workflow
+	const [userMembership, setUserMembership] = useState<{ role: string; isApprover: boolean } | null>(null);
+	const [submittingForApproval, setSubmittingForApproval] = useState(false);
+	const [processingApproval, setProcessingApproval] = useState(false);
+	const [showRejectModal, setShowRejectModal] = useState(false);
+	const [rejectMessage, setRejectMessage] = useState('');
+	const [showRequestChangesModal, setShowRequestChangesModal] = useState(false);
+	const [requestChangesMessage, setRequestChangesMessage] = useState('');
+	const [processingChanges, setProcessingChanges] = useState(false);
+
+	useEffect(() => {
+		fetch('/api/user/role')
+			.then(r => r.ok ? r.json() : null)
+			.then(data => { if (data) setUserMembership(data); })
+			.catch(() => { });
+	}, []);
+
+	const userNeedsApproval = userMembership
+		? !(userMembership.role === 'APPROVER' || (userMembership.role === 'OWNER' && userMembership.isApprover))
+		: false;
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
@@ -367,6 +386,30 @@ export default function FillNDAHTML() {
 		}
 	}, [liveData, values]);
 
+	// Fetch email suggestions
+	const fetchEmailSuggestions = useCallback(async (query: string) => {
+		if (!query || query.length < 2) {
+			setEmailSuggestions([]);
+			setShowEmailSuggestions(false);
+			return;
+		}
+
+		try {
+			setLoadingSuggestions(true);
+			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
+			const data = await res.json();
+
+			if (res.ok && data.suggestions) {
+				setEmailSuggestions(data.suggestions);
+				setShowEmailSuggestions(data.suggestions.length > 0);
+			}
+		} catch (error) {
+			console.error("Failed to fetch email suggestions:", error);
+		} finally {
+			setLoadingSuggestions(false);
+		}
+	}, []);
+
 	// C) Fix email suggestions debounce - clean timeout on unmount
 	useEffect(() => {
 		if (signersEmail.length < 2) {
@@ -378,17 +421,69 @@ export default function FillNDAHTML() {
 			fetchEmailSuggestions(signersEmail);
 		}, 300);
 		return () => clearTimeout(id);
-	}, [signersEmail]);
+	}, [signersEmail, fetchEmailSuggestions]);
+
+	const loadDraft = useCallback(async (id: string) => {
+		console.log('=== Loading draft ===')
+		console.log('Draft ID:', id)
+		setLoading(true);
+		try {
+			const res = await fetch(`/api/ndas/drafts/${id}`);
+			console.log('Response status:', res.status)
+
+			const json = await res.json();
+			console.log('Response data:', json)
+
+			if (!res.ok) throw new Error(json.error || "Failed to load draft");
+
+			if (json.draft?.content) {
+				console.log('Setting form values from draft content:', json.draft.content)
+				// Compute next values in one pass, then set once
+				const next = { ...DEFAULTS, ...json.draft.content };
+				if (json.draft.title) next.docName = json.draft.title;
+				setValues(next);
+				setLastSavedValues(next);
+				setDraftId(json.draft.id);
+				setWorkflowState(json.draft.workflowState || null);
+
+				// Parse revisions to extract incoming suggestions from Party B
+				if (json.draft.revisions && json.draft.revisions.length > 0) {
+					const latestRevision = json.draft.revisions[0];
+					const revContent = latestRevision.content as Record<string, unknown>;
+					const revSuggestions = revContent?.suggestedChanges as Record<string, string> | undefined;
+					const submittedBy = revContent?.submittedBy as string | undefined;
+					const lastEditedBy = json.draft.lastEditedBy;
+
+					// If last edit was by party_b and there are suggestions, show them
+					if (lastEditedBy === 'party_b' && revSuggestions) {
+						const suggestions: Record<string, Suggestion> = {};
+						for (const [field, newValue] of Object.entries(revSuggestions)) {
+							if (newValue?.trim()) {
+								suggestions[field] = {
+									oldValue: (json.draft.content[field] as string) || '',
+									newValue,
+									suggestedBy: 'party_b'
+								};
+							}
+						}
+						setIncomingSuggestions(suggestions);
+						console.log('Loaded incoming suggestions from Party B:', suggestions);
+					}
+				}
+			} else {
+				console.log('No draft data found, using defaults')
+				setValues(DEFAULTS);
+			}
+		} catch (e) {
+			console.error('Load draft error:', e)
+			setWarning(e instanceof Error ? e.message : "Failed to load draft");
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
 	useEffect(() => {
-		// Sync user to database (best-effort)
-		if (user?.emailAddresses?.[0]?.emailAddress) {
-			fetch("/api/users/sync", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email: user.emailAddresses[0].emailAddress }),
-			}).catch(() => { });
-		}
+		if (!user) return;
 
 		const urlDraftId = searchParams.get("draftId");
 		const urlTemplateId = searchParams.get("templateId");
@@ -427,8 +522,7 @@ export default function FillNDAHTML() {
 				}
 			}
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [user]);
+	}, [user, searchParams, loadDraft]);
 
 	// Listen for click-to-field messages from the preview iframe
 	// Maps template field names to their form step numbers
@@ -503,66 +597,6 @@ export default function FillNDAHTML() {
 		return () => window.removeEventListener('message', handleFieldClick);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [step]);
-
-	// D) Fix loadDraft - single setValues call to avoid double-set race
-	const loadDraft = async (id: string) => {
-		console.log('=== Loading draft ===')
-		console.log('Draft ID:', id)
-		setLoading(true);
-		try {
-			const res = await fetch(`/api/ndas/drafts/${id}`);
-			console.log('Response status:', res.status)
-
-			const json = await res.json();
-			console.log('Response data:', json)
-
-			if (!res.ok) throw new Error(json.error || "Failed to load draft");
-
-			if (json.draft?.content) {
-				console.log('Setting form values from draft content:', json.draft.content)
-				// Compute next values in one pass, then set once
-				const next = { ...DEFAULTS, ...json.draft.content };
-				if (json.draft.title) next.docName = json.draft.title;
-				setValues(next);
-				setLastSavedValues(next);
-				setDraftId(json.draft.id);
-				setWorkflowState(json.draft.workflowState || null);
-
-				// Parse revisions to extract incoming suggestions from Party B
-				if (json.draft.revisions && json.draft.revisions.length > 0) {
-					const latestRevision = json.draft.revisions[0];
-					const revContent = latestRevision.content as Record<string, unknown>;
-					const revSuggestions = revContent?.suggestedChanges as Record<string, string> | undefined;
-					const submittedBy = revContent?.submittedBy as string | undefined;
-					const lastEditedBy = json.draft.lastEditedBy;
-
-					// If last edit was by party_b and there are suggestions, show them
-					if (lastEditedBy === 'party_b' && revSuggestions) {
-						const suggestions: Record<string, Suggestion> = {};
-						for (const [field, newValue] of Object.entries(revSuggestions)) {
-							if (newValue?.trim()) {
-								suggestions[field] = {
-									oldValue: (json.draft.content[field] as string) || '',
-									newValue,
-									suggestedBy: 'party_b'
-								};
-							}
-						}
-						setIncomingSuggestions(suggestions);
-						console.log('Loaded incoming suggestions from Party B:', suggestions);
-					}
-				}
-			} else {
-				console.log('No draft data found, using defaults')
-				setValues(DEFAULTS);
-			}
-		} catch (e) {
-			console.error('Load draft error:', e)
-			setWarning(e instanceof Error ? e.message : "Failed to load draft");
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	const setField = (k: keyof FormValues, v: string | boolean) => {
 		setValues((s) => ({ ...s, [k]: v } as unknown as FormValues));
@@ -954,30 +988,6 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// Fetch email suggestions
-	const fetchEmailSuggestions = async (query: string) => {
-		if (!query || query.length < 2) {
-			setEmailSuggestions([]);
-			setShowEmailSuggestions(false);
-			return;
-		}
-
-		try {
-			setLoadingSuggestions(true);
-			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
-			const data = await res.json();
-
-			if (res.ok && data.suggestions) {
-				setEmailSuggestions(data.suggestions);
-				setShowEmailSuggestions(data.suggestions.length > 0);
-			}
-		} catch (error) {
-			console.error("Failed to fetch email suggestions:", error);
-		} finally {
-			setLoadingSuggestions(false);
-		}
-	};
-
 	// Handle email input change with debounce
 	// C) Clean email change handler - debounce moved to useEffect
 	const handleEmailChange = (email: string) => {
@@ -1040,6 +1050,124 @@ export default function FillNDAHTML() {
 		setShowVerifyEmailModal(true);
 	};
 
+	const submitForApproval = async () => {
+		let currentDraftId = draftId;
+		if (!currentDraftId) {
+			try {
+				const payload = { draftId: null, title: values.docName, data: values };
+				const res = await fetch('/api/ndas/drafts', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				const json = await res.json();
+				if (!res.ok) throw new Error(json.error || 'Failed to save draft');
+				currentDraftId = json.draftId || json.id;
+				setDraftId(currentDraftId);
+				setLastSavedValues(values);
+			} catch (e) {
+				setWarning(e instanceof Error ? e.message : 'Failed to save draft');
+				return;
+			}
+		}
+		setSubmittingForApproval(true);
+		setWarning('');
+		try {
+			const res = await fetch('/api/ndas/submit-for-approval', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ draftId: currentDraftId }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Failed to submit for approval');
+			setWorkflowState('PENDING_INTERNAL_APPROVAL');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : 'Failed to submit for approval');
+		} finally {
+			setSubmittingForApproval(false);
+		}
+	};
+
+	const approveInternally = async () => {
+		if (!draftId) return;
+		setProcessingApproval(true);
+		try {
+			const res = await fetch('/api/ndas/internal-approve', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ draftId }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Failed to approve');
+			setWorkflowState('DRAFT');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : 'Failed to approve');
+		} finally {
+			setProcessingApproval(false);
+		}
+	};
+
+	const rejectInternally = async () => {
+		if (!draftId || !rejectMessage.trim()) return;
+		setProcessingApproval(true);
+		try {
+			const res = await fetch('/api/ndas/internal-reject', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ draftId, message: rejectMessage.trim() }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Failed to reject');
+			setWorkflowState('DRAFT');
+			setShowRejectModal(false);
+			setRejectMessage('');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : 'Failed to reject');
+		} finally {
+			setProcessingApproval(false);
+		}
+	};
+
+
+	const approveChanges = async () => {
+		if (!draftId) return;
+		setProcessingChanges(true);
+		try {
+			const res = await fetch('/api/ndas/approve-changes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ draftId }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Failed to approve changes');
+			setWorkflowState('AWAITING_PARTY_A_SIGNATURE');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : 'Failed to approve changes');
+		} finally {
+			setProcessingChanges(false);
+		}
+	};
+
+	const requestChanges = async () => {
+		if (!draftId || !requestChangesMessage.trim()) return;
+		setProcessingChanges(true);
+		try {
+			const res = await fetch('/api/ndas/request-changes', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ draftId, message: requestChangesMessage.trim() }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || 'Failed to request changes');
+			setWorkflowState('AWAITING_PARTY_B_REVIEW');
+			setShowRequestChangesModal(false);
+			setRequestChangesMessage('');
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : 'Failed to request changes');
+		} finally {
+			setProcessingChanges(false);
+		}
+	};
 	// Actually send after email verification
 	const confirmAndSend = async () => {
 		if (!verifyRecipientEmail?.trim()) {
@@ -1177,7 +1305,7 @@ export default function FillNDAHTML() {
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 											)}
 										</svg>
-										{showLivePreview ? "Hide" : "Show"}
+										{showLivePreview ? "Hide Preview" : "Show Preview"}
 									</button>
 									{isDev && (
 										<button
@@ -1397,7 +1525,7 @@ export default function FillNDAHTML() {
 												<div>
 													<p className="text-sm text-green-800">
 														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
-														You can manage your company profile in <a href="/companydetails" className="underline hover:text-green-900">Company Details</a>.
+														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-green-900">Company Details</a>.
 													</p>
 												</div>
 											</div>
@@ -1822,44 +1950,113 @@ export default function FillNDAHTML() {
 									)}
 								</div>
 								<div className="flex gap-2">
-									{/* Continue to Sign Button - shown when workflow is past initial stage */}
-									{draftId && workflowState && !['DRAFT', 'AWAITING_INPUT', 'AWAITING_PARTY_B_REVIEW'].includes(workflowState) && (
-										<button
-											onClick={() => router.push(`/sign-nda/manual/${draftId}`)}
-											className="px-5 py-2.5 bg-purple-600 text-white rounded-lg font-medium text-sm hover:bg-purple-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
-										>
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-											</svg>
-											Continue to Sign
-										</button>
+									{/* Internal Approval Buttons — shown to approvers when draft is pending internal review */}
+									{workflowState === 'PENDING_INTERNAL_APPROVAL' && !userNeedsApproval && (
+										<>
+											<button
+												onClick={approveInternally}
+												disabled={processingApproval}
+												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${processingApproval ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'}`}
+											>
+												{processingApproval ? 'Processing...' : 'Approve'}
+											</button>
+											<button
+												onClick={() => setShowRejectModal(true)}
+												disabled={processingApproval}
+												className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+											>
+												Reject
+											</button>
+										</>
 									)}
-									{/* Send Button - always visible */}
-									<button
-										onClick={sendForReview}
-										disabled={sendingForSignature}
-										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
-											? 'bg-gray-400 text-white cursor-not-allowed'
-											: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
-											}`}
-									>
-										{sendingForSignature ? (
-											<>
-												<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-													<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-													<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-												</svg>
-												Sending...
-											</>
+
+									{/* Awaiting Approval badge — shown to contributors when draft is pending */}
+									{workflowState === 'PENDING_INTERNAL_APPROVAL' && userNeedsApproval && (
+										<span className="px-5 py-2.5 rounded-lg font-medium text-sm bg-amber-100 text-amber-800 border border-amber-300">
+											Awaiting Approval
+										</span>
+									)}
+
+									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
+									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
+										<span className="px-5 py-2.5 rounded-lg font-medium text-sm bg-blue-100 text-blue-800 border border-blue-300">
+											Awaiting Party B
+										</span>
+									)}
+
+									{/* Party A Review Buttons — shown when Party B has submitted changes */}
+									{workflowState === 'AWAITING_PARTY_A_REVIEW' && !userNeedsApproval && (
+										<>
+											<button
+												onClick={approveChanges}
+												disabled={processingChanges}
+												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${processingChanges ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'}`}
+											>
+												{processingChanges ? 'Processing...' : 'Accept Changes'}
+											</button>
+											<button
+												onClick={() => setShowRequestChangesModal(true)}
+												disabled={processingChanges}
+												className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+											>
+												Request Changes
+											</button>
+										</>
+									)}
+
+									{/* Send / Submit Button — shown in DRAFT state or new (null) drafts */}
+									{(workflowState === 'DRAFT' || workflowState === null) && (
+										userNeedsApproval ? (
+											<button
+												onClick={submitForApproval}
+												disabled={submittingForApproval}
+												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${submittingForApproval ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg'}`}
+											>
+												{submittingForApproval ? (
+													<>
+														<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+															<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+															<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+														</svg>
+														Submitting...
+													</>
+												) : (
+													<>
+														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+														</svg>
+														Submit for Approval
+													</>
+												)}
+											</button>
 										) : (
-											<>
-												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-												</svg>
-												Send for Review
-											</>
-										)}
-									</button>
+											<button
+												onClick={sendForReview}
+												disabled={sendingForSignature}
+												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
+													? 'bg-gray-400 text-white cursor-not-allowed'
+													: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
+													}`}
+											>
+												{sendingForSignature ? (
+													<>
+														<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+															<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+															<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+														</svg>
+														Sending...
+													</>
+												) : (
+													<>
+														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+														</svg>
+														Send for Review
+													</>
+												)}
+											</button>
+										)
+									)}
 									<button
 										onClick={saveDraft}
 										disabled={saving}
@@ -1889,7 +2086,7 @@ export default function FillNDAHTML() {
 									<p className="text-xs text-gray-600">Updates as you type</p>
 								</div>
 								<div className="flex gap-2">
-									{livePreviewHtml && (
+									{isDev && livePreviewHtml && (
 										<>
 											<button
 												onClick={() => {
@@ -2321,6 +2518,85 @@ export default function FillNDAHTML() {
 
 				{/* Exit Warning Modal */}
 
+
+				{/* Reject Internal Submission Modal */}
+				{showRequestChangesModal && (
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+							<div className="p-6 border-b border-gray-200">
+								<h3 className="text-lg font-semibold text-gray-900">Request Changes from Party B</h3>
+								<p className="text-sm text-gray-500 mt-1">Describe what needs to be revised before proceeding.</p>
+							</div>
+							<div className="p-6">
+								<label className="block text-sm font-medium text-gray-700 mb-2">Message to Party B</label>
+								<textarea
+									value={requestChangesMessage}
+									onChange={e => setRequestChangesMessage(e.target.value)}
+									rows={4}
+									className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+									placeholder="Explain what changes are needed..."
+									autoFocus
+								/>
+							</div>
+							<div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
+								<button
+									onClick={() => { setShowRequestChangesModal(false); setRequestChangesMessage(''); }}
+									className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+								>
+									Cancel
+								</button>
+								<button
+									onClick={requestChanges}
+									disabled={processingChanges || !requestChangesMessage.trim()}
+									className="flex-1 px-4 py-3 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+								>
+									{processingChanges ? (
+										<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Sending...</>
+									) : 'Send to Party B'}
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{showRejectModal && (
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+							<div className="p-6 border-b border-gray-200">
+								<h3 className="text-lg font-semibold text-gray-900">Reject & Request Changes</h3>
+								<p className="text-sm text-gray-500 mt-1">Provide feedback so the contributor can revise the draft.</p>
+							</div>
+							<div className="p-6">
+								<label className="block text-sm font-medium text-gray-700 mb-2">Feedback message</label>
+								<textarea
+									value={rejectMessage}
+									onChange={e => setRejectMessage(e.target.value)}
+									rows={4}
+									className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+									placeholder="Explain what needs to be changed..."
+									autoFocus
+								/>
+							</div>
+							<div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
+								<button
+									onClick={() => { setShowRejectModal(false); setRejectMessage(''); }}
+									className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+								>
+									Cancel
+								</button>
+								<button
+									onClick={rejectInternally}
+									disabled={processingApproval || !rejectMessage.trim()}
+									className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+								>
+									{processingApproval ? (
+										<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Sending...</>
+									) : 'Send Feedback'}
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* PDF Preview Modal (fallback for blocked popups) */}
 				{showPdfPreview && pdfPreviewUrl && (
