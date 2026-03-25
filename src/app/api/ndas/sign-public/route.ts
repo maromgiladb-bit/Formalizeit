@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
 import { createNotification, createNotificationsForOrgApprovers, createNotificationsForAllOrgMembers } from '@/lib/notifications';
+import { linkSignerToUser } from '@/lib/linkSignerToUser';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -179,19 +180,10 @@ export async function POST(request: NextRequest) {
         // This handles the case where a registered user signs via public link
         let matchedUserId: string | null = null
         try {
-            const matchedUser = await prisma.user.findUnique({
-                where: { email: signer.email },
-                select: { id: true },
-            });
-            if (matchedUser) {
-                matchedUserId = matchedUser.id
-                await prisma.signer.update({
-                    where: { id: signerId },
-                    data: { userId: matchedUser.id },
-                });
-                if (process.env.NODE_ENV === 'development') {
-                    console.log('🔗 Linked signer to user account:', matchedUser.id);
-                }
+            const { linked, userId } = await linkSignerToUser(signerId, signer.email);
+            matchedUserId = userId;
+            if (linked && process.env.NODE_ENV === 'development') {
+                console.log('🔗 Linked signer to user account:', userId);
             }
         } catch (linkError) {
             // Non-critical: failure here doesn't break signing
@@ -396,7 +388,7 @@ export async function POST(request: NextRequest) {
                 const partyBEmail = otherSigner?.email || otherPartyEmail
                 if (partyBEmail) {
                     const partyBUser = await prisma.user.findUnique({
-                        where: { email: partyBEmail },
+                        where: { email: partyBEmail.trim().toLowerCase() },
                         select: { id: true },
                     })
                     if (partyBUser) {

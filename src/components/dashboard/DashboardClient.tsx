@@ -176,7 +176,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
               </div>
             </div>
             <Link href="/templates">
-              <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
+              <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                 <Plus className="h-5 w-5" />
                 New NDA
               </button>
@@ -209,7 +209,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
           <button
             onClick={() => setFilter('all')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'all'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'all'
               ? 'bg-[var(--teal-50)] border-[var(--teal-600)]'
               : 'bg-white border-gray-200 hover:border-[var(--teal-100)]'
               }`}
@@ -228,7 +228,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('draft')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'draft'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'draft'
               ? 'bg-yellow-50 border-yellow-500'
               : 'bg-white border-gray-200 hover:border-yellow-300'
               }`}
@@ -249,7 +249,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('sent')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'sent'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'sent'
               ? 'bg-purple-50 border-purple-500'
               : 'bg-white border-gray-200 hover:border-purple-300'
               }`}
@@ -270,7 +270,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('received')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'received'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'received'
               ? 'bg-orange-50 border-orange-500'
               : 'bg-white border-gray-200 hover:border-orange-300'
               }`}
@@ -291,7 +291,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('action')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'action'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'action'
               ? 'bg-red-50 border-red-500'
               : 'bg-white border-gray-200 hover:border-red-300'
               }`}
@@ -317,7 +317,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
           <button
             onClick={() => setFilter('signed')}
-            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 ${filter === 'signed'
+            className={`p-6 rounded-xl shadow-sm border-2 transition-all text-left hover:shadow-md hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${filter === 'signed'
               ? 'bg-green-50 border-green-500'
               : 'bg-white border-gray-200 hover:border-green-300'
               }`}
@@ -345,7 +345,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
               <h3 className="text-lg font-bold text-gray-900 mb-2">No NDAs found</h3>
               <p className="text-gray-600 mb-6">Add a new NDA to get started.</p>
               <Link href="/templates">
-                <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300">
+                <button className="px-6 py-3 bg-[var(--teal-600)] text-white rounded-xl font-bold shadow-lg hover:bg-[var(--teal-700)] hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                   + New NDA
                 </button>
               </Link>
@@ -431,7 +431,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {nda.status === 'draft' && (
                       <>
                         <Link href={`/fillndahtml?draftId=${nda.id}`}>
-                          <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2">
+                          <button className="px-4 py-2 bg-white border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-[var(--teal-600)] transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                             <Edit className="h-4 w-4" />
                             Edit
                           </button>
@@ -439,7 +439,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         <button
                           onClick={() => handleDelete(nda.id, nda.partyName)}
                           disabled={deletingId === nda.id}
-                          className="px-4 py-2 bg-white border-2 border-red-300 rounded-xl text-red-700 font-semibold hover:bg-red-50 hover:border-red-500 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-white border-2 border-red-300 rounded-xl text-red-700 font-semibold hover:bg-red-50 hover:border-red-500 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         >
                           {deletingId === nda.id ? (
                             <>
@@ -459,7 +459,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
                     {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
                       <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
-                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                           <Edit className="h-4 w-4" />
                           Sign Now
                         </button>
@@ -469,7 +469,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
                     {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
                       <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
-                        <button className="px-4 py-2 bg-yellow-500 border-2 border-yellow-500 rounded-xl text-white font-semibold hover:bg-yellow-600 transition-all flex items-center gap-2">
+                        <button className="px-4 py-2 bg-yellow-500 border-2 border-yellow-500 rounded-xl text-white font-semibold hover:bg-yellow-600 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                           <Eye className="h-4 w-4" />
                           Review Changes
                         </button>
@@ -480,14 +480,14 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                     {nda.type === 'received' && nda.signerId && !['COMPLETE', 'SIGNING_COMPLETE'].includes(nda.workflowState || '') && (
                       nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE' ? (
                         <Link href={`/sign-nda-public/${nda.signerId}`}>
-                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                             <Edit className="h-4 w-4" />
                             Sign Now
                           </button>
                         </Link>
                       ) : (
                         <Link href={`/fillndahtml-public/${nda.signerId}`}>
-                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                             <Eye className="h-4 w-4" />
                             Review
                           </button>
@@ -507,7 +507,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                         return (
                           <button
                             onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
-                            className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2"
+                            className="px-4 py-2 bg-green-600 border-2 border-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                           >
                             <FileDown className="h-4 w-4" />
                             View PDF
@@ -519,7 +519,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created' && nda.partyASignerId) {
                         return (
                           <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
-                            <button className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2">
+                            <button className="px-4 py-2 bg-[var(--teal-600)] border-2 border-[var(--teal-600)] rounded-xl text-white font-semibold hover:bg-[var(--teal-700)] transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                               <Eye className="h-4 w-4" />
                               View
                             </button>

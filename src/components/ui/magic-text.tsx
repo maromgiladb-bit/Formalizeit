@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useRef } from "react"
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion"
 
 export interface MagicTextProps {
   text: string;
@@ -11,8 +10,8 @@ export interface MagicTextProps {
 
 interface WordProps {
   children: string;
-  progress: any;
-  range: number[];
+  progress: MotionValue<number>;
+  range: [number, number];
 }
 
 const Word: React.FC<WordProps> = ({ children, progress, range }) => {
@@ -27,11 +26,10 @@ const Word: React.FC<WordProps> = ({ children, progress, range }) => {
 };
 
 export const MagicText: React.FC<MagicTextProps> = ({ text }) => {
-  const container = useRef(null);
+  const container = useRef<HTMLParagraphElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: container,
-
     offset: ["start 0.9", "start 0.25"],
   });
 
@@ -41,7 +39,6 @@ export const MagicText: React.FC<MagicTextProps> = ({ text }) => {
     <p ref={container} className="flex flex-wrap leading-[0.5] p-4">
       {words.map((word, i) => {
         const start = i / words.length;
-
         const end = start + 1 / words.length;
 
         return (
@@ -53,3 +50,4 @@ export const MagicText: React.FC<MagicTextProps> = ({ text }) => {
     </p>
   );
 };
+

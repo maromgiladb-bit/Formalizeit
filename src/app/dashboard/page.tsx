@@ -118,12 +118,11 @@ export default async function DashboardPage() {
     ...emailSigners.filter(es => !user.signers.some(us => us.id === es.id)),
   ];
 
-  // Build set of draft IDs the user CREATED so we can avoid double-listing them
-  const createdDraftIds = new Set(createdNdas.map(n => n.id));
-
   const receivedNdas = allSigners
     // Don't show NDAs the user created (they already appear in Sent tab)
-    .filter(signer => !createdDraftIds.has(signer.signRequest.draft.id))
+    // We explicitly check createdByUserId rather than createdDraftIds because
+    // in an org context, createdDraftIds contains ALL org drafts, not just the user's.
+    .filter(signer => signer.signRequest.draft.createdByUserId !== user!.id)
     .map((signer) => {
       const draft = signer.signRequest.draft;
       const sender = (draft as { createdBy?: { name?: string; email?: string } }).createdBy;
