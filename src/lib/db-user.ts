@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { currentUser } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
+import { claimPendingSigners } from '@/lib/claimPendingSigners'
 
 /**
  * Ensures the authenticated Clerk user has a corresponding database User record.
@@ -60,6 +61,9 @@ export async function ensureDbUser(clerkUserId: string) {
         }
       }
 
+      // Claim any NDA signer records that were sent to this email before the user existed
+      await claimPendingSigners(email, merged.id)
+
       return merged
     } catch {
       // Concurrent request may have already completed the merge
@@ -82,6 +86,9 @@ export async function ensureDbUser(clerkUserId: string) {
     },
     include,
   })
+
+  // Claim any NDA signer records that were sent to this email before the user existed
+  await claimPendingSigners(email, created.id)
 
   return created
 }

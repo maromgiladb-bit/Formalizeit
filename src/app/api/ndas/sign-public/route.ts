@@ -174,6 +174,27 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Link signer to user account if one exists with this email
+        // This handles the case where a registered user signs via public link
+        try {
+            const matchedUser = await prisma.user.findUnique({
+                where: { email: signer.email },
+                select: { id: true },
+            });
+            if (matchedUser) {
+                await prisma.signer.update({
+                    where: { id: signerId },
+                    data: { userId: matchedUser.id },
+                });
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🔗 Linked signer to user account:', matchedUser.id);
+                }
+            }
+        } catch (linkError) {
+            // Non-critical: failure here doesn't break signing
+            console.error('Failed to link signer to user:', linkError);
+        }
+
         // Send Email Notifications
         try {
             const appUrl = getAppUrl();

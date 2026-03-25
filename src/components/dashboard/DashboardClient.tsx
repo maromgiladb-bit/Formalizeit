@@ -122,7 +122,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
     if (filter === 'signed') return isSigned && !isActionRequired;
     if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created' && !isActionRequired && !isSigned;
     if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending') && !isActionRequired && !isSigned;
-    if (filter === 'received') return nda.type === 'received' && !isSigned && !isActionRequired;
+    if (filter === 'received') return nda.type === 'received'; // show ALL received, regardless of status
     return true;
   });
 
@@ -134,7 +134,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
     total: localNdas.length,
     draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created' && !actionRequired(n) && !isSigned(n)).length,
     sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending') && !actionRequired(n) && !isSigned(n)).length,
-    received: localNdas.filter((n) => n.type === 'received' && !isSigned(n) && !actionRequired(n)).length,
+    received: localNdas.filter((n) => n.type === 'received').length, // ALL received, any status
     signed: localNdas.filter((n) => isSigned(n) && !actionRequired(n)).length,
     action: localNdas.filter((n) => actionRequired(n)).length,
   };
@@ -257,7 +257,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-600">Incoming NDAs</p>
+                <p className="text-sm font-semibold text-gray-600">Received</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stats.received}</p>
               </div>
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${filter === 'received' ? 'bg-orange-600' : 'bg-orange-100'
