@@ -45,11 +45,15 @@ export default function MyNDAsPage() {
     const [error, setError] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming'>('outgoing')
 
-    // Search and filter state
+    // Search and filter state (Outgoing / Sent tab)
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
     const [sortBy, setSortBy] = useState<SortBy>('newest')
     const [selectedCategory, setSelectedCategory] = useState<'all' | 'action_required' | 'sent' | 'draft' | 'signed'>('all')
+
+    // Search and filter state (Incoming / Received tab)
+    const [incomingSearch, setIncomingSearch] = useState('')
+    const [incomingStatusFilter, setIncomingStatusFilter] = useState<'all' | 'PENDING' | 'SIGNED' | 'SENT' | 'VIEWED'>('all')
 
     useEffect(() => {
         if (isLoaded && userId) {
@@ -111,6 +115,19 @@ export default function MyNDAsPage() {
             console.error('Failed to fetch incoming NDAs:', err)
         }
     }
+
+    // Filtered incoming NDAs
+    const filteredIncomingNdas = incomingNdas.filter(nda => {
+        if (incomingSearch) {
+            const q = incomingSearch.toLowerCase()
+            const matchesTitle = nda.title?.toLowerCase().includes(q)
+            const matchesFrom = nda.fromName?.toLowerCase().includes(q)
+            const matchesFromEmail = nda.fromEmail?.toLowerCase().includes(q)
+            if (!matchesTitle && !matchesFrom && !matchesFromEmail) return false
+        }
+        if (incomingStatusFilter !== 'all' && nda.status !== incomingStatusFilter) return false
+        return true
+    })
 
     const deleteDraft = async (id: string) => {
         if (!confirm('Are you sure you want to delete this NDA?')) return
@@ -658,17 +675,99 @@ export default function MyNDAsPage() {
                 {/* Incoming NDAs Tab */}
                 {activeTab === 'incoming' && (
                     <>
-                        {incomingNdas.length === 0 ? (
+                        {/* Filter Bar */}
+                        {incomingNdas.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    {/* Search */}
+                                    <div className="flex-1 relative">
+                                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <input
+                                            type="text"
+                                            placeholder="Search by title or sender..."
+                                            value={incomingSearch}
+                                            onChange={(e) => setIncomingSearch(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                                        />
+                                    </div>
+                                    {/* Status Filter */}
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Status:</label>
+                                        <select
+                                            value={incomingStatusFilter}
+                                            onChange={(e) => setIncomingStatusFilter(e.target.value as typeof incomingStatusFilter)}
+                                            className="px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm bg-white"
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="PENDING">Pending</option>
+                                            <option value="SENT">Sent to me</option>
+                                            <option value="VIEWED">Viewed</option>
+                                            <option value="SIGNED">Signed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {/* Results count */}
+                                {(incomingSearch || incomingStatusFilter !== 'all') && (
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <p className="text-sm text-gray-500">
+                                            Showing {filteredIncomingNdas.length} of {incomingNdas.length} received NDAs
+                                        </p>
+                                        <button
+                                            onClick={() => { setIncomingSearch(''); setIncomingStatusFilter('all') }}
+                                            className="text-xs text-teal-600 hover:text-teal-800 font-medium"
+                                        >
+                                            Clear filters
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Stats Pills */}
+                        {incomingNdas.length > 0 && (
+                            <div className="flex gap-3 mb-6 flex-wrap">
+                                {(['all', 'PENDING', 'SENT', 'SIGNED'] as const).map(s => {
+                                    const count = s === 'all'
+                                        ? incomingNdas.length
+                                        : incomingNdas.filter(n => n.status === s).length
+                                    if (s !== 'all' && count === 0) return null
+                                    const label = s === 'all' ? 'All' : s === 'PENDING' ? 'Pending' : s === 'SENT' ? 'Sent to me' : 'Signed'
+                                    const active = incomingStatusFilter === s
+                                    return (
+                                        <button
+                                            key={s}
+                                            onClick={() => setIncomingStatusFilter(s)}
+                                            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${active
+                                                ? 'bg-teal-600 text-white border-teal-600'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-teal-400'
+                                            }`}
+                                        >
+                                            {label} <span className={`ml-1 ${active ? 'text-teal-100' : 'text-gray-400'}`}>({count})</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        )}
+
+                        {filteredIncomingNdas.length === 0 ? (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Incoming NDAs</h3>
-                                <p className="text-gray-600">You haven&apos;t received any NDAs yet.</p>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    {incomingSearch || incomingStatusFilter !== 'all' ? 'No matching NDAs' : 'No Incoming NDAs'}
+                                </h3>
+                                <p className="text-gray-600">
+                                    {incomingSearch || incomingStatusFilter !== 'all'
+                                        ? 'Try adjusting your search or filters'
+                                        : "You haven't received any NDAs yet."}
+                                </p>
                             </div>
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                {incomingNdas.map((nda) => (
+                                {filteredIncomingNdas.map((nda) => (
                                     <div
                                         key={nda.id}
                                         className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all overflow-hidden"
@@ -680,10 +779,10 @@ export default function MyNDAsPage() {
                                                     <h3 className="text-lg font-semibold text-gray-900 truncate">{nda.title}</h3>
                                                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${nda.status === 'SIGNED' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
-                                                            nda.status === 'PENDING' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                                                            nda.status === 'PENDING' || nda.status === 'SENT' ? 'bg-amber-100 text-amber-800 border-amber-200' :
                                                                 'bg-blue-100 text-blue-800 border-blue-200'
                                                             }`}>
-                                                            {nda.status}
+                                                            {nda.status === 'PENDING' ? 'Awaiting your action' : nda.status === 'SENT' ? 'Sent to you' : nda.status}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -721,16 +820,39 @@ export default function MyNDAsPage() {
 
                                         {/* Card Footer */}
                                         <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
-                                            <Link
-                                                href={`/fillndahtml-public/${nda.signerId}`}
-                                                className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
-                                            >
-                                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                Review
-                                            </Link>
+                                            {/* Signed: view PDF */}
+                                            {nda.status === 'SIGNED' ? (
+                                                <button
+                                                    onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.draftId}`, '_blank')}
+                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    View PDF
+                                                </button>
+                                            ) : nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE' ? (
+                                                <Link
+                                                    href={`/sign-nda-public/${nda.signerId}`}
+                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                    </svg>
+                                                    Sign Now
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    href={`/fillndahtml-public/${nda.signerId}`}
+                                                    className="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
+                                                >
+                                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    Review
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

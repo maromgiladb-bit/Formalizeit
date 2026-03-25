@@ -26,6 +26,8 @@ export default async function DashboardPage() {
         orderBy: { createdAt: 'desc' },
       },
       signers: {
+        // Include ALL signer roles — both SIGNER (received as Party B)
+        // and APPROVER (received sign-back request as Party A)
         include: {
           signRequest: {
             include: {
@@ -42,6 +44,24 @@ export default async function DashboardPage() {
       }
     },
   });
+
+  // Also fetch any signers matched by email but not yet linked to userId
+  // (covers the case where user signed via public link before logging in)
+  const emailSigners = user ? await prisma.signer.findMany({
+    where: {
+      email: user.email,
+      userId: null,
+    },
+    include: {
+      signRequest: {
+        include: {
+          draft: { include: { createdBy: true } },
+          ndaPdfs: true,
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  }) : [];
 
   if (!user) {
     // ensureDbUser() in layout guarantees the user exists;
@@ -92,25 +112,36 @@ export default async function DashboardPage() {
     };
   });
 
-  // Transform received NDAs
-  const receivedNdas = user.signers.map((signer) => {
-    const draft = signer.signRequest.draft;
-    const sender = (draft as { createdBy?: { name?: string; email?: string } }).createdBy;
-    const content = draft.content as Record<string, unknown> | null;
+  // Transform received NDAs (merge userId-linked and email-matched signers, deduplicate)
+  const allSigners = [
+    ...(user.signers || []),
+    ...emailSigners.filter(es => !user.signers.some(us => us.id === es.id)),
+  ];
 
-    return {
-      id: draft.id,
-      partyName: draft.title || 'Untitled NDA',
-      status: signer.status?.toLowerCase() || 'pending',
-      workflowState: (draft as { workflowState?: string }).workflowState || undefined,
-      createdAt: draft.createdAt || new Date(),
-      signedAt: signer.updatedAt, // Approximation
-      type: 'received' as const,
-      signerId: signer.id,
-      senderName: sender?.name || (content?.party_a_name as string) || undefined,
-      senderEmail: sender?.email || (draft as { recipientEmail?: string }).recipientEmail || undefined,
-    };
-  });
+  // Build set of draft IDs the user CREATED so we can avoid double-listing them
+  const createdDraftIds = new Set(createdNdas.map(n => n.id));
+
+  const receivedNdas = allSigners
+    // Don't show NDAs the user created (they already appear in Sent tab)
+    .filter(signer => !createdDraftIds.has(signer.signRequest.draft.id))
+    .map((signer) => {
+      const draft = signer.signRequest.draft;
+      const sender = (draft as { createdBy?: { name?: string; email?: string } }).createdBy;
+      const content = draft.content as Record<string, unknown> | null;
+
+      return {
+        id: draft.id,
+        partyName: draft.title || 'Untitled NDA',
+        status: signer.status?.toLowerCase() || 'pending',
+        workflowState: (draft as { workflowState?: string }).workflowState || undefined,
+        createdAt: draft.createdAt || new Date(),
+        signedAt: signer.updatedAt,
+        type: 'received' as const,
+        signerId: signer.id,
+        senderName: sender?.name || (content?.party_a_name as string) || undefined,
+        senderEmail: sender?.email || undefined,
+      };
+    });
 
   // Combine all NDAs
   const allNdas = [...createdNdas, ...receivedNdas].sort(

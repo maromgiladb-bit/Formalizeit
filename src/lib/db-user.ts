@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { currentUser } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
+import { claimPendingSigners } from '@/lib/claimPendingSigners'
 
 /**
  * Ensures the authenticated Clerk user has a corresponding database User record.
@@ -34,6 +35,24 @@ export async function ensureDbUser(clerkUserId: string) {
     include,
   })
 
+  // --- Account Recovery ---
+  // If this user deleted their account within the last 30 days and is re-registering
+  // with the same email, restore their account (all NDAs, signers, memberships intact).
+  if (placeholder?.status === 'pending_deletion') {
+    const restored = await prisma.user.update({
+      where: { id: placeholder.id },
+      data: {
+        externalId: clerkUserId,
+        name: clerkUser?.fullName || clerkUser?.firstName || placeholder.name,
+        image: clerkUser?.imageUrl || placeholder.image,
+        deletedAt: null,
+        status: 'active',
+      },
+      include,
+    })
+    return restored
+  }
+
   if (placeholder) {
     // Merge: update placeholder externalId to real Clerk ID
     try {
@@ -60,6 +79,9 @@ export async function ensureDbUser(clerkUserId: string) {
         }
       }
 
+      // Claim any NDA signer records that were sent to this email before the user existed
+      await claimPendingSigners(email, merged.id)
+
       return merged
     } catch {
       // Concurrent request may have already completed the merge
@@ -82,6 +104,9 @@ export async function ensureDbUser(clerkUserId: string) {
     },
     include,
   })
+
+  // Claim any NDA signer records that were sent to this email before the user existed
+  await claimPendingSigners(email, created.id)
 
   return created
 }

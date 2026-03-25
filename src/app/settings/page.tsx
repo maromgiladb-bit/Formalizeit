@@ -1,14 +1,40 @@
 'use client'
 
 import { useAuth, useUser } from '@clerk/nextjs'
-import { redirect } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function SettingsPage() {
   const { userId } = useAuth()
   const { user } = useUser()
+  const router = useRouter()
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [confirmText, setConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   if (!userId) {
     redirect('/sign-in')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (confirmText !== 'DELETE') return
+    setDeleting(true)
+    setDeleteError(null)
+
+    try {
+      const res = await fetch('/api/user/account', { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to delete account')
+      }
+      // Redirect home — Clerk session is now invalid
+      router.push('/?deleted=1')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Something went wrong')
+      setDeleting(false)
+    }
   }
 
   return (
@@ -42,20 +68,18 @@ export default function SettingsPage() {
         <h3 className="text-lg leading-6 font-medium text-gray-900">Preferences</h3>
         <div className="mt-4 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <span className="flex flex-col">
-                <span className="text-sm font-medium text-gray-900">Show Organization Switcher</span>
-                <span className="text-sm text-gray-500">Display the organization dropdown in the toolbar</span>
-              </span>
-            </div>
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-gray-900">Show Organization Switcher</span>
+              <span className="text-sm text-gray-500">Display the organization dropdown in the toolbar</span>
+            </span>
             <button
               type="button"
               disabled
-              className="bg-gray-200 relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2"
+              className="bg-gray-200 relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
               role="switch"
               aria-checked="false"
             >
-              <span aria-hidden="true" className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+              <span aria-hidden="true" className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
             </button>
           </div>
           <p className="text-xs text-gray-400 italic">* This setting is managed by your organization administrator (Coming Soon)</p>
@@ -73,11 +97,51 @@ export default function SettingsPage() {
           <h3 className="text-lg font-medium text-red-800">Danger Zone</h3>
         </div>
         <p className="text-sm text-red-600 mb-4">
-          Once you delete your account, there is no going back. Please be certain.
+          Deleting your account removes your access immediately. Your signed NDAs are preserved for 30 days, after which your personal data is anonymized.
         </p>
-        <button className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-md hover:bg-red-50 font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-          Delete Account
-        </button>
+
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-md hover:bg-red-50 font-medium transition-colors"
+          >
+            Delete Account
+          </button>
+        ) : (
+          <div className="bg-white border border-red-300 rounded-lg p-4 space-y-4">
+            <p className="text-sm font-semibold text-gray-800">
+              Type <span className="font-mono text-red-600 font-bold">DELETE</span> to confirm:
+            </p>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Type DELETE"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              autoFocus
+            />
+            {deleteError && (
+              <p className="text-sm text-red-600">{deleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={confirmText !== 'DELETE' || deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {deleting ? 'Deleting...' : 'Permanently Delete Account'}
+              </button>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setConfirmText(''); setDeleteError(null) }}
+                disabled={deleting}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

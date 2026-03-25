@@ -23,19 +23,21 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Find all signers linked to this user
+        // Include ALL signer roles: SIGNER (received as Party B) and
+        // APPROVER (received sign-back from Party B, waiting for Party A to countersign)
         const signers = await prisma.signer.findMany({
             where: {
                 OR: [
                     { userId: dbUser.id },
                     { email: dbUser.email }
                 ],
-                role: 'SIGNER' // Only Party B signers, not APPROVER (which is Party A reviewing)
             },
             include: {
                 signRequest: {
                     include: {
-                        draft: true,
+                        draft: {
+                            include: { createdBy: true }
+                        },
                         createdBy: true
                     }
                 }
@@ -43,9 +45,19 @@ export async function GET() {
             orderBy: { createdAt: 'desc' }
         })
 
-        // Map to incoming NDA format
+        // Deduplicate by signRequestId (user may have multiple signer records per request)
+        const seen = new Set<string>()
         const incomingNdas = signers
             .filter(s => s.signRequest?.draft) // Ensure draft exists
+            .filter(s => {
+                // Exclude NDAs the user created themselves (those belong in Sent)
+                const draft = s.signRequest.draft as { createdByUserId?: string }
+                if (draft.createdByUserId === dbUser.id) return false
+                // Deduplicate: take one entry per sign request
+                if (seen.has(s.signRequestId)) return false
+                seen.add(s.signRequestId)
+                return true
+            })
             .map(signer => {
                 const draft = signer.signRequest.draft
                 const content = draft.content as Record<string, unknown> || {}

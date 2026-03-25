@@ -132,6 +132,10 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  // Soft-delete fields
+  deletedAt     DateTime? @map("deleted_at")   // Set on Clerk user.deleted webhook
+  status        String    @default("active") @map("status") // "active" | "pending_deletion" | "deleted"
+
   // Relations
   memberships         Membership[]
   ownedOrganizations  Organization[] @relation("OwnedOrganizations")
