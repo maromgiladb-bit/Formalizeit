@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
+import { createNotification, createNotificationsForOrgApprovers, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -176,12 +177,14 @@ export async function POST(request: NextRequest) {
 
         // Link signer to user account if one exists with this email
         // This handles the case where a registered user signs via public link
+        let matchedUserId: string | null = null
         try {
             const matchedUser = await prisma.user.findUnique({
                 where: { email: signer.email },
                 select: { id: true },
             });
             if (matchedUser) {
+                matchedUserId = matchedUser.id
                 await prisma.signer.update({
                     where: { id: signerId },
                     data: { userId: matchedUser.id },
@@ -348,6 +351,68 @@ export async function POST(request: NextRequest) {
 
         } catch (emailError) {
             console.error('Failed to send notification email:', emailError);
+        }
+
+        // In-app notifications based on outcome
+        const orgId = signer.signRequest.organizationId
+        const ndaTitle = draft.title || 'Untitled NDA'
+        const ndaLink = `/dashboard#nda-${draft.id}`
+        try {
+            if (newWorkflowState === 'COMPLETE') {
+                await createNotificationsForAllOrgMembers(
+                    orgId,
+                    null,
+                    'NDA_COMPLETED',
+                    'NDA complete',
+                    `"${ndaTitle}" has been signed by both parties`,
+                    ndaLink,
+                    draft.id
+                )
+                // Also notify the signer (Party B) if they have a registered account
+                if (matchedUserId) {
+                    const { createNotification } = await import('@/lib/notifications')
+                    await createNotification(
+                        matchedUserId,
+                        'NDA_COMPLETED',
+                        'NDA complete',
+                        `"${ndaTitle}" has been signed by both parties`,
+                        ndaLink,
+                        draft.id
+                    )
+                }
+            } else if (!isPartyA) {
+                // Party B signed, Party A still needs to sign
+                await createNotificationsForOrgApprovers(
+                    orgId,
+                    null,
+                    'NDA_SIGNED',
+                    'Party B signed',
+                    `${signerName} signed "${ndaTitle}" — your turn to sign`,
+                    ndaLink,
+                    draft.id
+                )
+            } else {
+                // Party A signed, Party B still needs to sign — notify Party B if registered
+                const partyBEmail = otherSigner?.email || otherPartyEmail
+                if (partyBEmail) {
+                    const partyBUser = await prisma.user.findUnique({
+                        where: { email: partyBEmail },
+                        select: { id: true },
+                    })
+                    if (partyBUser) {
+                        await createNotification(
+                            partyBUser.id,
+                            'NDA_SIGNED',
+                            'Your turn to sign',
+                            `${signerName} signed "${ndaTitle}" — your turn to sign`,
+                            ndaLink,
+                            draft.id
+                        )
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to create sign notification:', e)
         }
 
         // Create audit event

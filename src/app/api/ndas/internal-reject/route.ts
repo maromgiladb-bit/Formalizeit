@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canApproveAndSend } from '@/lib/organizationRoles'
 import { sendEmail, getAppUrl, approvalRejectedEmailHtml } from '@/lib/email'
+import { createNotification } from '@/lib/notifications'
 
 /**
  * Approver rejects a contributor's draft and sends it back for rework.
@@ -69,6 +70,20 @@ export async function POST(request: NextRequest) {
             })
         } catch (e) {
             console.error('Failed to send rejection notification:', e)
+        }
+
+        // In-app notification for the draft creator
+        try {
+            await createNotification(
+                draft.createdBy.id,
+                'NDA_APPROVAL_REJECTED',
+                'Draft returned',
+                `Your NDA "${draft.title || 'Untitled NDA'}" needs revisions before it can be sent`,
+                `/dashboard#nda-${draftId}`,
+                draftId
+            )
+        } catch (e) {
+            console.error('Failed to create rejection notification:', e)
         }
 
         return NextResponse.json({ success: true, workflowState: 'DRAFT' })

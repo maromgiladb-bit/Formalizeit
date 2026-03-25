@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, Plus, FileText, Edit, Trash2, FileDown } from 'lucide-react';
 import Link from 'next/link';
 
@@ -51,6 +51,9 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
     case 'AWAITING_PARTY_A_SIGNATURE':
       return { label: 'SIGN NOW', color: 'text-red-800', bgColor: 'bg-red-100' };
     case 'AWAITING_PARTY_B_SIGNATURE':
+      if (nda.type === 'received') {
+        return { label: 'SIGN NOW', color: 'text-red-800', bgColor: 'bg-red-100' };
+      }
       return { label: 'WAITING SIG.', color: 'text-purple-800', bgColor: 'bg-purple-100' };
 
     case 'PENDING_INTERNAL_APPROVAL':
@@ -74,6 +77,21 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Scroll to and highlight a card when navigating from a notification
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#nda-')) return;
+    const draftId = hash.slice(5); // strip '#nda-'
+    setHighlightedId(draftId);
+    const el = document.getElementById(`nda-${draftId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const t = setTimeout(() => setHighlightedId(null), 2500);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
@@ -114,7 +132,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
   const filteredNdas = localNdas.filter((nda) => {
     if (filter === 'all') return true;
     // Action Required: highest priority - NDA needs your action
-    const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '');
+    const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
+      (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
     // Signed/Complete: takes priority over sent
     const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
 
@@ -127,7 +146,8 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
   });
 
   // Compute mutually exclusive stats
-  const actionRequired = (n: NDA) => ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '');
+  const actionRequired = (n: NDA) => ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '') ||
+    (n.type === 'received' && n.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
   const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
 
   const stats = {
@@ -334,7 +354,12 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
             filteredNdas.map((nda) => (
               <div
                 key={nda.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all hover:scale-102"
+                id={`nda-${nda.id}`}
+                className={`bg-white rounded-2xl shadow-sm border p-6 hover:shadow-md transition-all hover:scale-102 ${
+                  highlightedId === nda.id
+                    ? 'border-teal-400 ring-2 ring-teal-300 ring-offset-1 shadow-teal-100'
+                    : 'border-gray-200'
+                }`}
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div className="flex-1">
@@ -451,14 +476,23 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                       </Link>
                     )}
 
-                    {/* RECEIVED/INCOMING: Review + sender info */}
+                    {/* RECEIVED/INCOMING: Sign Now or Review depending on workflow state */}
                     {nda.type === 'received' && nda.signerId && !['COMPLETE', 'SIGNING_COMPLETE'].includes(nda.workflowState || '') && (
-                      <Link href={`/fillndahtml-public/${nda.signerId}`}>
-                        <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
-                          <Eye className="h-4 w-4" />
-                          Review
-                        </button>
-                      </Link>
+                      nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE' ? (
+                        <Link href={`/sign-nda-public/${nda.signerId}`}>
+                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                            <Edit className="h-4 w-4" />
+                            Sign Now
+                          </button>
+                        </Link>
+                      ) : (
+                        <Link href={`/fillndahtml-public/${nda.signerId}`}>
+                          <button className="px-4 py-2 bg-orange-500 border-2 border-orange-500 rounded-xl text-white font-semibold hover:bg-orange-600 transition-all flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            Review
+                          </button>
+                        </Link>
+                      )
                     )}
 
                     {/* VIEW BUTTON: Different behavior based on status */}

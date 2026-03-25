@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canApproveAndSend } from '@/lib/organizationRoles'
+import { createNotification } from '@/lib/notifications'
 
 /**
  * Send NDA for Party B input (not signature)
@@ -147,6 +148,39 @@ export async function POST(request: NextRequest) {
         } catch (emailError) {
             console.error('❌ Failed to send email:', emailError)
             // Don't fail the request
+        }
+
+        // Notify the draft creator if they are different from the sender
+        if (draft.createdByUserId !== user.id) {
+            try {
+                await createNotification(
+                    draft.createdByUserId,
+                    'NDA_SENT_TO_YOU',
+                    'NDA sent',
+                    `"${draft.title || 'Untitled NDA'}" was sent to ${recipientEmail} for input`,
+                    `/dashboard#nda-${draftId}`,
+                    draftId
+                )
+            } catch (e) {
+                console.error('Failed to create sent notification:', e)
+            }
+        }
+
+        // Notify the recipient if they have a registered account
+        const recipientUser = await prisma.user.findUnique({ where: { email: recipientEmail }, select: { id: true } })
+        if (recipientUser) {
+            try {
+                await createNotification(
+                    recipientUser.id,
+                    'NDA_SENT_TO_YOU',
+                    'Incoming NDA',
+                    `${user.name || user.email} sent you "${draft.title || 'Untitled NDA'}" to fill in`,
+                    `/dashboard#nda-${draftId}`,
+                    draftId
+                )
+            } catch (e) {
+                console.error('Failed to create recipient notification:', e)
+            }
         }
 
         return NextResponse.json({
