@@ -15,6 +15,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/ndas/submit-input',
   '/api/ndas/sign-public',
   '/api/ndas/preview-html-public',
+  '/api/webhooks/clerk',           // Clerk user.deleted webhook (verified by svix)
+  '/api/cron/cleanup-deleted-users', // Cron job (protected by CRON_SECRET)
 ])
 
 export default clerkMiddleware(async (auth, req) => {

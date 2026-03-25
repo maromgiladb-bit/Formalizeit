@@ -35,6 +35,24 @@ export async function ensureDbUser(clerkUserId: string) {
     include,
   })
 
+  // --- Account Recovery ---
+  // If this user deleted their account within the last 30 days and is re-registering
+  // with the same email, restore their account (all NDAs, signers, memberships intact).
+  if (placeholder?.status === 'pending_deletion') {
+    const restored = await prisma.user.update({
+      where: { id: placeholder.id },
+      data: {
+        externalId: clerkUserId,
+        name: clerkUser?.fullName || clerkUser?.firstName || placeholder.name,
+        image: clerkUser?.imageUrl || placeholder.image,
+        deletedAt: null,
+        status: 'active',
+      },
+      include,
+    })
+    return restored
+  }
+
   if (placeholder) {
     // Merge: update placeholder externalId to real Clerk ID
     try {
