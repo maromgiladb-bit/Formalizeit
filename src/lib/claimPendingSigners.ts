@@ -11,7 +11,10 @@ import { prisma } from '@/lib/prisma'
 export async function claimPendingSigners(email: string, userId: string): Promise<number> {
   const result = await prisma.signer.updateMany({
     where: {
-      email,
+      email: {
+        equals: email,
+        mode: 'insensitive',
+      },
       userId: null,
     },
     data: { userId },
