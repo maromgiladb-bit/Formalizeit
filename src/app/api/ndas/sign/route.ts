@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, getAppUrl, timeToSignEmailHtml, congratulationsEmailHtml } from '@/lib/email';
+import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
     try {
@@ -221,6 +222,46 @@ export async function POST(request: NextRequest) {
                 },
             },
         });
+
+        // In-app notification based on outcome
+        if (newWorkflowState === 'COMPLETE') {
+            try {
+                await createNotificationsForAllOrgMembers(
+                    draft.organizationId,
+                    null,
+                    'NDA_COMPLETED',
+                    'NDA complete',
+                    `"${draft.title || 'Untitled NDA'}" has been signed by both parties`,
+                    `/dashboard#nda-${draftId}`,
+                    draftId
+                )
+            } catch (e) {
+                console.error('Failed to create completion notification:', e)
+            }
+        } else if (newWorkflowState === 'AWAITING_PARTY_B_SIGNATURE' && partyBSigner) {
+            // Party A signed first — notify Party B if they have a registered account
+            try {
+                const normalizedPartyBEmail = partyBSigner.email?.trim().toLowerCase();
+                const partyBUser = normalizedPartyBEmail
+                    ? await prisma.user.findUnique({
+                        where: { email: normalizedPartyBEmail },
+                        select: { id: true },
+                    })
+                    : null;
+                if (partyBUser) {
+                    await createNotification(
+                        partyBUser.id,
+                        'NDA_SIGNED',
+                        'Your turn to sign',
+                        `${signerName} signed "${draft.title || 'Untitled NDA'}" — your turn to sign`,
+                        `/dashboard#nda-${draftId}`,
+                        draftId
+                    )
+                }
+            } catch (e) {
+                console.error('Failed to create Party B sign notification:', e)
+            }
+        }
 
         return NextResponse.json({
             success: true,

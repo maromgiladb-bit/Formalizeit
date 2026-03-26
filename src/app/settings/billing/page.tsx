@@ -164,7 +164,7 @@ export default function BillingSettingsPage() {
                             {subscription.plan === 'FREE' ? (
                                 <Link
                                     href="/plans"
-                                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 shadow-sm transition-all hover:scale-105"
+                                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 shadow-sm transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                                 >
                                     Upgrade Now
                                 </Link>

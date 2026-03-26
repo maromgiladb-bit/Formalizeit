@@ -9,12 +9,10 @@ import { prisma } from '@/lib/prisma'
  *  - New user who receives + signs an NDA before creating an account
  */
 export async function claimPendingSigners(email: string, userId: string): Promise<number> {
+  const normalizedEmail = email.trim().toLowerCase()
   const result = await prisma.signer.updateMany({
     where: {
-      email: {
-        equals: email,
-        mode: 'insensitive',
-      },
+      email: normalizedEmail,
       userId: null,
     },
     data: { userId },

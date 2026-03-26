@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import OrgSwitcher from './OrgSwitcher'
 import { InteractiveHoverButton } from './ui/interactive-hover-button'
 import { NotificationIcon } from './ui/notification-icon'
+import NotificationPanel from './NotificationPanel'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -21,10 +22,13 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
   const [isDevMenuOpen, setIsDevMenuOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const moreMenuRef = useRef<HTMLDivElement>(null)
   const devMenuRef = useRef<HTMLDivElement>(null)
   const moreMenuRefTablet = useRef<HTMLDivElement>(null)
   const devMenuRefTablet = useRef<HTMLDivElement>(null)
+  const notifRef = useRef<HTMLDivElement>(null)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
@@ -77,9 +81,31 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
       ) {
         setIsDevMenuOpen(false)
       }
+      if (notifRef.current && !notifRef.current.contains(target)) {
+        setIsNotifOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Fetch unread notification count on mount and poll every 30s
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        // Use a lightweight count-only endpoint to avoid fetching the full notifications list
+        const res = await fetch('/api/notifications/count')
+        if (res.ok) {
+          const data = await res.json()
+          setUnreadCount(data.unreadCount ?? 0)
+        }
+      } catch {
+        // non-critical
+      }
+    }
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   if (!userId) return null
@@ -321,9 +347,25 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
           {/* Right side buttons - Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
-            <button className="p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center" aria-label="Notifications">
-              <NotificationIcon size={24} active={false} />
-            </button>
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setIsNotifOpen(prev => !prev)}
+                className="p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center"
+                aria-label="Notifications"
+              >
+                <NotificationIcon size={24} active={unreadCount > 0} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none pointer-events-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <NotificationPanel
+                isOpen={isNotifOpen}
+                onClose={() => setIsNotifOpen(false)}
+                onUnreadCountChange={setUnreadCount}
+              />
+            </div>
             <InteractiveHoverButton
               text="New NDA"
               onClick={() => router.push('/templates')}

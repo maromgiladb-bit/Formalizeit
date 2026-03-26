@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email';
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canApproveAndSend } from '@/lib/organizationRoles';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
     try {
@@ -188,6 +189,42 @@ export async function POST(request: NextRequest) {
                 { error: 'Failed to send email. Please check your email configuration.' },
                 { status: 500 }
             );
+        }
+
+        // Notify the draft creator if they are different from the sender
+        if (draft.createdByUserId !== user.id) {
+            try {
+                await createNotification(
+                    draft.createdByUserId,
+                    'NDA_SENT_TO_YOU',
+                    'NDA sent',
+                    `"${draft.title || 'Untitled NDA'}" was sent to ${partyBEmail} for signature`,
+                    `/dashboard#nda-${draftId}`,
+                    draftId
+                )
+            } catch (e) {
+                console.error('Failed to create sent notification:', e)
+            }
+        }
+
+        // Notify the recipient if they have a registered account
+        const normalizedPartyBEmail = partyBEmail?.trim().toLowerCase();
+        const recipientUser = normalizedPartyBEmail
+            ? await prisma.user.findUnique({ where: { email: normalizedPartyBEmail }, select: { id: true } })
+            : null;
+        if (recipientUser) {
+            try {
+                await createNotification(
+                    recipientUser.id,
+                    'NDA_SENT_TO_YOU',
+                    'Incoming NDA',
+                    `${user.name || user.email} sent you "${draft.title || 'Untitled NDA'}" to sign`,
+                    `/dashboard#nda-${draftId}`,
+                    draftId
+                )
+            } catch (e) {
+                console.error('Failed to create recipient notification:', e)
+            }
         }
 
         return NextResponse.json({

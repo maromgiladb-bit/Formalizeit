@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, ownerReviewEmailHtml, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml } from '@/lib/email'
+import { createNotificationsForOrgApprovers } from '@/lib/notifications'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -280,6 +281,24 @@ export async function POST(request: NextRequest) {
                 console.log('✅ Owner notification email sent')
             } catch (emailError) {
                 console.error('❌ Failed to send owner notification:', emailError)
+            }
+        }
+
+        // In-app notification: Party B submitted suggestions → notify org approvers
+        if (!isPartyA && hasSuggestions) {
+            try {
+                const partyBName = signer.name || signer.email
+                await createNotificationsForOrgApprovers(
+                    draft.organizationId,
+                    null,
+                    'NDA_CHANGES_REQUESTED',
+                    'Party B made changes',
+                    `${partyBName} submitted edits to "${draft.title || 'Untitled NDA'}" — review before signing`,
+                    `/dashboard#nda-${draft.id}`,
+                    draft.id
+                )
+            } catch (e) {
+                console.error('Failed to create changes notification:', e)
             }
         }
 

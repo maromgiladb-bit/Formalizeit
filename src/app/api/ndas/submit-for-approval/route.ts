@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { needsInternalApproval } from '@/lib/organizationRoles'
 import { sendEmail, getAppUrl, approvalRequestEmailHtml } from '@/lib/email'
+import { createNotificationsForOrgApprovers } from '@/lib/notifications'
 
 /**
  * Contributor/Owner submits a draft for internal approval before external sending.
@@ -76,6 +77,22 @@ export async function POST(request: NextRequest) {
             } catch (e) {
                 console.error('Failed to notify approver:', m.user.email, e)
             }
+        }
+
+        // In-app notifications for approvers
+        const ndaLink = `/dashboard#nda-${draftId}`
+        try {
+            await createNotificationsForOrgApprovers(
+                activeMembership.organizationId,
+                dbUser.id,
+                'NDA_APPROVAL_REQUESTED',
+                'Approval needed',
+                `${submitterName} submitted "${draft.title || 'Untitled NDA'}" for review`,
+                ndaLink,
+                draftId
+            )
+        } catch (e) {
+            console.error('Failed to create approval notifications:', e)
         }
 
         return NextResponse.json({

@@ -53,4 +53,19 @@ describe('claimPendingSigners', () => {
 
     await expect(claimPendingSigners('err@test.com', 'uid')).rejects.toThrow('DB connection lost')
   })
+
+  it('normalises uppercase email to lowercase before querying', async () => {
+    vi.mocked(prisma.signer.updateMany).mockResolvedValue({ count: 1 })
+
+    await claimPendingSigners('PARTY@EXAMPLE.COM', 'user-uuid-789')
+
+    expect(prisma.signer.updateMany).toHaveBeenCalledWith({
+      where: {
+        email: 'party@example.com',
+        userId: null,
+      },
+      data: { userId: 'user-uuid-789' },
+    })
+  })
 })
+
