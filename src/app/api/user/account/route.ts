@@ -63,14 +63,48 @@ export async function DELETE() {
                 where: { userId: user.id },
             }),
         ])
+
+        // DB cleanup succeeded; Clerk account is already deleted.
+        return NextResponse.json({ success: true })
     } catch (dbError) {
         // Clerk account is already gone at this point.
         // Log for ops visibility — a cleanup job / webhook can reconcile.
         console.error('DB cleanup after Clerk deletion failed:', dbError)
-        // Still return success: the Clerk session is gone, the user is locked out.
-        // The grace-period cleanup cron will catch any orphaned DB rows.
+        // Best-effort compensating step: try to at least mark the user as
+        // pending deletion and remove memberships outside the transaction.
+        let reconciled = false
+        try {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    deletedAt: new Date(),
+                    status: 'pending_deletion',
+                },
+            })
+            await prisma.membership.deleteMany({
+                where: { userId: user.id },
+            })
+            reconciled = true
+        } catch (reconcileError) {
+            console.error(
+                'Secondary DB reconciliation after Clerk deletion also failed:',
+                reconcileError,
+            )
+        }
+        if (reconciled) {
+            // Compensating update succeeded; state matches the intended result.
+            return NextResponse.json({ success: true })
+        }
+        // At this point, Clerk has deleted the account but the DB user may still
+        // appear active. Signal a server error so callers know cleanup failed.
+        return NextResponse.json(
+            {
+                success: false,
+                error:
+                    'Account was deleted from the authentication provider, but internal cleanup failed. Please try again later.',
+            },
+            { status: 500 },
+        )
     }
-
-    return NextResponse.json({ success: true })
 }
 

@@ -14,20 +14,25 @@ export async function linkSignerToUser(
   signerId: string,
   signerEmail: string
 ): Promise<{ linked: boolean; userId: string | null }> {
-  const normalizedEmail = signerEmail.trim().toLowerCase()
+  try {
+    const normalizedEmail = signerEmail.trim().toLowerCase()
 
-  const matchedUser = await prisma.user.findUnique({
-    where: { email: normalizedEmail },
-    select: { id: true },
-  })
-
-  if (matchedUser) {
-    await prisma.signer.update({
-      where: { id: signerId },
-      data: { userId: matchedUser.id },
+    const matchedUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
     })
-    return { linked: true, userId: matchedUser.id }
-  }
 
-  return { linked: false, userId: null }
+    if (matchedUser) {
+      await prisma.signer.update({
+        where: { id: signerId },
+        data: { userId: matchedUser.id },
+      })
+      return { linked: true, userId: matchedUser.id }
+    }
+
+    return { linked: false, userId: null }
+  } catch (_error) {
+    // Intentionally non-throwing: treat any Prisma/database error as a non-critical failure.
+    return { linked: false, userId: null }
+  }
 }

@@ -54,7 +54,6 @@ export async function createNotificationsForOrgApprovers(
             link: link ?? null,
             draftId: draftId ?? null,
         })),
-        skipDuplicates: true,
     })
 }
 
@@ -90,6 +89,5 @@ export async function createNotificationsForAllOrgMembers(
             link: link ?? null,
             draftId: draftId ?? null,
         })),
-        skipDuplicates: true,
     })
 }

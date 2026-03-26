@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, getAppUrl, timeToSignEmailHtml, congratulationsEmailHtml } from '@/lib/email';
-import { createNotificationsForAllOrgMembers } from '@/lib/notifications';
+import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
     try {
@@ -246,7 +246,6 @@ export async function POST(request: NextRequest) {
                     select: { id: true },
                 })
                 if (partyBUser) {
-                    const { createNotification } = await import('@/lib/notifications')
                     await createNotification(
                         partyBUser.id,
                         'NDA_SIGNED',
