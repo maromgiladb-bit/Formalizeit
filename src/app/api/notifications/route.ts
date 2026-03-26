@@ -17,14 +17,16 @@ export async function GET() {
         })
         if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-        const notifications = await prisma.notification.findMany({
-            where: { userId: dbUser.id },
-            orderBy: { createdAt: 'desc' },
-            take: 20,
-        })
-
-        const unreadCount = notifications.filter(n => !n.read).length
-
+        const [notifications, unreadCount] = await Promise.all([
+            prisma.notification.findMany({
+                where: { userId: dbUser.id },
+                orderBy: { createdAt: 'desc' },
+                take: 20,
+            }),
+            prisma.notification.count({
+                where: { userId: dbUser.id, read: false },
+            }),
+        ])
         return NextResponse.json({ notifications, unreadCount })
     } catch (error) {
         console.error('Fetch notifications error:', error)

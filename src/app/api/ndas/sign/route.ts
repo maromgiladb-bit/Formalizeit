@@ -241,10 +241,13 @@ export async function POST(request: NextRequest) {
         } else if (newWorkflowState === 'AWAITING_PARTY_B_SIGNATURE' && partyBSigner) {
             // Party A signed first — notify Party B if they have a registered account
             try {
-                const partyBUser = await prisma.user.findUnique({
-                    where: { email: partyBSigner.email },
-                    select: { id: true },
-                })
+                const normalizedPartyBEmail = partyBSigner.email?.trim().toLowerCase();
+                const partyBUser = normalizedPartyBEmail
+                    ? await prisma.user.findUnique({
+                        where: { email: normalizedPartyBEmail },
+                        select: { id: true },
+                    })
+                    : null;
                 if (partyBUser) {
                     await createNotification(
                         partyBUser.id,

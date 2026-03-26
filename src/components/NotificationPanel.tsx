@@ -75,22 +75,24 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
     }, [onUnreadCountChange])
 
     useEffect(() => {
+        if (!isOpen) {
+            return
+        }
         fetchNotifications()
         const interval = setInterval(fetchNotifications, 30000)
         return () => clearInterval(interval)
-    }, [fetchNotifications])
-
-    // Refetch when panel opens
-    useEffect(() => {
-        if (isOpen) fetchNotifications()
     }, [isOpen, fetchNotifications])
 
     async function handleNotificationClick(n: Notification) {
         if (!n.read) {
             try {
                 await fetch(`/api/notifications/${n.id}`, { method: 'PATCH' })
-                setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))
-                onUnreadCountChange(notifications.filter(x => !x.read && x.id !== n.id).length)
+                setNotifications(prev => {
+                    const updated = prev.map(x => x.id === n.id ? { ...x, read: true } : x)
+                    const unreadCount = updated.filter(x => !x.read).length
+                    onUnreadCountChange(unreadCount)
+                    return updated
+                })
             } catch {
                 // non-critical
             }
