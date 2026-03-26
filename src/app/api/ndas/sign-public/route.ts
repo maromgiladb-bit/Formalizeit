@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
             if (newWorkflowState === 'COMPLETE') {
                 await createNotificationsForAllOrgMembers(
                     orgId,
-                    null,
+                    matchedUserId ?? null,
                     'NDA_COMPLETED',
                     'NDA complete',
                     `"${ndaTitle}" has been signed by both parties`,
@@ -362,7 +362,6 @@ export async function POST(request: NextRequest) {
                 )
                 // Also notify the signer (Party B) if they have a registered account
                 if (matchedUserId) {
-                    const { createNotification } = await import('@/lib/notifications')
                     await createNotification(
                         matchedUserId,
                         'NDA_COMPLETED',

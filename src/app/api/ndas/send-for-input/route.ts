@@ -167,7 +167,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Notify the recipient if they have a registered account
-        const recipientUser = await prisma.user.findUnique({ where: { email: recipientEmail }, select: { id: true } })
+        const normalizedRecipientEmail = recipientEmail.trim().toLowerCase()
+        const recipientUser = await prisma.user.findUnique({ where: { email: normalizedRecipientEmail }, select: { id: true } })
         if (recipientUser) {
             try {
                 await createNotification(
