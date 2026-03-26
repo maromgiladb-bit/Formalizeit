@@ -93,7 +93,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   useEffect(() => {
     async function fetchUnreadCount() {
       try {
-        const res = await fetch('/api/notifications')
+        // Use a lightweight count-only endpoint to avoid fetching the full notifications list
+        const res = await fetch('/api/notifications/count')
         if (res.ok) {
           const data = await res.json()
           setUnreadCount(data.unreadCount ?? 0)

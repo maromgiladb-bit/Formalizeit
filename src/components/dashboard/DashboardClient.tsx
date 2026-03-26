@@ -81,16 +81,35 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
 
   // Scroll to and highlight a card when navigating from a notification
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash.startsWith('#nda-')) return;
-    const draftId = hash.slice(5); // strip '#nda-'
-    setHighlightedId(draftId);
-    const el = document.getElementById(`nda-${draftId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    const t = setTimeout(() => setHighlightedId(null), 2500);
-    return () => clearTimeout(t);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const handleHashNavigation = () => {
+      const hash = window.location.hash;
+      if (!hash.startsWith('#nda-')) return;
+      const draftId = hash.slice(5); // strip '#nda-'
+      setHighlightedId(draftId);
+      const el = document.getElementById(`nda-${draftId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => setHighlightedId(null), 2500);
+    };
+
+    // Run once on mount in case we landed here with a hash
+    handleHashNavigation();
+
+    // Also respond to in-page hash changes while the dashboard is mounted
+    window.addEventListener('hashchange', handleHashNavigation);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashNavigation);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   const handleDelete = async (id: string, name: string) => {
