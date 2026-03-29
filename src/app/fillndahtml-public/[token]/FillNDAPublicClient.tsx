@@ -753,7 +753,7 @@ export default function FillNDAPublicClient({
             return (
                 <Link
                     href="/mynda"
-                    className="inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -767,7 +767,7 @@ export default function FillNDAPublicClient({
             <div className="space-y-3">
                 <Link
                     href="/"
-                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -815,8 +815,8 @@ export default function FillNDAPublicClient({
                 <div className={`transition-all duration-300 ${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
                     <div className="max-w-4xl mx-auto p-6">
                         {/* Header Card */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden">
-                            <div className="bg-teal-600 px-6 py-4">
+                        <div className="bg-white rounded-xl border border-gray-200 mb-6 overflow-hidden">
+                            <div className="bg-teal-800 px-6 py-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
@@ -826,7 +826,7 @@ export default function FillNDAPublicClient({
                                         </div>
                                         <div>
                                             <h1 className="text-xl font-bold text-white">{ndaTitle}</h1>
-                                            <p className="text-blue-100 text-sm">Complete your information to proceed</p>
+                                            <p className="text-teal-100 text-sm">Complete your information to proceed</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border border-white/30" title={showLivePreview ? "Hide Preview" : "Show Preview"} suppressHydrationWarning>
@@ -846,10 +846,10 @@ export default function FillNDAPublicClient({
                             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-sm font-medium text-gray-700">Completion Progress</span>
-                                    <span className="text-sm font-bold text-teal-600">{computeCompletionPercent()}%</span>
+                                    <span className="text-sm font-bold text-teal-700">{computeCompletionPercent()}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                    <div className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${computeCompletionPercent()}%` }} />
+                                    <div className="h-2.5 bg-teal-800 transition-all duration-500 ease-out rounded-full" style={{ width: `${computeCompletionPercent()}%` }} />
                                 </div>
                             </div>
                         </div>
@@ -865,7 +865,7 @@ export default function FillNDAPublicClient({
                         )}
 
                         {/* Form Card */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             <div className="p-6">
                                 {/* Step Navigation */}
                                 <div className="flex items-center justify-between gap-1 mb-6">
@@ -873,7 +873,7 @@ export default function FillNDAPublicClient({
                                         <div key={s} className="flex-1 relative">
                                             <button onClick={() => goToStep(i)} className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`} suppressHydrationWarning>
                                                 <div className="flex flex-col items-center">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${i === step ? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100' : i < step ? 'bg-teal-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}>
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${i === step ? 'bg-teal-800 text-white shadow-lg ring-4 ring-teal-100' : i < step ? 'bg-teal-700 text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}>
                                                         {i < step ? (
                                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -882,12 +882,12 @@ export default function FillNDAPublicClient({
                                                             <span className="font-bold text-sm">{i + 1}</span>
                                                         )}
                                                     </div>
-                                                    <span className={`text-xs font-medium text-center transition-all duration-300 ${i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'}`}>{s}</span>
+                                                    <span className={`text-xs font-medium text-center transition-all duration-300 ${i === step ? 'text-teal-700 font-semibold' : 'text-gray-500'}`}>{s}</span>
                                                 </div>
                                             </button>
                                             {i < steps.length - 1 && (
                                                 <div className="absolute top-5 left-[calc(50%+20px)] right-[calc(-50%+20px)] h-0.5 bg-gray-200 -z-10">
-                                                    <div className={`h-full bg-teal-600 transition-all duration-500 ${i < step ? 'w-full' : 'w-0'}`} />
+                                                    <div className={`h-full bg-teal-800 transition-all duration-500 ${i < step ? 'w-full' : 'w-0'}`} />
                                                 </div>
                                             )}
                                         </div>
@@ -901,8 +901,8 @@ export default function FillNDAPublicClient({
                                 {step === 0 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                             </div>
@@ -924,8 +924,8 @@ export default function FillNDAPublicClient({
                                 {step === 1 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                 </svg>
                                             </div>
@@ -1200,7 +1200,7 @@ export default function FillNDAPublicClient({
                             <div className="flex justify-between p-6 pt-0">
                                 <button onClick={goBack} disabled={step === 0} className={`px-6 py-3 rounded-lg font-semibold transition-all ${step === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} suppressHydrationWarning>← Back</button>
                                 {step < steps.length - 1 && (
-                                    <button onClick={goNext} className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md" suppressHydrationWarning>Next →</button>
+                                    <button onClick={goNext} className="px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md" suppressHydrationWarning>Next →</button>
                                 )}
                             </div>
                         </div>
