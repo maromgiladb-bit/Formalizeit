@@ -4,7 +4,7 @@ import { useAuth, useUser } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Key, ToggleLeft, AlertTriangle } from 'lucide-react'
+import { User, ToggleLeft, AlertTriangle } from 'lucide-react'
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },

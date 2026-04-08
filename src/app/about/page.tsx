@@ -409,7 +409,7 @@ export default function About() {
                 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop',
             },
           ]}
-          title="Making NDA's Simple"
+          title="Making NDAs Simple"
           autoPlayInterval={5000}
         />
       </section>

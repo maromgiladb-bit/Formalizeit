@@ -105,7 +105,6 @@ export default function FillNDAPublicClient({
     isPartyA = false,
 }: FillNDAPublicClientProps) {
     const router = useRouter();
-    const { isSignedIn } = useAuth();
 
     // Form values - starts with data from server
     const [formValues, setFormValues] = useState<FormValues>(initialFormData);
