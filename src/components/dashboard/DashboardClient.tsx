@@ -219,11 +219,9 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">My NDAs</h1>
             <p className="text-sm text-gray-500 mt-0.5">Manage and track your non-disclosure agreements</p>
           </div>
-          <Link href="/templates">
-            <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
-              <Plus className="w-4 h-4" />
-              New NDA
-            </button>
+          <Link href="/templates" className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 text-white rounded-xl font-bold shadow-lg hover:bg-teal-700 hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+            <Plus className="w-4 h-4" />
+            New NDA
           </Link>
         </div>
 

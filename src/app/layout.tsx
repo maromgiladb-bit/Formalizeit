@@ -61,7 +61,7 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} antialiased flex flex-col min-h-screen`}>
+        <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
           <ToolbarSwitcher organizationData={organizationData} />
           <div className="flex-1">
             {children}
