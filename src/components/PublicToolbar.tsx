@@ -45,22 +45,22 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
 
             {/* Desktop Navigation */}
             <div className="hidden md:ml-8 md:flex md:space-x-2">
-              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 Home
               </Link>
-              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 About
               </Link>
-              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 Plans
               </Link>
-              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 Contact
               </Link>
-              <Link href="/faq" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/faq" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 FAQ
               </Link>
-              <Link href="/help" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-(--navy-700) hover:text-(--teal-600) hover:bg-(--teal-50) text-sm font-semibold transition-all">
+              <Link href="/help" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
                 Help
               </Link>
             </div>
@@ -84,7 +84,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500 transition-all"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-700 transition-all"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
@@ -108,42 +108,42 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
           <div className="px-4 pt-2 pb-3 space-y-1">
             <Link
               href="/"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               Home
             </Link>
             <Link
               href="/about"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               About
             </Link>
             <Link
               href="/plans"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               Plans
             </Link>
             <Link
               href="/contact"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               Contact
             </Link>
             <Link
               href="/faq"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               FAQ
             </Link>
             <Link
               href="/help"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition-all"
+              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
               onClick={handleLinkClick}
             >
               Help
