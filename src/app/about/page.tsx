@@ -1,217 +1,450 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
+import { SignUpButton } from '@clerk/nextjs'
+import { motion, useScroll, useTransform, useInView } from 'framer-motion'
 import TestimonialsSection from '@/components/ui/testimonials'
 import { FeatureSteps } from '@/components/ui/feature-section'
+import {
+  FileText,
+  PenLine,
+  ScanSearch,
+  Send,
+  ArrowRight,
+  Check,
+} from 'lucide-react'
 
-export default function About() {
-  const observerRef = useRef<IntersectionObserver | null>(null)
+/* ─── Mockup components ───────────────────────────────────── */
 
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fade-in-up')
-          }
-        })
-      },
-      { threshold: 0.1 }
-    )
-
-    const elements = document.querySelectorAll('.fade-in-element')
-    elements.forEach((el) => observerRef.current?.observe(el))
-
-    return () => observerRef.current?.disconnect()
-  }, [])
-
+function TemplateMockup() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
-          <h1 className="text-6xl font-bold mb-6 animate-fade-in">About Formalize It</h1>
-          <p className="text-2xl text-gray-200 max-w-3xl leading-relaxed animate-fade-in-delay">
-            We make NDAs fast, clear, and collaborative. No more email ping-pong,
-            version confusion, or formatting drama.
-          </p>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <p className="text-xs font-semibold text-gray-500">Select a Template</p>
+      </div>
+      <div className="p-4 space-y-2">
+        {[
+          { name: 'Mutual NDA', tag: 'Most common', active: true },
+          { name: 'One-way NDA', tag: 'Vendor use', active: false },
+          { name: 'Employee NDA', tag: 'HR', active: false },
+        ].map((t) => (
+          <div
+            key={t.name}
+            className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+              t.active ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <FileText className={`w-4 h-4 ${t.active ? 'text-teal-600' : 'text-gray-400'}`} />
+              <span className={`text-sm font-medium ${t.active ? 'text-teal-800' : 'text-gray-700'}`}>
+                {t.name}
+              </span>
+            </div>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                t.active ? 'bg-teal-200 text-teal-800' : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {t.tag}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function VariablesMockup() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <p className="text-xs font-semibold text-gray-500">Fill in the Details</p>
+      </div>
+      <div className="p-5 space-y-4">
+        {[
+          { label: 'Disclosing Party', value: 'Acme Corp.' },
+          { label: 'Receiving Party', value: 'Initech Ltd.' },
+          { label: 'Effective Date', value: 'March 29, 2026' },
+          { label: 'Duration', value: '2 years' },
+        ].map((field) => (
+          <div key={field.label}>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+              {field.label}
+            </p>
+            <div className="flex items-center px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg">
+              <span className="text-sm text-teal-800 font-medium">{field.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ReviewMockup() {
+  return (
+    <div className="relative w-full max-w-sm">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-300" />
+          </div>
+          <div className="text-xs font-semibold text-gray-400">NDA_Agreement.docx</div>
+          <div className="w-12" />
+        </div>
+        <div className="px-6 py-5 space-y-3">
+          <div className="h-3 bg-gray-800 rounded w-2/3 mb-5" />
+          <div className="h-2 bg-gray-200 rounded w-full" />
+          <div className="h-2 bg-gray-200 rounded w-5/6" />
+          <div className="flex items-center gap-2 rounded-md bg-teal-50 border border-teal-200 px-3 py-2">
+            <div className="h-2 bg-teal-400 rounded w-1/3" />
+            <div className="h-2 bg-teal-200 rounded flex-1" />
+          </div>
+          <div className="h-2 bg-gray-200 rounded w-full" />
+          <div className="h-2 bg-gray-200 rounded w-3/4" />
+          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
+            <div className="h-2 bg-amber-400 rounded w-2/5" />
+            <div className="h-2 bg-amber-200 rounded flex-1" />
+          </div>
+          <div className="h-2 bg-gray-200 rounded w-full" />
+          <div className="h-2 bg-gray-200 rounded w-5/6" />
         </div>
       </div>
+      <div className="absolute -right-2 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-44">
+        <p className="text-xs font-semibold text-gray-800 leading-snug">Review only the changes:</p>
+        <p className="text-xs text-teal-600 font-medium mt-0.5">Variables &amp; Custom Clauses</p>
+      </div>
+    </div>
+  )
+}
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        {/* Why We Built It - Feature Steps */}
-        <section className="mb-32 fade-in-element opacity-0 -mx-4 sm:-mx-6 lg:-mx-8">
-          <FeatureSteps
-            features={[
-              {
-                step: 'Step 1',
-                title: 'Save Time',
-                content: 'Create professional NDAs in minutes, not hours. Auto-fill company details, use proven templates, and skip the repetitive formatting work.',
-                image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop'
-              },
-              {
-                step: 'Step 2',
-                title: 'Live Preview',
-                content: 'See exactly what your NDA looks like as you fill it out. No surprises — what you see is what you get in the final PDF.',
-                image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop'
-              },
-              {
-                step: 'Step 3',
-                title: 'Easy Communication',
-                content: 'Share a secure link with the other party. They can review, suggest changes, and sign — all without creating an account or email ping-pong.',
-                image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop'
-              },
-            ]}
-            title="Making NDA's Simple"
-            autoPlayInterval={5000}
-          />
-        </section>
-
-        {/* How It Works - Streamlined */}
-        <section className="mb-32 fade-in-element opacity-0">
-          <h2 className="text-5xl font-bold text-teal-600 mb-16 text-center">How it works</h2>
-          <div className="space-y-8">
-            <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
-                1
-              </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Fill your template</h3>
-                <p className="text-gray-600 text-lg">Choose from lawyer-approved templates. Your company details auto-fill instantly.</p>
-              </div>
+function SignMockup() {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+        <p className="text-xs font-semibold text-gray-500">Ready to Send</p>
+      </div>
+      <div className="p-5 space-y-4">
+        {[
+          { initials: 'JD', name: 'John Doe', email: 'john@acmecorp.com', signed: true },
+          { initials: 'MS', name: 'Mary Smith', email: 'mary@initech.com', signed: false },
+        ].map((person) => (
+          <div
+            key={person.email}
+            className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200"
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                person.signed ? 'bg-teal-100' : 'bg-blue-100'
+              }`}
+            >
+              <span className={`text-xs font-bold ${person.signed ? 'text-teal-700' : 'text-blue-700'}`}>
+                {person.initials}
+              </span>
             </div>
-
-            <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
-                2
-              </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Share & collaborate</h3>
-                <p className="text-gray-600 text-lg">Send a secure link. They review, suggest changes, and comment—no account required.</p>
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-900">{person.name}</p>
+              <p className="text-xs text-gray-400 truncate">{person.email}</p>
             </div>
-
-            <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
-                3
-              </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Track changes clearly</h3>
-                <p className="text-gray-600 text-lg">Every edit is highlighted and visible. No mystery diffs or hidden redlines.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-6 group hover:translate-x-2 transition-transform duration-300">
-              <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:shadow-xl transition-shadow">
-                4
-              </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">Export & sign</h3>
-                <p className="text-gray-600 text-lg">One click for a pixel-perfect PDF that matches the preview exactly.</p>
-              </div>
-            </div>
+            {person.signed ? (
+              <Check className="w-4 h-4 text-teal-500 flex-shrink-0" />
+            ) : (
+              <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+            )}
           </div>
-        </section>
+        ))}
+        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-800 text-white rounded-lg text-sm font-semibold">
+          <Send className="w-4 h-4" />
+          Send for Signature
+        </button>
+      </div>
+    </div>
+  )
+}
 
-        {/* Who Is It For */}
-        <section className="mb-32 fade-in-element opacity-0">
-          <h2 className="text-5xl font-bold text-teal-600 mb-16 text-center">Who it&apos;s for</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-8 border border-teal-200 h-full">
-                <div className="w-16 h-16 bg-teal-600 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Founders</h3>
-                <p className="text-gray-700 text-lg">Who need NDAs signed quickly to unblock deals.</p>
-              </div>
-            </div>
+/* ─── Timeline data ───────────────────────────────────────── */
+const TIMELINE_STEPS = [
+  {
+    number: '01',
+    title: 'Choose a Trusted Template',
+    description:
+      'Select from industry-standard, pre-vetted NDA templates built for your situation. No blank page, no guesswork — start from something that already works.',
+    icon: FileText,
+    mockupKey: 'template',
+  },
+  {
+    number: '02',
+    title: 'Fill the Variables',
+    description:
+      'Customize key details like company names, dates, and terms using smart fields. Your context, applied cleanly to a proven structure.',
+    icon: PenLine,
+    mockupKey: 'variables',
+  },
+  {
+    number: '03',
+    title: 'Review only the Changes',
+    description:
+      'The platform surfaces deviations from the standard. Focus your attention exactly where it matters — skip the boilerplate you already trust.',
+    icon: ScanSearch,
+    mockupKey: 'review',
+  },
+  {
+    number: '04',
+    title: 'Send & Sign',
+    description:
+      'Route for internal approval, send to the counterparty, and collect legally binding signatures — all in one place, with full audit trail.',
+    icon: Send,
+    mockupKey: 'sign',
+  },
+]
 
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-8 border border-slate-200 h-full">
-                <div className="w-16 h-16 bg-slate-700 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Legal Teams</h3>
-                <p className="text-gray-700 text-lg">Who want consistent templates and audit trails.</p>
-              </div>
-            </div>
+/* ─── Mockup renderer ─────────────────────────────────────── */
+function StepMockup({ mockupKey }: { mockupKey: string }) {
+  if (mockupKey === 'template') return <TemplateMockup />
+  if (mockupKey === 'variables') return <VariablesMockup />
+  if (mockupKey === 'review') return <ReviewMockup />
+  if (mockupKey === 'sign') return <SignMockup />
+  return null
+}
 
-            <div className="group hover:scale-105 transition-transform duration-300">
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200 h-full">
-                <div className="w-16 h-16 bg-gray-700 rounded-xl flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">Agencies</h3>
-                <p className="text-gray-700 text-lg">Who send many NDAs and can&apos;t afford errors.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+/* ─── Timeline step ───────────────────────────────────────── */
+function TimelineStep({
+  step,
+  index,
+}: {
+  step: (typeof TIMELINE_STEPS)[0]
+  index: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-80px' })
+  const isEven = index % 2 === 0
 
-        {/* Testimonials Section */}
-        <section className="mb-32 fade-in-element opacity-0 -mx-4 sm:-mx-6 lg:-mx-8">
-          <TestimonialsSection />
-        </section>
+  return (
+    <div ref={ref} className="relative mb-14 lg:mb-20 last:mb-0">
+      {/* Circle node */}
+      <motion.div
+        className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-full bg-teal-800 border-4 border-white shadow-md flex items-center justify-center"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={isInView ? { scale: 1, opacity: 1 } : {}}
+        transition={{ duration: 0.4, type: 'spring', stiffness: 220, damping: 18 }}
+      >
+        <step.icon className="w-5 h-5 text-white" />
+      </motion.div>
 
-        {/* CTA */}
-        <section className="fade-in-element opacity-0">
-          <div className="bg-gradient-to-br from-teal-600 to-teal-700 rounded-3xl py-20 px-8 text-center shadow-2xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-            <div className="relative z-10">
-              <h2 className="text-4xl font-bold text-white mb-6">Ready to streamline your NDAs?</h2>
-              <p className="text-xl text-teal-50 mb-10 max-w-2xl mx-auto">
-                Join teams who make NDAs the fastest step in their deal flow.
-              </p>
-              <a href="/signup">
-                <button className="bg-white text-teal-600 px-10 py-5 rounded-xl font-semibold text-xl hover:bg-gray-100 hover:scale-105 transition-all duration-300 shadow-xl">
-                  Get Started Free
-                </button>
-              </a>
-            </div>
-          </div>
-        </section>
+      {/* ── Mobile layout ── */}
+      <div className="lg:hidden pl-20 pt-1">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-1">{step.number}</p>
+          <h3 className="text-xl font-extrabold text-gray-900 mb-2">{step.title}</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">{step.description}</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <StepMockup mockupKey={step.mockupKey} />
+        </motion.div>
       </div>
 
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+      {/* ── Desktop layout ── */}
+      <div className="hidden lg:grid grid-cols-2 gap-16 items-center min-h-[240px]">
+        {/* Left column */}
+        <motion.div
+          className="flex justify-end"
+          initial={{ opacity: 0, x: -48 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.1, ease: 'easeOut' }}
+        >
+          {isEven ? (
+            <div className="max-w-xs pr-12 text-right">
+              <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
+              <h3 className="text-2xl font-extrabold text-gray-900 mb-3">{step.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+            </div>
+          ) : (
+            <div className="pr-12">
+              <StepMockup mockupKey={step.mockupKey} />
+            </div>
+          )}
+        </motion.div>
 
-        .animate-fade-in {
-          animation: fadeInUp 0.8s ease-out forwards;
-        }
+        {/* Right column */}
+        <motion.div
+          className="flex justify-start"
+          initial={{ opacity: 0, x: 48 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          transition={{ duration: 0.65, delay: 0.2, ease: 'easeOut' }}
+        >
+          {isEven ? (
+            <div className="pl-12">
+              <StepMockup mockupKey={step.mockupKey} />
+            </div>
+          ) : (
+            <div className="max-w-xs pl-12">
+              <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
+              <h3 className="text-2xl font-extrabold text-gray-900 mb-3">{step.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  )
+}
 
-        .animate-fade-in-delay {
-          animation: fadeInUp 0.8s ease-out 0.3s forwards;
-          opacity: 0;
-        }
+/* ─── Page ────────────────────────────────────────────────── */
+export default function About() {
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: timelineRef,
+    offset: ['start 75%', 'end 25%'],
+  })
+  const lineScaleY = useTransform(scrollYProgress, [0, 1], [0, 1])
 
-        .animate-fade-in-up {
-          animation: fadeInUp 0.8s ease-out forwards;
-        }
+  return (
+    <div className="min-h-screen bg-white font-sans">
 
-        .bg-grid-pattern {
-          background-image: 
-            linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-      `}</style>
+      {/* ══════════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════════ */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+          className="text-center max-w-2xl mx-auto"
+        >
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+            About FormalizeIt
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+            We make NDAs fast, clear, and collaborative.
+          </h1>
+          <p className="text-base text-gray-500 leading-relaxed">
+            No more email ping-pong, version confusion, or formatting drama.
+            You don&apos;t reinvent the NDA each time — you reuse a trusted structure
+            and review only the terms that actually change.
+          </p>
+        </motion.div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          TIMELINE
+      ══════════════════════════════════════════════ */}
+      <section className="border-t border-gray-100 py-12 lg:py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Section header */}
+          <motion.div
+            className="mb-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              The process
+            </p>
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              From blank to signed
+            </h2>
+          </motion.div>
+
+          {/* Timeline container with scroll-driven line */}
+          <div ref={timelineRef} className="relative">
+            {/* Track (faint background line) */}
+            <div className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-gray-100" />
+
+            {/* Animated progress line */}
+            <motion.div
+              className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-teal-600 origin-top"
+              style={{ scaleY: lineScaleY }}
+            />
+
+            {/* Steps */}
+            <div className="relative">
+              {TIMELINE_STEPS.map((step, i) => (
+                <TimelineStep key={i} step={step} index={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          FEATURE STEPS
+      ══════════════════════════════════════════════ */}
+      <section className="border-t border-gray-100">
+        <FeatureSteps
+          features={[
+            {
+              step: 'Step 1',
+              title: 'Save Time',
+              content:
+                'Create professional NDAs in minutes, not hours. Auto-fill company details, use proven templates, and skip the repetitive formatting work.',
+              image:
+                'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop',
+            },
+            {
+              step: 'Step 2',
+              title: 'Live Preview',
+              content:
+                'See exactly what your NDA looks like as you fill it out. No surprises — what you see is what you get in the final PDF.',
+              image:
+                'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
+            },
+            {
+              step: 'Step 3',
+              title: 'Easy Communication',
+              content:
+                'Share a secure link with the other party. They can review, suggest changes, and sign — all without creating an account or email ping-pong.',
+              image:
+                'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop',
+            },
+          ]}
+          title="Making NDAs Simple"
+          autoPlayInterval={5000}
+        />
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════════════════ */}
+      <section className="border-t border-gray-100">
+        <TestimonialsSection />
+      </section>
+
+{/* ══════════════════════════════════════════════
+          CTA
+      ══════════════════════════════════════════════ */}
+      <section className="border-t border-gray-100 bg-gray-50 py-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
+                Ready to streamline your NDAs?
+              </h2>
+              <p className="text-sm text-gray-500">
+                Join teams who make NDAs the fastest step in their deal flow.
+              </p>
+            </div>
+            <SignUpButton mode="modal">
+              <button className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
+                Get Started Free
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </SignUpButton>
+          </div>
+        </div>
+      </section>
+
     </div>
   )
 }

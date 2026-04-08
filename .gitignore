@@ -57,3 +57,6 @@ tsc_*.log
 tsc_*.txt
 prisma_error*.log
 test-prisma.ts
+
+# Claude Local Settings
+.claude/settings.local.json

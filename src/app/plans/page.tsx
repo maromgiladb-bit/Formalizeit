@@ -1,10 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
-import { Check, CreditCard } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Check, ArrowRight } from 'lucide-react'
 import { Pricing } from '@/components/ui/pricing'
-import PageHero from '@/components/ui/page-hero'
+
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
+}
+
+const stagger = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.09 } },
+}
 
 const pricingPlans = [
   {
@@ -63,119 +72,115 @@ const pricingPlans = [
     href: "/contact",
     isPopular: false,
   },
-];
+]
+
+const coreFeatures = [
+  "Secure Storage",
+  "E-Signatures",
+  "Status Tracking",
+  "Mobile Access",
+]
 
 export default function Plans() {
-  const [mounted, setMounted] = useState(false)
-  const faqRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setMounted(true)
-
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('fade-in-element')
-        }
-      })
-    }, observerOptions)
-
-    if (faqRef.current) observer.observe(faqRef.current)
-
-    return () => observer.disconnect()
-  }, [])
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHero
-        icon={CreditCard}
-        title="Choose Your Plan"
-        subtitle="Start free, upgrade when you need more. All plans include secure e-signatures."
-      />
+    <div className="min-h-screen bg-white font-sans">
 
-      {/* Pricing Component */}
-      <div className="bg-gray-50">
-        <Pricing
-          plans={pricingPlans}
-          title=""
-          description=""
-        />
-      </div>
-
-      {/* Features Comparison */}
-      <div ref={faqRef} className="pt-0 pb-10 bg-gray-50">
+      {/* Header + Pricing */}
+      <section className="bg-white pt-8 pb-4">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              All Plans Include
-            </h2>
-            <p className="text-gray-600">
-              Core features available in every plan
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Secure Storage</h3>
-            </div>
-
-            <div className="text-center">
-              <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">E-Signatures</h3>
-            </div>
-
-            <div className="text-center">
-              <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Status Tracking</h3>
-            </div>
-
-            <div className="text-center">
-              <div className="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center mb-3 mx-auto">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-              <h3 className="font-semibold text-gray-900 text-sm">Mobile Access</h3>
-            </div>
-          </div>
+          <motion.div
+            className="mb-4"
+            initial="initial"
+            animate="animate"
+            variants={stagger}
+          >
+            <motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Pricing</motion.p>
+            <motion.h1 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Choose Your Plan</motion.h1>
+            <motion.p variants={fadeUp} className="text-sm text-gray-500 leading-relaxed mt-1 max-w-lg">
+              Start free, upgrade when you need more. All plans include secure e-signatures.
+            </motion.p>
+          </motion.div>
         </div>
-      </div>
 
-      {/* CTA Section */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 py-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Still have questions?
-          </h2>
-          <p className="text-lg text-gray-300 mb-8">
-            Our team is here to help you choose the right plan for your needs.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/contact"
-              className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-all duration-200"
-            >
-              Contact Sales
-            </Link>
-            <Link
-              href="/about"
-              className="px-6 py-3 bg-white/10 border border-white/30 text-white font-semibold rounded-lg hover:bg-white/20 transition-all duration-200"
-            >
-              Learn More
-            </Link>
-          </div>
+        <div className="-mb-12">
+          <Pricing
+            plans={pricingPlans}
+            title=""
+            description=""
+          />
         </div>
-      </div>
+      </section>
+
+      {/* All Plans Include */}
+      <section className="border-t border-gray-100 bg-white pt-6 pb-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={fadeUp}
+            className="mb-5"
+          >
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Included</p>
+            <h2 className="text-2xl font-bold text-gray-900">All Plans Include</h2>
+            <p className="text-sm text-gray-500 mt-1">Core features available in every plan</p>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={stagger}
+          >
+            {coreFeatures.map((feature) => (
+              <motion.div
+                key={feature}
+                variants={fadeUp}
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200"
+              >
+                <div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-3 transition-colors duration-200">
+                  <Check className="w-5 h-5 text-teal-700" />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900">{feature}</h3>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Strip */}
+      <section className="border-t border-gray-100 bg-gray-50 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={fadeUp}
+          >
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Still have questions?</h2>
+              <p className="text-sm text-gray-500">Our team is here to help you choose the right plan.</p>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+              >
+                Contact Sales
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm cursor-pointer"
+              >
+                Learn More
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -696,22 +696,22 @@ export default function FillNDAPublicClient({
                     </div>
                 )}
 
-                {/* Suggest Change button for readonly fields */}
-                {state === "readonly" && !suggestionResponses[field] && (
+                {/* Suggest Change button — only shown when no active suggestion and input is closed */}
+                {state === "readonly" && !suggestionResponses[field] && !showingSuggestionFor.has(field) && !mySuggestions[field] && (
                     <div className="mb-2">
-                        <button onClick={() => toggleSuggestion(field)} className={`px-3 py-1 rounded-lg font-medium text-xs whitespace-nowrap ${showingSuggestionFor.has(field) ? "bg-gray-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`} suppressHydrationWarning>
-                            {showingSuggestionFor.has(field) ? "Cancel" : "✏️ Suggest Change"}
+                        <button onClick={() => toggleSuggestion(field)} className="px-3 py-1 rounded-lg font-medium text-xs whitespace-nowrap bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200" suppressHydrationWarning>
+                            ✏️ Suggest Change
                         </button>
                     </div>
                 )}
 
-                {/* Input field */}
+                {/* Input field — strikethrough when a suggestion is active */}
                 {(state !== "pending_suggestion" || suggestionResponses[field]) && (
                     useTextarea ? (
                         <textarea
                             value={value}
                             onChange={(e) => setFormValues(prev => ({ ...prev, [field]: e.target.value }))}
-                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''}`}
+                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''} ${state === "readonly" && (showingSuggestionFor.has(field) || !!mySuggestions[field]) ? 'line-through text-gray-400' : ''}`}
                             rows={3}
                             placeholder={isEditable ? `Please enter ${label.toLowerCase()}` : ""}
                             disabled={!isEditable}
@@ -722,7 +722,7 @@ export default function FillNDAPublicClient({
                             type={field.includes("email") ? "email" : field.includes("phone") ? "tel" : field.includes("date") ? "date" : field.includes("month") ? "number" : "text"}
                             value={value}
                             onChange={(e) => setFormValues(prev => ({ ...prev, [field]: e.target.value }))}
-                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''}`}
+                            className={`${getFieldClass(field)} w-full rounded-lg shadow-sm transition-all ${suggestionResponses[field] === 'accepted' ? 'bg-emerald-50 border-emerald-300' : ''} ${state === "readonly" && (showingSuggestionFor.has(field) || !!mySuggestions[field]) ? 'line-through text-gray-400' : ''}`}
                             placeholder={isEditable ? `Please enter ${label.toLowerCase()}` : ""}
                             disabled={!isEditable}
                             suppressHydrationWarning
@@ -730,15 +730,82 @@ export default function FillNDAPublicClient({
                     )
                 )}
 
-                {/* Inline suggestion input for readonly fields */}
+                {/* State B: suggestion input open */}
                 {state === "readonly" && showingSuggestionFor.has(field) && (
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <label className="block text-sm text-blue-700 mb-1">Your suggested value:</label>
+                    <div className="mt-1 flex items-center gap-2">
                         {useTextarea ? (
-                            <textarea value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={2} placeholder={`Suggest a new value for ${label.toLowerCase()}`} suppressHydrationWarning />
+                            <textarea
+                                value={mySuggestions[field] || ""}
+                                onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))}
+                                className="flex-1 px-2 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-amber-50"
+                                rows={2}
+                                placeholder={`Suggest a new value for ${label.toLowerCase()}`}
+                                suppressHydrationWarning
+                            />
                         ) : (
-                            <input type="text" value={mySuggestions[field] || ""} onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))} className="w-full p-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder={`Suggest a new value for ${label.toLowerCase()}`} suppressHydrationWarning />
+                            <input
+                                type={field.includes("email") ? "email" : field.includes("phone") ? "tel" : field.includes("date") ? "date" : field.includes("month") ? "number" : "text"}
+                                value={mySuggestions[field] || ""}
+                                onChange={(e) => setMySuggestions(prev => ({ ...prev, [field]: e.target.value }))}
+                                className="flex-1 px-2 py-1.5 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-amber-50"
+                                placeholder={`Suggest a new value for ${label.toLowerCase()}`}
+                                suppressHydrationWarning
+                            />
                         )}
+                        {/* ✓ keep value, close input */}
+                        <button
+                            onClick={() => setShowingSuggestionFor(prev => { const s = new Set(prev); s.delete(field); return s; })}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors shrink-0"
+                            title="Confirm suggestion"
+                            suppressHydrationWarning
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                        {/* ✗ clear value + close */}
+                        <button
+                            onClick={() => toggleSuggestion(field)}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors shrink-0"
+                            title="Cancel suggestion"
+                            suppressHydrationWarning
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
+                {/* State C: suggestion confirmed — show suggestion row below the struck-through field */}
+                {state === "readonly" && !showingSuggestionFor.has(field) && mySuggestions[field] && !suggestionResponses[field] && (
+                    <div className="mt-1 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="text-xs text-amber-600 shrink-0">→</span>
+                            <span className="text-sm font-medium text-gray-800 truncate">{mySuggestions[field]}</span>
+                        </div>
+                        {/* Re-open to edit */}
+                        <button
+                            onClick={() => setShowingSuggestionFor(prev => new Set([...prev, field]))}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors shrink-0"
+                            title="Edit suggestion"
+                            suppressHydrationWarning
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        {/* Remove suggestion */}
+                        <button
+                            onClick={() => setMySuggestions(prev => ({ ...prev, [field]: "" }))}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-colors shrink-0"
+                            title="Remove suggestion"
+                            suppressHydrationWarning
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                     </div>
                 )}
             </div>
@@ -753,7 +820,7 @@ export default function FillNDAPublicClient({
             return (
                 <Link
                     href="/mynda"
-                    className="inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -767,7 +834,7 @@ export default function FillNDAPublicClient({
             <div className="space-y-3">
                 <Link
                     href="/"
-                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
+                    className="w-full inline-flex items-center justify-center px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -808,50 +875,34 @@ export default function FillNDAPublicClient({
 
     return (
         <div className="min-h-screen bg-gray-50">
-
             {/* Main Container with Fixed Layout */}
             <div className="flex h-[calc(100vh-64px)]">
                 {/* LEFT SIDE: Form Content (Scrollable) */}
                 <div className={`transition-all duration-300 ${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
                     <div className="max-w-4xl mx-auto p-6">
-                        {/* Header Card */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden">
-                            <div className="bg-teal-600 px-6 py-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h1 className="text-xl font-bold text-white">{ndaTitle}</h1>
-                                            <p className="text-blue-100 text-sm">Complete your information to proceed</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-4 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 border border-white/30" title={showLivePreview ? "Hide Preview" : "Show Preview"} suppressHydrationWarning>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            {showLivePreview ? (
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                            ) : (
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            )}
-                                        </svg>
-                                        {showLivePreview ? "Hide" : "Show"}
-                                    </button>
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h1 className="text-base font-bold text-gray-900">{ndaTitle}</h1>
+                                    <p className="text-xs text-gray-500 mt-0.5">Complete your information to proceed</p>
                                 </div>
                             </div>
-
-                            {/* Progress Bar */}
-                            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-700">Completion Progress</span>
-                                    <span className="text-sm font-bold text-teal-600">{computeCompletionPercent()}%</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                    <div className="h-2.5 bg-teal-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${computeCompletionPercent()}%` }} />
-                                </div>
-                            </div>
+                            <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5" suppressHydrationWarning>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    {showLivePreview ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    )}
+                                </svg>
+                                {showLivePreview ? "Hide Preview" : "Show Preview"}
+                            </button>
                         </div>
 
                         {/* Alerts */}
@@ -865,44 +916,42 @@ export default function FillNDAPublicClient({
                         )}
 
                         {/* Form Card */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                            <div className="p-6">
-                                {/* Step Navigation */}
-                                <div className="flex items-center justify-between gap-1 mb-6">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div className="px-6 pt-5 pb-2">
+                                {/* Compact Step Stepper */}
+                                <div className="flex items-center">
                                     {steps.map((s, i) => (
-                                        <div key={s} className="flex-1 relative">
-                                            <button onClick={() => goToStep(i)} className={`w-full transition-all duration-300 ${i === step ? 'transform scale-105' : ''}`} suppressHydrationWarning>
-                                                <div className="flex flex-col items-center">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ${i === step ? 'bg-teal-600 text-white shadow-lg ring-4 ring-teal-100' : i < step ? 'bg-teal-500 text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}>
-                                                        {i < step ? (
-                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                            </svg>
-                                                        ) : (
-                                                            <span className="font-bold text-sm">{i + 1}</span>
-                                                        )}
-                                                    </div>
-                                                    <span className={`text-xs font-medium text-center transition-all duration-300 ${i === step ? 'text-teal-600 font-semibold' : 'text-gray-500'}`}>{s}</span>
+                                        <React.Fragment key={s}>
+                                            <button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0" suppressHydrationWarning>
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${i === step ? 'bg-teal-800 text-white' : i < step ? 'bg-teal-800 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {i < step ? (
+                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                    ) : (
+                                                        <span>{i + 1}</span>
+                                                    )}
                                                 </div>
+                                                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : i < step ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
                                             </button>
                                             {i < steps.length - 1 && (
-                                                <div className="absolute top-5 left-[calc(50%+20px)] right-[calc(-50%+20px)] h-0.5 bg-gray-200 -z-10">
-                                                    <div className={`h-full bg-teal-600 transition-all duration-500 ${i < step ? 'w-full' : 'w-0'}`} />
+                                                <div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
+                                                    <div className={`absolute inset-y-0 left-0 bg-teal-800 transition-all duration-500 ${i < step ? 'right-0' : 'right-full'}`} />
                                                 </div>
                                             )}
-                                        </div>
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Form Content */}
-                            <div className="bg-gray-50 rounded-xl p-6 mx-6 mb-6 min-h-100 border border-gray-200">
+                            <div className="p-6 pt-4">
                                 {/* Step 0: Document Details */}
                                 {step === 0 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                             </div>
@@ -924,8 +973,8 @@ export default function FillNDAPublicClient({
                                 {step === 1 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                 </svg>
                                             </div>
@@ -956,12 +1005,12 @@ export default function FillNDAPublicClient({
                                             </div>
                                         </div>
                                         {pendingInputFields.some(f => f.startsWith("party_b")) && (
-                                            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
+                                            <div className="bg-teal-50 rounded-lg p-4 border border-teal-200 mb-4">
                                                 <div className="flex gap-3">
-                                                    <svg className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    <p className="text-sm text-orange-800"><strong>Action required!</strong> Fields marked with ⏳ need your input.</p>
+                                                    <p className="text-sm text-teal-800"><strong>Action required!</strong> Fields marked with ⏳ need your input.</p>
                                                 </div>
                                             </div>
                                         )}
@@ -999,9 +1048,9 @@ export default function FillNDAPublicClient({
                                 {step === 4 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
                                             <div>
@@ -1041,16 +1090,16 @@ export default function FillNDAPublicClient({
 
                                         {/* Pending Suggestions Summary */}
                                         {getPendingSuggestionsCount() > 0 && (
-                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <svg className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <div>
-                                                        <p className="text-sm font-medium text-blue-800">
+                                                        <p className="text-sm font-medium text-amber-800">
                                                             You have {getPendingSuggestionsCount()} suggested change{getPendingSuggestionsCount() !== 1 ? 's' : ''} pending
                                                         </p>
-                                                        <p className="text-sm text-blue-700 mt-1">
+                                                        <p className="text-sm text-amber-700 mt-1">
                                                             Use "Send Back with Changes" to notify the other party about your proposed changes.
                                                         </p>
                                                     </div>
@@ -1107,8 +1156,8 @@ export default function FillNDAPublicClient({
                                                         <button
                                                             onClick={handleProceedToSign}
                                                             disabled={!canProceedToSign}
-                                                            className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${canProceedToSign
-                                                                ? "text-white bg-linear-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-lg hover:shadow-xl"
+                                                            className={`w-full px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2 ${canProceedToSign
+                                                                ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                                                                 : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
                                                                 }`}
                                                             suppressHydrationWarning
@@ -1156,9 +1205,9 @@ export default function FillNDAPublicClient({
                                                     <button
                                                         onClick={handleSendBackWithChanges}
                                                         disabled={isSubmitting || !canSendBack}
-                                                        className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${isSubmitting || !canSendBack
+                                                        className={`w-full px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2 ${isSubmitting || !canSendBack
                                                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                            : "bg-orange-100 text-orange-700 border-2 border-orange-300 hover:bg-orange-200 hover:border-orange-400"
+                                                            : "bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg"
                                                             }`}
                                                         suppressHydrationWarning
                                                     >
@@ -1177,7 +1226,7 @@ export default function FillNDAPublicClient({
                                                                 </svg>
                                                                 Send Back with Changes
                                                                 {(getPendingSuggestionsCount() > 0) && (
-                                                                    <span className="ml-1 px-2 py-0.5 bg-orange-200 text-orange-800 rounded-full text-sm">
+                                                                    <span className="ml-1 px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full text-xs">
                                                                         {getPendingSuggestionsCount()}
                                                                     </span>
                                                                 )}
@@ -1197,11 +1246,32 @@ export default function FillNDAPublicClient({
                             </div>
 
                             {/* Navigation Buttons */}
-                            <div className="flex justify-between p-6 pt-0">
-                                <button onClick={goBack} disabled={step === 0} className={`px-6 py-3 rounded-lg font-semibold transition-all ${step === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} suppressHydrationWarning>← Back</button>
-                                {step < steps.length - 1 && (
-                                    <button onClick={goNext} className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md" suppressHydrationWarning>Next →</button>
-                                )}
+                            <div className="mt-6 mb-2 flex items-center justify-between gap-3 pt-4 border-t border-gray-200 px-6">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={goBack}
+                                        disabled={step === 0}
+                                        className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${step === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                                        suppressHydrationWarning
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Back
+                                    </button>
+                                    {step < steps.length - 1 && (
+                                        <button
+                                            onClick={goNext}
+                                            className="px-5 py-2.5 bg-teal-800 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-all duration-200 flex items-center gap-2"
+                                            suppressHydrationWarning
+                                        >
+                                            Next Step: {steps[step + 1]}
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1209,20 +1279,30 @@ export default function FillNDAPublicClient({
 
                 {/* RIGHT SIDE: Live Preview Panel */}
                 {showLivePreview && (
-                    <div className="hidden lg:block lg:w-[55%] bg-gray-100 border-l border-gray-200">
-                        <div className="sticky top-0 h-full overflow-hidden flex flex-col">
-                            <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    <span className="font-medium text-gray-700">Live Preview</span>
-                                    {previewLoading && <span className="text-xs text-gray-500 ml-2 flex items-center gap-1"><svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Updating...</span>}
+                    <div className="hidden lg:block w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
+                        <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-gray-900">Live Preview</h3>
+                                    <p className="text-xs text-gray-600">
+                                        {previewLoading ? (
+                                            <span className="flex items-center gap-1">
+                                                <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                Updating...
+                                            </span>
+                                        ) : "Updates as you type"}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="flex-1 overflow-hidden p-4">
-                                <div className="bg-white rounded-xl shadow-lg h-full overflow-hidden">
-                                    <iframe srcDoc={previewHtml} title="NDA Preview" className="w-full h-full border-0" sandbox="allow-same-origin allow-scripts" />
-                                </div>
-                            </div>
+                        </div>
+                        <div className="p-6">
+                            <iframe
+                                srcDoc={previewHtml}
+                                title="NDA Preview"
+                                className="w-full border-0"
+                                style={{ minHeight: '1200px', height: 'auto' }}
+                                sandbox="allow-same-origin allow-scripts"
+                            />
                         </div>
                     </div>
                 )}

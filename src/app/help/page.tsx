@@ -1,8 +1,44 @@
-import Link from "next/link";
-import PageHero from "@/components/ui/page-hero";
-import { BookOpen, FileText, Users, Download, CreditCard, Scale, MessageCircle, ChevronRight } from "lucide-react";
+"use client";
 
-const sections = [
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+	BookOpen,
+	FileText,
+	Users,
+	Download,
+	CreditCard,
+	Scale,
+	MessageCircle,
+	ChevronRight,
+	ArrowRight,
+} from "lucide-react";
+
+const fadeUp = {
+	initial: { opacity: 0, y: 24 },
+	animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
+};
+
+const stagger = {
+	initial: {},
+	animate: { transition: { staggerChildren: 0.09 } },
+};
+
+interface ContentBlock {
+	heading: string | null;
+	body: string;
+	list?: string[];
+	listNote?: string;
+}
+
+interface Section {
+	id: string;
+	icon: typeof BookOpen;
+	title: string;
+	content: ContentBlock[];
+}
+
+const sections: Section[] = [
 	{
 		id: "getting-started",
 		icon: BookOpen,
@@ -138,130 +174,160 @@ const tableOfContents = [
 
 export default function HelpPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<PageHero
-				icon={BookOpen}
-				title="Need help using FormalizeIt?"
-				subtitle="Learn how to create documents, update key terms, review changes efficiently, and get the most out of your workflow."
-			/>
+		<div className="min-h-screen bg-white font-sans">
+
+			{/* Hero */}
+			<section className="border-b border-gray-100">
+				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+					<motion.div
+						className="text-center max-w-2xl mx-auto"
+						initial="initial"
+						animate="animate"
+						variants={stagger}
+					>
+						<motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+							Help Center
+						</motion.p>
+						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+							Need help using FormalizeIt?
+						</motion.h1>
+						<motion.p variants={fadeUp} className="text-base text-gray-500 leading-relaxed">
+							Learn how to create documents, update key terms, review changes efficiently, and get the most out of your workflow.
+						</motion.p>
+					</motion.div>
+				</div>
+			</section>
 
 			{/* Main Content */}
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-				<div className="flex flex-col lg:flex-row gap-12">
+			<section className="bg-white py-12">
+				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+					<div className="flex flex-col lg:flex-row gap-10">
 
-					{/* Sidebar Table of Contents */}
-					<aside className="lg:w-64 shrink-0">
-						<div className="sticky top-24 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-							<p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-								Help Center
-							</p>
-							<nav className="space-y-0.5">
-								{tableOfContents.map((item) => (
-									<a
-										key={item.id}
-										href={`#${item.id}`}
-										className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 transition-colors group"
-									>
-										<ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-teal-400 transition-colors" />
-										{item.label}
-									</a>
-								))}
-							</nav>
-						</div>
-					</aside>
-
-					{/* Article Content */}
-					<main className="flex-1 min-w-0">
-						<div className="space-y-10">
-							{sections.map((section) => {
-								const Icon = section.icon;
-								return (
-									<article
-										key={section.id}
-										id={section.id}
-										className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 scroll-mt-24"
-									>
-										<div className="flex items-center gap-3 mb-5">
-											<div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
-												<Icon className="w-5 h-5 text-teal-600" />
-											</div>
-											<h2 className="text-xl font-bold text-gray-900">
-												{section.title}
-											</h2>
-										</div>
-										{section.content.map((block, i) => (
-											<div key={i}>
-												{block.heading && (
-													<h3 className="text-base font-semibold text-gray-800 mb-2">
-														{block.heading}
-													</h3>
-												)}
-												<p className="text-gray-600 leading-relaxed">{block.body}</p>
-												{block.list && (
-													<ul className="mt-4 space-y-2">
-														{block.list.map((item) => (
-															<li key={item} className="flex items-start gap-2 text-gray-600">
-																<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
-																{item}
-															</li>
-														))}
-													</ul>
-												)}
-												{block.listNote && (
-													<p className="mt-4 text-gray-600 leading-relaxed">{block.listNote}</p>
-												)}
-											</div>
-										))}
-									</article>
-								);
-							})}
-
-							{/* Need More Help */}
-							<article className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-								<div className="flex items-center gap-3 mb-5">
-									<div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
-										<MessageCircle className="w-5 h-5 text-teal-600" />
-									</div>
-									<h2 className="text-xl font-bold text-gray-900">Need more help?</h2>
-								</div>
-								<p className="text-gray-600 leading-relaxed mb-4">
-									If you cannot find the answer you need, contact support and include:
+						{/* Sidebar Table of Contents */}
+						<aside className="lg:w-56 shrink-0">
+							<div className="sticky top-24">
+								<p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4 px-3">
+									Topics
 								</p>
-								<ul className="space-y-2 mb-6">
-									{[
-										"What you were trying to do",
-										"What happened",
-										"Any error message you saw",
-										"The document or page involved",
-									].map((item) => (
-										<li key={item} className="flex items-start gap-2 text-gray-600">
-											<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
-											{item}
-										</li>
+								<nav className="space-y-0.5">
+									{tableOfContents.map((item) => (
+										<a
+											key={item.id}
+											href={`#${item.id}`}
+											className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-teal-800 hover:bg-teal-50 transition-colors duration-150 group"
+										>
+											<ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-teal-500 transition-colors" />
+											{item.label}
+										</a>
 									))}
-								</ul>
-								<p className="text-sm text-gray-500 mb-6">
-									This helps us resolve issues faster.
-								</p>
-								<div className="flex flex-col sm:flex-row gap-3">
-									<Link
-										href="/contact"
-										className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-colors"
-									>
-										Contact Support
-									</Link>
-									<Link
-										href="/faq"
-										className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-									>
-										Browse FAQ
-									</Link>
-								</div>
-							</article>
-						</div>
-					</main>
+								</nav>
+							</div>
+						</aside>
+
+						{/* Article Content */}
+						<main className="flex-1 min-w-0">
+							<motion.div
+								className="space-y-6"
+								initial="initial"
+								whileInView="animate"
+								viewport={{ once: true, margin: "-60px" }}
+								variants={stagger}
+							>
+								{sections.map((section) => {
+									const Icon = section.icon;
+									return (
+										<motion.article
+											key={section.id}
+											id={section.id}
+											variants={fadeUp}
+											className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-6 sm:p-8 scroll-mt-24"
+										>
+											<div className="flex items-center gap-3 mb-4">
+												<div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200">
+													<Icon className="w-5 h-5 text-teal-700" />
+												</div>
+												<h2 className="text-sm font-bold text-gray-900">
+													{section.title}
+												</h2>
+											</div>
+											{section.content.map((block, i) => (
+												<div key={i}>
+													{block.heading && (
+														<h3 className="text-sm font-semibold text-gray-900 mb-2">
+															{block.heading}
+														</h3>
+													)}
+													<p className="text-sm text-gray-500 leading-relaxed">{block.body}</p>
+													{block.list && (
+														<ul className="mt-3 space-y-1.5">
+															{block.list.map((item) => (
+																<li key={item} className="flex items-start gap-2 text-sm text-gray-500">
+																	<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+																	{item}
+																</li>
+															))}
+														</ul>
+													)}
+													{block.listNote && (
+														<p className="mt-3 text-sm text-gray-500 leading-relaxed">{block.listNote}</p>
+													)}
+												</div>
+											))}
+										</motion.article>
+									);
+								})}
+
+								{/* Need More Help */}
+								<motion.article
+									variants={fadeUp}
+									className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-6 sm:p-8"
+								>
+									<div className="flex items-center gap-3 mb-4">
+										<div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200">
+											<MessageCircle className="w-5 h-5 text-teal-700" />
+										</div>
+										<h2 className="text-sm font-bold text-gray-900">Need more help?</h2>
+									</div>
+									<p className="text-sm text-gray-500 leading-relaxed mb-4">
+										If you cannot find the answer you need, contact support and include:
+									</p>
+									<ul className="space-y-1.5 mb-5">
+										{[
+											"What you were trying to do",
+											"What happened",
+											"Any error message you saw",
+											"The document or page involved",
+										].map((item) => (
+											<li key={item} className="flex items-start gap-2 text-sm text-gray-500">
+												<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+												{item}
+											</li>
+										))}
+									</ul>
+									<p className="text-xs text-gray-400 mb-5">
+										This helps us resolve issues faster.
+									</p>
+									<div className="flex flex-col sm:flex-row gap-3">
+										<Link
+											href="/contact"
+											className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+										>
+											Contact Support
+											<ArrowRight className="w-4 h-4" />
+										</Link>
+										<Link
+											href="/faq"
+											className="inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm cursor-pointer"
+										>
+											Browse FAQ
+										</Link>
+									</div>
+								</motion.article>
+							</motion.div>
+						</main>
+					</div>
 				</div>
-			</div>
+			</section>
 		</div>
 	);
 }

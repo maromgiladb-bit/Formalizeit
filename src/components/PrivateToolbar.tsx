@@ -143,9 +143,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${item.current
-                    ? 'bg-[var(--teal-50)] text-[var(--teal-700)] shadow-sm'
-                    : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${item.current
+                    ? 'bg-teal-800 text-white shadow-sm'
+                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
                     }`}
                 >
                   {item.name}
@@ -155,7 +155,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isMoreMenuOpen ? 'bg-[var(--teal-50)] text-[var(--teal-700)]' : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${isMoreMenuOpen ? 'bg-teal-800 text-white' : 'text-gray-700 hover:text-white hover:bg-teal-800'
                     }`}
                 >
                   More
@@ -165,15 +165,15 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 </button>
 
                 {isMoreMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
                     <div className="py-1">
                       {navigation.slice(4).map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all ${item.current
-                            ? 'bg-[var(--teal-50)] text-[var(--teal-700)]'
-                            : 'text-[var(--navy-700)] hover:bg-[var(--teal-50)] hover:text-[var(--teal-600)]'
+                          className={`block px-4 py-3 text-sm font-bold transition-all duration-200 ${item.current
+                            ? 'bg-teal-800 text-white'
+                            : 'text-gray-700 hover:bg-teal-800 hover:text-white'
                             }`}
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
@@ -184,18 +184,18 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                         <Link
                           key={link.name}
                           href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
+                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {link.name}
                         </Link>
                       ))}
-                      <div className="border-t-2 border-gray-200 my-1"></div>
+                      <div className="border-t border-gray-200 my-1"></div>
                       {secondaryLinks.map((link) => (
                         <Link
                           key={link.name}
                           href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
+                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {link.name}
@@ -251,9 +251,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${item.current
-                    ? 'bg-[var(--teal-50)] text-[var(--teal-700)] shadow-sm'
-                    : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${item.current
+                    ? 'bg-teal-800 text-white shadow-sm'
+                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
                     }`}
                 >
                   {item.name}
@@ -264,7 +264,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
               <div className="relative" ref={moreMenuRefTablet}>
                 <button
                   onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isMoreMenuOpen ? 'bg-[var(--teal-50)] text-[var(--teal-700)]' : 'text-[var(--navy-700)] hover:text-[var(--teal-600)] hover:bg-[var(--teal-50)]'
+                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${isMoreMenuOpen ? 'bg-teal-800 text-white' : 'text-gray-700 hover:text-white hover:bg-teal-800'
                     }`}
                 >
                   More
@@ -274,27 +274,27 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 </button>
 
                 {isMoreMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
                     <div className="py-1">
                       {navigation.slice(3).map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all ${item.current
-                            ? 'bg-[var(--teal-50)] text-[var(--teal-700)]'
-                            : 'text-[var(--navy-700)] hover:bg-[var(--teal-50)] hover:text-[var(--teal-600)]'
+                          className={`block px-4 py-3 text-sm font-bold transition-all duration-200 ${item.current
+                            ? 'bg-teal-800 text-white'
+                            : 'text-gray-700 hover:bg-teal-800 hover:text-white'
                             }`}
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {item.name}
                         </Link>
                       ))}
-                      <div className="border-t-2 border-gray-200 my-1"></div>
+                      <div className="border-t border-gray-200 my-1"></div>
                       {secondaryLinks.map((link: { name: string; href: string }) => (
                         <Link
                           key={link.name}
                           href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-[var(--navy-700)] hover:bg-gray-50 hover:text-[var(--navy-900)] transition-all"
+                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
                           onClick={() => setIsMoreMenuOpen(false)}
                         >
                           {link.name}
@@ -377,7 +377,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
           <div className="flex items-center lg:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-teal-600 hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500 transition-all"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-700 transition-all"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
@@ -404,9 +404,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block px-4 py-3 rounded-xl text-base font-bold transition-all ${item.current
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-gray-700 hover:text-teal-600 hover:bg-teal-50'
+                  className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-200 ${item.current
+                    ? 'bg-teal-800 text-white'
+                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
                     }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -418,7 +418,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name}
@@ -429,7 +429,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name}
