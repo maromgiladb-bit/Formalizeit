@@ -27,8 +27,8 @@ function getStatusBadge(workflowState: string, status: string): { label: string;
     case 'SIGNING_COMPLETE':
       return { label: 'COMPLETE', color: 'text-green-700', bgColor: 'bg-green-50' };
     default:
-      if (status === 'signed') return { label: 'SIGNED', color: 'text-green-700', bgColor: 'bg-green-50' };
-      if (status === 'sent' || status === 'pending') return { label: 'SENT', color: 'text-teal-700', bgColor: 'bg-teal-50' };
+      if (status === 'SIGNED') return { label: 'SIGNED', color: 'text-green-700', bgColor: 'bg-green-50' };
+      if (status === 'SENT' || status === 'PENDING') return { label: 'SENT', color: 'text-teal-700', bgColor: 'bg-teal-50' };
       return { label: 'DRAFT', color: 'text-gray-600', bgColor: 'bg-gray-100' };
   }
 }

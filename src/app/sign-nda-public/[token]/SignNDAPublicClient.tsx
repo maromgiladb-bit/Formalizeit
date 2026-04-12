@@ -79,7 +79,7 @@ export default function SignNDAPublicClient({
 
                 // Focus the typed signature input after mode switch renders
                 setTimeout(() => {
-                    const sigInput = document.querySelector<HTMLInputElement>('input[placeholder="Type your name"]');
+                    const sigInput = document.querySelector<HTMLInputElement>('input[data-testid="signature-input"]');
                     if (sigInput) {
                         sigInput.focus();
                         sigInput.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
@@ -371,6 +371,7 @@ export default function SignNDAPublicClient({
                                             value={typedSignature}
                                             onChange={(e) => handleTypedChange(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                            data-testid="signature-input"
                                             placeholder="Type your name to generate signature"
                                         />
                                         {typedSignature && (

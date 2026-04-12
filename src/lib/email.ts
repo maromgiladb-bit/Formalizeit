@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { sanitizeForHtml } from '@/lib/sanitize'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000'
@@ -192,16 +193,20 @@ export function recipientEditEmailHtml(
   ownerMessage?: string,
   senderName?: string
 ): string {
-  const heading = senderName
-    ? `${senderName} sent you an NDA to review`
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeSenderName = sanitizeForHtml(senderName)
+  const safeOwnerMessage = sanitizeForHtml(ownerMessage)
+
+  const heading = safeSenderName
+    ? `${safeSenderName} sent you an NDA to review`
     : 'You have a new NDA to review'
 
   const content = `
     ${emailAccentLabel('Document Review')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${heading}</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Please take a moment to review the following agreement. You can suggest changes to any field before signing.</p>
-    ${emailDocTitle(draftTitle)}
-    ${ownerMessage ? emailNote('Message from sender', ownerMessage) : ''}
+    ${emailDocTitle(safeDraftTitle)}
+    ${safeOwnerMessage ? emailNote('Message from sender', safeOwnerMessage) : ''}
     ${emailAccentLabel('How it works')}
     ${emailSteps([
       { title: 'Open the document', desc: 'Click the button below to view the full NDA in your browser.' },
@@ -220,14 +225,15 @@ export function ownerReviewEmailHtml(
   reviewLink: string,
   changes: Array<{ field: string; before: string; after: string }>
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
   const changesRows = changes.slice(0, 5).map(c =>
     `<tr>
       <td style="padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
-        <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">${c.field}</p>
+        <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">${sanitizeForHtml(c.field)}</p>
       </td>
       <td style="padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
-        <p style="margin: 0 0 2px; font-size: 13px; color: #9ca3af; text-decoration: line-through;">${c.before || '(empty)'}</p>
-        <p style="margin: 0; font-size: 13px; color: #0f766e; font-weight: 600;">${c.after || '(removed)'}</p>
+        <p style="margin: 0 0 2px; font-size: 13px; color: #9ca3af; text-decoration: line-through;">${sanitizeForHtml(c.before) || '(empty)'}</p>
+        <p style="margin: 0; font-size: 13px; color: #0f766e; font-weight: 600;">${sanitizeForHtml(c.after) || '(removed)'}</p>
       </td>
     </tr>`
   ).join('')
@@ -238,7 +244,7 @@ export function ownerReviewEmailHtml(
     ${emailAccentLabel('Revision ' + revisionNumber)}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">The other party suggested changes</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Changes have been proposed on the following NDA. You can accept, reject, or counter each one.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
       <tr>
         <td style="padding: 10px 14px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Field</td>
@@ -256,6 +262,7 @@ export function finalSignedEmailHtml(
   draftTitle: string,
   downloadLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
   const content = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr><td align="center" style="padding-bottom: 20px;">
@@ -267,7 +274,7 @@ export function finalSignedEmailHtml(
     ${emailAccentLabel('Complete')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is fully signed</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Both parties have signed the agreement. A PDF copy is ready for your records.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailButton('Download Final PDF', downloadLink)}
   `
   return getBaseEmailHtml('NDA Completed', content)
@@ -277,11 +284,12 @@ export function recipientSignRequestEmailHtml(
   draftTitle: string,
   signLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
   const content = `
     ${emailAccentLabel('Signature Request')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">You're invited to sign an NDA</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">The following agreement has been reviewed and is ready for your signature. It only takes a minute.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailInfoBox(`
       <p style="margin: 0 0 4px; font-size: 12px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em;">What is an NDA?</p>
       <p style="margin: 0; font-size: 13px; color: #115e59; line-height: 1.5;">A Non-Disclosure Agreement is a short legal document where both parties agree to keep shared confidential information private.</p>
@@ -303,11 +311,13 @@ export function timeToSignEmailHtml(
   signLink: string,
   signerName: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeSignerName = sanitizeForHtml(signerName)
   const content = `
     ${emailAccentLabel('Your turn to sign')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${signerName} has signed — you're up</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeSignerName} has signed — you're up</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Great news! The other party has already added their signature. Please review the document and add yours to finalize the agreement.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailSteps([
       { title: 'Review the signed document', desc: 'You will see the full NDA including the other party\'s signature.' },
       { title: 'Add your signature', desc: 'Type, draw, or upload your signature to complete the agreement.' },
@@ -321,6 +331,7 @@ export function congratulationsEmailHtml(
   draftTitle: string,
   downloadLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
   const content = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr><td align="center" style="padding-bottom: 20px;">
@@ -332,7 +343,7 @@ export function congratulationsEmailHtml(
     ${emailAccentLabel('All signed')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3; text-align: center;">Your NDA is complete</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5; text-align: center;">Both parties have signed. The fully executed agreement is ready for download. A PDF copy is attached for your records.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailButton('Download Final PDF', downloadLink)}
   `
   return getBaseEmailHtml('NDA Complete', content)
@@ -345,16 +356,20 @@ export function partyBSuggestionsEmailHtml(
   suggestions: Record<string, string>,
   reviewLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safePartyBName = sanitizeForHtml(partyBName)
+  const safePartyBEmail = sanitizeForHtml(partyBEmail)
+
   const suggestionRows = Object.entries(suggestions)
     .filter(([, value]) => value && value.trim())
     .map(([key, value]) => {
       const fieldName = key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
       return `<tr>
         <td style="padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
-          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">${fieldName}</p>
+          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #111827;">${sanitizeForHtml(fieldName)}</p>
         </td>
         <td style="padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
-          <p style="margin: 0; font-size: 13px; color: #0f766e; font-weight: 600;">${value}</p>
+          <p style="margin: 0; font-size: 13px; color: #0f766e; font-weight: 600;">${sanitizeForHtml(value)}</p>
         </td>
       </tr>`
     })
@@ -362,11 +377,11 @@ export function partyBSuggestionsEmailHtml(
 
   const content = `
     ${emailAccentLabel('Suggestions received')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${partyBName} suggested changes to your NDA</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safePartyBName} suggested changes to your NDA</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">
-      <a href="mailto:${partyBEmail}" style="color: #0f766e; text-decoration: none;">${partyBEmail}</a> reviewed the agreement and proposed the following edits. You can accept, reject, or counter each one.
+      <a href="mailto:${safePartyBEmail}" style="color: #0f766e; text-decoration: none;">${safePartyBEmail}</a> reviewed the agreement and proposed the following edits. You can accept, reject, or counter each one.
     </p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
       <tr>
         <td style="padding: 10px 14px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Field</td>
@@ -384,12 +399,14 @@ export function partyARequestChangesEmailHtml(
   message: string,
   editLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeMessage = sanitizeForHtml(message)
   const content = `
     ${emailAccentLabel('Changes requested')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">The other party requested updates</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Your submission has been reviewed and a few updates are needed before moving forward.</p>
-    ${emailDocTitle(draftTitle)}
-    ${emailNote('Feedback from the sender', message)}
+    ${emailDocTitle(safeDraftTitle)}
+    ${emailNote('Feedback from the sender', safeMessage)}
     ${emailSteps([
       { title: 'Review the feedback above', desc: 'Understand what changes are being asked for.' },
       { title: 'Update the document', desc: 'Open the NDA and make the requested changes.' },
@@ -405,11 +422,13 @@ export function recipientInputSubmittedEmailHtml(
   partyBName: string,
   reviewLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safePartyBName = sanitizeForHtml(partyBName)
   const content = `
     ${emailAccentLabel('Submission received')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${partyBName} submitted their details</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safePartyBName} submitted their details</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">The other party has filled in the requested information and did not suggest any changes to your terms.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailInfoBox(`
       <p style="margin: 0; font-size: 13px; color: #115e59; line-height: 1.5;">No changes were proposed. You can review their submitted details and proceed to signing when ready.</p>
     `)}
@@ -424,6 +443,8 @@ export function inviteEmailHtml(
   role: string,
   signUpLink: string
 ): string {
+  const safeOrgName = sanitizeForHtml(orgName)
+  const safeInviterName = sanitizeForHtml(inviterName)
   const roleLabel = role === 'APPROVER' ? 'Approver' : 'Contributor'
   const roleDesc =
     role === 'APPROVER'
@@ -432,7 +453,7 @@ export function inviteEmailHtml(
 
   const content = `
     ${emailAccentLabel('Team invitation')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${inviterName} invited you to ${orgName}</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeInviterName} invited you to ${safeOrgName}</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">You have been invited to join the team on Formalize It. Here is what you will be able to do:</p>
     ${emailInfoBox(`
       <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em;">Your role: ${roleLabel}</p>
@@ -441,7 +462,7 @@ export function inviteEmailHtml(
     <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280; line-height: 1.5;">If you already have an account, just sign in and you will be added to the organization automatically.</p>
     ${emailButton('Accept Invitation', signUpLink)}
   `
-  return getBaseEmailHtml(`Join ${orgName} on Formalize It`, content)
+  return getBaseEmailHtml(`Join ${safeOrgName} on Formalize It`, content)
 }
 
 export function approvalRequestEmailHtml(
@@ -449,11 +470,13 @@ export function approvalRequestEmailHtml(
   submitterName: string,
   reviewLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeSubmitterName = sanitizeForHtml(submitterName)
   const content = `
     ${emailAccentLabel('Approval needed')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${submitterName} submitted a draft for your review</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeSubmitterName} submitted a draft for your review</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">A team member has prepared an NDA and is waiting for your approval before it can be sent to the other party.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailSteps([
       { title: 'Review the draft', desc: 'Check the terms, fields, and overall structure.' },
       { title: 'Approve or request changes', desc: 'If everything looks good, approve it. Otherwise, send it back with feedback.' },
@@ -468,6 +491,8 @@ export function approvalApprovedEmailHtml(
   approverName: string,
   draftLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeApproverName = sanitizeForHtml(approverName)
   const content = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr><td align="center" style="padding-bottom: 20px;">
@@ -477,9 +502,9 @@ export function approvalApprovedEmailHtml(
       </td></tr>
     </table>
     ${emailAccentLabel('Approved')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${approverName} approved your NDA draft</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeApproverName} approved your NDA draft</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Your draft is now ready to be sent to the other party for review and signature.</p>
-    ${emailDocTitle(draftTitle)}
+    ${emailDocTitle(safeDraftTitle)}
     ${emailButton('View Draft', draftLink)}
   `
   return getBaseEmailHtml('Your Draft Was Approved', content)
@@ -491,13 +516,15 @@ export function inputRequestEmailHtml(
   fieldCount: number,
   message: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeMessage = sanitizeForHtml(message)
   const fieldText = fieldCount === 1 ? '1 field' : `${fieldCount} fields`
   const content = `
     ${emailAccentLabel('Input requested')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your input is needed on an NDA</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">There ${fieldCount === 1 ? 'is' : 'are'} ${fieldText} that ${fieldCount === 1 ? 'needs' : 'need'} your information before this agreement can move forward.</p>
-    ${emailDocTitle(draftTitle)}
-    ${message ? emailNote('Message from the sender', message) : ''}
+    ${emailDocTitle(safeDraftTitle)}
+    ${safeMessage ? emailNote('Message from the sender', safeMessage) : ''}
     ${emailAccentLabel('How it works')}
     ${emailSteps([
       { title: 'Review the NDA', desc: 'See the full document so you know what you are filling in.' },
@@ -516,12 +543,15 @@ export function approvalRejectedEmailHtml(
   message: string,
   draftLink: string
 ): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeApproverName = sanitizeForHtml(approverName)
+  const safeMessage = sanitizeForHtml(message)
   const content = `
     ${emailAccentLabel('Changes requested')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${approverName} requested changes on your draft</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeApproverName} requested changes on your draft</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Your NDA draft has been reviewed and needs a few updates before it can be approved.</p>
-    ${emailDocTitle(draftTitle)}
-    ${emailNote('Feedback', message || 'Please review and update the draft.')}
+    ${emailDocTitle(safeDraftTitle)}
+    ${emailNote('Feedback', safeMessage || 'Please review and update the draft.')}
     <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280; line-height: 1.5;">Update the draft based on the feedback above and resubmit when ready.</p>
     ${emailButton('Edit Draft', draftLink)}
   `
