@@ -432,9 +432,9 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
                                 );
                               }
 
-                              if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created' && nda.partyASignerId) {
+                              if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created') {
                                 return (
-                                  <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
+                                  <Link href={`/view-nda/${nda.id}`}>
                                     <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 cursor-pointer">
                                       <Eye className="w-3.5 h-3.5" />
                                       View

@@ -969,7 +969,7 @@ export default function FillNDAHTML() {
 		setSaving(true);
 		setWarning("");
 		try {
-			const payload = { draftId, title: values.docName, data: values };
+			const payload = { draftId, title: values.docName, data: { ...values, templateId } };
 			const res = await fetch("/api/ndas/drafts", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -1027,7 +1027,7 @@ export default function FillNDAHTML() {
 		let currentDraftId = draftId;
 		if (!currentDraftId) {
 			try {
-				const payload = { draftId: draftId, title: values.docName, data: values };
+				const payload = { draftId: draftId, title: values.docName, data: { ...values, templateId } };
 				const res = await fetch("/api/ndas/drafts", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -1054,7 +1054,7 @@ export default function FillNDAHTML() {
 		let currentDraftId = draftId;
 		if (!currentDraftId) {
 			try {
-				const payload = { draftId: null, title: values.docName, data: values };
+				const payload = { draftId: null, title: values.docName, data: { ...values, templateId } };
 				const res = await fetch('/api/ndas/drafts', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },

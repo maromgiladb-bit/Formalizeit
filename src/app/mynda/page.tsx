@@ -300,9 +300,8 @@ export default function MyNDAsPage() {
 
                         {/* SENT (not action, not signed): View */}
                         {nda.status === 'SENT' && !signed &&
-                            !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') &&
-                            nda.partyASignerId && (
-                                <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
+                            !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') && (
+                                <Link href={`/view-nda/${nda.id}`}>
                                     <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:border-teal-300 hover:text-teal-700 transition-all duration-200">
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

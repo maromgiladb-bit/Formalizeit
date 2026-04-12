@@ -2,35 +2,119 @@
 import { useState } from 'react';
 import PrivateToolbar from '@/components/PrivateToolbar';
 import { useUser, RedirectToSignIn } from '@clerk/nextjs';
+import { Mail, Download, ChevronRight, Eye } from 'lucide-react';
 
 interface EmailTemplate {
     id: string;
     name: string;
     description: string;
+    category: string;
 }
 
 const emailTemplates: EmailTemplate[] = [
+    // Party B flow
     {
         id: 'recipientEdit',
-        name: '#1 - New NDA for Review (Party B)',
-        description: 'Sent to Party B when invited to review and edit an NDA',
+        name: 'New NDA for Review',
+        description: 'Party B receives NDA to review with a message from sender',
+        category: 'Party B receives',
+    },
+    {
+        id: 'recipientEditNoMessage',
+        name: 'New NDA for Review (no message)',
+        description: 'Party B receives NDA to review, no sender message',
+        category: 'Party B receives',
+    },
+    {
+        id: 'inputRequest',
+        name: 'Input Request',
+        description: 'Party B asked to fill in specific fields',
+        category: 'Party B receives',
+    },
+    {
+        id: 'recipientSignRequest',
+        name: 'Signature Request',
+        description: 'Party B invited to sign the reviewed NDA',
+        category: 'Party B receives',
+    },
+    {
+        id: 'partyARequestChanges',
+        name: 'Changes Requested by Party A',
+        description: 'Party A sends Party B back for revisions with feedback',
+        category: 'Party B receives',
+    },
+    // Party A flow
+    {
+        id: 'partyBSuggestions',
+        name: 'Party B Suggested Changes',
+        description: 'Party B proposed edits, Party A reviews them',
+        category: 'Party A receives',
     },
     {
         id: 'ownerReview',
-        name: '#2 - Review Changes (Party A)',
-        description: 'Sent to Party A when Party B submits changes for review',
+        name: 'Review Changes (Revision)',
+        description: 'Party A sees before/after diff of suggested changes',
+        category: 'Party A receives',
     },
     {
+        id: 'recipientInputSubmitted',
+        name: 'Details Submitted (No Changes)',
+        description: 'Party B filled in fields without suggesting changes',
+        category: 'Party A receives',
+    },
+    // Signing
+    {
         id: 'timeToSign',
-        name: '#3 - Time to Sign',
-        description: 'Sent when the other party has signed and it\'s your turn, or when NDA is ready for signature',
+        name: 'Your Turn to Sign',
+        description: 'Other party already signed, your turn now',
+        category: 'Signing',
     },
     {
         id: 'congratulations',
-        name: '#4 - Congratulations - All Done',
-        description: 'Sent to both parties when signing process is complete',
+        name: 'NDA Complete',
+        description: 'Both parties signed, PDF ready for download',
+        category: 'Signing',
+    },
+    {
+        id: 'finalSigned',
+        name: 'Fully Signed (Legacy)',
+        description: 'Alternate completion email with download link',
+        category: 'Signing',
+    },
+    // Internal / Team
+    {
+        id: 'approvalRequest',
+        name: 'Draft Awaiting Approval',
+        description: 'Contributor submitted draft, approver needs to review',
+        category: 'Internal',
+    },
+    {
+        id: 'approvalApproved',
+        name: 'Draft Approved',
+        description: 'Approver approved the draft, ready to send',
+        category: 'Internal',
+    },
+    {
+        id: 'approvalRejected',
+        name: 'Changes Requested on Draft',
+        description: 'Approver rejected draft with feedback',
+        category: 'Internal',
+    },
+    {
+        id: 'invite',
+        name: 'Team Invite (Approver)',
+        description: 'Invite to join organization as Approver',
+        category: 'Internal',
+    },
+    {
+        id: 'inviteContributor',
+        name: 'Team Invite (Contributor)',
+        description: 'Invite to join organization as Contributor',
+        category: 'Internal',
     },
 ];
+
+const categories = ['Party B receives', 'Party A receives', 'Signing', 'Internal'];
 
 export default function DevEmailsPage() {
     const { isLoaded, user } = useUser();
@@ -64,110 +148,127 @@ export default function DevEmailsPage() {
     if (!isLoaded) return <div className="min-h-screen">Loading...</div>;
     if (!user) return <RedirectToSignIn />;
 
+    const selectedInfo = emailTemplates.find(t => t.id === selectedTemplate);
+
     return (
         <div className="min-h-screen bg-gray-50">
             <PrivateToolbar />
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        📧 Dev Email Templates
-                    </h1>
-                    <p className="text-gray-600">
-                        Preview all email templates for testing (Development Only)
-                    </p>
+                    <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Development</p>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">Email Templates</h1>
+                    <p className="text-sm text-gray-500">Preview all {emailTemplates.length} email templates with sample data</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Email Templates List */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                                <h2 className="text-lg font-semibold text-gray-900">Email Templates</h2>
-                            </div>
-
-                            <div className="divide-y divide-gray-200">
-                                {emailTemplates.map((template) => (
-                                    <div
-                                        key={template.id}
-                                        className={`p-4 cursor-pointer transition-colors ${selectedTemplate === template.id
-                                            ? 'bg-purple-50 border-l-4 border-l-purple-500'
-                                            : 'hover:bg-gray-50'
-                                            }`}
-                                        onClick={() => loadEmailPreview(template.id)}
-                                    >
-                                        <h3 className="font-semibold text-gray-900">
-                                            {template.name}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            {template.description}
-                                        </p>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Sidebar */}
+                    <div className="lg:col-span-4">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            {categories.map((category, catIdx) => {
+                                const templates = emailTemplates.filter(t => t.category === category);
+                                return (
+                                    <div key={category}>
+                                        <div className={`px-4 py-2.5 bg-gray-50 ${catIdx > 0 ? 'border-t border-gray-200' : ''}`}>
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{category}</p>
+                                        </div>
+                                        {templates.map((template) => (
+                                            <button
+                                                key={template.id}
+                                                className={`w-full text-left px-4 py-3 border-t border-gray-100 transition-colors cursor-pointer ${
+                                                    selectedTemplate === template.id
+                                                        ? 'bg-teal-50 border-l-2 border-l-teal-700'
+                                                        : 'hover:bg-gray-50'
+                                                }`}
+                                                onClick={() => loadEmailPreview(template.id)}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="min-w-0">
+                                                        <p className={`text-sm font-semibold truncate ${
+                                                            selectedTemplate === template.id ? 'text-teal-800' : 'text-gray-900'
+                                                        }`}>
+                                                            {template.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{template.description}</p>
+                                                    </div>
+                                                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ml-2 ${
+                                                        selectedTemplate === template.id ? 'text-teal-700' : 'text-gray-300'
+                                                    }`} />
+                                                </div>
+                                            </button>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* Preview Panel */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-semibold text-gray-900">
-                                        {selectedTemplate
-                                            ? `Preview: ${emailTemplates.find(t => t.id === selectedTemplate)?.name}`
-                                            : 'Select an email template'}
-                                    </h2>
-                                    {selectedTemplate && previewHtml && (
-                                        <button
-                                            onClick={() => {
-                                                const blob = new Blob([previewHtml], { type: 'text/html' });
-                                                const url = URL.createObjectURL(blob);
-                                                const a = document.createElement('a');
-                                                a.href = url;
-                                                a.download = `${selectedTemplate}_email.html`;
-                                                a.click();
-                                                URL.revokeObjectURL(url);
-                                            }}
-                                            className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                                        >
-                                            Download HTML
-                                        </button>
-                                    )}
+                    {/* Preview */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            {/* Preview header */}
+                            <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Eye className="w-4 h-4 text-gray-400" />
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {selectedInfo ? selectedInfo.name : 'Select a template'}
+                                    </p>
                                 </div>
+                                {selectedTemplate && previewHtml && (
+                                    <button
+                                        onClick={() => {
+                                            const blob = new Blob([previewHtml], { type: 'text/html' });
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `${selectedTemplate}_email.html`;
+                                            a.click();
+                                            URL.revokeObjectURL(url);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 hover:text-teal-800 transition-colors cursor-pointer"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Download HTML
+                                    </button>
+                                )}
                             </div>
 
+                            {/* Preview body */}
                             <div className="p-4">
                                 {!selectedTemplate ? (
-                                    <div className="text-center py-20 text-gray-400">
-                                        <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                        <p>Select an email template to preview</p>
+                                    <div className="text-center py-24">
+                                        <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                            <Mail className="w-6 h-6 text-teal-700" />
+                                        </div>
+                                        <p className="text-sm font-semibold text-gray-900 mb-1">No template selected</p>
+                                        <p className="text-xs text-gray-500">Choose a template from the sidebar to preview it</p>
                                     </div>
                                 ) : loading ? (
-                                    <div className="text-center py-20">
-                                        <div className="animate-spin h-12 w-12 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                                        <p className="mt-4 text-gray-600">Loading preview...</p>
+                                    <div className="text-center py-24">
+                                        <div className="animate-spin h-8 w-8 border-2 border-teal-700 border-t-transparent rounded-full mx-auto"></div>
+                                        <p className="mt-3 text-sm text-gray-500">Loading preview...</p>
                                     </div>
                                 ) : previewHtml ? (
                                     <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                        <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
-                                            <span className="text-sm font-medium text-gray-700">Email Preview</span>
+                                        {/* Browser chrome */}
+                                        <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-gray-300"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-gray-300"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-gray-300"></div>
+                                            <span className="ml-3 text-xs text-gray-400">Email Preview</span>
                                         </div>
-                                        <div
-                                            className="bg-gray-200 p-6"
-                                            style={{ minHeight: '500px' }}
-                                        >
-                                            <div
-                                                className="bg-white shadow-lg rounded-lg overflow-hidden max-w-2xl mx-auto"
-                                                dangerouslySetInnerHTML={{ __html: previewHtml }}
-                                            />
-                                        </div>
+                                        {/* Email render */}
+                                        <iframe
+                                            srcDoc={previewHtml}
+                                            className="w-full border-0"
+                                            style={{ minHeight: '700px' }}
+                                            title="Email preview"
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="text-center py-20 text-red-500">
-                                        <p>Failed to load preview</p>
+                                    <div className="text-center py-24 text-red-500">
+                                        <p className="text-sm">Failed to load preview</p>
                                     </div>
                                 )}
                             </div>

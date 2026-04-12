@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, getAppUrl } from "@/lib/email";
+import { sanitizeForHtml } from "@/lib/sanitize";
 import { renderNdaHtml } from "@/lib/renderNdaHtml";
 import { htmlToPdf } from "@/lib/htmlToPdf";
 import { randomBytes } from "crypto";
@@ -156,13 +157,15 @@ function generatePartyBReturnEmail(
 	acceptedFields: string[],
 	reviewLink: string
 ): string {
+	const safeDocTitle = sanitizeForHtml(docTitle)
+	const safePartyBName = sanitizeForHtml(partyBName)
 	const acceptedList =
 		acceptedFields.length > 0
 			? `
 		<div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 5px;">
 			<h3 style="margin-top: 0; color: #065f46;">✅ Changes Applied:</h3>
 			<ul style="margin: 10px 0; padding-left: 20px;">
-				${acceptedFields.map((field) => `<li>${field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}</li>`).join("")}
+				${acceptedFields.map((field) => `<li>${sanitizeForHtml(field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()))}</li>`).join("")}
 			</ul>
 		</div>
 	`
@@ -187,9 +190,9 @@ function generatePartyBReturnEmail(
 			<h1>📝 Updated NDA Ready</h1>
 		</div>
 		<div class="content">
-			<p>Hello ${partyBName},</p>
-			
-			<p>Party A has reviewed your suggestions for <strong>"${docTitle}"</strong> and updated the NDA accordingly.</p>
+			<p>Hello ${safePartyBName},</p>
+
+			<p>Party A has reviewed your suggestions for <strong>"${safeDocTitle}"</strong> and updated the NDA accordingly.</p>
 			
 			${acceptedList}
 			

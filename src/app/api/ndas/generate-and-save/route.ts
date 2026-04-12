@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
+import { sanitizeForHtml } from '@/lib/sanitize';
 import { htmlToPdf } from '@/lib/htmlToPdf';
 import { storeNdaPdf } from '@/lib/storeNdaPdf';
 import { getActiveOrganization } from '@/lib/db-organization';
@@ -117,9 +118,9 @@ export async function POST(request: NextRequest) {
                         <div style="margin-top: 10px;">
                             <img src="${signatureImage}" alt="Signature" style="max-height: 60px; display: block;" />
                             <div style="margin-top: 5px; font-size: 14px;">
-                                <div><strong>${signerName}</strong></div>
-                                <div>${signerTitle}</div>
-                                <div>${signerDate}</div>
+                                <div><strong>${sanitizeForHtml(signerName)}</strong></div>
+                                <div>${sanitizeForHtml(signerTitle)}</div>
+                                <div>${sanitizeForHtml(signerDate)}</div>
                             </div>
                         </div>
                     `;
