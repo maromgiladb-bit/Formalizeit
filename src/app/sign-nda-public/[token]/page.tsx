@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { Info } from 'lucide-react';
 import SignNDAPublicClient from './SignNDAPublicClient';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
 
@@ -126,10 +127,12 @@ export default async function SignNDAPublicPage({
 
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="text-6xl mb-4">ℹ️</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-                    <p className="text-gray-600">{message}</p>
+                <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
+                    <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-6 h-6 text-teal-700" />
+                    </div>
+                    <h1 className="text-xl font-extrabold text-gray-900 mb-2">{title}</h1>
+                    <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
                 </div>
             </div>
         );
