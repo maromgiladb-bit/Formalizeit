@@ -79,11 +79,6 @@ export default function SettingsPage() {
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
             <p className="text-base text-gray-900 font-medium">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
           </div>
-          <div className="h-px bg-gray-100" />
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">User ID</label>
-            <p className="text-sm text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded-lg inline-block border border-gray-200">{userId}</p>
-          </div>
         </div>
       </motion.div>
 
