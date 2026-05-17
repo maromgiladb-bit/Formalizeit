@@ -123,9 +123,9 @@ export default async function TeamSettingsPage() {
                                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                             </div>
                             <p className="text-sm text-amber-800">
-                                <strong>No approvers assigned.</strong> NDAs cannot be sent externally until at least one
-                                member has the Approver role, or you enable the &ldquo;Also an Approver&rdquo; toggle on
-                                your own account below.
+                                <strong>No approvers assigned.</strong> NDAs can be sent for review by anyone, but they
+                                cannot be signed or finalized until at least one member has the Approver role, or you
+                                enable the &ldquo;Also an Approver&rdquo; toggle on your own account below.
                             </p>
                         </div>
                     )}
@@ -151,7 +151,7 @@ export default async function TeamSettingsPage() {
                     {members.map((member) => {
                         const memberForGuard = { role: member.role, isApprover: member.isApprover }
                         const isThisOwner = member.role === 'OWNER'
-                        const canSend = canApproveAndSend(memberForGuard)
+                        const canSign = canApproveAndSend(memberForGuard)
                         const isPending = member.status === 'PENDING_INVITE'
 
                         return (
@@ -182,9 +182,9 @@ export default async function TeamSettingsPage() {
                                             <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-full ${getOrganizationRoleBadgeClass(member.role)}`}>
                                                 {getOrganizationRoleLabel(member.role)}
                                             </span>
-                                            {canSend && (
+                                            {canSign && (
                                                 <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                                                    Can send
+                                                    Can sign
                                                 </span>
                                             )}
                                         </div>

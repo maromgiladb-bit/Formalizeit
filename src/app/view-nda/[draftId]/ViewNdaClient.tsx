@@ -19,8 +19,6 @@ function getStatusBadge(workflowState: string, status: string): { label: string;
       return { label: 'WAITING REVIEW', color: 'text-orange-700', bgColor: 'bg-orange-50' };
     case 'AWAITING_PARTY_B_SIGNATURE':
       return { label: 'WAITING SIGNATURE', color: 'text-purple-700', bgColor: 'bg-purple-50' };
-    case 'PENDING_INTERNAL_APPROVAL':
-      return { label: 'AWAITING APPROVAL', color: 'text-amber-700', bgColor: 'bg-amber-50' };
     case 'AWAITING_PARTY_A_SIGNATURE':
       return { label: 'AWAITING SIGNATURE', color: 'text-purple-700', bgColor: 'bg-purple-50' };
     case 'COMPLETE':

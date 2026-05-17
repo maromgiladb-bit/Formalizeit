@@ -143,24 +143,10 @@ export default function FillNDAHTML() {
 	const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
 	const [generatingPdf, setGeneratingPdf] = useState(false);
 
-	// Role-based workflow
-	const [userMembership, setUserMembership] = useState<{ role: string; isApprover: boolean } | null>(null);
-	const [submittingForApproval, setSubmittingForApproval] = useState(false);
-	const [processingApproval, setProcessingApproval] = useState(false);
-	const [showRejectModal, setShowRejectModal] = useState(false);
-	const [rejectMessage, setRejectMessage] = useState('');
+	// Party A review workflow
 	const [showRequestChangesModal, setShowRequestChangesModal] = useState(false);
 	const [requestChangesMessage, setRequestChangesMessage] = useState('');
 	const [processingChanges, setProcessingChanges] = useState(false);
-
-	useEffect(() => {
-		fetch('/api/user/role')
-			.then(r => r.ok ? r.json() : null)
-			.then(data => { if (data) setUserMembership(data); })
-			.catch(() => { });
-	}, []);
-
-	const userNeedsApproval = false;
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
@@ -1044,90 +1030,12 @@ export default function FillNDAHTML() {
 			}
 		}
 
-		// Store draft ID and show verification modal
+		// Store draft ID and show verification modal (reset share state for this new draft)
 		setPendingDraftId(currentDraftId);
+		setGeneratedShareLink("");
 		setVerifyRecipientEmail(values.party_b_email?.trim() || "");
 		setShowVerifyEmailModal(true);
 	};
-
-	const submitForApproval = async () => {
-		let currentDraftId = draftId;
-		if (!currentDraftId) {
-			try {
-				const payload = { draftId: null, title: values.docName, data: { ...values, templateId } };
-				const res = await fetch('/api/ndas/drafts', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(payload),
-				});
-				const json = await res.json();
-				if (!res.ok) throw new Error(json.error || 'Failed to save draft');
-				currentDraftId = json.draftId || json.id;
-				setDraftId(currentDraftId);
-				setLastSavedValues(values);
-			} catch (e) {
-				setWarning(e instanceof Error ? e.message : 'Failed to save draft');
-				return;
-			}
-		}
-		setSubmittingForApproval(true);
-		setWarning('');
-		try {
-			const res = await fetch('/api/ndas/submit-for-approval', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ draftId: currentDraftId }),
-			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.error || 'Failed to submit for approval');
-			setWorkflowState('PENDING_INTERNAL_APPROVAL');
-		} catch (e) {
-			setWarning(e instanceof Error ? e.message : 'Failed to submit for approval');
-		} finally {
-			setSubmittingForApproval(false);
-		}
-	};
-
-	const approveInternally = async () => {
-		if (!draftId) return;
-		setProcessingApproval(true);
-		try {
-			const res = await fetch('/api/ndas/internal-approve', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ draftId }),
-			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.error || 'Failed to approve');
-			setWorkflowState('DRAFT');
-		} catch (e) {
-			setWarning(e instanceof Error ? e.message : 'Failed to approve');
-		} finally {
-			setProcessingApproval(false);
-		}
-	};
-
-	const rejectInternally = async () => {
-		if (!draftId || !rejectMessage.trim()) return;
-		setProcessingApproval(true);
-		try {
-			const res = await fetch('/api/ndas/internal-reject', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ draftId, message: rejectMessage.trim() }),
-			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.error || 'Failed to reject');
-			setWorkflowState('DRAFT');
-			setShowRejectModal(false);
-			setRejectMessage('');
-		} catch (e) {
-			setWarning(e instanceof Error ? e.message : 'Failed to reject');
-		} finally {
-			setProcessingApproval(false);
-		}
-	};
-
 
 	const approveChanges = async () => {
 		if (!draftId) return;
@@ -1250,9 +1158,10 @@ export default function FillNDAHTML() {
 			if (!response.ok) throw new Error(result.error || 'Failed to generate share link');
 
 			const link: string = result.reviewLink || '';
-			setGeneratedShareLink(link);
 			openSharePlatform(platform, link);
 			setShowVerifyEmailModal(false);
+			setPendingDraftId(null);
+			setGeneratedShareLink("");
 			setTimeout(() => router.push('/mynda'), 1500);
 		} catch (e) {
 			setWarning(e instanceof Error ? e.message : "Failed to generate share link");
@@ -1977,33 +1886,6 @@ export default function FillNDAHTML() {
 									)}
 								</div>
 								<div className="flex gap-2">
-									{/* Internal Approval Buttons — shown to approvers when draft is pending internal review */}
-									{workflowState === 'PENDING_INTERNAL_APPROVAL' && !userNeedsApproval && (
-										<>
-											<button
-												onClick={approveInternally}
-												disabled={processingApproval}
-												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${processingApproval ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'}`}
-											>
-												{processingApproval ? 'Processing...' : 'Approve'}
-											</button>
-											<button
-												onClick={() => setShowRejectModal(true)}
-												disabled={processingApproval}
-												className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-											>
-												Reject
-											</button>
-										</>
-									)}
-
-									{/* Awaiting Approval badge — shown to contributors when draft is pending */}
-									{workflowState === 'PENDING_INTERNAL_APPROVAL' && userNeedsApproval && (
-										<span className="px-5 py-2.5 rounded-lg font-medium text-sm bg-amber-100 text-amber-800 border border-amber-300">
-											Awaiting Approval
-										</span>
-									)}
-
 									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
 									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
 										<span className="px-5 py-2.5 rounded-lg font-medium text-sm bg-blue-100 text-blue-800 border border-blue-300">
@@ -2012,7 +1894,7 @@ export default function FillNDAHTML() {
 									)}
 
 									{/* Party A Review Buttons — shown when Party B has submitted changes */}
-									{workflowState === 'AWAITING_PARTY_A_REVIEW' && !userNeedsApproval && (
+									{workflowState === 'AWAITING_PARTY_A_REVIEW' && (
 										<>
 											<button
 												onClick={approveChanges}
@@ -2031,58 +1913,33 @@ export default function FillNDAHTML() {
 										</>
 									)}
 
-									{/* Send / Submit Button — shown in DRAFT state or new (null) drafts */}
+									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
-										userNeedsApproval ? (
-											<button
-												onClick={submitForApproval}
-												disabled={submittingForApproval}
-												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${submittingForApproval ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg'}`}
-											>
-												{submittingForApproval ? (
-													<>
-														<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-															<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-															<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-														</svg>
-														Submitting...
-													</>
-												) : (
-													<>
-														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-														</svg>
-														Submit for Approval
-													</>
-												)}
-											</button>
-										) : (
-											<button
-												onClick={sendForReview}
-												disabled={sendingForSignature}
-												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
-													? 'bg-gray-400 text-white cursor-not-allowed'
-													: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
-													}`}
-											>
-												{sendingForSignature ? (
-													<>
-														<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-															<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-															<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-														</svg>
-														Sending...
-													</>
-												) : (
-													<>
-														<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-														</svg>
-														Send for Review
-													</>
-												)}
-											</button>
-										)
+										<button
+											onClick={sendForReview}
+											disabled={sendingForSignature}
+											className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
+												? 'bg-gray-400 text-white cursor-not-allowed'
+												: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
+												}`}
+										>
+											{sendingForSignature ? (
+												<>
+													<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+														<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+														<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+													</svg>
+													Sending...
+												</>
+											) : (
+												<>
+													<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+													</svg>
+													Send for Review
+												</>
+											)}
+										</button>
 									)}
 									<button
 										onClick={saveDraft}
@@ -2675,44 +2532,6 @@ export default function FillNDAHTML() {
 					</div>
 				)}
 
-				{showRejectModal && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-							<div className="p-6 border-b border-gray-200">
-								<h3 className="text-lg font-semibold text-gray-900">Reject & Request Changes</h3>
-								<p className="text-sm text-gray-500 mt-1">Provide feedback so the contributor can revise the draft.</p>
-							</div>
-							<div className="p-6">
-								<label className="block text-sm font-medium text-gray-700 mb-2">Feedback message</label>
-								<textarea
-									value={rejectMessage}
-									onChange={e => setRejectMessage(e.target.value)}
-									rows={4}
-									className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-									placeholder="Explain what needs to be changed..."
-									autoFocus
-								/>
-							</div>
-							<div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
-								<button
-									onClick={() => { setShowRejectModal(false); setRejectMessage(''); }}
-									className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all"
-								>
-									Cancel
-								</button>
-								<button
-									onClick={rejectInternally}
-									disabled={processingApproval || !rejectMessage.trim()}
-									className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-								>
-									{processingApproval ? (
-										<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Sending...</>
-									) : 'Send Feedback'}
-								</button>
-							</div>
-						</div>
-					</div>
-				)}
 
 				{/* PDF Preview Modal (fallback for blocked popups) */}
 				{showPdfPreview && pdfPreviewUrl && (
