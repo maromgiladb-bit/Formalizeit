@@ -8,6 +8,7 @@ import { renderHtmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
+import { assertCanSendNda } from '@/organizations/limits'
 
 /**
  * Send NDA for Party B review
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
         if (!canSendNDA(activeMembership)) {
             return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
+
+        await assertCanSendNda(activeMembership.organizationId)
 
         // Get draft and verify organization access
         const draft = await prisma.ndaDraft.findFirst({

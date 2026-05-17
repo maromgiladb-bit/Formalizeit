@@ -14,7 +14,7 @@ export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; descri
   APPROVER: {
     label: 'Approver',
     description:
-      'Can create drafts, approve internal submissions, send NDAs for review/signature, and sign on behalf of the company.',
+      'Can create drafts, send NDAs for review/signature, and sign on behalf of the company.',
   },
   CONTRIBUTOR: {
     label: 'Contributor',
@@ -62,14 +62,6 @@ export function canSendNDA(_membership: MembershipForGuard): boolean {
 /** All roles can create and edit drafts. */
 export function canContributeToDrafts(_role: string): boolean {
   return true
-}
-
-/**
- * This role's drafts must go through internal approval before being sent.
- * Currently disabled — all members can send directly.
- */
-export function needsInternalApproval(_membership: MembershipForGuard): boolean {
-  return false
 }
 
 // ─── Display helpers ──────────────────────────────────────────────────────────

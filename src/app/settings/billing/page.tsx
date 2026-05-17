@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { CreditCard, ArrowRight, Zap } from 'lucide-react'
 
 interface SubscriptionInfo {
-    plan: 'FREE' | 'PRO' | 'ENTERPRISE' | 'DEVELOPER'
+    plan: 'FREE' | 'PRO' | 'ENTERPRISE' | 'DEV'
     ndaCount: number
     limit: number | null
     remaining: number | null
@@ -48,7 +48,7 @@ export default function BillingSettingsPage() {
             case 'FREE': return 'Free'
             case 'PRO': return 'Pro'
             case 'ENTERPRISE': return 'Enterprise'
-            case 'DEVELOPER': return 'Developer'
+            case 'DEV': return 'Developer'
             default: return plan
         }
     }
@@ -58,7 +58,7 @@ export default function BillingSettingsPage() {
             case 'FREE': return 'bg-gray-100 text-gray-700'
             case 'PRO': return 'bg-teal-100 text-teal-800'
             case 'ENTERPRISE': return 'bg-slate-100 text-slate-800'
-            case 'DEVELOPER': return 'bg-blue-100 text-blue-800'
+            case 'DEV': return 'bg-blue-100 text-blue-800'
             default: return 'bg-gray-100 text-gray-700'
         }
     }
@@ -68,7 +68,7 @@ export default function BillingSettingsPage() {
             case 'FREE': return '$0 / month'
             case 'PRO': return '$19.99 / month'
             case 'ENTERPRISE': return 'Custom pricing'
-            case 'DEVELOPER': return 'Complimentary'
+            case 'DEV': return 'Complimentary'
             default: return 'N/A'
         }
     }
@@ -153,13 +153,13 @@ export default function BillingSettingsPage() {
                                     <div className="px-5 py-3.5 grid grid-cols-3 gap-4">
                                         <dt className="text-sm font-medium text-gray-500">Billing Cycle</dt>
                                         <dd className="text-sm text-gray-900 col-span-2">
-                                            {subscription.plan === 'FREE' || subscription.plan === 'DEVELOPER' ? 'None' : 'Monthly'}
+                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV' ? 'None' : 'Monthly'}
                                         </dd>
                                     </div>
                                     <div className="px-5 py-3.5 grid grid-cols-3 gap-4">
                                         <dt className="text-sm font-medium text-gray-500">Next Billing Date</dt>
                                         <dd className="text-sm text-gray-900 col-span-2">
-                                            {subscription.plan === 'FREE' || subscription.plan === 'DEVELOPER'
+                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV'
                                                 ? 'N/A'
                                                 : new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString()}
                                         </dd>
@@ -167,7 +167,7 @@ export default function BillingSettingsPage() {
                                     <div className="px-5 py-3.5 grid grid-cols-3 gap-4">
                                         <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
                                         <dd className="text-sm text-gray-900 col-span-2">
-                                            {subscription.plan === 'FREE' || subscription.plan === 'DEVELOPER' ? 'None' : '\u2022\u2022\u2022\u2022 4242'}
+                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV' ? 'None' : '\u2022\u2022\u2022\u2022 4242'}
                                         </dd>
                                     </div>
                                 </dl>

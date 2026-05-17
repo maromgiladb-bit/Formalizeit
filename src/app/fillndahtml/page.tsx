@@ -77,6 +77,7 @@ export default function FillNDAHTML() {
 	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
@@ -104,8 +105,8 @@ export default function FillNDAHTML() {
 	const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
 	const [verifyRecipientEmail, setVerifyRecipientEmail] = useState("");
 	const [pendingDraftId, setPendingDraftId] = useState<string | null>(null);
-	const [sharingInProgress, setSharingInProgress] = useState(false);
 	const [generatedShareLink, setGeneratedShareLink] = useState("");
+	const [emailSent, setEmailSent] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
@@ -951,6 +952,25 @@ export default function FillNDAHTML() {
 		await performSave();
 	};
 
+	const deleteDraft = async () => {
+		if (!draftId) return;
+		if (!window.confirm('Delete this draft? This cannot be undone.')) return;
+		setDeleting(true);
+		try {
+			const res = await fetch(`/api/ndas/drafts/${draftId}`, { method: 'DELETE' });
+			if (!res.ok) {
+				const data = await res.json();
+				setWarning(data.error || 'Failed to delete draft');
+				return;
+			}
+			router.push('/mynda');
+		} catch {
+			setWarning('Failed to delete draft');
+		} finally {
+			setDeleting(false);
+		}
+	};
+
 	const performSave = async () => {
 		setSaving(true);
 		setWarning("");
@@ -1033,6 +1053,7 @@ export default function FillNDAHTML() {
 		// Store draft ID and show verification modal (reset share state for this new draft)
 		setPendingDraftId(currentDraftId);
 		setGeneratedShareLink("");
+		setEmailSent(false);
 		setVerifyRecipientEmail(values.party_b_email?.trim() || "");
 		setShowVerifyEmailModal(true);
 	};
@@ -1088,12 +1109,10 @@ export default function FillNDAHTML() {
 			return;
 		}
 
-		setShowVerifyEmailModal(false);
 		setSendingForSignature(true);
 		setWarning("");
 
 		try {
-			// Send for review using the new endpoint
 			const response = await fetch('/api/ndas/send-for-review', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -1111,66 +1130,29 @@ export default function FillNDAHTML() {
 				throw new Error(result.error || 'Failed to send for review');
 			}
 
-			// Show success message
-			alert(`NDA sent to ${verifyRecipientEmail} for review!`);
-
-			// Redirect to my NDAs
-			router.push('/mynda');
+			// Cache the link and mark email as sent — keep modal open so user can optionally share via other platforms
+			const link: string = result.reviewLink || '';
+			if (link) setGeneratedShareLink(link);
+			setEmailSent(true);
 
 		} catch (e) {
 			setWarning(e instanceof Error ? e.message : "Failed to send");
 		} finally {
 			setSendingForSignature(false);
-			setPendingDraftId(null);
 		}
 	};
 
 	// Share NDA via external platform (WhatsApp, LinkedIn, etc.)
-	const handleShare = async (platform: string) => {
-		if (!verifyRecipientEmail?.trim()) {
-			setWarning("Please enter the recipient's email address first.");
+	// Only available after the email has been sent — uses the cached review link
+	const handleShare = (platform: string) => {
+		if (!generatedShareLink) {
+			setWarning("Please send by email first to generate the review link.");
 			return;
 		}
-		if (!pendingDraftId) {
-			setWarning("No draft to send. Please try again.");
-			return;
-		}
-
-		// Reuse already-generated link if available
-		if (generatedShareLink) {
-			openSharePlatform(platform, generatedShareLink);
-			return;
-		}
-
-		setSharingInProgress(true);
-		try {
-			const response = await fetch('/api/ndas/send-for-review', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					draftId: pendingDraftId,
-					recipientEmail: verifyRecipientEmail.trim(),
-					recipientName: values.party_b_name || undefined,
-					message: `Please review this NDA: ${values.docName || 'Untitled NDA'}`
-				})
-			});
-			const result = await response.json();
-			if (!response.ok) throw new Error(result.error || 'Failed to generate share link');
-
-			const link: string = result.reviewLink || '';
-			openSharePlatform(platform, link);
-			setShowVerifyEmailModal(false);
-			setPendingDraftId(null);
-			setGeneratedShareLink("");
-			setTimeout(() => router.push('/mynda'), 1500);
-		} catch (e) {
-			setWarning(e instanceof Error ? e.message : "Failed to generate share link");
-		} finally {
-			setSharingInProgress(false);
-		}
+		openSharePlatform(platform, generatedShareLink);
 	};
 
-	const openSharePlatform = (platform: string, link: string) => {
+	const openSharePlatform = async (platform: string, link: string) => {
 		const ndaTitle = values.docName || 'NDA';
 		const msg = `Please review and sign our NDA — ${ndaTitle}`;
 		const urls: Record<string, string> = {
@@ -1181,9 +1163,14 @@ export default function FillNDAHTML() {
 			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
 		};
 		if (platform === 'copy') {
-			navigator.clipboard.writeText(link);
-			setWarning("Link copied to clipboard!");
-			setTimeout(() => setWarning(""), 2500);
+			try {
+				await navigator.clipboard.writeText(link);
+				setWarning("Link copied to clipboard!");
+				setTimeout(() => setWarning(""), 2500);
+			} catch {
+				setWarning("Could not copy — please copy the link manually.");
+				setTimeout(() => setWarning(""), 3000);
+			}
 		} else {
 			window.open(urls[platform], '_blank', 'noopener,noreferrer');
 		}
@@ -1913,6 +1900,17 @@ export default function FillNDAHTML() {
 										</>
 									)}
 
+									{/* Delete button — shown only for saved DRAFT state */}
+									{workflowState === 'DRAFT' && draftId && (
+										<button
+											onClick={deleteDraft}
+											disabled={deleting}
+											className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 border border-red-200 text-red-600 bg-white hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+										>
+											{deleting ? 'Deleting...' : 'Delete Draft'}
+										</button>
+									)}
+
 									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
 										<button
@@ -2195,9 +2193,13 @@ export default function FillNDAHTML() {
 												onClick={(e) => e.currentTarget.select()}
 											/>
 											<button
-												onClick={() => {
-													navigator.clipboard.writeText(shareableLink);
-													setWarning("Link copied to clipboard!");
+												onClick={async () => {
+													try {
+														await navigator.clipboard.writeText(shareableLink);
+														setWarning("Link copied to clipboard!");
+													} catch {
+														setWarning("Could not copy — please copy the link manually.");
+													}
 													setTimeout(() => setWarning(""), 2000);
 												}}
 												className="px-4 py-3 bg-teal-800 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
@@ -2246,7 +2248,7 @@ export default function FillNDAHTML() {
 												<span className="font-medium text-teal-700">Telegram</span>
 											</a>
 											<button
-												onClick={() => {
+												onClick={async () => {
 													const shareData = {
 														title: 'NDA Signature Request',
 														text: 'Please review and sign our NDA',
@@ -2255,8 +2257,12 @@ export default function FillNDAHTML() {
 													if (navigator.share) {
 														navigator.share(shareData).catch(() => { });
 													} else {
-														navigator.clipboard.writeText(shareableLink);
-														setWarning("Link copied!");
+														try {
+															await navigator.clipboard.writeText(shareableLink);
+															setWarning("Link copied!");
+														} catch {
+															setWarning("Could not copy — please copy the link manually.");
+														}
 														setTimeout(() => setWarning(""), 2000);
 													}
 												}}
@@ -2316,6 +2322,8 @@ export default function FillNDAHTML() {
 								setShowVerifyEmailModal(false);
 								setPendingDraftId(null);
 								setGeneratedShareLink("");
+								setEmailSent(false);
+								if (emailSent) router.push('/mynda');
 							}
 						}}
 					>
@@ -2339,6 +2347,8 @@ export default function FillNDAHTML() {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
 										setGeneratedShareLink("");
+										setEmailSent(false);
+										if (emailSent) router.push('/mynda');
 									}}
 									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
 									aria-label="Close"
@@ -2366,13 +2376,20 @@ export default function FillNDAHTML() {
 
 								<button
 									onClick={confirmAndSend}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
-									className="w-full mt-4 px-4 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+									disabled={sendingForSignature || emailSent || !verifyRecipientEmail?.trim()}
+									className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${emailSent ? 'bg-emerald-600 text-white cursor-default' : 'bg-teal-700 hover:bg-teal-600 text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
 								>
 									{sendingForSignature ? (
 										<>
 											<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
 											Sending…
+										</>
+									) : emailSent ? (
+										<>
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+											</svg>
+											Email Sent
 										</>
 									) : (
 										<>
@@ -2388,7 +2405,7 @@ export default function FillNDAHTML() {
 							{/* Divider */}
 							<div className="px-6 py-1 flex items-center gap-3">
 								<div className="flex-1 h-px bg-gray-100" />
-								<span className="text-xs text-gray-400 font-medium shrink-0">or share the link yourself</span>
+								<span className="text-xs text-gray-400 font-medium shrink-0">also share via</span>
 								<div className="flex-1 h-px bg-gray-100" />
 							</div>
 
@@ -2397,23 +2414,19 @@ export default function FillNDAHTML() {
 								{/* WhatsApp */}
 								<button
 									onClick={() => handleShare('whatsapp')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#25D366]/40 hover:bg-[#25D366]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									{sharingInProgress ? (
-										<div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-									) : (
-										<svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
 											<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
 										</svg>
-									)}
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">WhatsApp</span>
 								</button>
 
 								{/* LinkedIn */}
 								<button
 									onClick={() => handleShare('linkedin')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#0A66C2]/40 hover:bg-[#0A66C2]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
 									<svg className="w-5 h-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
@@ -2425,7 +2438,7 @@ export default function FillNDAHTML() {
 								{/* Telegram */}
 								<button
 									onClick={() => handleShare('telegram')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#2AABEE]/40 hover:bg-[#2AABEE]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
 									<svg className="w-5 h-5 text-[#2AABEE]" fill="currentColor" viewBox="0 0 24 24">
@@ -2437,7 +2450,7 @@ export default function FillNDAHTML() {
 								{/* Email (native) */}
 								<button
 									onClick={() => handleShare('email')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
 									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2449,7 +2462,7 @@ export default function FillNDAHTML() {
 								{/* SMS */}
 								<button
 									onClick={() => handleShare('sms')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
 									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2461,7 +2474,7 @@ export default function FillNDAHTML() {
 								{/* Copy link */}
 								<button
 									onClick={() => handleShare('copy')}
-									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
 									<svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2473,16 +2486,18 @@ export default function FillNDAHTML() {
 
 							{/* Footer note */}
 							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-								<p className="text-xs text-gray-400">Enter an email above before sharing via any channel.</p>
+								<p className="text-xs text-gray-400">{emailSent ? 'Email sent — optionally share via other channels too.' : 'Send by email first to unlock sharing options.'}</p>
 								<button
 									onClick={() => {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
 										setGeneratedShareLink("");
+										setEmailSent(false);
+										if (emailSent) router.push('/mynda');
 									}}
 									className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
 								>
-									Cancel
+									{emailSent ? 'Done' : 'Cancel'}
 								</button>
 							</div>
 						</div>

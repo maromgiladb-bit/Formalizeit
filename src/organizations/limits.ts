@@ -35,7 +35,7 @@ export async function addMemberToOrganization(
     })
 }
 
-export async function assertCanCreateDraft(organizationId: string) {
+export async function assertCanSendNda(organizationId: string) {
     const org = await prisma.organization.findUnique({ where: { id: organizationId } })
     if (!org) throw new Error("Organization not found")
 
@@ -43,12 +43,12 @@ export async function assertCanCreateDraft(organizationId: string) {
 
     const whereClause =
         limits.draftLimitPeriod === 'quarter'
-            ? { organizationId, createdAt: { gte: getCurrentQuarterStart() } }
-            : { organizationId, NOT: { status: "CANCELLED" } }
+            ? { organizationId, createdAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
+            : { organizationId, status: { in: ['SENT', 'SIGNED'] } }
 
-    const activeDraftCount = await prisma.ndaDraft.count({ where: whereClause })
+    const sentNdaCount = await prisma.ndaDraft.count({ where: whereClause })
 
-    if (activeDraftCount >= limits.maxActiveDrafts) {
+    if (sentNdaCount >= limits.maxActiveDrafts) {
         throw new Error("You've reached the maximum number of NDAs for this plan.")
     }
 }
@@ -60,8 +60,6 @@ export async function createDraftWithLimitCheck(data: {
     title?: string | null
     content?: unknown
 }) {
-    await assertCanCreateDraft(data.organizationId)
-
     return prisma.ndaDraft.create({
         data,
     })

@@ -7,6 +7,7 @@ import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { htmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
+import { assertCanSendNda } from '@/organizations/limits'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -49,6 +50,8 @@ export async function POST(request: NextRequest) {
     if (!canSendNDA(activeMembership)) {
       return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
     }
+
+    await assertCanSendNda(activeMembership.organizationId)
 
     const existingDraft = await prisma.ndaDraft.findFirst({
       where: {
