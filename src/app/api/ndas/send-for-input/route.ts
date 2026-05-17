@@ -112,7 +112,8 @@ export async function POST(request: NextRequest) {
                 workflowState: 'AWAITING_PARTY_B_REVIEW',
                 pendingInputFields: pendingInputFields,
                 recipientEmail: recipientEmail,
-                status: 'SENT'
+                status: 'SENT',
+                sentAt: new Date()
             }
         })
 

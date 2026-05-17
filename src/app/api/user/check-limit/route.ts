@@ -28,7 +28,7 @@ export async function GET() {
 
     const whereClause =
       limits.draftLimitPeriod === 'quarter'
-        ? { organizationId: organization.id, createdAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
+        ? { organizationId: organization.id, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
         : { organizationId: organization.id, status: { in: ['SENT', 'SIGNED'] } }
 
     const ndaCount = await prisma.ndaDraft.count({ where: whereClause })

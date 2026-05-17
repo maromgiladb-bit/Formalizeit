@@ -254,6 +254,7 @@ model NdaDraft {
   recipientEmail  String?   @map("recipient_email") // Party B email for sending
   lastEditedBy    String?   @map("last_edited_by") // "party_a" or "party_b" - for dynamic sign order
   content         Json? // Storing form data/content
+  sentAt          DateTime? @map("sent_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

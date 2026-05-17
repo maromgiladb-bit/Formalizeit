@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email';
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canApproveAndSend } from '@/lib/organizationRoles';
+import { assertCanSendNda } from '@/organizations/limits';
 import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
@@ -72,12 +73,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        await assertCanSendNda(activeMembership.organizationId);
+
         // Update draft status and content
         await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
                 content: formData,
                 status: 'SENT',
+                sentAt: new Date(),
                 workflowState: 'AWAITING_PARTY_B_SIGNATURE',
             },
         });

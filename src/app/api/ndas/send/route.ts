@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: draftId,
       },
-      data: { status: 'SENT' }
+      data: { status: 'SENT', sentAt: new Date() }
     })
 
     // Create sign request

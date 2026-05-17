@@ -43,7 +43,7 @@ export async function assertCanSendNda(organizationId: string) {
 
     const whereClause =
         limits.draftLimitPeriod === 'quarter'
-            ? { organizationId, createdAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
+            ? { organizationId, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
             : { organizationId, status: { in: ['SENT', 'SIGNED'] } }
 
     const sentNdaCount = await prisma.ndaDraft.count({ where: whereClause })

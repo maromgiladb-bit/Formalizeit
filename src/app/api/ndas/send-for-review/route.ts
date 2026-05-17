@@ -164,7 +164,8 @@ export async function POST(request: NextRequest) {
                 pendingInputFields: editableFields,
                 recipientEmail: recipientEmail,
                 lastEditedBy: 'party_a',
-                status: 'SENT'
+                status: 'SENT',
+                sentAt: new Date()
             }
         })
 
