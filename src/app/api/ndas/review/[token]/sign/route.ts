@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, getAppUrl } from "@/lib/email";
+import { sanitizeForHtml } from "@/lib/sanitize";
 import { renderNdaHtml } from "@/lib/renderNdaHtml";
 import { htmlToPdf } from "@/lib/htmlToPdf";
 
@@ -156,6 +157,9 @@ function partyASignedNotificationHtml(
 	signerEmail: string,
 	dashboardLink: string
 ): string {
+	const safeDraftTitle = sanitizeForHtml(draftTitle)
+	const safeSignatoryName = sanitizeForHtml(signatoryName)
+	const safeSignerEmail = sanitizeForHtml(signerEmail)
 	return `
     <!DOCTYPE html>
     <html>
@@ -186,17 +190,17 @@ function partyASignedNotificationHtml(
           <div class="content">
             <div class="success">✓</div>
             <h2>NDA Successfully Signed!</h2>
-            <p><strong>${draftTitle}</strong></p>
+            <p><strong>${safeDraftTitle}</strong></p>
             <p>Your NDA has been signed by the recipient. The fully executed document is attached to this email.</p>
-            
+
             <div class="info-box">
               <div class="info-row">
                 <span class="info-label">Signed by:</span>
-                <span class="info-value">${signatoryName}</span>
+                <span class="info-value">${safeSignatoryName}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Email:</span>
-                <span class="info-value">${signerEmail}</span>
+                <span class="info-value">${safeSignerEmail}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">Date:</span>

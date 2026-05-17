@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, EmailAttachment } from '@/lib/email'
+import { sanitizeForHtml } from '@/lib/sanitize'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { renderHtmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
@@ -280,6 +281,9 @@ function reviewRequestEmailHtml(
     senderName: string,
     message: string
 ): string {
+    const safeDraftTitle = sanitizeForHtml(draftTitle)
+    const safeSenderName = sanitizeForHtml(senderName)
+    const safeMessage = sanitizeForHtml(message)
     return `
     <!DOCTYPE html>
     <html>
@@ -336,11 +340,11 @@ function reviewRequestEmailHtml(
               <div class="card-body">
 
                 <div class="sender-box">
-                  <p><strong>${senderName}</strong> has shared the following NDA with you:</p>
-                  <p class="doc-name">${draftTitle}</p>
+                  <p><strong>${safeSenderName}</strong> has shared the following NDA with you:</p>
+                  <p class="doc-name">${safeDraftTitle}</p>
                 </div>
 
-                ${message ? `<div class="message-box">💬 <em>${message}</em></div>` : ''}
+                ${safeMessage ? `<div class="message-box">💬 <em>${safeMessage}</em></div>` : ''}
 
                 <div class="what-is">
                   <strong>📋 What's a Mutual NDA?</strong>
@@ -367,7 +371,7 @@ function reviewRequestEmailHtml(
                     <div class="step-icon step-3">💬</div>
                     <div class="step-text">
                       <strong>Approve or suggest edits</strong>
-                      <span>Happy with everything? Proceed to sign. Want to change something? Suggest it — ${senderName} will review your feedback.</span>
+                      <span>Happy with everything? Proceed to sign. Want to change something? Suggest it — ${safeSenderName} will review your feedback.</span>
                     </div>
                   </li>
                   <li class="step">
@@ -393,7 +397,7 @@ function reviewRequestEmailHtml(
 
             <div class="footer">
               <p>© ${new Date().getFullYear()} Formalize It. All rights reserved.</p>
-              <p style="margin-top:4px;">You received this because ${senderName} used Formalize It to send you an NDA.</p>
+              <p style="margin-top:4px;">You received this because ${safeSenderName} used Formalize It to send you an NDA.</p>
             </div>
           </div>
         </div>

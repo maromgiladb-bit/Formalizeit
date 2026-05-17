@@ -79,7 +79,7 @@ export default function SignNDAPublicClient({
 
                 // Focus the typed signature input after mode switch renders
                 setTimeout(() => {
-                    const sigInput = document.querySelector<HTMLInputElement>('input[placeholder="Type your name"]');
+                    const sigInput = document.querySelector<HTMLInputElement>('input[data-testid="signature-input"]');
                     if (sigInput) {
                         sigInput.focus();
                         sigInput.style.boxShadow = '0 0 0 3px rgba(251, 191, 36, 0.6)';
@@ -294,107 +294,96 @@ export default function SignNDAPublicClient({
 
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col">
             {/* Main Container with Fixed Layout */}
-            <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden">
-                {/* LEFT SIDE: Signature Form (No Scroll) */}
-                <div className="w-full lg:w-[45%] h-full overflow-hidden bg-gray-50 flex flex-col">
-                    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full p-4">
-                        <div className="mb-3">
-                            <h1 className="text-2xl font-bold text-gray-900 mb-1">Sign NDA</h1>
-                            <p className="text-gray-600 text-sm">{ndaTitle}</p>
+            <div className="flex flex-1 h-screen overflow-hidden">
+                {/* LEFT SIDE: Signature Form */}
+                <div className="w-full lg:w-[45%] h-full overflow-hidden bg-gray-50 flex flex-col border-r border-gray-100">
+                    <div className="flex-1 flex flex-col w-full px-6 py-8 overflow-y-auto">
+                        {/* Header */}
+                        <div className="mb-6">
+                            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Non-Disclosure Agreement</p>
+                            <h1 className="text-2xl font-extrabold text-gray-900 leading-tight mb-1">{ndaTitle}</h1>
+                            <p className="text-sm text-gray-500">Review the document and add your signature below.</p>
                         </div>
 
-                        <div ref={signatureCardRef} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col flex-1 min-h-0 overflow-y-auto">
-                            <h2 className="text-lg font-bold text-gray-900 mb-3">Your Signature</h2>
+                        <div ref={signatureCardRef} className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col flex-1 min-h-0">
+                            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">Your Signature</p>
 
                             {/* Form Fields */}
-                            <div className="space-y-3 mb-3">
+                            <div className="space-y-4 mb-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
                                     <input
                                         type="text"
                                         value={signature.name}
                                         onChange={(e) => setSignature({ ...signature, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
                                         placeholder="Your full name"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                                     <input
                                         type="text"
                                         value={signature.title}
                                         onChange={(e) => setSignature({ ...signature, title: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                                        placeholder="Your title"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                        placeholder="e.g. CEO, CTO, Director"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
                                     <input
                                         type="date"
                                         value={signature.date}
                                         onChange={(e) => setSignature({ ...signature, date: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
                                     />
                                 </div>
                             </div>
 
                             {/* Signature Mode Tabs */}
-                            <div className="flex gap-2 mb-3 border-b border-gray-200">
-                                <button
-                                    onClick={() => setSignatureMode('type')}
-                                    className={`px-4 py-2 text-sm font-semibold transition-all ${signatureMode === 'type'
-                                        ? 'text-teal-600 border-b-2 border-teal-600'
-                                        : 'text-gray-600 hover:text-gray-900'
+                            <div className="flex gap-1 mb-4 border-b border-gray-100">
+                                {(['type', 'draw', 'upload'] as const).map((mode) => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setSignatureMode(mode)}
+                                        className={`px-4 py-2 text-sm font-semibold capitalize transition-colors duration-200 cursor-pointer ${
+                                            signatureMode === mode
+                                                ? 'text-teal-700 border-b-2 border-teal-700 -mb-px'
+                                                : 'text-gray-500 hover:text-gray-900'
                                         }`}
-                                >
-                                    Type
-                                </button>
-                                <button
-                                    onClick={() => setSignatureMode('draw')}
-                                    className={`px-4 py-2 text-sm font-semibold transition-all ${signatureMode === 'draw'
-                                        ? 'text-teal-600 border-b-2 border-teal-600'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Draw
-                                </button>
-                                <button
-                                    onClick={() => setSignatureMode('upload')}
-                                    className={`px-4 py-2 text-sm font-semibold transition-all ${signatureMode === 'upload'
-                                        ? 'text-teal-600 border-b-2 border-teal-600'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Upload
-                                </button>
+                                    >
+                                        {mode}
+                                    </button>
+                                ))}
                             </div>
 
                             {/* Signature Capture Area */}
-                            <div className="mb-3 flex-1 min-h-0 flex flex-col">
+                            <div className="mb-5 flex-1 min-h-0 flex flex-col">
                                 {signatureMode === 'type' && (
-                                    <div className="flex-1 flex flex-col">
+                                    <div className="flex-1 flex flex-col gap-3">
                                         <input
                                             type="text"
                                             value={typedSignature}
                                             onChange={(e) => handleTypedChange(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded mb-2"
-                                            placeholder="Type your name"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                            data-testid="signature-input"
+                                            placeholder="Type your name to generate signature"
                                         />
                                         {typedSignature && (
-                                            <div className="p-3 border-2 border-gray-300 rounded bg-white overflow-hidden flex items-center justify-center flex-1">
-                                                <p className={`${greatVibes.className} text-3xl text-center wrap-break-word`}>{typedSignature}</p>
+                                            <div className="p-4 border border-gray-200 rounded-lg bg-white flex items-center justify-center flex-1 min-h-[80px]">
+                                                <p className={`${greatVibes.className} text-3xl text-gray-900 text-center break-words`}>{typedSignature}</p>
                                             </div>
                                         )}
                                     </div>
                                 )}
 
                                 {signatureMode === 'draw' && (
-                                    <div className="flex-1 flex flex-col">
+                                    <div className="flex-1 flex flex-col gap-2">
                                         <canvas
                                             ref={canvasRef}
                                             width={400}
@@ -403,11 +392,11 @@ export default function SignNDAPublicClient({
                                             onMouseMove={draw}
                                             onMouseUp={stopDrawing}
                                             onMouseLeave={stopDrawing}
-                                            className="w-full border-2 border-gray-300 rounded cursor-crosshair bg-white flex-1"
+                                            className="w-full border border-gray-200 rounded-lg cursor-crosshair bg-white flex-1"
                                         />
                                         <button
                                             onClick={clearCanvas}
-                                            className="mt-1 text-sm text-gray-600 hover:text-gray-900 underline self-start"
+                                            className="text-sm text-gray-500 hover:text-gray-900 underline self-start cursor-pointer transition-colors duration-200"
                                         >
                                             Clear
                                         </button>
@@ -415,15 +404,15 @@ export default function SignNDAPublicClient({
                                 )}
 
                                 {signatureMode === 'upload' && (
-                                    <div className="flex-1 flex flex-col">
+                                    <div className="flex-1 flex flex-col gap-3">
                                         <input
                                             type="file"
                                             accept="image/*"
                                             onChange={handleImageUpload}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer"
                                         />
                                         {signatureImage && (
-                                            <div className="mt-2 p-3 border-2 border-gray-300 rounded bg-white flex items-center justify-center flex-1">
+                                            <div className="p-4 border border-gray-200 rounded-lg bg-white flex items-center justify-center flex-1 min-h-[80px]">
                                                 <img src={signatureImage} alt="Signature" className="max-h-32 mx-auto" />
                                             </div>
                                         )}
@@ -433,7 +422,7 @@ export default function SignNDAPublicClient({
 
                             {/* Error Message */}
                             {error && (
-                                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+                                <div className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-lg text-red-700 text-sm">
                                     {error}
                                 </div>
                             )}
@@ -442,7 +431,7 @@ export default function SignNDAPublicClient({
                             <button
                                 onClick={handleSubmit}
                                 disabled={loading}
-                                className="w-full px-4 py-3 bg-teal-600 text-white rounded-lg font-bold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-auto"
+                                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                             >
                                 {loading ? 'Submitting...' : 'Submit Signature'}
                             </button>
@@ -450,16 +439,16 @@ export default function SignNDAPublicClient({
                     </div>
                 </div>
 
-                {/* RIGHT SIDE: Document Preview (Full Window Height) */}
+                {/* RIGHT SIDE: Document Preview */}
                 <div
                     ref={documentRef}
                     onScroll={handleScroll}
-                    className="hidden lg:block w-[55%] h-full bg-white border-l border-gray-200 overflow-y-auto"
+                    className="hidden lg:flex lg:flex-col w-[55%] h-full bg-white overflow-y-auto"
                 >
-                    <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-4 py-3 z-10">
-                        <h3 className="font-semibold text-gray-900 text-sm">Document Preview</h3>
+                    <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
+                        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">Document Preview</p>
                     </div>
-                    <div className="p-6">
+                    <div className="p-6 flex-1">
                         {previewHtml ? (
                             <iframe
                                 srcDoc={previewHtml}
@@ -470,7 +459,7 @@ export default function SignNDAPublicClient({
                             />
                         ) : (
                             <div className="flex items-center justify-center h-64">
-                                <p className="text-gray-500">Loading preview...</p>
+                                <p className="text-sm text-gray-500">Loading preview...</p>
                             </div>
                         )}
                     </div>
