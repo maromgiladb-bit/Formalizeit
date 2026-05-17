@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
                 // Email Current Signer
                 await sendEmail({
                     to: signer.email,
-                    subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                    subject: `Congratulations! Your NDA is complete`,
                     html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
                     attachments: pdfAttachment || undefined
                 });
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
                 if (otherRecipientEmail) {
                     await sendEmail({
                         to: otherRecipientEmail,
-                        subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                        subject: `Congratulations! Your NDA is complete`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
                         attachments: pdfAttachment || undefined
                     });
@@ -312,10 +312,13 @@ export async function POST(request: NextRequest) {
                 if (recipientEmail && recipientSignerId) {
                     // Always use sign-nda-public for the signing link
                     const signPageLink = `${appUrl}/sign-nda-public/${recipientSignerId}`;
+                    const signerCompany = isPartyA
+                        ? ((updatedContent as Record<string, unknown>).party_a_name as string) || ''
+                        : ((updatedContent as Record<string, unknown>).party_b_name as string) || ''
 
                     await sendEmail({
                         to: recipientEmail,
-                        subject: `Action Required: ${draft.title || 'NDA'} - ${signerName} has signed`,
+                        subject: `Time to sign! ${signerName}${signerCompany ? ` from ${signerCompany}` : ''} has already signed the NDA`,
                         html: timeToSignEmailHtml(
                             draft.title || 'NDA',
                             signPageLink,
@@ -326,9 +329,12 @@ export async function POST(request: NextRequest) {
                 } else if (recipientEmail) {
                     // Fallback: If we couldn't create a signer record, send to dashboard
                     const dashboardLink = `${appUrl}/mynda`;
+                    const signerCompanyFallback = isPartyA
+                        ? ((updatedContent as Record<string, unknown>).party_a_name as string) || ''
+                        : ((updatedContent as Record<string, unknown>).party_b_name as string) || ''
                     await sendEmail({
                         to: recipientEmail,
-                        subject: `Action Required: ${draft.title || 'NDA'} - ${signerName} has signed`,
+                        subject: `Time to sign! ${signerName}${signerCompanyFallback ? ` from ${signerCompanyFallback}` : ''} has already signed the NDA`,
                         html: timeToSignEmailHtml(
                             draft.title || 'NDA',
                             dashboardLink,

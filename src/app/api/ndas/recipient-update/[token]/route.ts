@@ -188,9 +188,11 @@ export async function PATCH(
       after: String(c.after || '')
     }))
 
+    const partyBPerson = (form_data.party_b_signatory_name as string) || (form_data.party_b_name as string) || 'the other party'
+    const partyBCompany = (form_data.party_b_name as string) || ''
     await sendEmail({
       to: draft.users.email,
-      subject: `Review requested: changes to ${draft.title} (R${revNum})`,
+      subject: `Review requested – ${partyBPerson}${partyBCompany && partyBCompany !== partyBPerson ? ` from ${partyBCompany}` : ''} made changes to the NDA`,
       html: ownerReviewEmailHtml(draft.title || 'Untitled NDA', revNum, reviewLink, changesSummary)
     })
 

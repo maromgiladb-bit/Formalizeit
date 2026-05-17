@@ -118,9 +118,10 @@ export async function POST(
 		// Send email to Party A (owner) without PDF attachment - PDF will be attached only in final completion email
 		const reviewLink = `${getAppUrl()}/review-suggestions/${reviewToken}`;
 
+		const partyBCompany = ((draft.data as Record<string, unknown>)?.party_b_name as string) || ''
 		await sendEmail({
 			to: owner.email,
-			subject: `${party_b_name} has suggested changes to your NDA – ${draft.title || 'NDA'}`,
+			subject: `Review requested – ${party_b_name}${partyBCompany && partyBCompany !== party_b_name ? ` from ${partyBCompany}` : ''} made changes to the NDA`,
 			html: partyBSuggestionsEmailHtml(
 				draft.title || "Untitled NDA",
 				party_b_name,

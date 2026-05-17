@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { resolveLimits } from "@/billing/planLimits"
+import { resolveLimits, getCurrentQuarterStart } from "@/billing/planLimits"
 import { DbMembershipRole } from '@/lib/organizationRoles'
 
 export async function assertCanAddMember(organizationId: string) {
@@ -18,7 +18,7 @@ export async function assertCanAddMember(organizationId: string) {
     const current = org._count.memberships
 
     if (current >= limits.maxUsers) {
-        throw new Error("You’ve reached the maximum number of users for this plan.")
+        throw new Error("You've reached the maximum number of users for this plan.")
     }
 }
 
@@ -41,15 +41,15 @@ export async function assertCanCreateDraft(organizationId: string) {
 
     const limits = resolveLimits(org)
 
-    const activeDraftCount = await prisma.ndaDraft.count({
-        where: {
-            organizationId,
-            NOT: { status: "CANCELLED" },
-        },
-    })
+    const whereClause =
+        limits.draftLimitPeriod === 'quarter'
+            ? { organizationId, createdAt: { gte: getCurrentQuarterStart() } }
+            : { organizationId, NOT: { status: "CANCELLED" } }
+
+    const activeDraftCount = await prisma.ndaDraft.count({ where: whereClause })
 
     if (activeDraftCount >= limits.maxActiveDrafts) {
-        throw new Error("You’ve reached the maximum number of NDAs for this plan.")
+        throw new Error("You've reached the maximum number of NDAs for this plan.")
     }
 }
 

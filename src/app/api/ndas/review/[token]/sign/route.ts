@@ -120,7 +120,7 @@ export async function POST(
 				// Send email without PDF attachment
 				await sendEmail({
 					to: owner.email,
-					subject: `✅ NDA Signed – ${draft.title || "NDA"}`,
+					subject: `Time to sign! ${party_b_signatory_name} has already signed the NDA`,
 					html: partyASignedNotificationHtml(
 						draft.title || "Untitled NDA",
 						party_b_signatory_name,

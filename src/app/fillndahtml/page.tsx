@@ -77,7 +77,7 @@ export default function FillNDAHTML() {
 	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
-	const [showLivePreview, setShowLivePreview] = useState(true);
+	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
 	const [workflowState, setWorkflowState] = useState<string | null>(null);
@@ -104,6 +104,8 @@ export default function FillNDAHTML() {
 	const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
 	const [verifyRecipientEmail, setVerifyRecipientEmail] = useState("");
 	const [pendingDraftId, setPendingDraftId] = useState<string | null>(null);
+	const [sharingInProgress, setSharingInProgress] = useState(false);
+	const [generatedShareLink, setGeneratedShareLink] = useState("");
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
@@ -158,9 +160,7 @@ export default function FillNDAHTML() {
 			.catch(() => { });
 	}, []);
 
-	const userNeedsApproval = userMembership
-		? !(userMembership.role === 'APPROVER' || (userMembership.role === 'OWNER' && userMembership.isApprover))
-		: false;
+	const userNeedsApproval = false;
 
 	const steps = ["Document", "Party A", "Party B", "Clauses", "Review"];
 
@@ -1217,6 +1217,69 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// Share NDA via external platform (WhatsApp, LinkedIn, etc.)
+	const handleShare = async (platform: string) => {
+		if (!verifyRecipientEmail?.trim()) {
+			setWarning("Please enter the recipient's email address first.");
+			return;
+		}
+		if (!pendingDraftId) {
+			setWarning("No draft to send. Please try again.");
+			return;
+		}
+
+		// Reuse already-generated link if available
+		if (generatedShareLink) {
+			openSharePlatform(platform, generatedShareLink);
+			return;
+		}
+
+		setSharingInProgress(true);
+		try {
+			const response = await fetch('/api/ndas/send-for-review', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					draftId: pendingDraftId,
+					recipientEmail: verifyRecipientEmail.trim(),
+					recipientName: values.party_b_name || undefined,
+					message: `Please review this NDA: ${values.docName || 'Untitled NDA'}`
+				})
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Failed to generate share link');
+
+			const link: string = result.reviewLink || '';
+			setGeneratedShareLink(link);
+			openSharePlatform(platform, link);
+			setShowVerifyEmailModal(false);
+			setTimeout(() => router.push('/mynda'), 1500);
+		} catch (e) {
+			setWarning(e instanceof Error ? e.message : "Failed to generate share link");
+		} finally {
+			setSharingInProgress(false);
+		}
+	};
+
+	const openSharePlatform = (platform: string, link: string) => {
+		const ndaTitle = values.docName || 'NDA';
+		const msg = `Please review and sign our NDA — ${ndaTitle}`;
+		const urls: Record<string, string> = {
+			whatsapp: `https://wa.me/?text=${encodeURIComponent(`${msg}: ${link}`)}`,
+			linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`,
+			telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(msg)}`,
+			email: `mailto:${verifyRecipientEmail}?subject=${encodeURIComponent(`Please review and sign our NDA — ${ndaTitle}`)}&body=${encodeURIComponent(`Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${link}\n\nThank you!`)}`,
+			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
+		};
+		if (platform === 'copy') {
+			navigator.clipboard.writeText(link);
+			setWarning("Link copied to clipboard!");
+			setTimeout(() => setWarning(""), 2500);
+		} else {
+			window.open(urls[platform], '_blank', 'noopener,noreferrer');
+		}
+	};
+
 	// Handle send for input from modal
 	const handleSendForInput = async () => {
 		if (!inputRecipientEmail?.trim()) {
@@ -1293,13 +1356,9 @@ export default function FillNDAHTML() {
 									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
 								>
 									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										{showLivePreview ? (
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-										) : (
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-										)}
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 									</svg>
-									{showLivePreview ? "Hide Preview" : "Show Preview"}
+									Toggle Preview
 								</button>
 								{isDev && (
 									<button
@@ -2393,91 +2452,180 @@ export default function FillNDAHTML() {
 
 				{/* Verify Email Modal */}
 				{showVerifyEmailModal && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
-						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden">
-							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-linear-to-r from-teal-600 to-teal-700">
+					<div
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+						onClick={(e) => {
+							if (e.target === e.currentTarget) {
+								setShowVerifyEmailModal(false);
+								setPendingDraftId(null);
+								setGeneratedShareLink("");
+							}
+						}}
+					>
+						<div className="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] overflow-hidden">
+
+							{/* Header */}
+							<div className="bg-[#0f2a4a] px-6 py-5 flex items-center justify-between">
 								<div className="flex items-center gap-3">
-									<div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-										<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+									<div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
+										<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
 										</svg>
 									</div>
 									<div>
-										<h3 className="font-semibold text-white text-lg">Confirm Recipient</h3>
-										<p className="text-teal-100 text-sm">Verify the email address before sending</p>
+										<h3 className="text-white font-semibold text-base leading-tight">Send NDA to Recipient</h3>
+										<p className="text-white/50 text-xs mt-0.5">Choose how to deliver the NDA</p>
 									</div>
 								</div>
 								<button
-									className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
 									onClick={() => {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
+										setGeneratedShareLink("");
 									}}
+									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
 									aria-label="Close"
 								>
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 									</svg>
 								</button>
 							</div>
 
-							<div className="p-6 space-y-4">
-								<p className="text-gray-600 text-sm">
-									The NDA will be sent to the following email address. You can modify it if needed:
+							{/* Email section */}
+							<div className="px-6 pt-5 pb-4">
+								<label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recipient Email</label>
+								<input
+									type="email"
+									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all placeholder:text-gray-400"
+									value={verifyRecipientEmail}
+									onChange={(e) => setVerifyRecipientEmail(e.target.value)}
+									placeholder="recipient@example.com"
+									autoFocus
+								/>
+								<p className="text-xs text-gray-400 mt-2 leading-relaxed">
+									We&apos;ll send an email with a secure link to review and sign the NDA.
 								</p>
 
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 mb-2">Recipient Email</label>
-									<input
-										type="email"
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
-										value={verifyRecipientEmail}
-										onChange={(e) => setVerifyRecipientEmail(e.target.value)}
-										placeholder="recipient@example.com"
-										autoFocus
-									/>
-								</div>
-
-								<div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
-									<div className="flex gap-3">
-										<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-										</svg>
-										<p className="text-sm text-teal-700">
-											The recipient will receive an email with a link to review and sign the NDA.
-										</p>
-									</div>
-								</div>
+								<button
+									onClick={confirmAndSend}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="w-full mt-4 px-4 py-2.5 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+								>
+									{sendingForSignature ? (
+										<>
+											<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+											Sending…
+										</>
+									) : (
+										<>
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+											</svg>
+											Send by Email
+										</>
+									)}
+								</button>
 							</div>
 
-							<div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
+							{/* Divider */}
+							<div className="px-6 py-1 flex items-center gap-3">
+								<div className="flex-1 h-px bg-gray-100" />
+								<span className="text-xs text-gray-400 font-medium shrink-0">or share the link yourself</span>
+								<div className="flex-1 h-px bg-gray-100" />
+							</div>
+
+							{/* Share options grid */}
+							<div className="px-6 pt-3 pb-5 grid grid-cols-3 gap-2">
+								{/* WhatsApp */}
+								<button
+									onClick={() => handleShare('whatsapp')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#25D366]/40 hover:bg-[#25D366]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									{sharingInProgress ? (
+										<div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+									) : (
+										<svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
+											<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+										</svg>
+									)}
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">WhatsApp</span>
+								</button>
+
+								{/* LinkedIn */}
+								<button
+									onClick={() => handleShare('linkedin')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#0A66C2]/40 hover:bg-[#0A66C2]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">LinkedIn</span>
+								</button>
+
+								{/* Telegram */}
+								<button
+									onClick={() => handleShare('telegram')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#2AABEE]/40 hover:bg-[#2AABEE]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5 text-[#2AABEE]" fill="currentColor" viewBox="0 0 24 24">
+										<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Telegram</span>
+								</button>
+
+								{/* Email (native) */}
+								<button
+									onClick={() => handleShare('email')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Email App</span>
+								</button>
+
+								{/* SMS */}
+								<button
+									onClick={() => handleShare('sms')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">SMS</span>
+								</button>
+
+								{/* Copy link */}
+								<button
+									onClick={() => handleShare('copy')}
+									disabled={sendingForSignature || sharingInProgress || !verifyRecipientEmail?.trim()}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Copy Link</span>
+								</button>
+							</div>
+
+							{/* Footer note */}
+							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+								<p className="text-xs text-gray-400">Enter an email above before sharing via any channel.</p>
 								<button
 									onClick={() => {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
+										setGeneratedShareLink("");
 									}}
-									className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+									className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
 								>
 									Cancel
-								</button>
-								<button
-									onClick={confirmAndSend}
-									disabled={sendingForSignature || !verifyRecipientEmail?.trim()}
-									className="flex-1 px-4 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-								>
-									{sendingForSignature ? (
-										<>
-											<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-											Sending...
-										</>
-									) : (
-										<>
-											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-											</svg>
-											Send NDA
-										</>
-									)}
 								</button>
 							</div>
 						</div>

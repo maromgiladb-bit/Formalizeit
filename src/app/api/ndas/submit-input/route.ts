@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
                 // Send email to Party B
                 await sendEmail({
                     to: partyBSigner.email,
-                    subject: `Review Required: Counter-proposal for ${draft.title || 'NDA'}`,
+                    subject: `Review requested – ${owner.name || owner.email} from ${(currentContent.party_a_name as string) || 'their company'} sent a counter-proposal`,
                     html: ownerReviewEmailHtml( // Reusing template for now, ideal to have specific one
                         draft.title || 'Untitled NDA',
                         1,
@@ -266,8 +266,8 @@ export async function POST(request: NextRequest) {
                 await sendEmail({
                     to: owner.email,
                     subject: hasSuggestions
-                        ? `Review Required: Changes to ${draft.title || 'NDA'}`
-                        : `Ready for Signature: ${draft.title || 'NDA'} - Party B provided information`,
+                        ? `Review requested – ${signer.name || signer.email}${(currentContent.party_b_name as string) ? ` from ${currentContent.party_b_name as string}` : ''} made changes to the NDA`
+                        : `${signer.name || signer.email} filled in their details – "${draft.title || 'NDA'}" is ready`,
                     html: hasSuggestions
                         ? partyBSuggestionsEmailHtml(
                             draft.title || 'Untitled NDA',

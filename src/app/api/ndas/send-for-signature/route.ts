@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         try {
             await sendEmail({
                 to: partyBEmail,
-                subject: `Please sign NDA – ${draft.title || 'NDA'}`,
+                subject: `${user.name || user.email} from ${(formData.party_a_name as string) || activeMembership.organization.name} sent you an NDA to sign`,
                 html: recipientSignRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     signLink

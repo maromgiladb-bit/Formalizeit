@@ -6,7 +6,7 @@ import { sendEmail, recipientEditEmailHtml, getAppUrl } from '@/lib/email'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { htmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canApproveAndSend } from '@/lib/organizationRoles'
+import { canSendNDA } from '@/lib/organizationRoles'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
     }
 
-    if (!canApproveAndSend(activeMembership)) {
-      return NextResponse.json({ error: 'Only approvers can send NDAs' }, { status: 403 })
+    if (!canSendNDA(activeMembership)) {
+      return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
     }
 
     const existingDraft = await prisma.ndaDraft.findFirst({
@@ -114,9 +114,11 @@ export async function POST(request: NextRequest) {
     console.log('📧 Draft title:', draft.title)
 
     try {
+      const draftContent = (draft.content as Record<string, unknown>) || {}
+      const partyACompany = (draftContent.party_a_name as string) || activeMembership.organization.name
       await sendEmail({
         to: signerEmail,
-        subject: `Please review & sign your NDA – ${draft.title || 'NDA'}`,
+        subject: `${user.name || user.email} from ${partyACompany} sent you an NDA to review`,
         html: recipientEditEmailHtml(
           draft.title || 'Untitled NDA',
           signLink,

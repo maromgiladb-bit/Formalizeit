@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
                 if (signerEmail || user.email) {
                     await sendEmail({
                         to: signerEmail || user.email,
-                        subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                        subject: `Congratulations! Your NDA is complete`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', dashboardLink),
                         attachments: pdfAttachment
                     });
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
                 if (partyBSigner) {
                     await sendEmail({
                         to: partyBSigner.email,
-                        subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                        subject: `Congratulations! Your NDA is complete`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', dashboardLink),
                         attachments: pdfAttachment
                     });
@@ -189,9 +189,10 @@ export async function POST(request: NextRequest) {
                 if (partyBSigner) {
                     const fillPageLink = `${appUrl}/fillndahtml-public/${partyBSigner.id}`;
 
+                    const partyACompany = (updatedContent.party_a_name as string) || ''
                     await sendEmail({
                         to: partyBSigner.email,
-                        subject: `Action Required: ${draft.title || 'NDA'} - ${signerName} has signed`,
+                        subject: `Time to sign! ${signerName}${partyACompany ? ` from ${partyACompany}` : ''} has already signed the NDA`,
                         html: timeToSignEmailHtml(
                             draft.title || 'NDA',
                             fillPageLink,

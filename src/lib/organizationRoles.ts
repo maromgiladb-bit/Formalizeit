@@ -19,7 +19,7 @@ export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; descri
   CONTRIBUTOR: {
     label: 'Contributor',
     description:
-      'Can create and edit NDA drafts. Drafts must be submitted to an Approver before they can be sent externally.',
+      'Can create and edit NDA drafts and send them externally for review or input. Cannot sign NDAs on behalf of the company.',
   },
 }
 
@@ -44,11 +44,19 @@ export function isOrganizationOwner(role: string): boolean {
 }
 
 /**
- * Can approve internal submissions, send NDAs externally, sign, finalize.
+ * Can sign NDAs on behalf of the company, approve/reject internal submissions, and finalize.
  * True for: APPROVER role, OR OWNER who has explicitly enabled the approver toggle.
  */
 export function canApproveAndSend(membership: MembershipForGuard): boolean {
   return membership.role === 'APPROVER' || (membership.role === 'OWNER' && membership.isApprover)
+}
+
+/**
+ * Can send NDAs externally (for review or input). Does not include signing.
+ * True for all roles — every member can send NDAs.
+ */
+export function canSendNDA(_membership: MembershipForGuard): boolean {
+  return true
 }
 
 /** All roles can create and edit drafts. */
@@ -58,10 +66,10 @@ export function canContributeToDrafts(_role: string): boolean {
 
 /**
  * This role's drafts must go through internal approval before being sent.
- * True for CONTRIBUTOR and OWNER (unless OWNER has approver toggle on).
+ * Currently disabled — all members can send directly.
  */
-export function needsInternalApproval(membership: MembershipForGuard): boolean {
-  return !canApproveAndSend(membership)
+export function needsInternalApproval(_membership: MembershipForGuard): boolean {
+  return false
 }
 
 // ─── Display helpers ──────────────────────────────────────────────────────────
