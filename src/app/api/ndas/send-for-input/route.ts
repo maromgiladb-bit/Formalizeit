@@ -3,8 +3,9 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, inputRequestEmailHtml } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canApproveAndSend } from '@/lib/organizationRoles'
+import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
+import { assertCanSendNda } from '@/organizations/limits'
 
 /**
  * Send NDA for Party B input (not signature)
@@ -39,9 +40,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
         }
 
-        if (!canApproveAndSend(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can send NDAs for input.' }, { status: 403 })
+        if (!canSendNDA(activeMembership)) {
+            return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
+
+        await assertCanSendNda(activeMembership.organizationId)
 
         // Get draft in active organization
         const draft = await prisma.ndaDraft.findFirst({
@@ -109,7 +112,8 @@ export async function POST(request: NextRequest) {
                 workflowState: 'AWAITING_PARTY_B_REVIEW',
                 pendingInputFields: pendingInputFields,
                 recipientEmail: recipientEmail,
-                status: 'SENT'
+                status: 'SENT',
+                sentAt: new Date()
             }
         })
 
@@ -136,7 +140,7 @@ export async function POST(request: NextRequest) {
         try {
             await sendEmail({
                 to: recipientEmail,
-                subject: `Action Required: Please complete your information - ${draft.title || 'NDA'}`,
+                subject: `${user.name || user.email} from ${(content.party_a_name as string) || activeMembership.organization.name} sent you an NDA to fill in`,
                 html: inputRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     inputLink,

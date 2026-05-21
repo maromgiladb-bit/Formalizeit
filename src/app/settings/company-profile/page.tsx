@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { Building2, Info, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CompanyProfile {
   id: string;
@@ -20,15 +21,22 @@ interface CompanyProfile {
   signatorytitle?: string;
 }
 
+const inputClass = (disabled: boolean) =>
+  `w-full px-3 py-2.5 border rounded-lg text-sm outline-none transition-colors duration-150 ${
+    disabled
+      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+      : 'border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+  }`
+
 export default function CompanyProfileSettingsPage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [canEdit, setCanEdit] = useState(false);
-  
+
   const [formData, setFormData] = useState<CompanyProfile>({
     id: '',
     companyname: '',
@@ -45,15 +53,12 @@ export default function CompanyProfileSettingsPage() {
     signatorytitle: ''
   });
 
-  // Load existing profile
   useEffect(() => {
     if (!isLoaded) return;
-    
     if (!isSignedIn) {
       router.push('/sign-in');
       return;
     }
-
     fetchProfile();
   }, [isLoaded, isSignedIn, router]);
 
@@ -61,9 +66,7 @@ export default function CompanyProfileSettingsPage() {
     try {
       const response = await fetch('/api/company-profile');
       const data = await response.json();
-      
       setCanEdit(!!data.canEdit);
-
       if (data.profile) {
         setFormData({
           id: data.profile.id,
@@ -97,22 +100,17 @@ export default function CompanyProfileSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canEdit) return;
-
     setSaving(true);
     setMessage(null);
-
     try {
       const response = await fetch('/api/company-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Company profile saved successfully!' });
-        // Auto-hide success message after 3 seconds
+        setMessage({ type: 'success', text: 'Company profile saved successfully.' });
         setTimeout(() => setMessage(null), 3000);
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save profile' });
@@ -127,11 +125,11 @@ export default function CompanyProfileSettingsPage() {
 
   if (loading) {
     return (
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="flex items-center justify-center p-12">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-600 font-medium text-sm">Loading company profile...</p>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-7 h-7 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-gray-500">Loading company profile...</p>
           </div>
         </div>
       </div>
@@ -139,67 +137,80 @@ export default function CompanyProfileSettingsPage() {
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">Company Profile</h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Set your default company information for quick NDA generation
-        </p>
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+
+      {/* Card Header */}
+      <div className="px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-teal-700" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">Company Profile</h3>
+            <p className="text-sm text-gray-500">Default company information for NDA generation</p>
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 py-5 sm:p-6 space-y-6">
-        {/* Info Box */}
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">Quick NDA Generation</h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <p>
-                  This information will be automatically filled in as Party A when you create a new NDA, saving you time. 
-                  You can always modify these details for individual NDAs.
-                </p>
-              </div>
-            </div>
+      <div className="px-6 py-5 space-y-5">
+
+        {/* Info callout */}
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
+          <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+            <Info className="w-4 h-4 text-teal-700" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-0.5">Quick NDA Generation</p>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              This information will be automatically filled in as Party A when you create a new NDA.
+              You can always modify these details for individual NDAs.
+            </p>
           </div>
         </div>
 
+        {/* Permission warning */}
         {!canEdit && (
-          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-md">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <p className="ml-3 text-sm text-amber-800 font-medium">
-                Only organization owners and approvers can update the company profile.
-              </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0 border border-amber-200">
+              <Lock className="w-4 h-4 text-amber-600" />
             </div>
+            <p className="text-sm text-amber-800 leading-relaxed">
+              Only organization owners and signers can update the company profile.
+            </p>
           </div>
         )}
 
-        {/* Message Banner */}
+        {/* Save message */}
         {message && (
-          <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500'}`}>
-            <div className="flex items-center gap-3">
-              <p className={`text-sm font-medium ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-                {message.text}
-              </p>
+          <div className={`rounded-xl p-4 flex items-start gap-3 ${
+            message.type === 'success'
+              ? 'bg-emerald-50 border border-emerald-200'
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+              message.type === 'success' ? 'bg-emerald-100' : 'bg-red-100'
+            }`}>
+              {message.type === 'success'
+                ? <CheckCircle className="w-4 h-4 text-emerald-600" />
+                : <AlertCircle className="w-4 h-4 text-red-600" />
+              }
             </div>
+            <p className={`text-sm font-medium ${
+              message.type === 'success' ? 'text-emerald-800' : 'text-red-800'
+            }`}>
+              {message.text}
+            </p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
+
+          {/* Section 1: Company Information */}
           <div>
-            <h4 className="text-md font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
-              1. Company Information
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">1. Company Information</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -210,12 +221,12 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="e.g., Acme Corporation Inc."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -226,12 +237,12 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="contact@company.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Phone
                 </label>
                 <input
@@ -241,12 +252,12 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="+1 (555) 123-4567"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Website
                 </label>
                 <input
@@ -256,19 +267,20 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="https://www.company.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
             </div>
           </div>
 
+          <div className="h-px bg-gray-100" />
+
+          {/* Section 2: Address */}
           <div>
-            <h4 className="text-md font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
-              2. Address
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">2. Address</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Address Line 1 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -279,12 +291,12 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="123 Main Street"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Address Line 2
                 </label>
                 <input
@@ -294,12 +306,12 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="Suite 100"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   City <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -310,12 +322,12 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="San Francisco"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   State / Province
                 </label>
                 <input
@@ -325,12 +337,12 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="California"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Postal Code
                 </label>
                 <input
@@ -340,12 +352,12 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="94102"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Country <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -356,19 +368,20 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="United States"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
             </div>
           </div>
 
+          <div className="h-px bg-gray-100" />
+
+          {/* Section 3: Authorized Signatory */}
           <div>
-            <h4 className="text-md font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
-              3. Authorized Signatory
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">3. Authorized Signatory</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Signatory Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -379,12 +392,12 @@ export default function CompanyProfileSettingsPage() {
                   required
                   disabled={!canEdit}
                   placeholder="John Smith"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                   Signatory Title
                 </label>
                 <input
@@ -394,27 +407,21 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="CEO"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClass(!canEdit)}
                 />
               </div>
             </div>
           </div>
 
           {canEdit && (
-            <div className="flex justify-end pt-4 border-t border-gray-200">
+            <div className="flex justify-end pt-4 border-t border-gray-100">
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-teal-400"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Saving...
-                  </>
-                ) : (
-                  'Save Profile'
-                )}
+                {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {saving ? 'Saving...' : 'Save Profile'}
               </button>
             </div>
           )}

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { randomBytes } from 'crypto'
 import { sendEmail, recipientEditEmailHtml, getAppUrl } from '@/lib/email'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { htmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canApproveAndSend } from '@/lib/organizationRoles'
+import { canSendNDA } from '@/lib/organizationRoles'
+import { assertCanSendNda } from '@/organizations/limits'
 
 export const runtime = 'nodejs' // Required for Puppeteer
 
@@ -46,9 +46,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
     }
 
-    if (!canApproveAndSend(activeMembership)) {
-      return NextResponse.json({ error: 'Only approvers can send NDAs' }, { status: 403 })
+    if (!canSendNDA(activeMembership)) {
+      return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
     }
+
+    await assertCanSendNda(activeMembership.organizationId)
 
     const existingDraft = await prisma.ndaDraft.findFirst({
       where: {
@@ -66,14 +68,10 @@ export async function POST(request: NextRequest) {
       where: {
         id: draftId,
       },
-      data: { status: 'SENT' }
+      data: { status: 'SENT', sentAt: new Date() }
     })
 
     // Create sign request
-    const token = randomBytes(32).toString('hex')
-    // const expiresAt = new Date()
-    // expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
-
     const signRequest = await prisma.signRequest.create({
       data: {
         organizationId: draft.organizationId,
@@ -108,15 +106,17 @@ export async function POST(request: NextRequest) {
     })
 
     // Send email notification to signer (without PDF attachment - PDF will be attached only in final completion email)
-    const signLink = `${getAppUrl()}/review-nda/${token}`
+    const signLink = `${getAppUrl()}/fillndahtml-public/${signer.id}`
     console.log('📧 Preparing to send email to:', signerEmail)
     console.log('📧 Review link:', signLink)
     console.log('📧 Draft title:', draft.title)
 
     try {
+      const draftContent = (draft.content as Record<string, unknown>) || {}
+      const partyACompany = (draftContent.party_a_name as string) || activeMembership.organization.name
       await sendEmail({
         to: signerEmail,
-        subject: `Please review & sign your NDA – ${draft.title || 'NDA'}`,
+        subject: `${user.name || user.email} from ${partyACompany} sent you an NDA to review`,
         html: recipientEditEmailHtml(
           draft.title || 'Untitled NDA',
           signLink,
@@ -135,8 +135,7 @@ export async function POST(request: NextRequest) {
       draft,
       signer,
       signRequest: {
-        token,
-        link: `/review-nda/${token}`
+        link: `/fillndahtml-public/${signer.id}`
       }
     })
   } catch (error) {

@@ -116,10 +116,17 @@ const emailTemplates: EmailTemplate[] = [
 
 const categories = ['Party B receives', 'Party A receives', 'Signing', 'Internal'];
 
+interface EmailMeta {
+    html: string;
+    subject: string;
+    from: string;
+    to: string;
+}
+
 export default function DevEmailsPage() {
     const { isLoaded, user } = useUser();
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-    const [previewHtml, setPreviewHtml] = useState('');
+    const [emailMeta, setEmailMeta] = useState<EmailMeta | null>(null);
     const [loading, setLoading] = useState(false);
 
     const loadEmailPreview = async (templateId: string) => {
@@ -136,10 +143,15 @@ export default function DevEmailsPage() {
             if (!response.ok) throw new Error('Failed to load email preview');
 
             const data = await response.json();
-            setPreviewHtml(data.html);
+            setEmailMeta(data);
         } catch (err) {
             console.error('Failed to load email preview:', err);
-            setPreviewHtml('<div style="padding: 20px; color: red;">Failed to load email preview</div>');
+            setEmailMeta({
+                html: '<div style="padding: 20px; color: red;">Failed to load email preview</div>',
+                subject: '',
+                from: '',
+                to: '',
+            });
         } finally {
             setLoading(false);
         }
@@ -215,10 +227,10 @@ export default function DevEmailsPage() {
                                         {selectedInfo ? selectedInfo.name : 'Select a template'}
                                     </p>
                                 </div>
-                                {selectedTemplate && previewHtml && (
+                                {selectedTemplate && emailMeta?.html && (
                                     <button
                                         onClick={() => {
-                                            const blob = new Blob([previewHtml], { type: 'text/html' });
+                                            const blob = new Blob([emailMeta.html], { type: 'text/html' });
                                             const url = URL.createObjectURL(blob);
                                             const a = document.createElement('a');
                                             a.href = url;
@@ -249,8 +261,23 @@ export default function DevEmailsPage() {
                                         <div className="animate-spin h-8 w-8 border-2 border-teal-700 border-t-transparent rounded-full mx-auto"></div>
                                         <p className="mt-3 text-sm text-gray-500">Loading preview...</p>
                                     </div>
-                                ) : previewHtml ? (
+                                ) : emailMeta?.html ? (
                                     <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                        {/* Email client-style header */}
+                                        <div className="bg-white border-b border-gray-200 px-4 py-3 space-y-1.5">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-xs font-semibold text-gray-400 w-14 shrink-0">Subject</span>
+                                                <span className="text-sm font-semibold text-gray-900">{emailMeta.subject}</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-xs font-semibold text-gray-400 w-14 shrink-0">From</span>
+                                                <span className="text-sm text-gray-700">{emailMeta.from}</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-xs font-semibold text-gray-400 w-14 shrink-0">To</span>
+                                                <span className="text-sm text-gray-700">{emailMeta.to}</span>
+                                            </div>
+                                        </div>
                                         {/* Browser chrome */}
                                         <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-1.5">
                                             <div className="w-2.5 h-2.5 rounded-full bg-gray-300"></div>
@@ -260,7 +287,7 @@ export default function DevEmailsPage() {
                                         </div>
                                         {/* Email render */}
                                         <iframe
-                                            srcDoc={previewHtml}
+                                            srcDoc={emailMeta.html}
                                             className="w-full border-0"
                                             style={{ minHeight: '700px' }}
                                             title="Email preview"

@@ -15,10 +15,10 @@ export async function createNotification(
 }
 
 /**
- * Notify all approvers in an org (APPROVER role OR OWNER with isApprover=true).
+ * Notify all signers in an org (SIGNER role OR OWNER with the signer toggle enabled).
  * Pass excludeUserId to skip the user taking the action.
  */
-export async function createNotificationsForOrgApprovers(
+export async function createNotificationsForOrgSigners(
     organizationId: string,
     excludeUserId: string | null,
     type: NotificationType,
@@ -27,19 +27,19 @@ export async function createNotificationsForOrgApprovers(
     link?: string | null,
     draftId?: string | null
 ) {
-    const approverMemberships = await prisma.membership.findMany({
+    const signerMemberships = await prisma.membership.findMany({
         where: {
             organizationId,
             status: 'ACTIVE',
             OR: [
-                { role: 'APPROVER' },
+                { role: 'SIGNER' },
                 { role: 'OWNER', isApprover: true },
             ],
         },
         select: { userId: true },
     })
 
-    const userIds = approverMemberships
+    const userIds = signerMemberships
         .map(m => m.userId)
         .filter(id => id !== excludeUserId)
 

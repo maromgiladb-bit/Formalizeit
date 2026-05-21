@@ -3,7 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email';
 import { getActiveOrganization } from '@/lib/db-organization';
-import { canApproveAndSend } from '@/lib/organizationRoles';
+import { canSignNDA } from '@/lib/organizationRoles';
+import { assertCanSendNda } from '@/organizations/limits';
 import { createNotification } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
@@ -53,8 +54,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
         }
 
-        if (!canApproveAndSend(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can send NDAs for signature' }, { status: 403 });
+        if (!canSignNDA(activeMembership)) {
+            return NextResponse.json({ error: 'Only signers and owners can send NDAs for signature' }, { status: 403 });
         }
 
         // Get draft in active organization
@@ -72,12 +73,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        await assertCanSendNda(activeMembership.organizationId);
+
         // Update draft status and content
         await prisma.ndaDraft.update({
             where: { id: draftId },
             data: {
                 content: formData,
                 status: 'SENT',
+                sentAt: new Date(),
                 workflowState: 'AWAITING_PARTY_B_SIGNATURE',
             },
         });
@@ -176,7 +180,7 @@ export async function POST(request: NextRequest) {
         try {
             await sendEmail({
                 to: partyBEmail,
-                subject: `Please sign NDA – ${draft.title || 'NDA'}`,
+                subject: `${user.name || user.email} from ${(formData.party_a_name as string) || activeMembership.organization.name} sent you an NDA to sign`,
                 html: recipientSignRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     signLink

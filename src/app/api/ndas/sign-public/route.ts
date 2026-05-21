@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
-import { createNotification, createNotificationsForOrgApprovers, createNotificationsForAllOrgMembers } from '@/lib/notifications';
+import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
                 content: updatedContent,
                 status: newStatus,
                 workflowState: newWorkflowState,
+                sentAt: draft.sentAt ?? new Date(),
             },
         });
 
@@ -265,7 +266,7 @@ export async function POST(request: NextRequest) {
                 // Email Current Signer
                 await sendEmail({
                     to: signer.email,
-                    subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                    subject: `Congratulations! Your NDA is complete`,
                     html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
                     attachments: pdfAttachment || undefined
                 });
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
                 if (otherRecipientEmail) {
                     await sendEmail({
                         to: otherRecipientEmail,
-                        subject: `🎉 Congratulations! NDA Completed - ${draft.title || 'NDA'}`,
+                        subject: `Congratulations! Your NDA is complete`,
                         html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
                         attachments: pdfAttachment || undefined
                     });
@@ -312,10 +313,13 @@ export async function POST(request: NextRequest) {
                 if (recipientEmail && recipientSignerId) {
                     // Always use sign-nda-public for the signing link
                     const signPageLink = `${appUrl}/sign-nda-public/${recipientSignerId}`;
+                    const signerCompany = isPartyA
+                        ? ((updatedContent as Record<string, unknown>).party_a_name as string) || ''
+                        : ((updatedContent as Record<string, unknown>).party_b_name as string) || ''
 
                     await sendEmail({
                         to: recipientEmail,
-                        subject: `Action Required: ${draft.title || 'NDA'} - ${signerName} has signed`,
+                        subject: `Time to sign! ${signerName}${signerCompany ? ` from ${signerCompany}` : ''} has already signed the NDA`,
                         html: timeToSignEmailHtml(
                             draft.title || 'NDA',
                             signPageLink,
@@ -326,9 +330,12 @@ export async function POST(request: NextRequest) {
                 } else if (recipientEmail) {
                     // Fallback: If we couldn't create a signer record, send to dashboard
                     const dashboardLink = `${appUrl}/mynda`;
+                    const signerCompanyFallback = isPartyA
+                        ? ((updatedContent as Record<string, unknown>).party_a_name as string) || ''
+                        : ((updatedContent as Record<string, unknown>).party_b_name as string) || ''
                     await sendEmail({
                         to: recipientEmail,
-                        subject: `Action Required: ${draft.title || 'NDA'} - ${signerName} has signed`,
+                        subject: `Time to sign! ${signerName}${signerCompanyFallback ? ` from ${signerCompanyFallback}` : ''} has already signed the NDA`,
                         html: timeToSignEmailHtml(
                             draft.title || 'NDA',
                             dashboardLink,
@@ -373,7 +380,7 @@ export async function POST(request: NextRequest) {
                 }
             } else if (!isPartyA) {
                 // Party B signed, Party A still needs to sign
-                await createNotificationsForOrgApprovers(
+                await createNotificationsForOrgSigners(
                     orgId,
                     null,
                     'NDA_SIGNED',

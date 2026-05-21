@@ -1,6 +1,9 @@
-export type DbMembershipRole = 'OWNER' | 'APPROVER' | 'CONTRIBUTOR'
+export type DbMembershipRole = 'OWNER' | 'SIGNER' | 'CONTRIBUTOR'
 
-// Minimal membership shape needed for permission checks
+// Minimal membership shape needed for permission checks.
+// `isApprover` matches the Prisma field name (DB column: `is_approver`) and represents
+// whether an OWNER has the signer toggle enabled. The field name predates the APPROVER→SIGNER
+// rename and intentionally mirrors the DB to avoid an extra mapping layer at callsites.
 export type MembershipForGuard = { role: DbMembershipRole; isApprover: boolean }
 
 // ─── Role descriptions (used in info tooltips in team settings) ──────────────
@@ -9,17 +12,17 @@ export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; descri
   OWNER: {
     label: 'Owner',
     description:
-      'Manages team members, billing, and company settings. Can create and edit drafts. Cannot send or approve NDAs unless the approver toggle is enabled.',
+      'Manages team members, billing, and company settings. Can create, edit, and send NDAs. Can sign NDAs on behalf of the company when the signer toggle is enabled.',
   },
-  APPROVER: {
-    label: 'Approver',
+  SIGNER: {
+    label: 'Signer',
     description:
-      'Can create drafts, approve internal submissions, send NDAs for review/signature, and sign on behalf of the company.',
+      'Can create, edit, and send NDAs. Can sign NDAs on behalf of the company.',
   },
   CONTRIBUTOR: {
     label: 'Contributor',
     description:
-      'Can create and edit NDA drafts. Drafts must be submitted to an Approver before they can be sent externally.',
+      'Can create, edit, and send NDA drafts for review or input. Cannot sign NDAs on behalf of the company.',
   },
 }
 
@@ -28,11 +31,11 @@ export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; descri
 
 export const ORGANIZATION_ROLE_OPTIONS: Array<{ value: DbMembershipRole; label: string }> = [
   { value: 'CONTRIBUTOR', label: 'Contributor' },
-  { value: 'APPROVER', label: 'Approver' },
+  { value: 'SIGNER', label: 'Signer' },
 ]
 
-export const APPROVER_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'true', label: 'Approver' },
+export const SIGNER_TOGGLE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'true', label: 'Signer' },
   { value: 'false', label: 'Contributor' },
 ]
 
@@ -44,24 +47,24 @@ export function isOrganizationOwner(role: string): boolean {
 }
 
 /**
- * Can approve internal submissions, send NDAs externally, sign, finalize.
- * True for: APPROVER role, OR OWNER who has explicitly enabled the approver toggle.
+ * Can sign NDAs on behalf of the company and perform finalisation actions.
+ * True for: SIGNER role, OR OWNER who has explicitly enabled the signer toggle.
  */
-export function canApproveAndSend(membership: MembershipForGuard): boolean {
-  return membership.role === 'APPROVER' || (membership.role === 'OWNER' && membership.isApprover)
+export function canSignNDA(membership: MembershipForGuard): boolean {
+  return membership.role === 'SIGNER' || (membership.role === 'OWNER' && membership.isApprover)
+}
+
+/**
+ * Can send NDAs externally (for review or input). Does not include signing.
+ * True for all roles — every member can send NDAs.
+ */
+export function canSendNDA(_membership: MembershipForGuard): boolean {
+  return true
 }
 
 /** All roles can create and edit drafts. */
 export function canContributeToDrafts(_role: string): boolean {
   return true
-}
-
-/**
- * This role's drafts must go through internal approval before being sent.
- * True for CONTRIBUTOR and OWNER (unless OWNER has approver toggle on).
- */
-export function needsInternalApproval(membership: MembershipForGuard): boolean {
-  return !canApproveAndSend(membership)
 }
 
 // ─── Display helpers ──────────────────────────────────────────────────────────
@@ -74,7 +77,7 @@ export function getOrganizationRoleBadgeClass(role: DbMembershipRole): string {
   switch (role) {
     case 'OWNER':
       return 'bg-indigo-100 text-indigo-800'
-    case 'APPROVER':
+    case 'SIGNER':
       return 'bg-teal-100 text-teal-800'
     case 'CONTRIBUTOR':
       return 'bg-gray-100 text-gray-700'
@@ -90,7 +93,7 @@ export function getOrganizationRoleBadgeClass(role: DbMembershipRole): string {
 export function toDbMembershipRole(input: string | null | undefined): DbMembershipRole | null {
   if (!input) return null
   const normalized = input.toUpperCase() as DbMembershipRole
-  if (normalized === 'OWNER' || normalized === 'APPROVER' || normalized === 'CONTRIBUTOR') {
+  if (normalized === 'OWNER' || normalized === 'SIGNER' || normalized === 'CONTRIBUTOR') {
     return normalized
   }
   return null

@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 config({ path: '.env.local' })
 import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
-import { createDraftWithLimitCheck } from './organizations/limits'
+import { createDraft } from './organizations/limits'
 import { prisma as libPrisma } from './lib/prisma'
 
 const log = (msg: string) => fs.appendFileSync('debug_output.txt', msg + '\n')
@@ -65,7 +65,7 @@ async function main() {
 
         log('Creating draft via limit check...')
         try {
-            const draftLimit = await createDraftWithLimitCheck({
+            const draftLimit = await createDraft({
                 organizationId: org.id,
                 createdByUserId: user.id,
                 templateId: template.id,

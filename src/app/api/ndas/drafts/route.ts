@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { createDraftWithLimitCheck } from '@/organizations/limits'
+import { createDraft } from '@/organizations/limits'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts } from '@/lib/organizationRoles'
 
@@ -103,8 +103,8 @@ export async function POST(req: Request) {
         data: { title, content: content }
       })
     } else {
-      // Create new draft - check limits
-      draft = await createDraftWithLimitCheck({
+      // Create new draft (limits are enforced at send-time via assertCanSendNda)
+      draft = await createDraft({
         organizationId,
         createdByUserId: dbUser.id,
         templateId: template.id,

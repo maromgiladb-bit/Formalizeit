@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { resolveLimits } from '@/billing/planLimits'
+import { resolveLimits, getCurrentQuarterStart } from '@/billing/planLimits'
 
 export async function GET() {
   try {
@@ -26,17 +26,16 @@ export async function GET() {
 
     const limits = resolveLimits(organization)
 
-    // Check organization-wide active draft count (not per-user)
-    const ndaCount = await prisma.ndaDraft.count({
-      where: {
-        organizationId: organization.id,
-        NOT: { status: 'CANCELLED' }
-      }
-    })
+    const whereClause =
+      limits.draftLimitPeriod === 'quarter'
+        ? { organizationId: organization.id, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
+        : { organizationId: organization.id, status: { in: ['SENT', 'SIGNED'] } }
+
+    const ndaCount = await prisma.ndaDraft.count({ where: whereClause })
 
     const plan = organization.billingPlan
     const isUnlimited = !Number.isFinite(limits.maxActiveDrafts)
-    const canCreate = isUnlimited || ndaCount < limits.maxActiveDrafts
+    const canSend = isUnlimited || ndaCount < limits.maxActiveDrafts
 
     const finiteLimit = isUnlimited ? null : limits.maxActiveDrafts
 
@@ -44,8 +43,9 @@ export async function GET() {
       plan,
       ndaCount,
       limit: finiteLimit,
-      canCreate,
-      remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount)
+      canSend,
+      remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount),
+      draftLimitPeriod: limits.draftLimitPeriod,
     })
   } catch (error) {
     console.error('Check limit error:', error)

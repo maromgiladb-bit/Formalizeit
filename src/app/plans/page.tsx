@@ -22,7 +22,8 @@ const pricingPlans = [
     yearlyPrice: "0",
     period: "month",
     features: [
-      "Up to 3 NDAs",
+      "Up to 3 NDAs total",
+      "1 team member",
       "Basic templates",
       "E-signature support",
       "Email support",
@@ -39,7 +40,8 @@ const pricingPlans = [
     yearlyPrice: "16",
     period: "month",
     features: [
-      "Unlimited NDAs",
+      "25 NDAs per quarter",
+      "Up to 10 team members",
       "All professional templates",
       "E-signature support",
       "Priority support",
@@ -89,7 +91,7 @@ export default function Plans() {
       <section className="bg-white pt-8 pb-4">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="mb-4"
+            className="mb-0"
             initial="initial"
             animate="animate"
             variants={stagger}

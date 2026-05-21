@@ -6,8 +6,9 @@ import { sanitizeForHtml } from '@/lib/sanitize'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { renderHtmlToPdf } from '@/lib/htmlToPdf'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canApproveAndSend } from '@/lib/organizationRoles'
+import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
+import { assertCanSendNda } from '@/organizations/limits'
 
 /**
  * Send NDA for Party B review
@@ -42,9 +43,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
         }
 
-        if (!canApproveAndSend(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can send NDAs for review.' }, { status: 403 })
+        if (!canSendNDA(activeMembership)) {
+            return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
+
+        await assertCanSendNda(activeMembership.organizationId)
 
         // Get draft and verify organization access
         const draft = await prisma.ndaDraft.findFirst({
@@ -161,7 +164,8 @@ export async function POST(request: NextRequest) {
                 pendingInputFields: editableFields,
                 recipientEmail: recipientEmail,
                 lastEditedBy: 'party_a',
-                status: 'SENT'
+                status: 'SENT',
+                sentAt: new Date()
             }
         })
 
@@ -211,7 +215,7 @@ export async function POST(request: NextRequest) {
         try {
             await sendEmail({
                 to: recipientEmail,
-                subject: `Review Request: ${draft.title || 'NDA'} - Formalize It`,
+                subject: `${user.name || user.email} from ${(content.party_a_name as string) || activeMembership.organization.name} sent you an NDA to review`,
                 html: reviewRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     reviewLink,

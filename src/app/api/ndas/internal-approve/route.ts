@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canApproveAndSend } from '@/lib/organizationRoles'
+import { canSignNDA } from '@/lib/organizationRoles'
 import { sendEmail, getAppUrl, approvalApprovedEmailHtml } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
 
@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
         const activeMembership = await getActiveOrganization()
         if (!activeMembership) return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
 
-        if (!canApproveAndSend(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can approve internal submissions' }, { status: 403 })
+        if (!canSignNDA(activeMembership)) {
+            return NextResponse.json({ error: 'Only signers and owners can approve internal submissions' }, { status: 403 })
         }
 
         const draft = await prisma.ndaDraft.findFirst({
