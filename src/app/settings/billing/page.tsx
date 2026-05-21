@@ -11,6 +11,7 @@ interface SubscriptionInfo {
     ndaCount: number
     limit: number | null
     remaining: number | null
+    draftLimitPeriod: 'total' | 'quarter'
 }
 
 export default function BillingSettingsPage() {
@@ -139,7 +140,7 @@ export default function BillingSettingsPage() {
                                     <p className="mt-2 text-sm text-gray-500">
                                         {subscription.remaining === 0
                                             ? "You've reached your limit."
-                                            : `${subscription.remaining} NDAs remaining this month.`}
+                                            : `${subscription.remaining} NDAs remaining ${subscription.draftLimitPeriod === 'quarter' ? 'this quarter' : 'in total'}.`}
                                     </p>
                                 </div>
                             )}
@@ -157,17 +158,11 @@ export default function BillingSettingsPage() {
                                         </dd>
                                     </div>
                                     <div className="px-5 py-3.5 grid grid-cols-3 gap-4">
-                                        <dt className="text-sm font-medium text-gray-500">Next Billing Date</dt>
-                                        <dd className="text-sm text-gray-900 col-span-2">
-                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV'
-                                                ? 'N/A'
-                                                : new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString()}
-                                        </dd>
-                                    </div>
-                                    <div className="px-5 py-3.5 grid grid-cols-3 gap-4">
                                         <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
-                                        <dd className="text-sm text-gray-900 col-span-2">
-                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV' ? 'None' : '\u2022\u2022\u2022\u2022 4242'}
+                                        <dd className="text-sm text-gray-400 col-span-2 italic">
+                                            {subscription.plan === 'FREE' || subscription.plan === 'DEV'
+                                                ? 'None'
+                                                : 'Online payment coming soon'}
                                         </dd>
                                     </div>
                                 </dl>

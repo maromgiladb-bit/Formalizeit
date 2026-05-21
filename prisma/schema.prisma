@@ -29,7 +29,7 @@ enum BillingStatus {
 
 enum MembershipRole {
   OWNER
-  APPROVER
+  SIGNER
   CONTRIBUTOR
 
   @@map("membership_role")

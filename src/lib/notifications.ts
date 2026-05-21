@@ -15,7 +15,7 @@ export async function createNotification(
 }
 
 /**
- * Notify all approvers in an org (APPROVER role OR OWNER with isApprover=true).
+ * Notify all approvers in an org (SIGNER role OR OWNER with isApprover=true).
  * Pass excludeUserId to skip the user taking the action.
  */
 export async function createNotificationsForOrgApprovers(
@@ -32,7 +32,7 @@ export async function createNotificationsForOrgApprovers(
             organizationId,
             status: 'ACTIVE',
             OR: [
-                { role: 'APPROVER' },
+                { role: 'SIGNER' },
                 { role: 'OWNER', isApprover: true },
             ],
         },

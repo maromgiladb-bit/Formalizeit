@@ -52,6 +52,7 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
         return { label: 'SIGN NOW', color: 'text-red-700', bgColor: 'bg-red-50' };
       }
       return { label: 'WAITING SIG.', color: 'text-purple-700', bgColor: 'bg-purple-50' };
+    case 'PENDING_INTERNAL_APPROVAL':
     case 'FILLING':
     default:
       if (nda.status === 'signed') {

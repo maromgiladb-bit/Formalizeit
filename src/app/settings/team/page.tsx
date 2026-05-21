@@ -14,9 +14,9 @@ import {
     getOrganizationRoleBadgeClass,
     getOrganizationRoleLabel,
     isOrganizationOwner,
-    canApproveAndSend,
+    canSignNDA,
     ORGANIZATION_ROLE_OPTIONS,
-    APPROVER_OPTIONS,
+    SIGNER_TOGGLE_OPTIONS,
     ROLE_DESCRIPTIONS,
 } from '@/lib/organizationRoles'
 
@@ -93,7 +93,7 @@ export default async function TeamSettingsPage() {
     const isOwner = isOrganizationOwner(membership.role)
 
     const approverCount = members.filter(
-        m => m.role === 'APPROVER' || (m.role === 'OWNER' && m.isApprover)
+        m => m.role === 'SIGNER' || (m.role === 'OWNER' && m.isApprover)
     ).length
 
     return (
@@ -123,9 +123,9 @@ export default async function TeamSettingsPage() {
                                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                             </div>
                             <p className="text-sm text-amber-800">
-                                <strong>No approvers assigned.</strong> NDAs can be sent for review by anyone, but they
-                                cannot be signed or finalized until at least one member has the Approver role, or you
-                                enable the &ldquo;Also an Approver&rdquo; toggle on your own account below.
+                                <strong>No signers assigned.</strong> NDAs can be sent for review by anyone, but they
+                                cannot be signed or finalized until at least one member has the Signer role, or you
+                                enable the &ldquo;Also a Signer&rdquo; toggle on your own account below.
                             </p>
                         </div>
                     )}
@@ -134,7 +134,7 @@ export default async function TeamSettingsPage() {
                     <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Role Guide</p>
                         <ul className="space-y-2">
-                            {(['OWNER', 'APPROVER', 'CONTRIBUTOR'] as const).map(r => (
+                            {(['OWNER', 'SIGNER', 'CONTRIBUTOR'] as const).map(r => (
                                 <li key={r} className="flex items-start gap-3">
                                     <span className={`mt-0.5 shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${getOrganizationRoleBadgeClass(r)}`}>
                                         {ROLE_DESCRIPTIONS[r].label}
@@ -151,7 +151,7 @@ export default async function TeamSettingsPage() {
                     {members.map((member) => {
                         const memberForGuard = { role: member.role, isApprover: member.isApprover }
                         const isThisOwner = member.role === 'OWNER'
-                        const canSign = canApproveAndSend(memberForGuard)
+                        const canSign = canSignNDA(memberForGuard)
                         const isPending = member.status === 'PENDING_INVITE'
 
                         return (
@@ -201,7 +201,7 @@ export default async function TeamSettingsPage() {
                                             <MemberRoleDropdown
                                                 membershipId={member.id}
                                                 currentRole={member.isApprover ? 'true' : 'false'}
-                                                options={APPROVER_OPTIONS}
+                                                options={SIGNER_TOGGLE_OPTIONS}
                                                 serverAction={updateMemberApprover}
                                                 fieldName="isApprover"
                                             />

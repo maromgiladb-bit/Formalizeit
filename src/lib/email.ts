@@ -445,11 +445,11 @@ export function inviteEmailHtml(
 ): string {
   const safeOrgName = sanitizeForHtml(orgName)
   const safeInviterName = sanitizeForHtml(inviterName)
-  const roleLabel = role === 'APPROVER' ? 'Approver' : 'Contributor'
+  const roleLabel = role === 'SIGNER' ? 'Signer' : 'Contributor'
   const roleDesc =
-    role === 'APPROVER'
-      ? 'Create and send NDAs, approve submissions from team members, and sign on behalf of the company.'
-      : 'Create and edit NDA drafts. An approver on your team will review them before they are sent externally.'
+    role === 'SIGNER'
+      ? 'Create and send NDAs and sign on behalf of the company.'
+      : 'Create and edit NDA drafts and send them for review or input. Cannot sign on behalf of the company.'
 
   const content = `
     ${emailAccentLabel('Team invitation')}

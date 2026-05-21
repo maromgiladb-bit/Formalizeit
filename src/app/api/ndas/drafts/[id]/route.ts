@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canContributeToDrafts, canApproveAndSend, isOrganizationOwner } from '@/lib/organizationRoles'
+import { canContributeToDrafts, canSignNDA, isOrganizationOwner } from '@/lib/organizationRoles'
 
 export async function GET(
   request: NextRequest,
@@ -162,7 +162,7 @@ export async function DELETE(
 
     const canDelete =
       isOrganizationOwner(activeMembership.role) ||
-      canApproveAndSend(activeMembership) ||
+      canSignNDA(activeMembership) ||
       existingDraft.createdByUserId === dbUser.id
 
     if (!canDelete) {

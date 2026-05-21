@@ -35,7 +35,7 @@ export async function GET() {
 
     const plan = organization.billingPlan
     const isUnlimited = !Number.isFinite(limits.maxActiveDrafts)
-    const canCreate = isUnlimited || ndaCount < limits.maxActiveDrafts
+    const canSend = isUnlimited || ndaCount < limits.maxActiveDrafts
 
     const finiteLimit = isUnlimited ? null : limits.maxActiveDrafts
 
@@ -43,7 +43,7 @@ export async function GET() {
       plan,
       ndaCount,
       limit: finiteLimit,
-      canCreate,
+      canSend,
       remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount),
       draftLimitPeriod: limits.draftLimitPeriod,
     })

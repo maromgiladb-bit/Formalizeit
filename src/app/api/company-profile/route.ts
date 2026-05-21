@@ -27,13 +27,13 @@ export async function GET() {
     if (!profile) {
       return NextResponse.json({ 
         profile: null,
-        canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'APPROVER'
+        canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER'
       }, { status: 200 });
     }
 
     return NextResponse.json({ 
       profile,
-      canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'APPROVER'
+      canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER'
     });
   } catch (error) {
     console.error('Error fetching company profile:', error);
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const role = activeMembership.role
-    if (role !== 'OWNER' && role !== 'APPROVER') {
+    if (role !== 'OWNER' && role !== 'SIGNER') {
       return NextResponse.json({ error: 'Only owners and approvers can update company profile' }, { status: 403 });
     }
 

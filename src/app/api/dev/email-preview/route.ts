@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
                     html: inviteEmailHtml(
                         sampleData.orgName,
                         sampleData.inviterName,
-                        'APPROVER',
+                        'SIGNER',
                         sampleData.signUpLink
                     ),
                 };
