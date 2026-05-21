@@ -53,7 +53,7 @@ export async function assertCanSendNda(organizationId: string) {
     }
 }
 
-export async function createDraftWithLimitCheck(data: {
+export async function createDraft(data: {
     organizationId: string
     createdByUserId: string
     templateId?: string | null
