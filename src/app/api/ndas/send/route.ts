@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { randomBytes } from 'crypto'
 import { sendEmail, recipientEditEmailHtml, getAppUrl } from '@/lib/email'
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 import { htmlToPdf } from '@/lib/htmlToPdf'
@@ -73,10 +72,6 @@ export async function POST(request: NextRequest) {
     })
 
     // Create sign request
-    const token = randomBytes(32).toString('hex')
-    // const expiresAt = new Date()
-    // expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
-
     const signRequest = await prisma.signRequest.create({
       data: {
         organizationId: draft.organizationId,
@@ -111,7 +106,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Send email notification to signer (without PDF attachment - PDF will be attached only in final completion email)
-    const signLink = `${getAppUrl()}/review-nda/${token}`
+    const signLink = `${getAppUrl()}/fillndahtml-public/${signer.id}`
     console.log('📧 Preparing to send email to:', signerEmail)
     console.log('📧 Review link:', signLink)
     console.log('📧 Draft title:', draft.title)
@@ -140,8 +135,7 @@ export async function POST(request: NextRequest) {
       draft,
       signer,
       signRequest: {
-        token,
-        link: `/review-nda/${token}`
+        link: `/fillndahtml-public/${signer.id}`
       }
     })
   } catch (error) {

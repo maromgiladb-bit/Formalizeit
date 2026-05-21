@@ -7,6 +7,7 @@ import { htmlToPdf } from '@/lib/htmlToPdf';
 import { storeNdaPdf } from '@/lib/storeNdaPdf';
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canSignNDA } from '@/lib/organizationRoles';
+import { assertCanSendNda } from '@/organizations/limits';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
                 { status: 404 }
             );
         }
+
+        await assertCanSendNda(activeMembership.organizationId);
 
         // Update draft with form data and status
         const updatedDraft = await prisma.ndaDraft.update({
