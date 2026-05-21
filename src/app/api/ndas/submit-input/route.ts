@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, ownerReviewEmailHtml, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml } from '@/lib/email'
-import { createNotificationsForOrgApprovers } from '@/lib/notifications'
+import { createNotificationsForOrgSigners } from '@/lib/notifications'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
         if (!isPartyA && hasSuggestions) {
             try {
                 const partyBName = signer.name || signer.email
-                await createNotificationsForOrgApprovers(
+                await createNotificationsForOrgSigners(
                     draft.organizationId,
                     null,
                     'NDA_CHANGES_REQUESTED',

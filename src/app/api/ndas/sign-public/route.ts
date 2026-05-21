@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
-import { createNotification, createNotificationsForOrgApprovers, createNotificationsForAllOrgMembers } from '@/lib/notifications';
+import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
                 content: updatedContent,
                 status: newStatus,
                 workflowState: newWorkflowState,
+                sentAt: draft.sentAt ?? new Date(),
             },
         });
 
@@ -379,7 +380,7 @@ export async function POST(request: NextRequest) {
                 }
             } else if (!isPartyA) {
                 // Party B signed, Party A still needs to sign
-                await createNotificationsForOrgApprovers(
+                await createNotificationsForOrgSigners(
                     orgId,
                     null,
                     'NDA_SIGNED',

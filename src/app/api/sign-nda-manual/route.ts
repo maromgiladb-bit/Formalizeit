@@ -42,6 +42,7 @@ export async function POST(request: Request) {
             where: { id: ndaId },
             data: {
                 status: 'SIGNED',
+                sentAt: existingDraft.sentAt ?? new Date(),
                 content: updatedData,
                 updatedAt: new Date(),
             },

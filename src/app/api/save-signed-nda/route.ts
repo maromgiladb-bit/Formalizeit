@@ -43,6 +43,7 @@ export async function POST(request: Request) {
             },
             data: {
               status: 'SIGNED',
+              sentAt: existingDraft.sentAt ?? new Date(),
               updatedAt: new Date(),
             },
           });

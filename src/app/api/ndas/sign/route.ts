@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
                 content: updatedContent,
                 status: newStatus as any,
                 workflowState: newWorkflowState as any,
+                sentAt: draft.sentAt ?? new Date(),
             },
         });
 

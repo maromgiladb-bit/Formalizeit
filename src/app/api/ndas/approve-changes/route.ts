@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can approve changes' }, { status: 403 })
+            return NextResponse.json({ error: 'Only signers and owners can approve changes' }, { status: 403 })
         }
 
         const existingDraft = await prisma.ndaDraft.findFirst({

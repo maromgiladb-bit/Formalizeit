@@ -1,6 +1,9 @@
 export type DbMembershipRole = 'OWNER' | 'SIGNER' | 'CONTRIBUTOR'
 
-// Minimal membership shape needed for permission checks
+// Minimal membership shape needed for permission checks.
+// `isApprover` matches the Prisma field name (DB column: `is_approver`) and represents
+// whether an OWNER has the signer toggle enabled. The field name predates the APPROVER→SIGNER
+// rename and intentionally mirrors the DB to avoid an extra mapping layer at callsites.
 export type MembershipForGuard = { role: DbMembershipRole; isApprover: boolean }
 
 // ─── Role descriptions (used in info tooltips in team settings) ──────────────
