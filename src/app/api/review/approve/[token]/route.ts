@@ -69,6 +69,7 @@ export async function POST(
         where: { id: draft.id },
         data: {
           status: 'SIGNED',
+          sent_at: draft.sent_at ?? new Date(),
           updated_at: new Date()
         }
       })

@@ -51,6 +51,7 @@ export async function POST(
 				updated_at: new Date(),
 				last_actor: "OWNER",
 				status: "SENT", // Send back to Party B
+				sent_at: draft.sent_at ?? new Date(),
 			},
 		});
 
