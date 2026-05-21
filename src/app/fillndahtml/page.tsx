@@ -101,6 +101,8 @@ export default function FillNDAHTML() {
 	const [showSendForInputModal, setShowSendForInputModal] = useState(false);
 	const [inputRecipientEmail, setInputRecipientEmail] = useState("");
 	const [sendingForInput, setSendingForInput] = useState(false);
+	// No company profile modal state
+	const [showNoProfileModal, setShowNoProfileModal] = useState(false);
 	// Verify email modal state
 	const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
 	const [verifyRecipientEmail, setVerifyRecipientEmail] = useState("");
@@ -214,6 +216,13 @@ export default function FillNDAHTML() {
 					address = addressParts.join(', ');
 				}
 
+				// Check if there's any useful data to fill
+				const hasData = profile.companyName || address || profile.phone || profile.signatoryName || profile.signatoryTitle || profile.email;
+				if (!hasData) {
+					setShowNoProfileModal(true);
+					return;
+				}
+
 				setValues(prev => ({
 					...prev,
 					// Only update fields if profile has a non-null/non-empty value
@@ -225,6 +234,8 @@ export default function FillNDAHTML() {
 					...(profile.email && { party_a_email: profile.email })
 				}));
 				console.log('✅ Auto-filled Party A from company profile');
+			} else {
+				setShowNoProfileModal(true);
 			}
 		} catch (error) {
 			console.error('Error loading company profile:', error);
@@ -2547,6 +2558,63 @@ export default function FillNDAHTML() {
 					</div>
 				)}
 
+
+				{/* No Company Profile Modal */}
+				{showNoProfileModal && (
+					<div
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						onClick={(e) => {
+							if (e.target === e.currentTarget) {
+								setShowNoProfileModal(false);
+							}
+						}}
+					>
+						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+							<div className="p-6 border-b border-gray-100">
+								<div className="flex items-start gap-4">
+									<div className="w-11 h-11 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+										<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+										</svg>
+									</div>
+									<div>
+										<h2 className="text-lg font-bold text-gray-900 mb-1">No company information found</h2>
+										<p className="text-sm text-gray-500 leading-relaxed">
+											Your company profile is empty. Fill in your company details once and auto-fill will populate Party A fields in all your NDAs.
+										</p>
+									</div>
+								</div>
+							</div>
+							<div className="p-6 bg-gray-50">
+								<p className="text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">What you&apos;ll add</p>
+								<ul className="space-y-2 mb-6">
+									{['Company name', 'Address', 'Signatory name & title', 'Email & phone'].map((item) => (
+										<li key={item} className="flex items-center gap-2 text-sm text-gray-600">
+											<svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+											</svg>
+											{item}
+										</li>
+									))}
+								</ul>
+								<div className="flex gap-3">
+									<button
+										onClick={() => setShowNoProfileModal(false)}
+										className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-semibold text-sm text-gray-700 hover:bg-white transition-colors"
+									>
+										Cancel
+									</button>
+									<a
+										href="/settings/company-profile"
+										className="flex-1 px-4 py-2.5 bg-teal-800 hover:bg-teal-700 text-white rounded-lg font-semibold text-sm text-center transition-colors"
+									>
+										Go to Company Profile
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* PDF Preview Modal (fallback for blocked popups) */}
 				{showPdfPreview && pdfPreviewUrl && (

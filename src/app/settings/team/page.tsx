@@ -92,7 +92,7 @@ export default async function TeamSettingsPage() {
     const members = organizationData.memberships
     const isOwner = isOrganizationOwner(membership.role)
 
-    const approverCount = members.filter(
+    const signerCount = members.filter(
         m => m.role === 'SIGNER' || (m.role === 'OWNER' && m.isApprover)
     ).length
 
@@ -117,7 +117,7 @@ export default async function TeamSettingsPage() {
 
                 <div className="px-6 pt-5 space-y-4">
                     {/* No-approver warning */}
-                    {isOwner && approverCount === 0 && (
+                    {isOwner && signerCount === 0 && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0 border border-amber-200">
                                 <AlertTriangle className="w-4 h-4 text-amber-600" />

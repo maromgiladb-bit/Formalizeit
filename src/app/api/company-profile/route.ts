@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const role = activeMembership.role
     if (role !== 'OWNER' && role !== 'SIGNER') {
-      return NextResponse.json({ error: 'Only owners and approvers can update company profile' }, { status: 403 });
+      return NextResponse.json({ error: 'Only owners and signers can update company profile' }, { status: 403 });
     }
 
     // Check if profile exists

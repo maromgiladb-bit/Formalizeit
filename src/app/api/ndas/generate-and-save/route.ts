@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
             data: {
                 content: formData,
                 status: 'SENT',
+                sentAt: new Date(),
             },
         });
 

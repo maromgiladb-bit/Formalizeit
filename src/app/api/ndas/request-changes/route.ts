@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can request changes' }, { status: 403 })
+            return NextResponse.json({ error: 'Only signers and owners can request changes' }, { status: 403 })
         }
 
         // Get draft with sign request and signer in active organization

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can send NDAs for signature' }, { status: 403 });
+            return NextResponse.json({ error: 'Only signers and owners can send NDAs for signature' }, { status: 403 });
         }
 
         // Get draft in active organization

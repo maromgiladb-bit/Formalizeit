@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         if (!activeMembership) return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
 
         if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only approvers can approve internal submissions' }, { status: 403 })
+            return NextResponse.json({ error: 'Only signers and owners can approve internal submissions' }, { status: 403 })
         }
 
         const draft = await prisma.ndaDraft.findFirst({

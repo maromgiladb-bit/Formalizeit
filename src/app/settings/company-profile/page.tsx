@@ -175,7 +175,7 @@ export default function CompanyProfileSettingsPage() {
               <Lock className="w-4 h-4 text-amber-600" />
             </div>
             <p className="text-sm text-amber-800 leading-relaxed">
-              Only organization owners and approvers can update the company profile.
+              Only organization owners and signers can update the company profile.
             </p>
           </div>
         )}
