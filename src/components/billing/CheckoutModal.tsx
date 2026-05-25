@@ -59,7 +59,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ billingCycle, embedded: true }),
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          return res.json().catch(() => null).then(data => {
+            throw new Error(data?.error || 'Could not initialize checkout')
+          })
+        }
+        return res.json()
+      })
       .then(data => {
         if (data.clientSecret) {
           setClientSecret(data.clientSecret)
@@ -67,7 +74,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
           setError(data.error || 'Could not initialize checkout')
         }
       })
-      .catch(() => setError('Could not initialize checkout'))
+      .catch(err => setError(err instanceof Error ? err.message : 'Could not initialize checkout'))
       .finally(() => setLoading(false))
   }, [isOpen, billingCycle])
 

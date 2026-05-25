@@ -90,6 +90,10 @@ export async function POST(req: NextRequest) {
         ui_mode: 'embedded',
         return_url: `${resolvedAppUrl}/dashboard?checkout=success`,
       })
+      if (!session.client_secret) {
+        console.error('Stripe embedded checkout session returned no client_secret')
+        return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+      }
       return NextResponse.json({ clientSecret: session.client_secret })
     }
 

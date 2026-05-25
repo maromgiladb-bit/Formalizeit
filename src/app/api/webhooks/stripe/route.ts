@@ -111,8 +111,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
 
-  // Keep PRO access during past_due/unpaid — Stripe retries for ~2 weeks.
-  // Only downgrade to FREE when the subscription is actually deleted.
+  // Keep PRO access while Stripe is retrying (past_due, unpaid, incomplete, paused).
+  // Downgrade to FREE only when the subscription reaches a terminal state (canceled/incomplete_expired),
+  // which is handled here or via handleSubscriptionDeleted.
   const gracePlanStatuses = new Set(['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'])
   const isActivePlan = gracePlanStatuses.has(subscription.status)
 

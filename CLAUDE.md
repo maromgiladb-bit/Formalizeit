@@ -20,7 +20,7 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 - **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless), `pdf-lib`, `pdfjs-dist`
 - **Document templating:** `docxtemplater` + `mammoth` for `.docx` templates, Handlebars for HTML template rendering
 - **Testing:** Vitest
-- **Payments:** Israeli payment provider — PayMe or Tranzila (not Stripe)
+- **Payments:** Stripe — subscription billing, embedded checkout, webhooks, billing portal
 
 ---
 
