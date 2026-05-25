@@ -5,15 +5,15 @@ import { ArrowRight, FileText, Shield, Zap, Users } from 'lucide-react';
 
 export default function ComingSoonPage() {
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-white">
+    <div className="min-h-screen w-full flex flex-col bg-white">
       {/* Top accent bar */}
       <div className="h-1 w-full flex-shrink-0 bg-gradient-to-r from-teal-800 via-teal-600 to-amber-400" />
 
-      {/* Body: two columns */}
-      <div className="flex-1 grid grid-cols-2 min-h-0">
+      {/* Body: stacks on mobile, two columns on lg+ */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
 
         {/* ── Left: Branding ───────────────────────────────────── */}
-        <div className="flex flex-col justify-center px-16 xl:px-24 bg-white border-r border-gray-100">
+        <div className="flex flex-col justify-center px-8 py-12 sm:px-12 lg:px-16 xl:px-24 bg-white lg:border-r border-b lg:border-b-0 border-gray-100">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-10">
             <div className="relative">
@@ -31,7 +31,7 @@ export default function ComingSoonPage() {
           </p>
 
           {/* Big heading */}
-          <h1 className="text-5xl xl:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
+          <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
             NDAs without<br />
             the{' '}
             <span className="relative inline-block">
@@ -63,7 +63,7 @@ export default function ComingSoonPage() {
         </div>
 
         {/* ── Right: Sign-in ───────────────────────────────────── */}
-        <div className="flex flex-col justify-center items-center px-16 xl:px-24 bg-gray-50">
+        <div className="flex flex-col justify-center items-center px-8 py-12 sm:px-12 lg:px-16 xl:px-24 bg-gray-50">
           <div className="w-full max-w-sm">
             {/* Card */}
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-6">
@@ -94,7 +94,7 @@ export default function ComingSoonPage() {
           </div>
 
           {/* Footer */}
-          <p className="absolute bottom-5 text-xs text-gray-400">
+          <p className="mt-8 text-xs text-gray-400">
             © {new Date().getFullYear()} FormalizeIt. All rights reserved.
           </p>
         </div>

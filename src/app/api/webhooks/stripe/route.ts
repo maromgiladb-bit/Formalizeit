@@ -83,7 +83,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
-  const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+  const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
 
@@ -122,8 +123,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     data: {
       billingPlan: isActivePlan ? 'PRO' : 'FREE',
       billingStatus,
-      stripePriceId: subscription.items.data[0]?.price.id ?? null,
-      stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      stripePriceId: isActivePlan ? (subscription.items.data[0]?.price.id ?? null) : null,
+      stripeCurrentPeriodEnd: isActivePlan ? new Date(subscription.current_period_end * 1000) : null,
+      stripeSubscriptionId: isActivePlan ? undefined : null,
     },
   })
 }
@@ -134,7 +136,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   })
 
   if (!organization) {
-    console.error('customer.subscription.deleted: no org found for subscription', subscription.id)
+    // May have already been cleaned up by customer.subscription.updated on terminal status
+    console.warn('customer.subscription.deleted: no org found for subscription', subscription.id)
     return
   }
 
