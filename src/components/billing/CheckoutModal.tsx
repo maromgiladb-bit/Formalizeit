@@ -29,10 +29,18 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ billingCycle, embedded: false }),
       })
+      if (!res.ok) {
+        setError('Could not start checkout. Please try again.')
+        return
+      }
       const data = await res.json()
-      if (data.url) window.open(data.url, '_blank', 'noopener,noreferrer')
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setError('Could not start checkout. Please try again.')
+      }
     } catch {
-      // ignore — fall through
+      setError('Could not start checkout. Please try again.')
     } finally {
       setFullPageLoading(false)
     }
@@ -81,14 +89,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: 'easeOut' } }}
             exit={{ opacity: 0, y: 20, transition: { duration: 0.2 } }}
-            className="fixed bottom-6 right-6 z-50 w-[460px] max-h-[90vh] bg-white rounded-2xl border border-gray-200 shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[460px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl border border-gray-200 shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <div>
                 <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">Upgrade to Pro</p>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {billingCycle === 'annual' ? '$16 / month · billed annually' : '$20 / month · billed monthly'}
+                  {billingCycle === 'annual' ? '$15.99 / month · billed annually' : '$19.99 / month · billed monthly'}
                 </p>
               </div>
               <div className="flex items-center gap-1">

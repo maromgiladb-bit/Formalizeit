@@ -2,11 +2,10 @@
 
 import { useAuth } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  CreditCard, ArrowRight, AlertTriangle, CheckCircle,
+  CreditCard, ArrowRight, AlertTriangle,
   Check, Download, ExternalLink, FileText, Zap,
 } from 'lucide-react'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
@@ -70,18 +69,6 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
 }
 
-function BillingSuccessBanner() {
-  const searchParams = useSearchParams()
-  if (searchParams.get('checkout') !== 'success') return null
-  return (
-    <div className="mb-6 flex items-center gap-3 px-5 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm font-medium shadow-sm">
-      <div className="w-8 h-8 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
-        <CheckCircle className="w-4 h-4 text-white" />
-      </div>
-      <span>You&apos;re now on Pro. Welcome to FormalizeIt Pro!</span>
-    </div>
-  )
-}
 
 function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat('en-US', {
@@ -101,6 +88,8 @@ export default function BillingSettingsPage() {
   const { userId, isLoaded } = useAuth()
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [isOwner, setIsOwner] = useState(true)
+  const [portalError, setPortalError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -114,7 +103,9 @@ export default function BillingSettingsPage() {
           fetch('/api/billing/invoices'),
         ])
         if (subRes.ok) setSubscription(await subRes.json())
-        if (invRes.ok) {
+        if (invRes.status === 403 || invRes.status === 401) {
+          setIsOwner(false)
+        } else if (invRes.ok) {
           const data = await invRes.json()
           setInvoices(data.invoices ?? [])
         }
@@ -130,13 +121,19 @@ export default function BillingSettingsPage() {
   if (isLoaded && !userId) redirect('/sign-in')
 
   async function handleManageSubscription() {
+    setPortalError(null)
     setPortalLoading(true)
     try {
       const res = await fetch('/api/billing/portal', { method: 'POST' })
+      if (!res.ok) {
+        setPortalError('Failed to open billing portal. Please try again.')
+        return
+      }
       const data = await res.json()
       if (data.url) window.location.href = data.url
     } catch (err) {
       console.error('Portal error:', err)
+      setPortalError('Failed to open billing portal. Please try again.')
     } finally {
       setPortalLoading(false)
     }
@@ -152,10 +149,12 @@ export default function BillingSettingsPage() {
     }
   }
 
-  const getPlanPrice = (plan: string) => {
+  const getPlanPrice = (plan: string, billingCycle: 'monthly' | 'annual' | null) => {
     switch (plan) {
       case 'FREE': return '$0 / month'
-      case 'PRO': return '$20 / month'
+      case 'PRO': return billingCycle === 'annual'
+        ? '$15.99 / month, billed annually'
+        : '$19.99 / month'
       case 'ENTERPRISE': return 'Custom pricing'
       case 'DEV': return 'Complimentary'
       default: return '—'
@@ -180,10 +179,6 @@ export default function BillingSettingsPage() {
 
   return (
     <div className="space-y-6">
-
-      <Suspense fallback={null}>
-        <BillingSuccessBanner />
-      </Suspense>
 
       {/* PAST_DUE warning */}
       {subscription.billingStatus === 'PAST_DUE' && (
@@ -229,7 +224,7 @@ export default function BillingSettingsPage() {
                     : 'Active'}
                 </span>
               </div>
-              <p className="text-sm text-gray-500">{getPlanPrice(subscription.plan)}</p>
+              <p className="text-sm text-gray-500">{getPlanPrice(subscription.plan, subscription.billingCycle)}</p>
             </div>
             <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
               <Zap className="w-5 h-5 text-teal-700" />
@@ -288,14 +283,17 @@ export default function BillingSettingsPage() {
                 View all plans
               </Link>
             </>
-          ) : subscription.hasStripeSubscription ? (
-            <button
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm disabled:opacity-60 cursor-pointer"
-            >
-              {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
-            </button>
+          ) : subscription.hasStripeSubscription && isOwner ? (
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm disabled:opacity-60 cursor-pointer"
+              >
+                {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
+              </button>
+              {portalError && <p className="text-xs text-red-600">{portalError}</p>}
+            </div>
           ) : (
             <button
               disabled
@@ -361,7 +359,7 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Invoice History */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {isOwner && <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-6 pt-6 pb-5 border-b border-gray-100">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -437,7 +435,7 @@ export default function BillingSettingsPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </div>}
 
       {/* Checkout Modal */}
       <CheckoutModal
