@@ -127,7 +127,16 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
                 </div>
               )}
               {!stripePublishableKey && (
-                <div className="p-5 text-sm text-red-600 font-medium">Checkout is not available. Please contact support.</div>
+                <div className="p-5 space-y-3">
+                  <p className="text-sm text-gray-600">Embedded checkout is unavailable. Use the full-page checkout instead.</p>
+                  <button
+                    onClick={handleFullPage}
+                    disabled={fullPageLoading}
+                    className="w-full bg-teal-800 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors cursor-pointer"
+                  >
+                    {fullPageLoading ? 'Redirecting…' : 'Continue to checkout'}
+                  </button>
+                </div>
               )}
               {error && (
                 <div className="p-5 text-sm text-red-600 font-medium">{error}</div>

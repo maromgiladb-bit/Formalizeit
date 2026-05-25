@@ -52,6 +52,19 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
+type DbBillingStatus = 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
+
+const SUBSCRIPTION_STATUS_MAP: Record<string, DbBillingStatus> = {
+  active: 'ACTIVE',
+  trialing: 'TRIALING',
+  past_due: 'PAST_DUE',
+  canceled: 'CANCELLED',
+  unpaid: 'PAST_DUE',
+  incomplete: 'PAST_DUE',
+  incomplete_expired: 'CANCELLED',
+  paused: 'PAST_DUE',
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const organizationId = session.metadata?.organizationId
   if (!organizationId) {
@@ -72,11 +85,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
 
+  const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
+
   await prisma.organization.update({
     where: { id: organizationId },
     data: {
       billingPlan: 'PRO',
-      billingStatus: 'ACTIVE',
+      billingStatus,
       stripeSubscriptionId: subscription.id,
       stripePriceId: subscription.items.data[0]?.price.id ?? null,
       stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
@@ -94,19 +109,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return
   }
 
-  type DbBillingStatus = 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
-  const statusMap: Record<string, DbBillingStatus> = {
-    active: 'ACTIVE',
-    trialing: 'TRIALING',
-    past_due: 'PAST_DUE',
-    canceled: 'CANCELLED',
-    unpaid: 'PAST_DUE',
-    incomplete: 'PAST_DUE',
-    incomplete_expired: 'CANCELLED',
-    paused: 'PAST_DUE',
-  }
-
-  const billingStatus: DbBillingStatus = statusMap[subscription.status] ?? 'PAST_DUE'
+  const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
 
   // Keep PRO access during past_due/unpaid — Stripe retries for ~2 weeks.
   // Only downgrade to FREE when the subscription is actually deleted.

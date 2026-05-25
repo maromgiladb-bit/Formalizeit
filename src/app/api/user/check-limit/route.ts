@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { resolveLimits, getCurrentQuarterStart } from '@/billing/planLimits'
+import { STRIPE_PRICE_IDS } from '@/lib/stripe'
 
 export async function GET() {
   try {
@@ -49,7 +50,7 @@ export async function GET() {
       billingStatus: organization.billingStatus,
       stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
       hasStripeSubscription: !!organization.stripeSubscriptionId,
-      billingCycle: organization.stripePriceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
+      billingCycle: organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL
         ? 'annual'
         : organization.stripePriceId
         ? 'monthly'

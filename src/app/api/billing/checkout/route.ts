@@ -62,7 +62,17 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set' },
+          { status: 500 }
+        )
+      }
+      // development only — safe to fall back
+    }
+    const resolvedAppUrl = appUrl ?? 'http://localhost:3000'
     const embedded = body.embedded === true
 
     const commonParams = {
@@ -78,7 +88,7 @@ export async function POST(req: NextRequest) {
       const session = await stripe.checkout.sessions.create({
         ...commonParams,
         ui_mode: 'embedded',
-        return_url: `${appUrl}/dashboard?checkout=success`,
+        return_url: `${resolvedAppUrl}/dashboard?checkout=success`,
       })
       return NextResponse.json({ clientSecret: session.client_secret })
     }
@@ -86,8 +96,8 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       ...commonParams,
       ui_mode: 'hosted',
-      success_url: `${appUrl}/dashboard?checkout=success`,
-      cancel_url: `${appUrl}/plans`,
+      success_url: `${resolvedAppUrl}/dashboard?checkout=success`,
+      cancel_url: `${resolvedAppUrl}/plans`,
     })
     return NextResponse.json({ url: session.url })
   } catch (error) {

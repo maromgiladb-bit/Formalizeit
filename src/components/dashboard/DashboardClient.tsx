@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -70,7 +69,6 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
 }
 
 export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClientProps) {
-  const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action'>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
@@ -80,10 +78,13 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
 
   useEffect(() => {
     if (checkoutSuccess) {
-      // Clean the URL without reloading
-      router.replace('/dashboard', { scroll: false });
+      // Remove only the `checkout` param, preserving any other search params
+      const params = new URLSearchParams(window.location.search)
+      params.delete('checkout')
+      const clean = params.size > 0 ? `?${params.toString()}` : ''
+      window.history.replaceState(null, '', `/dashboard${clean}`)
     }
-  }, [checkoutSuccess, router]);
+  }, [checkoutSuccess]);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;

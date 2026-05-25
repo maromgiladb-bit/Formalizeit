@@ -33,11 +33,20 @@ export async function POST() {
       return NextResponse.json({ error: 'No Stripe customer found' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set' },
+          { status: 500 }
+        )
+      }
+    }
+    const resolvedAppUrl = appUrl ?? 'http://localhost:3000'
 
     const session = await stripe.billingPortal.sessions.create({
       customer: organization.stripeCustomerId,
-      return_url: `${appUrl}/settings/billing`,
+      return_url: `${resolvedAppUrl}/settings/billing`,
     })
 
     return NextResponse.json({ url: session.url })
