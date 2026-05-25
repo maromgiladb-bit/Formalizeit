@@ -35,7 +35,6 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                 <Image
                   src="/formalizeIt-logo.png"
                   alt="FormalizeIt"
-                  unoptimized
                   width={200}
                   height={50}
                   className="h-30 w-auto"

@@ -101,9 +101,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const organization = await prisma.organization.findUnique({
-    where: { stripeSubscriptionId: subscription.id },
-  })
+  const organizationId = subscription.metadata?.organizationId
+
+  const organization = organizationId
+    ? await prisma.organization.findUnique({ where: { id: organizationId } })
+    : await prisma.organization.findUnique({ where: { stripeSubscriptionId: subscription.id } })
 
   if (!organization) {
     console.error('customer.subscription.updated: no org found for subscription', subscription.id)
@@ -131,9 +133,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const organization = await prisma.organization.findUnique({
-    where: { stripeSubscriptionId: subscription.id },
-  })
+  const organizationId = subscription.metadata?.organizationId
+
+  const organization = organizationId
+    ? await prisma.organization.findUnique({ where: { id: organizationId } })
+    : await prisma.organization.findUnique({ where: { stripeSubscriptionId: subscription.id } })
 
   if (!organization) {
     // May have already been cleaned up by customer.subscription.updated on terminal status

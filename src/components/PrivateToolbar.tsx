@@ -120,7 +120,6 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 <Image
                   src="/formalizeIt-logo.png"
                   alt="FormalizeIt"
-                  unoptimized
                   width={200}
                   height={50}
                   className="h-35 w-auto"

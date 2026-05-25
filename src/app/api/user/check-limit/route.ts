@@ -52,7 +52,7 @@ export async function GET() {
       hasStripeSubscription: !!organization.stripeSubscriptionId,
       billingCycle: organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL
         ? 'annual'
-        : organization.stripePriceId
+        : organization.stripePriceId === STRIPE_PRICE_IDS.PRO_MONTHLY
         ? 'monthly'
         : null,
     })
