@@ -154,9 +154,13 @@ model Organization {
   name          String
   slug          String        @unique
   ownerUserId   String        @map("owner_user_id") @db.Uuid
-  billingPlan   BillingPlan   @default(FREE) @map("billing_plan")
-  billingStatus BillingStatus @default(ACTIVE) @map("billing_status")
-  settings      Json?         @default("{}")
+  billingPlan            BillingPlan   @default(FREE) @map("billing_plan")
+  billingStatus          BillingStatus @default(ACTIVE) @map("billing_status")
+  stripeCustomerId       String?       @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
+  stripePriceId          String?       @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end")
+  settings               Json?         @default("{}")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 

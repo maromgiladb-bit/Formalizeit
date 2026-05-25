@@ -48,13 +48,13 @@ export default function SettingsLayout({
                                         className={`
                                             flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
                                             ${isCurrent
-                                                ? 'bg-teal-50 text-teal-800'
+                                                ? 'bg-teal-800 text-white'
                                                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                             }
                                         `}
                                         aria-current={isCurrent ? 'page' : undefined}
                                     >
-                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-teal-700' : 'text-gray-400'}`} />
+                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-white' : 'text-gray-400'}`} />
                                         <span className="truncate">{item.name}</span>
                                     </Link>
                                 )

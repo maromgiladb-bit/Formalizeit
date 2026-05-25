@@ -4,7 +4,13 @@ import { prisma } from '@/lib/prisma';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 import { getActiveOrganization } from '@/lib/db-organization';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>
+}) {
+  const params = await searchParams
+  const checkoutSuccess = params.checkout === 'success'
   const { userId } = await auth();
 
   if (!userId) {
@@ -147,5 +153,5 @@ export default async function DashboardPage() {
     (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
   );
 
-  return <DashboardClient ndas={allNdas} />;
+  return <DashboardClient ndas={allNdas} checkoutSuccess={checkoutSuccess} />;
 }

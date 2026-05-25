@@ -22,6 +22,7 @@ interface PricingPlan {
     buttonText: string;
     href: string;
     isPopular: boolean;
+    onClickAction?: (isMonthly: boolean) => void;
 }
 
 interface PricingProps {
@@ -198,18 +199,34 @@ export function Pricing({
                             </ul>
 
                             <div className="mt-8">
-                                <Link
-                                    href={plan.href}
-                                    className={cn(
-                                        buttonVariants({ variant: "outline" }),
-                                        "w-full py-3 text-base font-semibold transition-all duration-300",
-                                        plan.isPopular
-                                            ? "bg-teal-600 text-white border-teal-600 hover:bg-teal-700 hover:border-teal-700"
-                                            : "bg-white text-gray-900 border-gray-900 hover:bg-gray-900 hover:text-white"
-                                    )}
-                                >
-                                    {plan.buttonText}
-                                </Link>
+                                {plan.onClickAction ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => plan.onClickAction!(isMonthly)}
+                                        className={cn(
+                                            buttonVariants({ variant: "outline" }),
+                                            "w-full py-3 text-base font-semibold transition-all duration-300 cursor-pointer",
+                                            plan.isPopular
+                                                ? "bg-teal-800 text-white border-teal-800 hover:bg-teal-700 hover:border-teal-700"
+                                                : "bg-white text-gray-900 border-gray-900 hover:bg-gray-900 hover:text-white"
+                                        )}
+                                    >
+                                        {plan.buttonText}
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href={plan.href}
+                                        className={cn(
+                                            buttonVariants({ variant: "outline" }),
+                                            "w-full py-3 text-base font-semibold transition-all duration-300",
+                                            plan.isPopular
+                                                ? "bg-teal-800 text-white border-teal-800 hover:bg-teal-700 hover:border-teal-700"
+                                                : "bg-white text-gray-900 border-gray-900 hover:bg-gray-900 hover:text-white"
+                                        )}
+                                    >
+                                        {plan.buttonText}
+                                    </Link>
+                                )}
                             </div>
                             <p className={cn("mt-4 text-xs", plan.isPopular ? "text-gray-400" : "text-gray-500")}>
                                 {plan.description}

@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/ndas/sign-public',
   '/api/ndas/preview-html-public',
   '/api/webhooks/clerk',           // Clerk user.deleted webhook (verified by svix)
+  '/api/webhooks/stripe',          // Stripe webhook (verified by stripe-signature header)
   '/api/cron/cleanup-deleted-users', // Cron job (protected by CRON_SECRET)
 ])
 

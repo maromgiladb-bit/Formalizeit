@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, Plus, FileText, Edit, Trash2, FileDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface NDA {
@@ -24,6 +25,7 @@ interface NDA {
 
 interface DashboardClientProps {
   ndas: NDA[];
+  checkoutSuccess?: boolean;
 }
 
 function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColor: string } {
@@ -66,12 +68,23 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; color: string; bgColo
   }
 }
 
-export default function DashboardClient({ ndas }: DashboardClientProps) {
+export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClientProps) {
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action'>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [showProBanner, setShowProBanner] = useState(!!checkoutSuccess);
+
+  useEffect(() => {
+    if (checkoutSuccess) {
+      // Remove only the `checkout` param, preserving any other search params
+      const params = new URLSearchParams(window.location.search)
+      params.delete('checkout')
+      const clean = params.size > 0 ? `?${params.toString()}` : ''
+      window.history.replaceState(null, '', `/dashboard${clean}`)
+    }
+  }, [checkoutSuccess]);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -224,6 +237,7 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
             New NDA
           </Link>
         </div>
+
 
         {/* Message banner */}
         {message && (
@@ -456,6 +470,33 @@ export default function DashboardClient({ ndas }: DashboardClientProps) {
           )}
         </div>
       </div>
+
+      {/* Pro upgrade toast — bottom-right */}
+      <AnimatePresence>
+        {showProBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
+            exit={{ opacity: 0, y: 8, transition: { duration: 0.2 } }}
+            className="fixed bottom-6 right-6 z-50 bg-white border border-gray-200 rounded-xl shadow-lg p-4 flex items-start gap-3 max-w-xs"
+          >
+            <div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900">You&apos;re on Pro</p>
+              <p className="text-sm text-gray-500">Welcome to FormalizeIt Pro!</p>
+            </div>
+            <button
+              onClick={() => setShowProBanner(false)}
+              aria-label="Dismiss"
+              className="text-gray-400 hover:text-gray-600 text-lg leading-none shrink-0 cursor-pointer"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

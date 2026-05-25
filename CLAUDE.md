@@ -20,7 +20,21 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 - **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless), `pdf-lib`, `pdfjs-dist`
 - **Document templating:** `docxtemplater` + `mammoth` for `.docx` templates, Handlebars for HTML template rendering
 - **Testing:** Vitest
-- **Payments:** Israeli payment provider — PayMe or Tranzila (not Stripe)
+- **Payments:** Stripe — subscription billing, embedded checkout, webhooks, billing portal
+
+---
+
+## Design System
+
+**All UI work must follow the Stitch design system.** Read `.claude/skills/stitch-design.md` at the start of every UI task before writing or editing any component, page, or layout.
+
+Key rules to always apply:
+- Primary buttons: `bg-teal-800 hover:bg-teal-700` (never teal-600)
+- Accent labels: `text-teal-700 text-xs font-bold uppercase tracking-widest`
+- Icon backgrounds: `bg-teal-50` (feature cards), `bg-teal-800` (step rows / toasts)
+- Cards: `bg-white border border-gray-200 rounded-xl`
+- Alternate section backgrounds: `bg-gray-50`
+- Body text: `text-gray-900` headings, `text-gray-500` descriptions
 
 ---
 
@@ -132,7 +146,7 @@ When working on new features, check what already exists before adding new files 
 
 ## Brand and tone (relevant for any copy/UI text)
 
-- Colors: **teal** and **dark navy**
+- Colors: **teal**, **dark navy**, and **amber** (accent/highlight — Tailwind amber-500 `#f59e0b`)
 - Tone: friendly but professional, clear, trustworthy, not overly legalistic
 - Core message: *"You don't reinvent the NDA each time. You reuse a trusted structure and review only the important changes."*
 

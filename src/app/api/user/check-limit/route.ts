@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { resolveLimits, getCurrentQuarterStart } from '@/billing/planLimits'
+import { STRIPE_PRICE_IDS } from '@/lib/stripe-price-ids'
 
 export async function GET() {
   try {
@@ -46,6 +47,14 @@ export async function GET() {
       canSend,
       remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount),
       draftLimitPeriod: limits.draftLimitPeriod,
+      billingStatus: organization.billingStatus,
+      stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
+      hasStripeSubscription: !!organization.stripeSubscriptionId,
+      billingCycle: organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL
+        ? 'annual'
+        : organization.stripePriceId === STRIPE_PRICE_IDS.PRO_MONTHLY
+        ? 'monthly'
+        : null,
     })
   } catch (error) {
     console.error('Check limit error:', error)
