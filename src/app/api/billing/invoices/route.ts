@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { stripe } from '@/lib/stripe'
+import { isOrganizationOwner } from '@/lib/organizationRoles'
 
 export async function GET() {
   try {
@@ -11,6 +12,10 @@ export async function GET() {
 
     const activeMembership = await getActiveOrganization()
     if (!activeMembership) return NextResponse.json({ invoices: [] })
+
+    if (!isOrganizationOwner(activeMembership.role)) {
+      return NextResponse.json({ error: 'Only organization owners can view billing' }, { status: 403 })
+    }
 
     const organization = await prisma.organization.findUnique({
       where: { id: activeMembership.organizationId },

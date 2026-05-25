@@ -20,6 +20,7 @@ interface SubscriptionInfo {
   billingStatus: 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
   stripeCurrentPeriodEnd: string | null
   hasStripeSubscription: boolean
+  billingCycle: 'monthly' | 'annual' | null
 }
 
 interface Invoice {
@@ -323,7 +324,11 @@ export default function BillingSettingsPage() {
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <dt className="text-sm font-medium text-gray-500">Billing Cycle</dt>
             <dd className="text-sm text-gray-900 col-span-2">
-              {subscription.plan === 'FREE' || subscription.plan === 'DEV' ? 'None' : 'Monthly'}
+              {subscription.plan === 'FREE' || subscription.plan === 'DEV'
+                ? 'None'
+                : subscription.billingCycle === 'annual'
+                ? 'Annual'
+                : 'Monthly'}
             </dd>
           </div>
           <div className="px-6 py-4 grid grid-cols-3 gap-4">

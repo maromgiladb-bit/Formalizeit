@@ -108,7 +108,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const billingStatus: DbBillingStatus = statusMap[subscription.status] ?? 'PAST_DUE'
 
-  const isActivePlan = subscription.status === 'active' || subscription.status === 'trialing'
+  // Keep PRO access during past_due/unpaid — Stripe retries for ~2 weeks.
+  // Only downgrade to FREE when the subscription is actually deleted.
+  const gracePlanStatuses = new Set(['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'])
+  const isActivePlan = gracePlanStatuses.has(subscription.status)
 
   await prisma.organization.update({
     where: { id: organization.id },
@@ -135,7 +138,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { id: organization.id },
     data: {
       billingPlan: 'FREE',
-      billingStatus: 'ACTIVE',
+      billingStatus: 'CANCELLED',
       stripeSubscriptionId: null,
       stripePriceId: null,
       stripeCurrentPeriodEnd: null,

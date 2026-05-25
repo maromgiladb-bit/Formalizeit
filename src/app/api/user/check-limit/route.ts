@@ -49,6 +49,11 @@ export async function GET() {
       billingStatus: organization.billingStatus,
       stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
       hasStripeSubscription: !!organization.stripeSubscriptionId,
+      billingCycle: organization.stripePriceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
+        ? 'annual'
+        : organization.stripePriceId
+        ? 'monthly'
+        : null,
     })
   } catch (error) {
     console.error('Check limit error:', error)
