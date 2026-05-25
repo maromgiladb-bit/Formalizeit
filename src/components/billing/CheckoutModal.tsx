@@ -6,7 +6,8 @@ import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { X, ExternalLink } from 'lucide-react'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null
 
 interface CheckoutModalProps {
   isOpen: boolean
@@ -95,12 +96,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
                   onClick={handleFullPage}
                   disabled={fullPageLoading}
                   title="Open full page checkout"
+                  aria-label="Open full page checkout"
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
+                  aria-label="Close checkout"
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
@@ -115,10 +118,13 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
                   <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-800 rounded-full animate-spin" />
                 </div>
               )}
+              {!stripePublishableKey && (
+                <div className="p-5 text-sm text-red-600 font-medium">Checkout is not available. Please contact support.</div>
+              )}
               {error && (
                 <div className="p-5 text-sm text-red-600 font-medium">{error}</div>
               )}
-              {clientSecret && (
+              {clientSecret && stripePromise && (
                 <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
                   <EmbeddedCheckout />
                 </EmbeddedCheckoutProvider>

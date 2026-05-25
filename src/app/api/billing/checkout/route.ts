@@ -72,8 +72,7 @@ export async function POST(req: NextRequest) {
     if (embedded) {
       const session = await stripe.checkout.sessions.create({
         ...commonParams,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ui_mode: 'embedded' as any,
+        ui_mode: 'embedded',
         return_url: `${appUrl}/dashboard?checkout=success`,
       })
       return NextResponse.json({ clientSecret: session.client_secret })
@@ -81,6 +80,7 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       ...commonParams,
+      ui_mode: 'hosted',
       success_url: `${appUrl}/dashboard?checkout=success`,
       cancel_url: `${appUrl}/plans`,
     })

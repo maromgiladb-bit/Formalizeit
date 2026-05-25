@@ -488,6 +488,7 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
             </div>
             <button
               onClick={() => setShowProBanner(false)}
+              aria-label="Dismiss"
               className="text-gray-400 hover:text-gray-600 text-lg leading-none shrink-0 cursor-pointer"
             >
               ×

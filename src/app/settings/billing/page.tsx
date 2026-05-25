@@ -97,7 +97,7 @@ function formatDate(timestamp: number) {
 }
 
 export default function BillingSettingsPage() {
-  const { userId } = useAuth()
+  const { userId, isLoaded } = useAuth()
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -126,7 +126,7 @@ export default function BillingSettingsPage() {
     fetchData()
   }, [userId])
 
-  if (!userId) redirect('/sign-in')
+  if (isLoaded && !userId) redirect('/sign-in')
 
   async function handleManageSubscription() {
     setPortalLoading(true)
@@ -216,12 +216,15 @@ export default function BillingSettingsPage() {
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   subscription.billingStatus === 'PAST_DUE'
                     ? 'bg-red-50 text-red-700'
+                    : subscription.billingStatus === 'CANCELLED'
+                    ? 'bg-gray-100 text-gray-500'
                     : subscription.billingStatus === 'TRIALING'
                     ? 'bg-amber-50 text-amber-700'
                     : 'bg-teal-50 text-teal-800'
                 }`}>
                   {subscription.billingStatus === 'TRIALING' ? 'Trial'
                     : subscription.billingStatus === 'PAST_DUE' ? 'Past Due'
+                    : subscription.billingStatus === 'CANCELLED' ? 'Cancelled'
                     : 'Active'}
                 </span>
               </div>

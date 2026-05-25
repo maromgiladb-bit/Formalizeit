@@ -13,9 +13,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
   }
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured')
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
+  }
+
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     console.error('Stripe webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
@@ -56,6 +61,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (!session.subscription) return
 
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+  })
+
+  if (!organization) {
+    console.error('checkout.session.completed: no org found for id', organizationId)
+    return
+  }
+
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
 
   await prisma.organization.update({
@@ -87,14 +101,19 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     past_due: 'PAST_DUE',
     canceled: 'CANCELLED',
     unpaid: 'PAST_DUE',
+    incomplete: 'PAST_DUE',
+    incomplete_expired: 'CANCELLED',
+    paused: 'PAST_DUE',
   }
 
-  const billingStatus: DbBillingStatus = statusMap[subscription.status] ?? 'ACTIVE'
+  const billingStatus: DbBillingStatus = statusMap[subscription.status] ?? 'PAST_DUE'
+
+  const isActivePlan = subscription.status === 'active' || subscription.status === 'trialing'
 
   await prisma.organization.update({
     where: { id: organization.id },
     data: {
-      billingPlan: subscription.status === 'canceled' ? 'FREE' : 'PRO',
+      billingPlan: isActivePlan ? 'PRO' : 'FREE',
       billingStatus,
       stripePriceId: subscription.items.data[0]?.price.id ?? null,
       stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
