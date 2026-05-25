@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['docusign-esign'],
+  serverExternalPackages: ['docusign-esign', 'stripe'],
   webpack: (config, { isServer }) => {
     // Exclude docusign-esign from client-side bundle
     if (!isServer) {

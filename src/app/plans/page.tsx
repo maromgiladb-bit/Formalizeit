@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, ArrowRight } from 'lucide-react'
 import { Pricing } from '@/components/ui/pricing'
+import { CheckoutModal } from '@/components/billing/CheckoutModal'
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -84,6 +86,18 @@ const coreFeatures = [
 ]
 
 export default function Plans() {
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+
+  function handleProUpgrade(isMonthly: boolean) {
+    setBillingCycle(isMonthly ? 'monthly' : 'annual')
+    setCheckoutOpen(true)
+  }
+
+  const pricingPlansWithActions = pricingPlans.map(plan =>
+    plan.name === 'Pro' ? { ...plan, onClickAction: handleProUpgrade } : plan
+  )
+
   return (
     <div className="min-h-screen bg-white font-sans">
 
@@ -106,7 +120,7 @@ export default function Plans() {
 
         <div className="-mb-12">
           <Pricing
-            plans={pricingPlans}
+            plans={pricingPlansWithActions}
             title=""
             description=""
           />
@@ -183,6 +197,11 @@ export default function Plans() {
           </motion.div>
         </div>
       </section>
+      <CheckoutModal
+        isOpen={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        billingCycle={billingCycle}
+      />
     </div>
   )
 }

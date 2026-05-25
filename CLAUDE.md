@@ -24,6 +24,20 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 
 ---
 
+## Design System
+
+**All UI work must follow the Stitch design system.** Read `.claude/skills/stitch-design.md` at the start of every UI task before writing or editing any component, page, or layout.
+
+Key rules to always apply:
+- Primary buttons: `bg-teal-800 hover:bg-teal-700` (never teal-600)
+- Accent labels: `text-teal-700 text-xs font-bold uppercase tracking-widest`
+- Icon backgrounds: `bg-teal-50` (feature cards), `bg-teal-800` (step rows / toasts)
+- Cards: `bg-white border border-gray-200 rounded-xl`
+- Alternate section backgrounds: `bg-gray-50`
+- Body text: `text-gray-900` headings, `text-gray-500` descriptions
+
+---
+
 ## Current development focus
 
 **Company/workspace model** — the top priority right now.

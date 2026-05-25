@@ -46,6 +46,9 @@ export async function GET() {
       canSend,
       remaining: finiteLimit === null ? null : Math.max(0, finiteLimit - ndaCount),
       draftLimitPeriod: limits.draftLimitPeriod,
+      billingStatus: organization.billingStatus,
+      stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
+      hasStripeSubscription: !!organization.stripeSubscriptionId,
     })
   } catch (error) {
     console.error('Check limit error:', error)
