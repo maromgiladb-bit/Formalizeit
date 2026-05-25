@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { resolveLimits, getCurrentQuarterStart } from '@/billing/planLimits'
-import { STRIPE_PRICE_IDS } from '@/lib/stripe'
+import { STRIPE_PRICE_IDS } from '@/lib/stripe-price-ids'
 
 export async function GET() {
   try {

@@ -53,11 +53,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
       return
     }
 
+    const controller = new AbortController()
+
     setLoading(true)
     fetch('/api/billing/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ billingCycle, embedded: true }),
+      signal: controller.signal,
     })
       .then(res => {
         if (!res.ok) {
@@ -74,8 +77,13 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
           setError(data.error || 'Could not initialize checkout')
         }
       })
-      .catch(err => setError(err instanceof Error ? err.message : 'Could not initialize checkout'))
+      .catch(err => {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : 'Could not initialize checkout')
+      })
       .finally(() => setLoading(false))
+
+    return () => controller.abort()
   }, [isOpen, billingCycle])
 
   return (

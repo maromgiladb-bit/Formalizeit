@@ -146,7 +146,7 @@ When working on new features, check what already exists before adding new files 
 
 ## Brand and tone (relevant for any copy/UI text)
 
-- Colors: **teal** and **dark navy**
+- Colors: **teal**, **dark navy**, and **amber** (accent/highlight — Tailwind amber-500 `#f59e0b`)
 - Tone: friendly but professional, clear, trustworthy, not overly legalistic
 - Core message: *"You don't reinvent the NDA each time. You reuse a trusted structure and review only the important changes."*
 
