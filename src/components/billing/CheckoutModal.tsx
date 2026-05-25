@@ -53,6 +53,8 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
       return
     }
 
+    if (!stripePublishableKey) return
+
     const controller = new AbortController()
 
     setLoading(true)
