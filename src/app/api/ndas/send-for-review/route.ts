@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json()
         const { draftId, recipientEmail, recipientName, message } = body
+        const linkExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
         if (!draftId || !recipientEmail) {
             return NextResponse.json({ error: 'Missing required fields: draftId, recipientEmail' }, { status: 400 })
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
                     data: {
                         email: recipientEmail,
                         name: recipientName || null,
-                        status: 'PENDING'
+                        status: 'PENDING',
+                        expiresAt: linkExpiresAt,
                     }
                 })
             } else {
@@ -88,7 +90,8 @@ export async function POST(request: NextRequest) {
                         email: recipientEmail,
                         name: recipientName || null,
                         role: 'SIGNER',
-                        status: 'PENDING'
+                        status: 'PENDING',
+                        expiresAt: linkExpiresAt,
                     }
                 })
             }
@@ -117,7 +120,8 @@ export async function POST(request: NextRequest) {
                     email: recipientEmail,
                     name: recipientName || null,
                     role: 'SIGNER',
-                    status: 'PENDING'
+                    status: 'PENDING',
+                    expiresAt: linkExpiresAt,
                 }
             })
 

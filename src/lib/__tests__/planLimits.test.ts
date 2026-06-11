@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { resolveLimits, PLAN_LIMITS } from '@/billing/planLimits'
 
-function org(billingPlan: 'FREE' | 'PRO' | 'ENTERPRISE', settings?: object) {
+function org(billingPlan: 'FREE' | 'PRO' | 'ENTERPRISE', settings?: Record<string, unknown>) {
   return { billingPlan, settings: settings ?? null }
 }
 

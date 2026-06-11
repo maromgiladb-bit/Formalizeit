@@ -1187,7 +1187,7 @@ export default function FillNDAHTML() {
 			whatsapp: `https://wa.me/?text=${encodeURIComponent(`${msg}: ${link}`)}`,
 			linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`,
 			telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(msg)}`,
-			email: `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			email: `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
 		};
 		if (platform === 'copy') {
