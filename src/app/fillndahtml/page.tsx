@@ -1180,13 +1180,14 @@ export default function FillNDAHTML() {
 		const msg = `Please review and sign our NDA — ${ndaTitle}`;
 		const subject = suggestedEmailSubject || `Please review and sign our NDA — ${ndaTitle}`;
 		const body = suggestedEmailBody || `Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${link}\n\nThank you!`;
+		const recipientEmail = verifyRecipientEmail.trim();
 		const urls: Record<string, string> = {
-			gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(verifyRecipientEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-			outlook: `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(verifyRecipientEmail)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipientEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			outlook: `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(recipientEmail)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			whatsapp: `https://wa.me/?text=${encodeURIComponent(`${msg}: ${link}`)}`,
 			linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`,
 			telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(msg)}`,
-			email: `mailto:${encodeURIComponent(verifyRecipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			email: `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
 		};
 		if (platform === 'copy') {
