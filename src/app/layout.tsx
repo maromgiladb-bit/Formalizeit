@@ -25,8 +25,19 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Formalize It - NDA Management Platform',
-  description: 'Create and manage NDAs with ease',
+  title: 'FormalizeIt — Send an NDA in Minutes',
+  description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
+  openGraph: {
+    title: 'FormalizeIt — Send an NDA in Minutes',
+    description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
+    siteName: 'FormalizeIt',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FormalizeIt — Send an NDA in Minutes',
+    description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link.',
+  },
 }
 
 export default async function RootLayout({

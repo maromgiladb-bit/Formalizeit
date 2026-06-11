@@ -112,7 +112,7 @@ function ReviewMockup() {
           <div className="h-2 bg-gray-200 rounded w-5/6" />
         </div>
       </div>
-      <div className="absolute -right-2 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-44">
+      <div className="hidden sm:block absolute -right-2 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-44">
         <p className="text-xs font-semibold text-gray-800 leading-snug">Review only the changes:</p>
         <p className="text-xs text-teal-600 font-medium mt-0.5">Variables &amp; Custom Clauses</p>
       </div>
@@ -321,16 +321,13 @@ export default function About() {
           transition={{ duration: 0.55, ease: 'easeOut' }}
           className="text-center max-w-2xl mx-auto"
         >
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-            About FormalizeIt
-          </p>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
-            We make NDAs fast, clear, and collaborative.
+            Send an NDA in minutes.
           </h1>
           <p className="text-base text-gray-500 leading-relaxed">
-            No more email ping-pong, version confusion, or formatting drama.
-            You don&apos;t reinvent the NDA each time — you reuse a trusted structure
-            and review only the terms that actually change.
+            No blank page, no email ping-pong, no formatting drama.
+            Pick a trusted template, fill in what&apos;s different, and send —
+            done before the meeting ends.
           </p>
         </motion.div>
       </section>
@@ -429,10 +426,10 @@ export default function About() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
-                Ready to streamline your NDAs?
+                Send your first NDA in minutes.
               </h2>
               <p className="text-sm text-gray-500">
-                Join teams who make NDAs the fastest step in their deal flow.
+                No setup friction. Start from a trusted template and go.
               </p>
             </div>
             <SignUpButton mode="modal">

@@ -108,7 +108,10 @@ export default function FillNDAHTML() {
 	const [verifyRecipientEmail, setVerifyRecipientEmail] = useState("");
 	const [pendingDraftId, setPendingDraftId] = useState<string | null>(null);
 	const [generatedShareLink, setGeneratedShareLink] = useState("");
+	const [suggestedEmailSubject, setSuggestedEmailSubject] = useState("");
+	const [suggestedEmailBody, setSuggestedEmailBody] = useState("");
 	const [emailSent, setEmailSent] = useState(false);
+	const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
@@ -345,7 +348,7 @@ export default function FillNDAHTML() {
 		term_years_number: values.term_months ? Math.floor(parseInt(values.term_months) / 12) : '',
 		term_years_words: values.term_months ? (Math.floor(parseInt(values.term_months) / 12) === 1 ? 'one' : 'two') : '',
 		purpose: sanitizeForHtml(values.purpose),
-		information_scope_text: 'All information and materials',
+		information_scope_text: 'All information, materials, documents, data, and other content',
 		// Sanitize other text fields that might have newlines
 		ip_ownership: sanitizeForHtml(values.ip_ownership),
 		additional_terms: sanitizeForHtml(values.additional_terms),
@@ -802,9 +805,6 @@ export default function FillNDAHTML() {
 		if (!values.party_b_title_ask_receiver) {
 			mandatoryFields.push("party_b_title");
 		}
-		if (!values.party_b_title_ask_receiver) {
-			mandatoryFields.push("party_b_title");
-		}
 		// party_b_email is no longer mandatory here, can be added in sign-nda
 
 
@@ -923,9 +923,6 @@ export default function FillNDAHTML() {
 		}
 		if (!values.party_b_signatory_name_ask_receiver) {
 			requiredFields.push("party_b_signatory_name");
-		}
-		if (!values.party_b_title_ask_receiver) {
-			requiredFields.push("party_b_title");
 		}
 		if (!values.party_b_title_ask_receiver) {
 			requiredFields.push("party_b_title");
@@ -1061,10 +1058,17 @@ export default function FillNDAHTML() {
 			}
 		}
 
-		// Store draft ID and show verification modal (reset share state for this new draft)
+		// Store draft ID and show verification modal
+		// Only reset the share link if this is a different draft — reuse the existing link if reopening for the same one
+		const isReopeningForSameDraft = pendingDraftId === currentDraftId && !!generatedShareLink;
 		setPendingDraftId(currentDraftId);
-		setGeneratedShareLink("");
-		setEmailSent(false);
+		if (!isReopeningForSameDraft) {
+			setGeneratedShareLink("");
+			setSuggestedEmailSubject("");
+			setSuggestedEmailBody("");
+			setEmailSent(false);
+		}
+		setShowMoreShareOptions(false);
 		setVerifyRecipientEmail(values.party_b_email?.trim() || "");
 		setShowVerifyEmailModal(true);
 	};
@@ -1141,9 +1145,11 @@ export default function FillNDAHTML() {
 				throw new Error(result.error || 'Failed to send for review');
 			}
 
-			// Cache the link and mark email as sent — keep modal open so user can optionally share via other platforms
+			// Cache the link and suggested email content for the client-side send options
 			const link: string = result.reviewLink || '';
 			if (link) setGeneratedShareLink(link);
+			if (result.suggestedSubject) setSuggestedEmailSubject(result.suggestedSubject);
+			if (result.suggestedBody) setSuggestedEmailBody(result.suggestedBody);
 			setEmailSent(true);
 
 		} catch (e) {
@@ -1166,11 +1172,16 @@ export default function FillNDAHTML() {
 	const openSharePlatform = async (platform: string, link: string) => {
 		const ndaTitle = values.docName || 'NDA';
 		const msg = `Please review and sign our NDA — ${ndaTitle}`;
+		const subject = suggestedEmailSubject || `Please review and sign our NDA — ${ndaTitle}`;
+		const body = suggestedEmailBody || `Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${link}\n\nThank you!`;
+		const recipientEmail = verifyRecipientEmail.trim();
 		const urls: Record<string, string> = {
+			gmail: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipientEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			outlook: `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(recipientEmail)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			whatsapp: `https://wa.me/?text=${encodeURIComponent(`${msg}: ${link}`)}`,
 			linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`,
 			telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(msg)}`,
-			email: `mailto:${verifyRecipientEmail}?subject=${encodeURIComponent(`Please review and sign our NDA — ${ndaTitle}`)}&body=${encodeURIComponent(`Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${link}\n\nThank you!`)}`,
+			email: `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
 		};
 		if (platform === 'copy') {
@@ -1343,7 +1354,7 @@ export default function FillNDAHTML() {
 														<span>{i + 1}</span>
 													)}
 												</div>
-												<span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
+												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
 											</button>
 											{i < steps.length - 1 && (
 												<div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
@@ -2333,7 +2344,10 @@ export default function FillNDAHTML() {
 								setShowVerifyEmailModal(false);
 								setPendingDraftId(null);
 								setGeneratedShareLink("");
+								setSuggestedEmailSubject("");
+								setSuggestedEmailBody("");
 								setEmailSent(false);
+								setShowMoreShareOptions(false);
 								if (emailSent) router.push('/mynda');
 							}
 						}}
@@ -2358,6 +2372,8 @@ export default function FillNDAHTML() {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
 										setGeneratedShareLink("");
+										setSuggestedEmailSubject("");
+										setSuggestedEmailBody("");
 										setEmailSent(false);
 										if (emailSent) router.push('/mynda');
 									}}
@@ -2382,32 +2398,34 @@ export default function FillNDAHTML() {
 									autoFocus
 								/>
 								<p className="text-xs text-gray-400 mt-2 leading-relaxed">
-									We&apos;ll send an email with a secure link to review and sign the NDA.
+									{emailSent
+										? 'Secure link ready — choose Gmail, Outlook, or any option below to send it.'
+										: "Enter the recipient's email, then generate a secure link to share."}
 								</p>
 
 								<button
 									onClick={confirmAndSend}
 									disabled={sendingForSignature || emailSent || !verifyRecipientEmail?.trim()}
-									className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${emailSent ? 'bg-emerald-600 text-white cursor-default' : 'bg-teal-700 hover:bg-teal-600 text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
+									className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${emailSent ? 'bg-emerald-600 text-white cursor-default' : 'bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
 								>
 									{sendingForSignature ? (
 										<>
 											<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-											Sending…
+											Generating link…
 										</>
 									) : emailSent ? (
 										<>
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 											</svg>
-											Email Sent
+											Link Ready — Choose How to Send
 										</>
 									) : (
 										<>
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
 											</svg>
-											Send by Email
+											Generate Secure Link
 										</>
 									)}
 								</button>
@@ -2416,46 +2434,46 @@ export default function FillNDAHTML() {
 							{/* Divider */}
 							<div className="px-6 py-1 flex items-center gap-3">
 								<div className="flex-1 h-px bg-gray-100" />
-								<span className="text-xs text-gray-400 font-medium shrink-0">also share via</span>
+								<span className="text-xs text-gray-400 font-medium shrink-0">send via</span>
 								<div className="flex-1 h-px bg-gray-100" />
 							</div>
 
 							{/* Share options grid */}
 							<div className="px-6 pt-3 pb-5 grid grid-cols-3 gap-2">
+								{/* Gmail */}
+								<button
+									onClick={() => handleShare('gmail')}
+									disabled={!generatedShareLink}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-red-200 hover:bg-red-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+										<path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.364l-6.545-4.636v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.273l6.545-4.636 1.528-1.147C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Gmail</span>
+								</button>
+
+								{/* Outlook */}
+								<button
+									onClick={() => handleShare('outlook')}
+									disabled={!generatedShareLink}
+									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+								>
+									<svg className="w-5 h-5" viewBox="0 0 24 24" fill="#0078D4" aria-hidden="true" focusable="false">
+										<path d="M7.88 12.04q0 .45-.11.87-.1.41-.33.74-.22.33-.58.52-.37.2-.87.2t-.85-.2q-.35-.21-.57-.55-.22-.33-.33-.75-.1-.42-.1-.86t.1-.87q.1-.43.34-.76.22-.34.59-.54.36-.2.87-.2t.86.2q.35.21.57.55.22.34.31.77.1.43.1.88zM24 12v9.38q0 .46-.33.8-.33.32-.8.32H7.13q-.46 0-.8-.33-.32-.33-.32-.8V18H1q-.41 0-.7-.3-.3-.29-.3-.7V7q0-.41.3-.7Q.58 6 1 6h6.5V2.55q0-.44.3-.75.3-.3.75-.3h12.9q.44 0 .75.3.3.3.3.75V10.85l1.24.72h.01q.24.14.29.38zM10.38 8H7.13q-.46 0-.8.33-.32.33-.32.8V16h4.37V8zm5.525 3.6q-.44-.06-.87.08-.43.16-.74.48L12.35 10v7.55h2.03l.01-4.35 3.09 2.28q.3.22.66.22.36 0 .65-.23l.01-.01q.28-.22.4-.55.13-.32.1-.65V6.45h-2.07V11.6q-.22.12-.26.4-.04.28.1.57zM24 12.8l-5-2.92v5.84l5-2.92z"/>
+									</svg>
+									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Outlook</span>
+								</button>
+
 								{/* WhatsApp */}
 								<button
 									onClick={() => handleShare('whatsapp')}
 									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#25D366]/40 hover:bg-[#25D366]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									<svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
-											<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-										</svg>
+									<svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+										<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+									</svg>
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">WhatsApp</span>
-								</button>
-
-								{/* LinkedIn */}
-								<button
-									onClick={() => handleShare('linkedin')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#0A66C2]/40 hover:bg-[#0A66C2]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
-										<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">LinkedIn</span>
-								</button>
-
-								{/* Telegram */}
-								<button
-									onClick={() => handleShare('telegram')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#2AABEE]/40 hover:bg-[#2AABEE]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5 text-[#2AABEE]" fill="currentColor" viewBox="0 0 24 24">
-										<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Telegram</span>
 								</button>
 
 								{/* Email (native) */}
@@ -2464,7 +2482,7 @@ export default function FillNDAHTML() {
 									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 									</svg>
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Email App</span>
@@ -2476,7 +2494,7 @@ export default function FillNDAHTML() {
 									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
 									</svg>
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">SMS</span>
@@ -2495,14 +2513,60 @@ export default function FillNDAHTML() {
 								</button>
 							</div>
 
+							{/* More options */}
+							<div className="px-6 pb-2">
+								<button
+									onClick={() => setShowMoreShareOptions(v => !v)}
+									disabled={!generatedShareLink}
+									className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+								>
+									<svg
+										className={`w-3 h-3 transition-transform duration-150 ${showMoreShareOptions ? 'rotate-180' : ''}`}
+										fill="none" stroke="currentColor" viewBox="0 0 24 24"
+									>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+									</svg>
+									More options
+								</button>
+
+								{showMoreShareOptions && (
+									<div className="mt-2 grid grid-cols-3 gap-2">
+										{/* Telegram */}
+										<button
+											onClick={() => handleShare('telegram')}
+											disabled={!generatedShareLink}
+											className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#2AABEE]/40 hover:bg-[#2AABEE]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+										>
+											<svg className="w-5 h-5 text-[#2AABEE]" fill="currentColor" viewBox="0 0 24 24">
+												<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
+											</svg>
+											<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Telegram</span>
+										</button>
+										{/* LinkedIn */}
+										<button
+											onClick={() => handleShare('linkedin')}
+											disabled={!generatedShareLink}
+											className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-[#0A66C2]/40 hover:bg-[#0A66C2]/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+										>
+											<svg className="w-5 h-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+												<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+											</svg>
+											<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">LinkedIn</span>
+										</button>
+									</div>
+								)}
+							</div>
+
 							{/* Footer note */}
 							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-								<p className="text-xs text-gray-400">{emailSent ? 'Email sent — optionally share via other channels too.' : 'Send by email first to unlock sharing options.'}</p>
+								<p className="text-xs text-gray-400">{emailSent ? 'Link ready — send it your way. Recipient gets a secure review page.' : 'Generate the link first, then choose how to send it.'}</p>
 								<button
 									onClick={() => {
 										setShowVerifyEmailModal(false);
 										setPendingDraftId(null);
 										setGeneratedShareLink("");
+										setSuggestedEmailSubject("");
+										setSuggestedEmailBody("");
 										setEmailSent(false);
 										if (emailSent) router.push('/mynda');
 									}}

@@ -148,7 +148,28 @@ When working on new features, check what already exists before adding new files 
 
 - Colors: **teal**, **dark navy**, and **amber** (accent/highlight — Tailwind amber-500 `#f59e0b`)
 - Tone: friendly but professional, clear, trustworthy, not overly legalistic
-- Core message: *"You don't reinvent the NDA each time. You reuse a trusted structure and review only the important changes."*
+
+### Primary message — Easy and Fast
+
+**This is the #1 message the site must communicate.** Every headline, CTA, and feature description should reinforce that sending an NDA with FormalizeIt is quick and frictionless.
+
+- The tagline is: **"Send an NDA in minutes"** — use this phrase verbatim in hero sections, page titles, and CTAs wherever appropriate
+- Lead with speed and simplicity: "Send an NDA in minutes", "No back-and-forth on boilerplate", "Done before the meeting ends"
+- Show the user the shortest path to a sent NDA — not the full feature set
+- CTAs should feel action-oriented and low-effort: "Send your first NDA", "Get started in seconds"
+- Avoid copy that sounds like setup or process overhead (e.g. don't lead with "configure your team" or "set up your workspace")
+
+### Secondary message — Collaborative and Secure
+
+Support the primary message with trust signals, not as the headline:
+
+- Collaborative: teammates can review and contribute without slowing down the sender
+- Secure: documents are stored safely, signed with a clear audit trail
+- These reinforce confidence after the user is already interested — they are not the hook
+
+### Core message (use as a copywriting anchor)
+
+*"You don't reinvent the NDA each time. Pick a trusted template, fill in what's different, and send — in minutes."*
 
 ---
 

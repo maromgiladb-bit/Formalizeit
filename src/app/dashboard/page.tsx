@@ -33,7 +33,7 @@ export default async function DashboardPage({
       },
       signers: {
         // Include ALL signer roles — both SIGNER (received as Party B)
-        // and APPROVER (received sign-back request as Party A)
+        // and SENDER (received sign-back request as Party A)
         include: {
           signRequest: {
             include: {
@@ -99,8 +99,8 @@ export default async function DashboardPage({
     const sentPdf = latestSignRequest?.ndaPdfs?.find((pdf: { kind: string }) => pdf.kind === 'SENT');
     const content = draft.content as Record<string, unknown> | null;
 
-    // Find Party A signer (APPROVER role) for sign link
-    const partyASigner = latestSignRequest?.signers?.find((s: { role: string }) => s.role === 'APPROVER');
+    // Find Party A signer (SENDER role) for sign link
+    const partyASigner = latestSignRequest?.signers?.find((s: { role: string }) => s.role === 'SENDER');
 
     return {
       id: draft.id,

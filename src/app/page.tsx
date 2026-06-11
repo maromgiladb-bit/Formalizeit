@@ -141,7 +141,7 @@ function DocumentMockup() {
       </div>
 
       {/* Floating tooltip */}
-      <div className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-52">
+      <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-52">
         <p className="text-xs font-semibold text-gray-800 leading-snug">
           Review only the changes:
         </p>
@@ -163,7 +163,7 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
         initial={{ opacity: 0, scale: 0.85 }}
         animate={inView ? { opacity: 1, scale: 1 } : {}}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="text-3xl md:text-4xl font-extrabold text-teal-700 tracking-tight"
+        className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-teal-700 tracking-tight"
       >
         {value}
       </motion.div>
@@ -193,19 +193,20 @@ export default function Home() {
               variants={fadeUp}
               className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5"
             >
-              You don&apos;t reinvent<br />the NDA each time.
+              Send an NDA<br />in minutes.
             </motion.h1>
             <motion.p
               variants={fadeUp}
               className="text-base text-gray-500 leading-relaxed mb-8 max-w-sm"
             >
-              Streamline your non-disclosure agreement workflows. Review only the
-              changes, not the entire document, and close deals faster with FormalizeIt.
+              You don&apos;t reinvent the NDA each time. Pick a trusted template,
+              fill in what&apos;s different, and send — no back-and-forth, no
+              formatting drama, no blank page.
             </motion.p>
             <motion.div variants={fadeUp}>
               <SignUpButton mode="modal">
                 <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
-                  Get Started for Free
+                  Send Your First NDA Free
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </SignUpButton>
@@ -258,9 +259,9 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-3 gap-6">
             {[
-              { value: "10,000+", label: "NDAs created" },
-              { value: "2×", label: "faster avg. turnaround" },
-              { value: "99.9%", label: "uptime" },
+              { value: "< 5 min", label: "from template to sent" },
+              { value: "0", label: "recipient accounts needed" },
+              { value: "100%", label: "audit-trailed & binding" },
             ].map((s) => (
               <AnimatedStat key={s.label} value={s.value} label={s.label} />
             ))}
@@ -284,7 +285,7 @@ export default function Home() {
               Capabilities
             </p>
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Everything your team needs
+              Fast by design. Secure by default.
             </h2>
           </motion.div>
 

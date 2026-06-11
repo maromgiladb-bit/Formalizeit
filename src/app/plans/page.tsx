@@ -111,9 +111,9 @@ export default function Plans() {
             variants={stagger}
           >
             <motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Pricing</motion.p>
-            <motion.h1 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Choose Your Plan</motion.h1>
+            <motion.h1 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Simple, honest pricing</motion.h1>
             <motion.p variants={fadeUp} className="text-sm text-gray-500 leading-relaxed mt-1 max-w-lg">
-              Start free, upgrade when you need more. All plans include secure e-signatures.
+              Start free — no credit card, no setup. Upgrade when your team needs more NDAs or members. Every plan includes secure e-signatures and a full audit trail.
             </motion.p>
           </motion.div>
         </div>

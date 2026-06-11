@@ -24,7 +24,7 @@ export async function GET() {
         }
 
         // Include ALL signer roles: SIGNER (received as Party B) and
-        // APPROVER (received sign-back from Party B, waiting for Party A to countersign)
+        // SENDER (received sign-back from Party B, waiting for Party A to countersign)
         const signers = await prisma.signer.findMany({
             where: {
                 OR: [

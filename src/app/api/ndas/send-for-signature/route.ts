@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const linkExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         // Create or update signer record with token
         const existingSigner = await prisma.signer.findFirst({
             where: {
@@ -123,6 +125,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     status: 'PENDING',
                     role: 'SIGNER',
+                    expiresAt: linkExpiresAt,
                 },
             });
         } else {
@@ -133,14 +136,15 @@ export async function POST(request: NextRequest) {
                     email: partyBEmail,
                     role: 'SIGNER',
                     status: 'PENDING',
+                    expiresAt: linkExpiresAt,
                 },
             });
 
-            // Also ensure Party A (APPROVER) record exists for bidirectional email notifications
+            // Also ensure Party A (SENDER) record exists for bidirectional email notifications
             const existingApprover = await prisma.signer.findFirst({
                 where: {
                     signRequestId: signRequest.id,
-                    role: 'APPROVER',
+                    role: 'SENDER',
                 },
             });
 
@@ -152,8 +156,9 @@ export async function POST(request: NextRequest) {
                         signRequestId: signRequest.id,
                         email: partyAEmail,
                         name: partyAName,
-                        role: 'APPROVER',
+                        role: 'SENDER',
                         status: 'PENDING',
+                        expiresAt: linkExpiresAt,
                     },
                 });
             }

@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { Clock, Info } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
 import FillNDAPublicClient from './FillNDAPublicClient';
@@ -58,6 +59,21 @@ export default async function FillNDAPublicPage({
         notFound();
     }
 
+    // Check expiry
+    if (signer.expiresAt && signer.expiresAt < new Date()) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+                    <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Clock className="w-7 h-7 text-teal-700" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h1>
+                    <p className="text-gray-600">This review link has expired. Please ask the sender to resend the NDA.</p>
+                </div>
+            </div>
+        );
+    }
+
     // Redirect to success page if already signed
     if (signer.status === 'SIGNED') {
         redirect(`/sign-nda-public/${signer.id}/success`);
@@ -73,8 +89,8 @@ export default async function FillNDAPublicPage({
     };
     const workflowState = extendedDraft.workflowState || 'AWAITING_PARTY_B_REVIEW';
 
-    // Determine if this is Party A (APPROVER) or Party B (SIGNER)
-    const isPartyA = signer.role === 'APPROVER';
+    // Determine if this is Party A (SENDER) or Party B (SIGNER)
+    const isPartyA = signer.role === 'SENDER';
 
     // Allowed workflow states differ based on who's accessing
     const allowedStatesPartyA = ['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE'];
@@ -86,7 +102,9 @@ export default async function FillNDAPublicPage({
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="text-6xl mb-4">ℹ️</div>
+                    <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-7 h-7 text-teal-700" />
+                    </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">
                         {workflowState === 'COMPLETE' ? 'Already Completed' : 'Not Available'}
                     </h1>
@@ -208,7 +226,7 @@ export default async function FillNDAPublicPage({
         term_years_number: formData.term_months ? Math.floor(parseInt(formData.term_months as string) / 12) : '',
         term_years_words: formData.term_months ? (Math.floor(parseInt(formData.term_months as string) / 12) === 1 ? 'one' : 'two') : '',
         purpose: 'evaluating a potential business relationship',
-        information_scope_text: 'All information and materials',
+        information_scope_text: (formData.information_scope_text as string) || 'All information, materials, documents, data, and other content',
     };
     const initialHtml = await renderNdaHtml(templateData, templateId);
 

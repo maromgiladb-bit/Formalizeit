@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         }
 
         const draft = signer.signRequest.draft
-        const isPartyA = signer.role === 'APPROVER';
+        const isPartyA = signer.role === 'SENDER';
 
         // Verify draft is in correct state
         const allowedStates = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT', 'DRAFT', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE']
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
             let partyAReviewer = await prisma.signer.findFirst({
                 where: {
                     signRequestId: signer.signRequestId,
-                    role: 'APPROVER'
+                    role: 'SENDER'
                 }
             })
 
@@ -215,8 +215,9 @@ export async function POST(request: NextRequest) {
                         signRequestId: signer.signRequestId,
                         email: owner.email,
                         name: owner.name || 'Party A',
-                        role: 'APPROVER',
-                        status: 'PENDING'
+                        role: 'SENDER',
+                        status: 'PENDING',
+                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                     }
                 })
             }

@@ -90,8 +90,8 @@ export default async function SignNDAPublicPage({
     const draft = signer.signRequest.draft;
     const workflowState = (draft as typeof draft & { workflowState?: string }).workflowState || 'DRAFT';
 
-    // Determine if this is Party A (APPROVER) or Party B (SIGNER)
-    const isPartyA = signer.role === 'APPROVER';
+    // Determine if this is Party A (SENDER) or Party B (SIGNER)
+    const isPartyA = signer.role === 'SENDER';
 
     // Allow signing logic
     let canSign = false;
@@ -176,7 +176,7 @@ export default async function SignNDAPublicPage({
         term_years_number: formData.term_months ? Math.floor(parseInt(formData.term_months as string) / 12) : '',
         term_years_words: formData.term_months ? (Math.floor(parseInt(formData.term_months as string) / 12) === 1 ? 'one' : 'two') : '',
         purpose: 'evaluating a potential business relationship',
-        information_scope_text: 'All information and materials',
+        information_scope_text: (formData.information_scope_text as string) || 'All information, materials, documents, data, and other content',
     };
     const initialHtml = await renderNdaHtml(templateData, templateId);
 

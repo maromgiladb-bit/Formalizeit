@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Check if signer role is Party A (APPROVER) or Party B (SIGNER)
-        const isPartyA = signer.role === 'APPROVER';
+        // Check if signer role is Party A (SENDER) or Party B (SIGNER)
+        const isPartyA = signer.role === 'SENDER';
 
         // Extract form data from draft
         const draft = signer.signRequest.draft;
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         let newStatus: NdaStatus = NdaStatus.SIGNED;
 
         // Find the OTHER signer
-        const otherSignerRole = isPartyA ? 'SIGNER' : 'APPROVER';
+        const otherSignerRole = isPartyA ? 'SIGNER' : 'SENDER';
         // First try to find a SIGNED record (any version)
         let otherSigner = await prisma.signer.findFirst({
             where: {
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
             console.log('🔍 Other signer found:', otherSigner ? otherSigner.email : 'NOT FOUND');
         }
 
-        // Fallback: If Party B signed but no APPROVER record exists, get Party A email from draft content
+        // Fallback: If Party B signed but no SENDER record exists, get Party A email from draft content
         let otherPartyEmail: string | null = null;
         let otherPartyName: string | null = null;
 
@@ -302,8 +302,9 @@ export async function POST(request: NextRequest) {
                             signRequestId: signer.signRequestId,
                             email: recipientEmail,
                             name: recipientName || 'Party A',
-                            role: 'APPROVER',
+                            role: 'SENDER',
                             status: 'PENDING',
+                            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                         }
                     });
                     recipientSignerId = newSignerRecord.id;
