@@ -147,29 +147,31 @@ When working on new features, check what already exists before adding new files 
 ## Brand and tone (relevant for any copy/UI text)
 
 - Colors: **teal**, **dark navy**, and **amber** (accent/highlight — Tailwind amber-500 `#f59e0b`)
-- Tone: friendly but professional, clear, trustworthy, not overly legalistic
+- Tone: friendly, direct, and energetic — zero friction, zero jargon, zero delay
 
-### Primary message — Easy and Fast
+### #1 message — Time saving. Easy. Accessible. NDA in minutes.
 
-**This is the #1 message the site must communicate.** Every headline, CTA, and feature description should reinforce that sending an NDA with FormalizeIt is quick and frictionless.
+**Every word on the site exists to prove one thing: you can send a legally ready NDA faster than you think.**
 
-- The tagline is: **"Send an NDA in minutes"** — use this phrase verbatim in hero sections, page titles, and CTAs wherever appropriate
-- Lead with speed and simplicity: "Send an NDA in minutes", "No back-and-forth on boilerplate", "Done before the meeting ends"
-- Show the user the shortest path to a sent NDA — not the full feature set
-- CTAs should feel action-oriented and low-effort: "Send your first NDA", "Get started in seconds"
-- Avoid copy that sounds like setup or process overhead (e.g. don't lead with "configure your team" or "set up your workspace")
+- The tagline is: **"NDA in minutes"** — use verbatim in hero sections, page titles, and CTAs
+- Open every headline with the time win: "NDA in minutes", "Done before the meeting ends", "No back-and-forth, no delays"
+- The user's job is to pick a template and fill in what's different — surface that path immediately, never bury it
+- CTAs are action-first and feel instant: "Send your NDA now", "Start in seconds", "Get started free"
+- Accessibility means: no legal knowledge required, no setup friction, works for anyone on any device
+- Never lead with team setup, configuration, or process language — that signals effort, not speed
+- If a sentence doesn't make the product feel faster or easier, cut it
 
-### Secondary message — Collaborative and Secure
+### Secondary message — Trusted and Collaborative
 
-Support the primary message with trust signals, not as the headline:
+Confidence signals come after the speed hook, never before:
 
-- Collaborative: teammates can review and contribute without slowing down the sender
-- Secure: documents are stored safely, signed with a clear audit trail
-- These reinforce confidence after the user is already interested — they are not the hook
+- Teammates can review and contribute without slowing the sender down
+- Documents are stored securely with a clear audit trail and e-signature
+- Frame these as "and it's safe" not "it's safe so use it"
 
 ### Core message (use as a copywriting anchor)
 
-*"You don't reinvent the NDA each time. Pick a trusted template, fill in what's different, and send — in minutes."*
+*"Pick a template, fill in what's different, send — in minutes. No lawyer required."*
 
 ---
 
