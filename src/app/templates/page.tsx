@@ -119,14 +119,14 @@ export default function TemplateSelectionPage() {
                 onClick={() => handleSelectTemplate(template.id)}
               >
                 {/* Preview Image or Placeholder */}
-                <div className="h-48 bg-gradient-to-br from-teal-500 to-blue-600 relative overflow-hidden shrink-0">
+                <div className="h-48 bg-gray-50 relative overflow-hidden shrink-0">
                   {template.previewImage ? (
                     <Image
                       src={template.previewImage}
                       alt={template.name}
                       width={400}
                       height={300}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

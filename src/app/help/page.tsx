@@ -46,7 +46,19 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "FormalizeIt is built to make NDA creation and review more efficient. Instead of rewriting the same agreement over and over, you begin with a structured template and update only the practical details that are specific to the deal.",
+				body: "FormalizeIt is an NDA workflow tool. Instead of writing a new agreement from scratch each time, you pick a template, fill in the details that change, and send a secure link to the other party. The whole process takes about 5 minutes.",
+			},
+			{
+				heading: "Quick start",
+				body: "Here is the fastest path to a sent NDA:",
+				list: [
+					"Go to Dashboard → New NDA",
+					"Select a template (Mutual NDA is the most common)",
+					"Fill in your company details (Step 1) and the other party's details (Step 2)",
+					"Choose the legal terms in Step 3 — duration, governing law, etc.",
+					"Review the live preview in Step 4, then click Generate Secure Link",
+					"Open Gmail, Outlook, or your preferred app and send the link to the recipient",
+				],
 			},
 		],
 	},
@@ -57,7 +69,14 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "Start by creating a new document and selecting the relevant NDA template. Once the template is loaded, fill in the required fields such as the party names, effective date, and any business-specific terms that need to be updated.",
+				body: "From your dashboard, click New NDA. You will be taken to the NDA fill-in form. The form has four steps:",
+				list: [
+					"Step 1 — Document & Party A: your company name, address, signatory name, title, and contact details",
+					"Step 2 — Party B: the other party's details. You can fill these in yourself or check 'Ask receiver to fill' to have them complete their own details",
+					"Step 3 — Clauses: purpose of the NDA, governing law, IP ownership, non-solicitation, and exclusivity",
+					"Step 4 — Review: a live preview of the full NDA. Check everything, then generate the link",
+				],
+				listNote: "Your draft is saved automatically as you work. If you leave and come back, it will be in My Drafts.",
 			},
 		],
 	},
@@ -68,81 +87,127 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "Choose the template that best matches your use case. In most cases, the goal is to begin with a familiar format so the review stays focused on the few terms that actually change.",
+				body: "For most business situations, the Mutual NDA template is the right choice. It protects both parties equally — both sides agree to keep the other's information confidential.",
+			},
+			{
+				heading: "When to use a one-way NDA",
+				body: "If only one party is sharing confidential information (e.g. you are disclosing to a vendor), a one-way NDA may be more appropriate. Contact us if you need templates beyond what is currently available.",
 			},
 		],
 	},
 	{
-		id: "editing",
+		id: "sending",
 		icon: FileText,
-		title: "How editing works",
+		title: "How to send the NDA",
 		content: [
 			{
 				heading: null,
-				body: "FormalizeIt is designed so you do not need to rebuild the document each time. You review the existing structure and update only the key information. This saves time and reduces repetitive review work.",
+				body: "After completing the form, click Generate Secure Link. A unique, secure link is created for the recipient. You then send it yourself using the channel of your choice:",
+				list: [
+					"Gmail — opens a pre-filled compose window in Gmail",
+					"Outlook — opens a pre-filled compose window in Outlook Web",
+					"Email App — opens your default mail client via mailto",
+					"WhatsApp or Telegram — sends the link as a message",
+					"Copy Link — copies the link so you can paste it anywhere",
+				],
+				listNote: "The link is valid for 30 days. The recipient does not need an account to open it.",
 			},
 		],
 	},
 	{
 		id: "review",
 		icon: Users,
-		title: "How review works",
+		title: "How the recipient reviews the NDA",
 		content: [
 			{
 				heading: null,
-				body: "When you and your partners review a document in FormalizeIt, the main benefit is consistency. Because the underlying template is already known, reviewers can focus on meaningful changes instead of reading a completely reformatted NDA from beginning to end.",
+				body: "When the recipient opens the link, they see a read-only preview of the NDA along with any fields they need to fill in. They can:",
+				list: [
+					"Review all terms before filling anything in",
+					"Complete their company details if you asked them to fill those in",
+					"Suggest changes to any field (you will be notified and can accept or reject)",
+					"Proceed to sign once they are satisfied with the terms",
+				],
+				listNote: "Once both parties have signed, both receive a copy of the executed PDF by email.",
+			},
+		],
+	},
+	{
+		id: "team",
+		icon: Users,
+		title: "Team members and roles",
+		content: [
+			{
+				heading: "Adding team members",
+				body: "Go to Settings → Team. Enter the person's email and assign a role. They will receive an invitation to join your workspace.",
+			},
+			{
+				heading: "Roles explained",
+				body: "There are three roles:",
+				list: [
+					"Owner — manages the workspace, billing, and team members. Can do everything an Approver can",
+					"Approver — can create, send, sign, and finalize NDAs",
+					"Contributor — can create and edit draft NDAs, then submit them for internal review before they are sent externally",
+				],
+				listNote: "Contributors cannot send or sign directly. Their drafts go through an Approver first.",
 			},
 		],
 	},
 	{
 		id: "what-changes",
 		icon: FileText,
-		title: "What kinds of details usually change",
+		title: "What fields are in the NDA",
 		content: [
 			{
 				heading: null,
-				body: "In many NDA workflows, only a small number of practical terms change from one document to another.",
+				body: "The Mutual NDA template includes the following customizable fields:",
 				list: [
-					"Party names",
-					"Dates",
+					"Party A and Party B: name, address, phone, signatory name, title, email",
+					"Effective date and NDA duration (in months)",
 					"Confidentiality period",
-					"Signature details",
-					"Other specific business terms",
+					"Purpose of the NDA",
+					"Governing law",
+					"IP ownership, non-solicitation, and exclusivity clauses",
+					"Additional terms (free text)",
 				],
-				listNote: "Everything else often stays close to the same standard structure.",
-			},
-		],
-	},
-	{
-		id: "saves-time",
-		icon: BookOpen,
-		title: "Why this saves time",
-		content: [
-			{
-				heading: null,
-				body: "Most NDA negotiations do not require a totally new agreement. FormalizeIt saves time by reducing repetition. Instead of rechecking standard language every time, you and your collaborators can review only the parts that truly matter.",
+				listNote: "Fields marked with an asterisk (*) are required before the NDA can be sent.",
 			},
 		],
 	},
 	{
 		id: "export",
 		icon: Download,
-		title: "How to export or share a document",
+		title: "How to download or export a signed NDA",
 		content: [
 			{
 				heading: null,
-				body: "If your workspace supports export or sharing features, you can use them after completing your review. Available export and collaboration options may depend on your plan.",
+				body: "Once both parties have signed, a final PDF is generated automatically. You can download it from:",
+				list: [
+					"Your dashboard — click on the NDA, then Download PDF",
+					"The confirmation email sent after signing — it contains a direct download link",
+				],
+				listNote: "Signed PDFs are stored securely for the duration of your subscription and 90 days after account deletion.",
 			},
 		],
 	},
 	{
 		id: "billing",
 		icon: CreditCard,
-		title: "Billing and access",
+		title: "Billing and plans",
 		content: [
 			{
 				heading: null,
-				body: "If you upgrade your plan, your workspace gains access to the paid features included with that plan. Billing details, plan changes, and subscription information can be managed through your billing settings once payments are enabled.",
+				body: "Billing is managed from Settings → Billing. You can see your current plan, usage, and upgrade or cancel from there.",
+			},
+			{
+				heading: "Plans",
+				body: "FormalizeIt offers three plans:",
+				list: [
+					"Free — up to 3 NDAs total, 1 team member, 7-day document storage",
+					"Pro ($20/month or $16/month billed annually) — 25 NDAs per quarter, up to 10 team members, all templates, advanced tracking",
+					"Enterprise — unlimited everything, custom templates, dedicated support, API access",
+				],
+				listNote: "You can cancel Pro at any time. Your plan stays active until the end of the billing period.",
 			},
 		],
 	},
@@ -153,7 +218,18 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "FormalizeIt is useful for streamlining standard NDA workflows, but it is not a substitute for legal advice. If your deal is unusual, highly negotiated, cross-border, or high-stakes, it may still make sense to involve legal counsel.",
+				body: "FormalizeIt is a workflow tool, not a law firm. The templates are designed to handle standard, recurring NDA use cases efficiently.",
+			},
+			{
+				heading: "Consider involving a lawyer if",
+				body: "Your situation involves any of the following:",
+				list: [
+					"High-value transactions or sensitive IP",
+					"Cross-border agreements with complex jurisdiction requirements",
+					"Heavily negotiated terms that differ significantly from the template",
+					"NDAs that will be used as part of a larger legal framework (M&A, fundraising, etc.)",
+				],
+				listNote: "For typical business NDAs — partnerships, hiring, vendor agreements — FormalizeIt is designed to handle the process end-to-end.",
 			},
 		],
 	},
@@ -162,13 +238,13 @@ const sections: Section[] = [
 const tableOfContents = [
 	{ id: "getting-started", label: "Getting started" },
 	{ id: "create-document", label: "How to create a document" },
-	{ id: "choose-template", label: "How to choose the right template" },
-	{ id: "editing", label: "How editing works" },
-	{ id: "review", label: "How review works" },
-	{ id: "what-changes", label: "What kinds of details usually change" },
-	{ id: "saves-time", label: "Why this saves time" },
-	{ id: "export", label: "How to export or share a document" },
-	{ id: "billing", label: "Billing and access" },
+	{ id: "choose-template", label: "Choosing a template" },
+	{ id: "sending", label: "How to send the NDA" },
+	{ id: "review", label: "How the recipient reviews" },
+	{ id: "team", label: "Team members and roles" },
+	{ id: "what-changes", label: "Fields in the NDA" },
+	{ id: "export", label: "Downloading a signed NDA" },
+	{ id: "billing", label: "Billing and plans" },
 	{ id: "legal", label: "When to get legal advice" },
 ];
 

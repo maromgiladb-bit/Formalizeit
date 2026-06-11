@@ -232,7 +232,7 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">My NDAs</h1>
             <p className="text-sm text-gray-500 mt-0.5">Manage and track your non-disclosure agreements</p>
           </div>
-          <Link href="/templates" className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 text-white rounded-xl font-bold shadow-lg hover:bg-teal-700 hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+          <Link href="/templates" className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-teal-800 text-white rounded-xl font-bold shadow-lg hover:bg-teal-700 hover:shadow-xl hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 text-sm">
             <Plus className="w-4 h-4" />
             New NDA
           </Link>
@@ -298,15 +298,31 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
 
           {filteredNdas.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-6 h-6 text-gray-300" />
+              <div className="w-12 h-12 bg-teal-800 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-sm font-bold text-gray-900 mb-1.5">No NDAs found</h3>
-              <p className="text-sm text-gray-500 mb-5">Add a new NDA to get started.</p>
+              <h3 className="text-base font-bold text-gray-900 mb-2">Send your first NDA in minutes</h3>
+              <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">Pick a template, fill in the details, and send a secure link — no back-and-forth, no blank page.</p>
+              <div className="flex items-center justify-center gap-4 text-xs text-gray-400 mb-6">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">1</span>
+                  Choose template
+                </span>
+                <span className="text-gray-300">→</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">2</span>
+                  Fill details
+                </span>
+                <span className="text-gray-300">→</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">3</span>
+                  Send secure link
+                </span>
+              </div>
               <Link href="/templates">
                 <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
                   <Plus className="w-4 h-4" />
-                  New NDA
+                  Send Your First NDA
                 </button>
               </Link>
             </div>
