@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const linkExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         // Create or update signer record with token
         const existingSigner = await prisma.signer.findFirst({
             where: {
@@ -123,6 +125,7 @@ export async function POST(request: NextRequest) {
                 data: {
                     status: 'PENDING',
                     role: 'SIGNER',
+                    expiresAt: linkExpiresAt,
                 },
             });
         } else {
@@ -133,6 +136,7 @@ export async function POST(request: NextRequest) {
                     email: partyBEmail,
                     role: 'SIGNER',
                     status: 'PENDING',
+                    expiresAt: linkExpiresAt,
                 },
             });
 
@@ -154,6 +158,7 @@ export async function POST(request: NextRequest) {
                         name: partyAName,
                         role: 'SENDER',
                         status: 'PENDING',
+                        expiresAt: linkExpiresAt,
                     },
                 });
             }

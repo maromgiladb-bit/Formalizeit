@@ -216,7 +216,8 @@ export async function POST(request: NextRequest) {
                         email: owner.email,
                         name: owner.name || 'Party A',
                         role: 'SENDER',
-                        status: 'PENDING'
+                        status: 'PENDING',
+                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                     }
                 })
             }

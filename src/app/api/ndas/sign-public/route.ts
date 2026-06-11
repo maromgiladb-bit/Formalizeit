@@ -304,6 +304,7 @@ export async function POST(request: NextRequest) {
                             name: recipientName || 'Party A',
                             role: 'SENDER',
                             status: 'PENDING',
+                            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                         }
                     });
                     recipientSignerId = newSignerRecord.id;

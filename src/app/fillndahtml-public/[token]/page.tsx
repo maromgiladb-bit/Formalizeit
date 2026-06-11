@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { Clock } from 'lucide-react';
+import { Clock, Info } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
 import FillNDAPublicClient from './FillNDAPublicClient';
@@ -102,7 +102,9 @@ export default async function FillNDAPublicPage({
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="text-6xl mb-4">ℹ️</div>
+                    <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-7 h-7 text-teal-700" />
+                    </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">
                         {workflowState === 'COMPLETE' ? 'Already Completed' : 'Not Available'}
                     </h1>
