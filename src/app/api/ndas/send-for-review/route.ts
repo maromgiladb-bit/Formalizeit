@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
         const senderName = (updatedContent.party_a_name as string) || user.name || user.email || 'Sender'
         const ndaTitle = draft.title || 'Untitled NDA'
         const suggestedSubject = `${senderName} sent you an NDA to review — ${ndaTitle}`
-        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.\n\nPlease click the link below to open the document:\n${reviewLink}\n\nThe link is valid for 30 days. No account is needed.\n\nBest regards,\n${senderName}`
+        const messageBlock = message ? `\n\nNote from ${senderName}:\n${message}` : ''
+        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link is valid for 30 days. No account is needed.\n\nBest regards,\n${senderName}`
 
         // Notify the draft creator if they are different from the sender
         if (draft.createdByUserId !== user.id) {

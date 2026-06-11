@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
@@ -1186,7 +1186,7 @@ export default function FillNDAHTML() {
 			whatsapp: `https://wa.me/?text=${encodeURIComponent(`${msg}: ${link}`)}`,
 			linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`,
 			telegram: `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(msg)}`,
-			email: `mailto:${verifyRecipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+			email: `mailto:${encodeURIComponent(verifyRecipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
 			sms: `sms:?body=${encodeURIComponent(`${msg}: ${link}`)}`,
 		};
 		if (platform === 'copy') {

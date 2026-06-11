@@ -64,7 +64,7 @@ const faqs = [
 	{
 		question: "What are the team roles?",
 		answer:
-			"There are three roles: Owner (manages the workspace, billing, and members), Approver (can send, sign, and finalize NDAs), and Contributor (can draft NDAs and submit them for internal review before they are sent). Contributors cannot send or sign directly — their drafts need approval first.",
+			"There are three roles: Owner (manages the workspace, billing, and members), Signer (can create, send, sign, and finalize NDAs), and Contributor (can create and send NDA drafts, but cannot sign). Owners can also be granted signing authority via a toggle in team settings.",
 	},
 	{
 		question: "How do I invite team members?",
