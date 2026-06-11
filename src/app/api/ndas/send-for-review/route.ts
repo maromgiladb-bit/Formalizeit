@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
                 }
             })
 
-            // Create Party A (APPROVER) record - needed for bidirectional email notifications
+            // Create Party A (SENDER) record - needed for bidirectional email notifications
             const partyAEmail = (content.party_a_email as string) || user.email
             const partyAName = (content.party_a_signatory_name as string) || null
             await prisma.signer.create({
@@ -133,8 +133,9 @@ export async function POST(request: NextRequest) {
                     signRequestId: signRequest.id,
                     email: partyAEmail,
                     name: partyAName,
-                    role: 'APPROVER',
-                    status: 'PENDING'
+                    role: 'SENDER',
+                    status: 'PENDING',
+                    expiresAt: linkExpiresAt,
                 }
             })
         }

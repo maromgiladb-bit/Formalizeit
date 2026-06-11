@@ -80,7 +80,7 @@ enum SignerStatus {
 
 enum SignerRole {
   SIGNER
-  APPROVER
+  SENDER
   VIEWER
 
   @@map("signer_role")

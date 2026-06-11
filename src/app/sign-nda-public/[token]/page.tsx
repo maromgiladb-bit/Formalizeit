@@ -90,8 +90,8 @@ export default async function SignNDAPublicPage({
     const draft = signer.signRequest.draft;
     const workflowState = (draft as typeof draft & { workflowState?: string }).workflowState || 'DRAFT';
 
-    // Determine if this is Party A (APPROVER) or Party B (SIGNER)
-    const isPartyA = signer.role === 'APPROVER';
+    // Determine if this is Party A (SENDER) or Party B (SIGNER)
+    const isPartyA = signer.role === 'SENDER';
 
     // Allow signing logic
     let canSign = false;

@@ -73,7 +73,7 @@ export default function MyNDAsPage() {
             if (data.drafts) {
                 setNdas(data.drafts.map((d: Record<string, unknown>) => {
                     const signers = (d.signers as Array<{ id: string, role: string }>) || []
-                    const partyASigner = signers.find(s => s.role === 'APPROVER')
+                    const partyASigner = signers.find(s => s.role === 'SENDER')
                     return {
                         id: d.id,
                         title: d.title || 'Untitled NDA',

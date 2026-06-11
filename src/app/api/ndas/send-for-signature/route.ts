@@ -136,11 +136,11 @@ export async function POST(request: NextRequest) {
                 },
             });
 
-            // Also ensure Party A (APPROVER) record exists for bidirectional email notifications
+            // Also ensure Party A (SENDER) record exists for bidirectional email notifications
             const existingApprover = await prisma.signer.findFirst({
                 where: {
                     signRequestId: signRequest.id,
-                    role: 'APPROVER',
+                    role: 'SENDER',
                 },
             });
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
                         signRequestId: signRequest.id,
                         email: partyAEmail,
                         name: partyAName,
-                        role: 'APPROVER',
+                        role: 'SENDER',
                         status: 'PENDING',
                     },
                 });
