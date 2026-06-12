@@ -2,6 +2,7 @@
 
 import React, {
 	forwardRef,
+	useCallback,
 	useEffect,
 	useImperativeHandle,
 	useRef,
@@ -30,7 +31,6 @@ const GREETING =
 	"Hi! I'm Formi — your FormalizeIt helper. Ask me about your NDAs, the dashboard, or plans!";
 
 type TextLikePart = { type: string; text?: string };
-type ToolFindingsPart = { type: string; input?: { findings?: Finding[] } };
 
 function assistantMessage(text: string): UIMessage {
 	return {
@@ -182,18 +182,50 @@ const NdaAgentAvatar = forwardRef<NdaAgentHandle, NdaAgentAvatarProps>(
 		});
 		const isLoading = status === "submitted" || status === "streaming";
 
-		useEffect(() => {
-			let latest: Finding[] | null = null;
-			for (const m of messages) {
-				if (m.role !== "assistant") continue;
-				for (const part of m.parts as ToolFindingsPart[]) {
-					if (part.type === "tool-recordFindings" && part.input?.findings) {
-						latest = part.input.findings;
-					}
-				}
+		// Keep a stable ref so the scan fetch callback doesn't hold a stale closure.
+		const onFindingsChangeRef = useRef(onFindingsChange);
+		onFindingsChangeRef.current = onFindingsChange;
+
+		// Background scan: fires 1.5 s after the NDA snapshot changes, returns
+		// structured findings without polluting the visible chat history.
+		const runScan = useCallback(async (snapshot: NdaContext, signal: AbortSignal) => {
+			try {
+				const res = await fetch("/api/ai/chat", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						messages: [
+							{
+								id: crypto.randomUUID(),
+								role: "user",
+								parts: [{ type: "text", text: "analyze" }],
+							},
+						],
+						ndaContext: snapshot,
+						mode: "scan",
+					}),
+					signal,
+				});
+				if (!res.ok || signal.aborted) return;
+				const { findings } = (await res.json()) as { findings: Finding[] };
+				onFindingsChangeRef.current?.(findings ?? []);
+			} catch {
+				// AbortError on unmount/NDA-change is expected — ignore silently.
 			}
-			if (latest) onFindingsChange?.(latest);
-		}, [messages, onFindingsChange]);
+		}, []);
+
+		useEffect(() => {
+			if (!nda) {
+				onFindingsChangeRef.current?.([]);
+				return;
+			}
+			const controller = new AbortController();
+			const t = setTimeout(() => runScan(nda, controller.signal), 1500);
+			return () => {
+				clearTimeout(t);
+				controller.abort();
+			};
+		}, [nda, runScan]);
 
 		useImperativeHandle(
 			ref,
@@ -273,7 +305,7 @@ const NdaAgentAvatar = forwardRef<NdaAgentHandle, NdaAgentAvatarProps>(
 									const text = getMessageText(m.parts);
 									if (!text) return null;
 									const isUser = m.role === "user";
-									const isFlag = !isUser && text.includes("⚠");
+									const isFlag = !isUser && text.startsWith("Heads up —");
 									return (
 										<motion.div
 											key={m.id}

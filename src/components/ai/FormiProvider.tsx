@@ -2,6 +2,7 @@
 
 import React, {
 	createContext,
+	useCallback,
 	useContext,
 	useMemo,
 	useRef,
@@ -41,13 +42,20 @@ export function FormiProvider({ children }: { children: React.ReactNode }) {
 	const [findings, setFindings] = useState<Finding[]>([]);
 	const avatarRef = useRef<NdaAgentHandle>(null);
 
+	// Clear findings whenever the NDA context is removed so a stale scan from a
+	// previous draft never bleeds into the next one.
+	const handleSetNda = useCallback((next: NdaContext | null) => {
+		setNda(next);
+		if (!next) setFindings([]);
+	}, []);
+
 	const value = useMemo<FormiContextValue>(
 		() => ({
-			setNda,
+			setNda: handleSetNda,
 			findings,
 			openWithNudge: (text: string) => avatarRef.current?.openWithNudge(text),
 		}),
-		[findings]
+		[handleSetNda, findings]
 	);
 
 	return (
