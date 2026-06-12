@@ -1,10 +1,11 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import PublicToolbar from "@/components/PublicToolbar";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
+import { useFormi } from "@/components/ai/FormiProvider";
 
 type FormValues = {
 	docName: string;
@@ -103,6 +104,33 @@ export default function FillNDAHTML() {
 	const [sendingForInput, setSendingForInput] = useState(false);
 	// No company profile modal state
 	const [showNoProfileModal, setShowNoProfileModal] = useState(false);
+	// Formi (global AI copilot): publish this draft's fields + one-time pre-send nudge
+	const { setNda: setFormiNda, openWithNudge: openFormiNudge, findings: formiFindings } = useFormi();
+	const formiNudgeShownRef = useRef(false);
+	// Feed the current NDA draft to the global Formi while this page is mounted.
+	useEffect(() => {
+		setFormiNda({
+			termMonths: values.term_months,
+			confidentialityMonths: values.confidentiality_period_months,
+			additionalTerms: values.additional_terms,
+			purpose: values.purpose,
+			governingLaw: values.governing_law,
+			ipOwnership: values.ip_ownership,
+			nonSolicit: values.non_solicit,
+			exclusivity: values.exclusivity,
+		});
+		return () => setFormiNda(null);
+	}, [
+		setFormiNda,
+		values.term_months,
+		values.confidentiality_period_months,
+		values.additional_terms,
+		values.purpose,
+		values.governing_law,
+		values.ip_ownership,
+		values.non_solicit,
+		values.exclusivity,
+	]);
 	// Verify email modal state
 	const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
 	const [verifyRecipientEmail, setVerifyRecipientEmail] = useState("");
@@ -1034,6 +1062,24 @@ export default function FillNDAHTML() {
 		if (!validation.isValid) {
 			setValidationErrors(validation.errors);
 			setWarning(validation.message || "Please fill in all required fields");
+			return;
+		}
+
+		// Formi gentle pre-send nudge (once): open Formi and offer a quick review.
+		// Clicking "Send for Review" again proceeds.
+		if (!formiNudgeShownRef.current) {
+			formiNudgeShownRef.current = true;
+			const highs = formiFindings.filter((f) => f.severity === "high");
+			const nudge = highs.length
+				? `Heads up — I flagged ${highs.length} high-severity item${
+						highs.length > 1 ? "s" : ""
+				  }: ${highs
+						.map((f) => f.fieldLabel)
+						.join(", ")}. Want me to walk through ${
+						highs.length > 1 ? "them" : "it"
+				  }? Or click "Send for Review" again to send.`
+				: `Want me to review this NDA before you send? Just ask — or click "Send for Review" again to send.`;
+			openFormiNudge(nudge);
 			return;
 		}
 

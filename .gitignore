@@ -55,8 +55,13 @@ node_modules_trash/
 *.log
 tsc_*.log
 tsc_*.txt
+*_output.txt
 prisma_error*.log
 test-prisma.ts
+
+# generated NDA artifacts
+/tmp/
+/public/tmp/
 
 # Claude Local Settings
 .claude/settings.local.json

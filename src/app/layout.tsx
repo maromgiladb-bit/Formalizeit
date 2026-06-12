@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import ToolbarSwitcher from '@/components/ToolbarSwitcher'
 import FooterWrapper from '@/components/FooterWrapper'
+import { FormiProvider } from '@/components/ai/FormiProvider'
 import './globals.css'
 import { auth } from '@clerk/nextjs/server'
 import { getActiveOrganization } from '@/lib/db-organization'
@@ -73,11 +74,13 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
-          <ToolbarSwitcher organizationData={organizationData} />
-          <div className="flex-1">
-            {children}
-          </div>
-          <FooterWrapper />
+          <FormiProvider>
+            <ToolbarSwitcher organizationData={organizationData} />
+            <div className="flex-1">
+              {children}
+            </div>
+            <FooterWrapper />
+          </FormiProvider>
         </body>
       </html>
     </ClerkProvider>
