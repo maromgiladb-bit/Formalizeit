@@ -1,4 +1,4 @@
-# FormalizeIt — Stitch Design System
+# FormalizeIt — Calm Precision Design System
 
 Read this file at the start of any UI task. All pages must follow this design system.
 
@@ -6,132 +6,112 @@ Read this file at the start of any UI task. All pages must follow this design sy
 
 ## Overview
 
-Clean, minimal SaaS design. White background, teal + dark navy brand colors. No heavy gradients, no dark hero sections. Applied to: `src/app/page.tsx`, `src/app/about/page.tsx` — use these as reference implementations.
+**Calm precision** — Linear/Notion-feel minimalism. Generous whitespace, soft shadows, rounded-2xl cards, subtle teal tints, restrained scroll reveals. The site must *feel* like its message: "NDA in minutes" — fast, simple, frictionless.
+
+Reference implementations: `src/app/page.tsx` (marketing), `src/components/dashboard/DashboardClient.tsx` (app).
 
 ---
 
-## Colors
+## Color discipline — every color has exactly one job
 
-- **Primary action:** `bg-teal-800 hover:bg-teal-700` (buttons — NOT teal-600)
-- **Accent label:** `text-teal-700` (small uppercase section labels)
-- **Body text:** `text-gray-900` (headings), `text-gray-500` (body/descriptions)
-- **Borders:** `border-gray-100` (section dividers), `border-gray-200` (cards)
-- **Backgrounds:** `bg-white` (primary), `bg-gray-50` (alternate sections)
-- **Icon backgrounds:** `bg-teal-50 group-hover:bg-teal-100`
-- **Status/highlight rows:** teal-50/teal-200 for variables, amber-50/amber-200 for custom clauses
+Tokens are defined in `src/app/globals.css` (`@theme`). Never invent new colors.
+
+| Role | Token / class | Rule |
+|---|---|---|
+| Ink | `text-ink` (`#0d1f1e`) | Headings, nav links, primary text. NOT `text-gray-900`. |
+| Body | `text-gray-500` | Descriptions, secondary text. |
+| Surfaces | `bg-white` / `bg-gray-50` | Alternate section backgrounds. |
+| Primary | `bg-teal-800 hover:bg-teal-700` | CTAs and links ONLY. Never as decoration, block hovers, or random borders. Never teal-600. |
+| Soft tint | `bg-teal-50` + `text-teal-700` | Icon chips, active nav pills, info boxes. |
+| Action | amber (`bg-amber-50 text-amber-700` / `bg-amber-500`) | EXCLUSIVELY "needs you" moments: sign now, review changes, pending approval, popular badge. Never decorative — amber must always mean something. |
+| Borders | `border-gray-100` (cards), `border-gray-200` (inputs, dividers) | |
+| Destructive | `text-red-600` etc. | Errors and delete confirmation only. |
+
+**Banned:** blue, purple, orange, green, yellow utility colors. Green "success" → teal done-tone. Yellow "warning" → amber. Blue "info" → teal-50 tint.
 
 ---
 
-## Typography
+## Elevation & shape
 
-- **Page H1:** `text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight`
-- **Section H2:** `text-2xl font-bold text-gray-900` or `text-3xl font-extrabold tracking-tight`
-- **Step/card H3:** `text-sm font-bold text-gray-900` (small cards) or `text-2xl font-extrabold` (timeline)
-- **Section accent label:** `text-teal-700 text-xs font-bold uppercase tracking-widest mb-3`
+- Cards: `bg-white rounded-2xl border border-gray-100 shadow-card` (hover: `hover:shadow-float`)
+- Overlays / nav pill / hero mockups: `shadow-float`
+- Buttons & inputs: `rounded-xl` (small buttons `rounded-lg`, nav pills `rounded-full`)
+- Never `shadow-md/lg/xl` — only the two tokens.
+
+---
+
+## Typography (Plus Jakarta Sans)
+
+- **Display (home hero):** `text-5xl sm:text-6xl lg:text-7xl font-extrabold text-ink tracking-tight leading-[1.05]`
+- **Page H1:** `text-4xl md:text-5xl font-extrabold text-ink tracking-tight`
+- **Section H2:** `text-3xl md:text-4xl font-extrabold text-ink tracking-tight`
+- **Card H3:** `text-sm font-semibold text-ink` (drop pervasive `font-bold` — use semibold/medium)
+- **Eyebrow label:** `text-teal-700 text-xs font-bold uppercase tracking-widest mb-2`
 - **Body:** `text-base text-gray-500 leading-relaxed`
-- **Small descriptions:** `text-sm text-gray-500 leading-relaxed`
+
+---
+
+## Components — use the shared primitives, never hand-roll
+
+- **Buttons:** `@/components/ui/button` (`Button` / `buttonVariants`). Default = teal-800. Variants: outline, secondary, ghost, link, destructive. Never hand-roll a teal button.
+- **Inputs:** `@/components/ui/input` — `Input`, `Textarea`, or the `inputClasses` string for legacy forms. Focus = `focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700`.
+- **Status:** `@/components/ui/status-pill` — `<StatusPill tone label />`. Tones:
+  - `neutral` (gray) — DRAFT, FILLING
+  - `progress` (teal-50/teal-700 ring) — SENT, AWAITING_*  on the other side
+  - `action` (amber, pulsing dot) — SIGN NOW, CHANGES TO REVIEW, PENDING_INTERNAL_APPROVAL
+  - `done` (solid teal-700 + check) — SIGNED, COMPLETE
+- **Scroll reveals:** `@/components/ui/reveal` — `<Reveal>`, `<RevealGroup>` + `<RevealItem>`. The ONLY scroll-animation mechanism. Honors `prefers-reduced-motion` automatically.
+- **Cards:** `@/components/ui/card` or the card classes above.
+
+---
+
+## Navigation
+
+- Both toolbars wrap `src/components/nav/FloatingNavShell.tsx`: full-width white bar at top of page → centered floating pill (`bg-white/85 backdrop-blur-md shadow-float rounded-full`) past 32px scroll. Two discrete states with CSS transitions — never continuous scroll-linked animation.
+- Shrunken pill keeps only core links + primary CTA.
+- Nav links: `text-gray-600 hover:text-ink hover:bg-gray-100 rounded-full` — active = `bg-teal-50 text-teal-800 font-semibold`. No solid teal block hovers.
+- Pages are spaced by the shell's built-in `h-16` spacer (the header is `fixed`). Anchor targets need `scroll-mt-28`.
+
+## Footer
+
+Light: `bg-gray-50 border-t border-gray-200`, brand blurb + 3 link columns, links `text-gray-500 hover:text-ink`.
 
 ---
 
 ## Layout
 
-- **Container:** `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8`
-- **Section padding:** `py-10` to `py-16` (not py-24/py-32 — keep it tight)
-- **Section divider:** `border-t border-gray-100` between sections
-- **Hero padding:** `pt-12 pb-12`
-- **Centered hero:** `text-center max-w-2xl mx-auto`
-- **Two-column hero:** `grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center`
+- Container: `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8` (home uses 6xl, footer/nav 7xl)
+- Marketing sections: `py-20` with alternating white / gray-50 + `border-y border-gray-100`
+- App pages: `py-8`–`py-12`, compact headers with eyebrow + H1 + description
 
 ---
 
-## Components
+## Motion rules
 
-### Primary CTA Button
-```tsx
-<button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
-  Label
-  <ArrowRight className="w-4 h-4" />
-</button>
-```
-
-### Feature Card
-```tsx
-<div className="group bg-white p-6 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200">
-  <div className="w-10 h-10 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-200">
-    <Icon className="w-5 h-5 text-teal-700" />
-  </div>
-  <h3 className="text-sm font-bold text-gray-900 mb-1.5">Title</h3>
-  <p className="text-sm text-gray-500 leading-relaxed">Description</p>
-</div>
-```
-
-### Step Row ("How it Works" style)
-```tsx
-<div className="flex gap-4">
-  <div className="flex-shrink-0 w-11 h-11 rounded-full bg-teal-800 flex items-center justify-center shadow-sm">
-    <Icon className="w-5 h-5 text-white" />
-  </div>
-  <div>
-    <p className="text-sm font-semibold text-gray-900 mb-1">1. Step title</p>
-    <p className="text-sm text-gray-500 leading-relaxed">Description</p>
-  </div>
-</div>
-```
-
-### Section Header (with accent label)
-```tsx
-<p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Label</p>
-<h2 className="text-2xl font-bold text-gray-900 mb-8">Section Title</h2>
-```
-
-### CTA Strip (bottom of page)
-```tsx
-<section className="border-t border-gray-100 bg-gray-50 py-10">
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-      <div>
-        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Heading</h2>
-        <p className="text-sm text-gray-500">Subtext</p>
-      </div>
-      {/* Primary button */}
-    </div>
-  </div>
-</section>
-```
+- Reveals: once-only, fade-up 24px, 0.4–0.5s easeOut, stagger 0.08 — via `<Reveal>` only.
+- Hovers: color/shadow transitions (`transition-colors` / `transition-shadow`), 200–300ms. No scale bounces, no translate lifts, no confetti.
+- `prefers-reduced-motion` is mandatory: framer components use `useReducedMotion()`, CSS uses `motion-reduce:` / `motion-safe:` variants.
 
 ---
 
-## Animations (Framer Motion)
+## Page recipes
 
-```tsx
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-}
-const stagger = {
-  initial: {},
-  animate: { transition: { staggerChildren: 0.09 } },
-}
-```
-
-- Hero: `initial/animate` with `fadeUp` + `stagger`
-- Sections: `whileInView` + `viewport={{ once: true, margin: '-60px' }}`
-- Cards: stagger children with `fadeUp`
+- **Marketing section:** eyebrow label → H2 → description → `RevealGroup` of rounded-2xl cards.
+- **App page header:** eyebrow → `text-2xl font-extrabold text-ink` H1 → `text-sm text-gray-500` description → primary action button on the right.
+- **List rows (dashboard pattern):** `rounded-2xl border-gray-100 bg-white px-5 py-4 hover:shadow-card` — icon chip + semibold name + gray-500 counterparty | StatusPill | date + small actions. Stacks on mobile, no horizontal scroll.
+- **Public token frame (external recipients):** gray-50 page, "Secure NDA link" lock badge (`bg-teal-50 text-teal-800 rounded-full`), white rounded-2xl card with shadow-float, single prominent CTA, trust line "Encrypted · Audit-trailed · Powered by FormalizeIt".
+- **Pricing:** lives on home at `/#pricing` (`/plans` redirects there). Popular card = white + `border-teal-600 ring-1` + amber badge.
 
 ---
 
-## Document Mockup (reusable visual)
+## Site map notes
 
-Used in hero sections to illustrate the NDA review concept.
-See `src/app/page.tsx` → `DocumentMockup` component.
-Key elements: browser chrome, gray text bars, teal-highlighted variable row, amber-highlighted clause row, floating tooltip card.
+- Pricing is a home-page section: link to `/#pricing`, never `/plans`.
+- About stays a standalone page (scroll timeline).
+- One shared app shell for all roles — role differences are action-level, not page-level.
 
----
+## Mobile
 
-## Timeline (about page pattern)
-
-Scroll-driven vertical timeline using `useScroll` + `useTransform` for a progress line.
-See `src/app/about/page.tsx` for full implementation.
-- Desktop: alternating left/right columns with centered line
-- Mobile: left-aligned line, content stacked below dot
-- Each step slides in from opposite sides via `useInView`
+- Every surface works at 375px. Lists stack, never scroll horizontally.
+- Settings sidebar becomes a horizontal pill bar on mobile.
+- Mobile menus open as sheets inside the nav pill (rounded-2xl).
