@@ -151,12 +151,12 @@ export default function MyNDAsPage() {
         })
 
     const getWorkflowLabel = (nda: NDA) => {
-        if (nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE') return { label: 'Sign now', style: 'bg-red-50 text-red-700' }
+        if (nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE') return { label: 'Sign now', style: 'bg-amber-50 text-amber-700' }
         if (nda.workflowState === 'AWAITING_PARTY_A_REVIEW') return { label: 'Changes to review', style: 'bg-amber-50 text-amber-700' }
         if (nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE') return { label: 'Waiting for Party B', style: 'bg-teal-50 text-teal-700' }
         if (nda.workflowState === 'AWAITING_PARTY_B_REVIEW') return { label: 'Waiting for Party B', style: 'bg-teal-50 text-teal-700' }
         if (nda.workflowState === 'AWAITING_INPUT') return { label: 'Awaiting Party B', style: 'bg-teal-50 text-teal-700' }
-        if (nda.workflowState === 'COMPLETE' || nda.workflowState === 'SIGNING_COMPLETE') return { label: 'Completed', style: 'bg-green-50 text-green-700' }
+        if (nda.workflowState === 'COMPLETE' || nda.workflowState === 'SIGNING_COMPLETE') return { label: 'Completed', style: 'bg-teal-700 text-white' }
         if (nda.workflowState === 'REVIEWING_CHANGES') return { label: 'Review Changes', style: 'bg-amber-50 text-amber-700' }
         if (nda.workflowState === 'READY_TO_SIGN') return { label: 'Ready to Sign', style: 'bg-teal-50 text-teal-700' }
         if (nda.workflowState === 'AWAITING_SIGNATURE') return { label: 'Pending Signature', style: 'bg-teal-50 text-teal-700' }
@@ -195,20 +195,20 @@ export default function MyNDAsPage() {
         return (
             <div
                 key={nda.id}
-                className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-5"
+                className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-5"
             >
                 <div className="flex items-start justify-between gap-4">
                     {/* Left: icon + info */}
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors duration-200">
+                        <div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors duration-200">
                             <FileText className="w-4 h-4 text-teal-700" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <h3 className="text-sm font-bold text-gray-900">{nda.title}</h3>
+                                <h3 className="text-sm font-bold text-ink">{nda.title}</h3>
                                 {/* Status badge */}
                                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    nda.status === 'SIGNED' ? 'bg-green-50 text-green-700' :
+                                    nda.status === 'SIGNED' ? 'bg-teal-700 text-white' :
                                     nda.status === 'SENT' ? 'bg-teal-50 text-teal-700' :
                                     nda.status === 'DRAFT' ? 'bg-gray-100 text-gray-600' :
                                     'bg-gray-100 text-gray-500'
@@ -241,7 +241,7 @@ export default function MyNDAsPage() {
                         {nda.status === 'DRAFT' && (
                             <>
                                 <Link href={`/fillndahtml?draftId=${nda.id}`}>
-                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:border-teal-300 hover:text-teal-700 transition-all duration-200">
+                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -289,7 +289,7 @@ export default function MyNDAsPage() {
                         {signed && (
                             <button
                                 onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition-colors duration-200"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -302,7 +302,7 @@ export default function MyNDAsPage() {
                         {nda.status === 'SENT' && !signed &&
                             !['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') && (
                                 <Link href={`/view-nda/${nda.id}`}>
-                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:border-teal-300 hover:text-teal-700 transition-all duration-200">
+                                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -345,12 +345,12 @@ export default function MyNDAsPage() {
                             <FileText className="w-5 h-5 text-teal-700" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">My NDAs</h1>
+                            <h1 className="text-2xl font-bold text-ink">My NDAs</h1>
                             <p className="text-sm text-gray-500 mt-0.5">Manage all your non-disclosure agreements</p>
                         </div>
                     </div>
                     <Link href="/fillndahtml?new=true">
-                        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
+                        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer">
                             <Plus className="w-4 h-4" />
                             New NDA
                         </button>
@@ -364,7 +364,7 @@ export default function MyNDAsPage() {
                         className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                             activeTab === 'outgoing'
                                 ? 'bg-teal-800 text-white'
-                                : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:text-gray-900'
+                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-ink'
                         }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,7 +378,7 @@ export default function MyNDAsPage() {
                         className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                             activeTab === 'incoming'
                                 ? 'bg-teal-800 text-white'
-                                : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:text-gray-900'
+                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-ink'
                         }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,7 +401,7 @@ export default function MyNDAsPage() {
                                     placeholder="Search by title, party name, or email..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 bg-white"
                                 />
                             </div>
                             <select
@@ -435,16 +435,16 @@ export default function MyNDAsPage() {
                                     onClick={() => setSelectedCategory(key)}
                                     className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                                         selectedCategory === key
-                                            ? urgent ? 'bg-red-600 text-white' : 'bg-teal-800 text-white'
+                                            ? urgent ? 'bg-amber-500 text-white' : 'bg-teal-800 text-white'
                                             : urgent && count > 0
-                                                ? 'bg-white border border-red-200 text-red-600 hover:border-red-400'
-                                                : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:text-gray-900'
+                                                ? 'bg-white border border-amber-200 text-amber-600 hover:border-amber-400'
+                                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-ink'
                                     }`}
                                 >
                                     {label}
                                     <span className={`text-xs font-bold ${selectedCategory === key ? 'opacity-70' : 'text-gray-400'}`}>{count}</span>
                                     {urgent && count > 0 && selectedCategory !== key && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 motion-safe:animate-pulse" />
                                     )}
                                 </button>
                             ))}
@@ -462,11 +462,11 @@ export default function MyNDAsPage() {
 
                         {/* NDA rows */}
                         {filteredNdas.length === 0 ? (
-                            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-12 text-center">
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mx-auto mb-4">
                                     <FileText className="w-6 h-6 text-gray-300" />
                                 </div>
-                                <h3 className="text-sm font-bold text-gray-900 mb-1.5">
+                                <h3 className="text-sm font-bold text-ink mb-1.5">
                                     {searchQuery || statusFilter !== 'all' ? 'No matching NDAs' : 'No NDAs yet'}
                                 </h3>
                                 <p className="text-sm text-gray-500 mb-5">
@@ -474,7 +474,7 @@ export default function MyNDAsPage() {
                                 </p>
                                 {!searchQuery && statusFilter === 'all' && (
                                     <Link href="/fillndahtml?new=true">
-                                        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
+                                        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer">
                                             <Plus className="w-4 h-4" />
                                             New NDA
                                         </button>
@@ -486,8 +486,8 @@ export default function MyNDAsPage() {
                                 {(selectedCategory === 'all' || selectedCategory === 'action_required') && categorizedNdas.action_required.length > 0 && (
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">{categorizedNdas.action_required.length}</span>
-                                            <p className="text-xs font-bold uppercase tracking-widest text-red-600">Action Required</p>
+                                            <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">{categorizedNdas.action_required.length}</span>
+                                            <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Action Required</p>
                                         </div>
                                         <div className="space-y-3">{categorizedNdas.action_required.map(renderNdaRow)}</div>
                                     </div>
@@ -528,7 +528,7 @@ export default function MyNDAsPage() {
                                         placeholder="Search by title or sender..."
                                         value={incomingSearch}
                                         onChange={(e) => setIncomingSearch(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 bg-white"
                                     />
                                 </div>
                                 <select
@@ -560,7 +560,7 @@ export default function MyNDAsPage() {
                                             className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                                                 active
                                                     ? 'bg-teal-800 text-white'
-                                                    : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:text-gray-900'
+                                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-ink'
                                             }`}
                                         >
                                             {label}
@@ -580,11 +580,11 @@ export default function MyNDAsPage() {
                         )}
 
                         {filteredIncomingNdas.length === 0 ? (
-                            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-12 text-center">
                                 <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mx-auto mb-4">
                                     <FileText className="w-6 h-6 text-gray-300" />
                                 </div>
-                                <h3 className="text-sm font-bold text-gray-900 mb-1.5">
+                                <h3 className="text-sm font-bold text-ink mb-1.5">
                                     {incomingSearch || incomingStatusFilter !== 'all' ? 'No matching NDAs' : 'No incoming NDAs'}
                                 </h3>
                                 <p className="text-sm text-gray-500">
@@ -596,18 +596,18 @@ export default function MyNDAsPage() {
                                 {filteredIncomingNdas.map((nda) => (
                                     <div
                                         key={nda.id}
-                                        className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-5"
+                                        className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-5"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-start gap-3 flex-1 min-w-0">
-                                                <div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors duration-200">
+                                                <div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-colors duration-200">
                                                     <FileText className="w-4 h-4 text-teal-700" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                        <h3 className="text-sm font-bold text-gray-900">{nda.title}</h3>
+                                                        <h3 className="text-sm font-bold text-ink">{nda.title}</h3>
                                                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                            nda.status === 'SIGNED' ? 'bg-green-50 text-green-700' :
+                                                            nda.status === 'SIGNED' ? 'bg-teal-700 text-white' :
                                                             nda.status === 'PENDING' || nda.status === 'SENT' ? 'bg-amber-50 text-amber-700' :
                                                             'bg-gray-100 text-gray-500'
                                                         }`}>
@@ -630,7 +630,7 @@ export default function MyNDAsPage() {
                                                 {nda.status === 'SIGNED' ? (
                                                     <button
                                                         onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.draftId}`, '_blank')}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition-colors duration-200"
                                                     >
                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -648,7 +648,7 @@ export default function MyNDAsPage() {
                                                     </Link>
                                                 ) : (
                                                     <Link href={`/fillndahtml-public/${nda.signerId}`}>
-                                                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:border-teal-300 hover:text-teal-700 transition-all duration-200">
+                                                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
