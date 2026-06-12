@@ -12,6 +12,35 @@
   --font-mono: var(--font-geist-mono);
   --animate-appear-zoom: appear-zoom 0.5s ease-out forwards;
   --animate-spotlight: spotlight 2s ease forwards;
+
+  /*
+    Calm-precision palette — every color has exactly one job:
+    ink      = headings, nav, primary text (teal-tinted near-black)
+    gray-500 = body/secondary text
+    primary  = teal-800, CTAs and links ONLY (teal-50 for soft tints)
+    accent-brand = amber, "action needed" moments ONLY
+  */
+  --color-ink: #0d1f1e;
+  --color-primary: #115e59;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f9fafb;
+  --color-secondary-foreground: #0d1f1e;
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  --color-accent: #f3f4f6;
+  --color-accent-foreground: #0d1f1e;
+  --color-accent-brand: #f59e0b;
+  --color-card: #ffffff;
+  --color-card-foreground: #0d1f1e;
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #0f766e;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  /* Soft elevation — shadow-card for resting cards, shadow-float for overlays/nav pill */
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-float: 0 8px 30px rgb(16 24 40 / 0.08);
 }
 
 @keyframes appear-zoom {
@@ -24,17 +53,36 @@
   100% { opacity: 1; transform: scale(1)   translate(-50%, -40%); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fadeIn,
+  .animate-slideUp,
+  .animate-shimmer,
+  .animate-appear-zoom,
+  .animate-spotlight,
+  .animate-accordion-down,
+  .animate-accordion-up {
+    animation: none;
+  }
+
+  .hover-lift,
+  .hover-lift:hover {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* DOCX Preview Styles */
