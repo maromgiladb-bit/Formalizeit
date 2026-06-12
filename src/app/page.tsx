@@ -1,7 +1,8 @@
 "use client";
-import { SignUpButton } from "@clerk/nextjs";
+import { SignUpButton, useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
   FileText,
   PenLine,
@@ -13,30 +14,28 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
-
-/* ─── Motion variants ─────────────────────────────────────── */
-const fadeUp = {
-  initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
-};
-
-const stagger = {
-  initial: {},
-  animate: { transition: { staggerChildren: 0.09 } },
-};
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
+import PricingSection from "@/components/marketing/PricingSection";
+import { faqs } from "./faq/faq-data";
 
 /* ─── Data ────────────────────────────────────────────────── */
 const STEPS = [
   {
     number: "1",
-    title: "Choose a Trusted Template",
+    title: "Choose a trusted template",
     description:
       "Select from industry-standard, pre-vetted NDA templates for any situation.",
     icon: FileText,
   },
   {
     number: "2",
-    title: "Fill the Variables",
+    title: "Fill the variables",
     description:
       "Customize key details like company names, dates, and terms using smart fields.",
     icon: PenLine,
@@ -89,18 +88,21 @@ const FEATURES = [
   },
 ];
 
+// A curated taste of the FAQ — the full list lives at /faq.
+const TEASER_FAQ_INDEXES = [0, 2, 5, 13];
+
 /* ─── Document Mockup ─────────────────────────────────────── */
 function DocumentMockup() {
   return (
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
       {/* Document card */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden">
         {/* Doc header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
           </div>
           <div className="text-xs font-semibold text-gray-400 tracking-wide">NDA_Agreement.docx</div>
           <div className="w-12" />
@@ -109,7 +111,7 @@ function DocumentMockup() {
         {/* Doc body */}
         <div className="px-6 py-5 space-y-3">
           {/* Title line */}
-          <div className="h-3 bg-gray-800 rounded w-2/3 mb-5" />
+          <div className="h-3 bg-ink rounded w-2/3 mb-5" />
 
           {/* Regular lines */}
           <div className="h-2 bg-gray-200 rounded w-full" />
@@ -141,11 +143,11 @@ function DocumentMockup() {
       </div>
 
       {/* Floating tooltip */}
-      <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-52">
-        <p className="text-xs font-semibold text-gray-800 leading-snug">
+      <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-float px-4 py-3 w-52">
+        <p className="text-xs font-semibold text-ink leading-snug">
           Review only the changes:
         </p>
-        <p className="text-xs text-teal-600 font-medium mt-0.5">
+        <p className="text-xs text-teal-700 font-medium mt-0.5">
           Variables &amp; Custom Clauses
         </p>
       </div>
@@ -157,13 +159,14 @@ function DocumentMockup() {
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+  const reduceMotion = useReducedMotion();
   return (
     <div ref={ref} className="text-center">
       <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.85 }}
         animate={inView ? { opacity: 1, scale: 1 } : {}}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-teal-700 tracking-tight"
+        className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-teal-800 tracking-tight"
       >
         {value}
       </motion.div>
@@ -174,13 +177,26 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
 
 /* ─── Page ────────────────────────────────────────────────── */
 export default function Home() {
+  const { userId } = useAuth();
+  const reduceMotion = useReducedMotion();
+
+  const fadeUp = {
+    initial: reduceMotion ? {} : { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
+  };
+
+  const stagger = {
+    initial: {},
+    animate: { transition: { staggerChildren: 0.09 } },
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans">
 
       {/* ══════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-20 lg:pb-24">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
           {/* Left: copy */}
@@ -191,31 +207,47 @@ export default function Home() {
           >
             <motion.h1
               variants={fadeUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5"
+              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-ink leading-[1.05] tracking-tight mb-6"
             >
-              Send an NDA<br />in minutes.
+              NDA in<br />minutes.
             </motion.h1>
             <motion.p
               variants={fadeUp}
-              className="text-base text-gray-500 leading-relaxed mb-8 max-w-sm"
+              className="text-lg text-gray-500 leading-relaxed mb-8 max-w-md"
             >
               You don&apos;t reinvent the NDA each time. Pick a trusted template,
               fill in what&apos;s different, and send — no back-and-forth, no
               formatting drama, no blank page.
             </motion.p>
-            <motion.div variants={fadeUp}>
-              <SignUpButton mode="modal">
-                <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
-                  Send Your First NDA Free
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
+              {userId ? (
+                <Link
+                  href="/templates"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm"
+                >
+                  Send your NDA now
                   <ArrowRight className="w-4 h-4" />
-                </button>
-              </SignUpButton>
+                </Link>
+              ) : (
+                <SignUpButton mode="modal">
+                  <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm cursor-pointer">
+                    Send Your First NDA Free
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </SignUpButton>
+              )}
+              <a
+                href="#pricing"
+                className="inline-flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-ink hover:bg-gray-100 font-semibold rounded-xl transition-colors duration-200 text-sm"
+              >
+                See pricing
+              </a>
             </motion.div>
           </motion.div>
 
           {/* Right: document mockup */}
           <motion.div
-            initial={{ opacity: 0, x: 24 }}
+            initial={reduceMotion ? false : { opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
             className="flex justify-center lg:justify-end pr-8 lg:pr-14"
@@ -226,38 +258,46 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          HOW IT WORKS
+          HOW IT WORKS + STATS
       ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100 bg-white py-16">
+      <section className="bg-gray-50 border-y border-gray-100 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-10">How it Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Reveal className="mb-12 text-center">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
+              How it works
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+              Three steps. That&apos;s the whole process.
+            </h2>
+          </Reveal>
+
+          <RevealGroup className="relative grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Connecting line behind the cards (desktop) */}
+            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-px bg-gray-200" aria-hidden="true" />
             {STEPS.map((step) => (
-              <div key={step.number} className="flex gap-4">
-                {/* Icon circle */}
-                <div className="flex-shrink-0 w-11 h-11 rounded-full bg-teal-800 flex items-center justify-center shadow-sm">
-                  <step.icon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
-                    {step.number}. {step.title}
-                  </p>
+              <RevealItem key={step.number}>
+                <div className="relative bg-white rounded-2xl border border-gray-100 shadow-card p-7 h-full">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center">
+                      <step.icon className="w-5 h-5 text-teal-700" />
+                    </div>
+                    <span className="text-4xl font-extrabold text-gray-200 leading-none select-none">
+                      {step.number}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-ink mb-1.5">
+                    {step.title}
+                  </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
-              </div>
+              </RevealItem>
             ))}
-          </div>
-        </div>
-      </section>
+          </RevealGroup>
 
-      {/* ══════════════════════════════════════════════
-          STATS STRIP
-      ══════════════════════════════════════════════ */}
-      <section className="bg-gray-50 border-y border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-3 gap-6">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6 mt-16 max-w-3xl mx-auto">
             {[
               { value: "< 5 min", label: "from template to sent" },
               { value: "0", label: "recipient accounts needed" },
@@ -274,46 +314,115 @@ export default function Home() {
       ══════════════════════════════════════════════ */}
       <section className="bg-white py-20 lg:py-28">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="mb-12"
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={fadeUp}
-          >
+          <Reveal className="mb-12">
             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
               Capabilities
             </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
               Fast by design. Secure by default.
             </h2>
-          </motion.div>
+          </Reveal>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            variants={stagger}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true, margin: "-60px" }}
-          >
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="group bg-white p-6 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 cursor-default"
-              >
-                <div className="w-10 h-10 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-200">
-                  <f.icon className="w-5 h-5 text-teal-700" />
+              <RevealItem key={i}>
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 h-full cursor-default">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+                    <f.icon className="w-5 h-5 text-teal-700" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-ink mb-1.5">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {f.description}
+                  </p>
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1.5">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {f.description}
-                </p>
-              </motion.div>
+              </RevealItem>
             ))}
-          </motion.div>
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          PRICING
+      ══════════════════════════════════════════════ */}
+      <section id="pricing" className="scroll-mt-28 bg-gray-50 border-y border-gray-100 py-20">
+        <PricingSection />
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          FAQ TEASER
+      ══════════════════════════════════════════════ */}
+      <section className="bg-white py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="mb-10 text-center">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
+              FAQ
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+              Good questions, quick answers
+            </h2>
+          </Reveal>
+
+          <Reveal>
+            <Accordion type="single" collapsible className="space-y-3">
+              {TEASER_FAQ_INDEXES.map((faqIndex) => (
+                <AccordionItem
+                  key={faqIndex}
+                  value={`item-${faqIndex}`}
+                  className="bg-white rounded-2xl border border-gray-200 px-6 data-[state=open]:border-teal-600 transition-colors duration-200"
+                >
+                  <AccordionTrigger className="text-ink text-sm font-semibold hover:no-underline py-5">
+                    {faqs[faqIndex].question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-sm text-gray-500 leading-relaxed pb-5">
+                    {faqs[faqIndex].answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            <div className="text-center mt-8">
+              <Link
+                href="/faq"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-teal-800 hover:text-teal-700 transition-colors"
+              >
+                All questions
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          FINAL CTA
+      ══════════════════════════════════════════════ */}
+      <section className="bg-teal-800 py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Reveal>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
+              Your next NDA, sent in minutes.
+            </h2>
+            <p className="text-teal-100 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto">
+              Pick a template, fill in what&apos;s different, send. No lawyer required.
+            </p>
+            {userId ? (
+              <Link
+                href="/templates"
+                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm"
+              >
+                Send your NDA now
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <SignUpButton mode="modal">
+                <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm cursor-pointer">
+                  Start in seconds
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </SignUpButton>
+            )}
+          </Reveal>
         </div>
       </section>
 

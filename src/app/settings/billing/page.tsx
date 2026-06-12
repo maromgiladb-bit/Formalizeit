@@ -286,7 +286,7 @@ export default function BillingSettingsPage() {
               ) : (
                 <p className="text-sm text-gray-500">Only the organization owner can upgrade the plan.</p>
               )}
-              <Link href="/plans" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+              <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
                 View all plans
               </Link>
             </>
