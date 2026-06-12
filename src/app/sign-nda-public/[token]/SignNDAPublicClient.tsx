@@ -302,12 +302,18 @@ export default function SignNDAPublicClient({
                     <div className="flex-1 flex flex-col w-full px-6 py-8 overflow-y-auto">
                         {/* Header */}
                         <div className="mb-6">
+                            <div className="inline-flex items-center gap-1.5 bg-teal-50 text-teal-800 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                                Secure NDA link
+                            </div>
                             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Non-Disclosure Agreement</p>
-                            <h1 className="text-2xl font-extrabold text-gray-900 leading-tight mb-1">{ndaTitle}</h1>
+                            <h1 className="text-2xl font-extrabold text-ink leading-tight mb-1">{ndaTitle}</h1>
                             <p className="text-sm text-gray-500">Review the document and add your signature below.</p>
                         </div>
 
-                        <div ref={signatureCardRef} className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col flex-1 min-h-0">
+                        <div ref={signatureCardRef} className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 flex flex-col flex-1 min-h-0">
                             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">Your Signature</p>
 
                             {/* Form Fields */}
@@ -318,7 +324,7 @@ export default function SignNDAPublicClient({
                                         type="text"
                                         value={signature.name}
                                         onChange={(e) => setSignature({ ...signature, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                                         placeholder="Your full name"
                                     />
                                 </div>
@@ -329,7 +335,7 @@ export default function SignNDAPublicClient({
                                         type="text"
                                         value={signature.title}
                                         onChange={(e) => setSignature({ ...signature, title: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                                         placeholder="e.g. CEO, CTO, Director"
                                     />
                                 </div>
@@ -340,7 +346,7 @@ export default function SignNDAPublicClient({
                                         type="date"
                                         value={signature.date}
                                         onChange={(e) => setSignature({ ...signature, date: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                                     />
                                 </div>
                             </div>
@@ -370,7 +376,7 @@ export default function SignNDAPublicClient({
                                             type="text"
                                             value={typedSignature}
                                             onChange={(e) => handleTypedChange(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none transition-shadow"
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                                             data-testid="signature-input"
                                             placeholder="Type your name to generate signature"
                                         />

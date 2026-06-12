@@ -858,13 +858,13 @@ export default function FillNDAPublicClient({
     if (submitSuccess) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="max-w-md w-full bg-white rounded-2xl shadow-float border border-gray-100 p-8 text-center animate-appear-zoom">
+                    <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Submitted Successfully!</h1>
+                    <h1 className="text-2xl font-bold text-ink mb-2">Submitted Successfully!</h1>
                     <p className="text-gray-600 mb-6">Your information has been submitted. The other party will review and you&apos;ll be notified of next steps.</p>
 
                     <SuccessActions />
@@ -889,7 +889,15 @@ export default function FillNDAPublicClient({
                                     </svg>
                                 </div>
                                 <div>
-                                    <h1 className="text-base font-bold text-gray-900">{ndaTitle}</h1>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h1 className="text-base font-bold text-ink">{ndaTitle}</h1>
+                                        <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                            Secure link
+                                        </span>
+                                    </div>
                                     <p className="text-xs text-gray-500 mt-0.5">Complete your information to proceed</p>
                                 </div>
                             </div>
@@ -916,7 +924,7 @@ export default function FillNDAPublicClient({
                         )}
 
                         {/* Form Card */}
-                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
                             <div className="px-6 pt-5 pb-2">
                                 {/* Compact Step Stepper */}
                                 <div className="flex items-center">
@@ -932,7 +940,7 @@ export default function FillNDAPublicClient({
                                                         <span>{i + 1}</span>
                                                     )}
                                                 </div>
-                                                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : i < step ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
+                                                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-ink font-semibold' : i < step ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
                                             </button>
                                             {i < steps.length - 1 && (
                                                 <div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
@@ -994,8 +1002,8 @@ export default function FillNDAPublicClient({
                                 {step === 2 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                                 </svg>
                                             </div>
@@ -1048,8 +1056,8 @@ export default function FillNDAPublicClient({
                                 {step === 4 && (
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3 mb-6">
-                                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
@@ -1283,7 +1291,7 @@ export default function FillNDAPublicClient({
                         <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-gray-900">Live Preview</h3>
+                                    <h3 className="font-semibold text-ink">Live Preview</h3>
                                     <p className="text-xs text-gray-600">
                                         {previewLoading ? (
                                             <span className="flex items-center gap-1">

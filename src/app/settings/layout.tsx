@@ -25,7 +25,7 @@ export default function SettingsLayout({
             <section className="border-b border-gray-100">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
                     <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Account</p>
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">Settings</h1>
                     <p className="text-base text-gray-500 leading-relaxed mt-2 max-w-lg">
                         Manage your account, team, and billing preferences.
                     </p>
@@ -34,9 +34,9 @@ export default function SettingsLayout({
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex flex-col lg:flex-row gap-10">
-                    {/* Sidebar */}
+                    {/* Sidebar — horizontal scrollable pill bar on mobile, vertical list on desktop */}
                     <aside className="lg:w-56 shrink-0">
-                        <nav className="sticky top-24 space-y-1">
+                        <nav className="lg:sticky lg:top-24 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible -mx-4 px-4 lg:mx-0 lg:px-0 pb-2 lg:pb-0">
                             {navigation.map((item) => {
                                 const isCurrent = item.href === '/settings'
                                     ? pathname === '/settings'
@@ -46,15 +46,15 @@ export default function SettingsLayout({
                                         key={item.name}
                                         href={item.href}
                                         className={`
-                                            flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
+                                            flex items-center gap-3 px-3.5 py-2.5 rounded-full lg:rounded-xl text-sm font-medium transition-colors duration-150 whitespace-nowrap shrink-0
                                             ${isCurrent
-                                                ? 'bg-teal-800 text-white'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                ? 'bg-teal-50 text-teal-800 font-semibold'
+                                                : 'text-gray-600 hover:text-ink hover:bg-gray-50'
                                             }
                                         `}
                                         aria-current={isCurrent ? 'page' : undefined}
                                     >
-                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-white' : 'text-gray-400'}`} />
+                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-teal-700' : 'text-gray-400'}`} />
                                         <span className="truncate">{item.name}</span>
                                     </Link>
                                 )

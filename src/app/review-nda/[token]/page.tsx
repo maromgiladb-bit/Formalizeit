@@ -354,13 +354,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 					</div>
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h2>
+					<h2 className="text-2xl font-bold text-ink mb-2">Link Expired</h2>
 					<p className="text-gray-600 mb-6">
 						This review link has expired. Please contact the sender to request a new review link.
 					</p>
 					<button
 						onClick={() => router.push('/')}
-						className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-all"
+						className="px-6 py-3 bg-teal-800 text-white rounded-lg font-medium hover:bg-teal-700 transition-all"
 					>
 						Go to Home
 					</button>
@@ -378,13 +378,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 						</svg>
 					</div>
-					<h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Link</h2>
+					<h2 className="text-2xl font-bold text-ink mb-2">Invalid Link</h2>
 					<p className="text-gray-600 mb-6">
 						This review link is invalid or no longer exists. Please check your email for the correct link or contact the sender.
 					</p>
 					<button
 						onClick={() => router.push('/')}
-						className="px-6 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-all"
+						className="px-6 py-3 bg-teal-800 text-white rounded-lg font-medium hover:bg-teal-700 transition-all"
 					>
 						Go to Home
 					</button>
@@ -397,7 +397,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 		return (
 			<div className="min-h-screen bg-gray-50 flex items-center justify-center">
 				<div className="text-center">
-					<div className="w-16 h-16 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+					<div className="w-16 h-16 border-4 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
 					<p className="text-gray-600">Loading NDA...</p>
 				</div>
 			</div>
@@ -411,7 +411,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 			{/* Warning Message */}
 			{warning && (
 				<div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg ${
-					warning.includes('✅') ? 'bg-green-500' : 'bg-orange-500'
+					warning.includes('✅') ? 'bg-teal-700' : 'bg-amber-500'
 				} text-white font-medium animate-fadeIn`}>
 					{warning}
 				</div>
@@ -423,8 +423,8 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 				<div className={`transition-all duration-300 ${showLivePreview ? "w-[45%]" : "w-full"} overflow-y-auto`}>
 					<div className="max-w-4xl mx-auto p-6">
 						{/* Header Card */}
-						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6 overflow-hidden">
-							<div className="bg-teal-600 px-6 py-4">
+						<div className="bg-white rounded-2xl shadow-card border border-gray-100 mb-6 overflow-hidden">
+							<div className="bg-teal-800 px-6 py-4">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
 										<div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
@@ -456,7 +456,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 						</div>
 
 						{/* Step Progress Bar */}
-						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+						<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
 							<div className="flex items-center justify-between mb-2">
 								{steps.map((s, i) => (
 									<React.Fragment key={i}>
@@ -464,9 +464,9 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											<div
 												className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
 													i < step
-														? "bg-green-500 text-white"
+														? "bg-teal-700 text-white"
 														: i === step
-														? "bg-teal-600 text-white ring-4 ring-teal-100"
+														? "bg-teal-800 text-white ring-4 ring-teal-100"
 														: "bg-gray-200 text-gray-500"
 												}`}
 											>
@@ -478,12 +478,12 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 													i + 1
 												)}
 											</div>
-											<span className={`text-xs mt-2 font-medium ${i === step ? "text-teal-600" : "text-gray-600"}`}>
+											<span className={`text-xs mt-2 font-medium ${i === step ? "text-teal-700" : "text-gray-600"}`}>
 												{s}
 											</span>
 										</div>
 										{i < steps.length - 1 && (
-											<div className={`h-1 flex-1 mx-2 rounded ${i < step ? "bg-green-500" : "bg-gray-200"}`} />
+											<div className={`h-1 flex-1 mx-2 rounded ${i < step ? "bg-teal-700" : "bg-gray-200"}`} />
 										)}
 									</React.Fragment>
 								))}
@@ -492,10 +492,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 						{/* Step 0: Document Information */}
 						{step === 0 && (
-							<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-								<h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-									<div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-										<svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+								<h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+									<div className="w-8 h-8 bg-teal-50 rounded-xl flex items-center justify-center">
+										<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 										</svg>
 									</div>
@@ -510,7 +510,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="text"
 											value={values.docName}
 											disabled
-											className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+											className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										/>
 										<p className="text-xs text-gray-500 mt-1">Set by sender</p>
 									</div>
@@ -523,7 +523,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 												type="date"
 												value={values.effective_date}
 												disabled
-												className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+												className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 											/>
 										</div>
 										<div>
@@ -534,7 +534,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 												type="number"
 												value={values.term_months}
 												disabled
-												className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+												className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 											/>
 										</div>
 									</div>
@@ -546,7 +546,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="number"
 											value={values.confidentiality_period_months}
 											disabled
-											className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+											className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										/>
 									</div>
 								</div>
@@ -555,10 +555,10 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 						{/* Step 1: Party A Information */}
 						{step === 1 && (
-							<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-								<h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-									<div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-										<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+								<h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+									<div className="w-8 h-8 bg-teal-50 rounded-xl flex items-center justify-center">
+										<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
 										</svg>
 									</div>
@@ -571,7 +571,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="text"
 											value={values.party_a_name}
 											disabled
-											className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+											className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										/>
 										<p className="text-xs text-gray-500 mt-1">Provided by sender</p>
 									</div>
@@ -581,7 +581,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											value={values.party_a_address}
 											disabled
 											rows={3}
-											className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+											className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										/>
 									</div>
 									<div>
@@ -590,7 +590,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="text"
 											value={values.party_a_phone}
 											disabled
-											className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+											className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										/>
 									</div>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -600,7 +600,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 												type="text"
 												value={values.party_a_signatory_name}
 												disabled
-												className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+												className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 											/>
 										</div>
 										<div>
@@ -609,7 +609,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 												type="text"
 												value={values.party_a_title}
 												disabled
-												className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+												className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 											/>
 										</div>
 									</div>
@@ -619,17 +619,17 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 						{/* Step 2: Party B Information */}
 						{step === 2 && (
-							<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-								<h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-									<div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-										<svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+								<h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+									<div className="w-8 h-8 bg-teal-50 rounded-xl flex items-center justify-center">
+										<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
 										</svg>
 									</div>
 									Party B Information (You)
 								</h2>
-								<div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
-									<p className="text-sm text-blue-800">
+								<div className="bg-teal-50 rounded-xl p-4 mb-4 border border-teal-200">
+									<p className="text-sm text-teal-800">
 										<strong>Note:</strong> Fill in the fields below. Grayed-out fields were pre-filled by the sender - you can suggest changes to them.
 									</p>
 								</div>
@@ -643,7 +643,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.party_b_name}
 										onChange={(e) => setField("party_b_name", e.target.value)}
 										disabled={!isFieldEditable("party_b_name")}
-										className={`p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+										className={`p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors ${
 											isFieldEditable("party_b_name") 
 												? "border-gray-300 bg-white" 
 												: "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
@@ -653,7 +653,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									{!isFieldEditable("party_b_name") && values.party_b_name && (
 										<button
 											onClick={() => openSuggestionModal("party_b_name")}
-											className="mt-2 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+											className="mt-2 text-sm text-teal-700 hover:text-teal-700 font-medium flex items-center gap-1"
 										>
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -671,7 +671,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										onChange={(e) => setField("party_b_address", e.target.value)}
 										disabled={!isFieldEditable("party_b_address")}
 										rows={3}
-										className={`p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+										className={`p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors ${
 											isFieldEditable("party_b_address") 
 												? "border-gray-300 bg-white" 
 												: "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
@@ -681,7 +681,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									{!isFieldEditable("party_b_address") && values.party_b_address && (
 										<button
 											onClick={() => openSuggestionModal("party_b_address")}
-											className="mt-2 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+											className="mt-2 text-sm text-teal-700 hover:text-teal-700 font-medium flex items-center gap-1"
 										>
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -700,7 +700,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											value={values.party_b_signatory_name}
 											onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 											disabled={!isFieldEditable("party_b_signatory_name")}
-											className={`p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+											className={`p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors ${
 												isFieldEditable("party_b_signatory_name") 
 													? "border-gray-300 bg-white" 
 													: "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
@@ -710,7 +710,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										{!isFieldEditable("party_b_signatory_name") && values.party_b_signatory_name && (
 											<button
 												onClick={() => openSuggestionModal("party_b_signatory_name")}
-												className="mt-2 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+												className="mt-2 text-sm text-teal-700 hover:text-teal-700 font-medium flex items-center gap-1"
 											>
 												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -728,7 +728,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											value={values.party_b_title}
 											onChange={(e) => setField("party_b_title", e.target.value)}
 											disabled={!isFieldEditable("party_b_title")}
-											className={`p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+											className={`p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors ${
 												isFieldEditable("party_b_title") 
 													? "border-gray-300 bg-white" 
 													: "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
@@ -738,7 +738,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										{!isFieldEditable("party_b_title") && values.party_b_title && (
 											<button
 												onClick={() => openSuggestionModal("party_b_title")}
-												className="mt-2 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+												className="mt-2 text-sm text-teal-700 hover:text-teal-700 font-medium flex items-center gap-1"
 											>
 												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -757,7 +757,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.party_b_email}
 										onChange={(e) => setField("party_b_email", e.target.value)}
 										disabled={!isFieldEditable("party_b_email")}
-										className={`p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+										className={`p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors ${
 											isFieldEditable("party_b_email") 
 												? "border-gray-300 bg-white" 
 												: "border-gray-300 bg-gray-50 text-gray-600 cursor-not-allowed"
@@ -767,7 +767,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									{!isFieldEditable("party_b_email") && values.party_b_email && (
 										<button
 											onClick={() => openSuggestionModal("party_b_email")}
-											className="mt-2 text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+											className="mt-2 text-sm text-teal-700 hover:text-teal-700 font-medium flex items-center gap-1"
 										>
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -782,8 +782,8 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 					{/* Step 3: Clauses */}
 					{step === 3 && (
-						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-							<h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+						<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+							<h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
 								<div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
 									<svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -800,7 +800,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										type="text"
 										value={values.governing_law}
 										disabled
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+										className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										placeholder="e.g., State of California"
 									/>
 								</div>
@@ -812,7 +812,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.ip_ownership}
 										disabled
 										rows={3}
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+										className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										placeholder="Intellectual property ownership terms..."
 									/>
 								</div>
@@ -824,7 +824,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.non_solicit}
 										disabled
 										rows={3}
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+										className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										placeholder="Non-solicitation terms..."
 									/>
 								</div>
@@ -836,7 +836,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.exclusivity}
 										disabled
 										rows={3}
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+										className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										placeholder="Exclusivity terms..."
 									/>
 								</div>
@@ -848,7 +848,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										value={values.additional_terms}
 										disabled
 										rows={4}
-										className="p-3 border border-gray-300 w-full rounded-lg shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+										className="p-3 border border-gray-200 w-full rounded-xl shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
 										placeholder="Any additional terms or conditions..."
 									/>
 								</div>
@@ -858,28 +858,28 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 
 					{/* Step 4: Review */}
 					{step === 4 && (
-						<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
-							<h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-								<div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-									<svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
+							<h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
+								<div className="w-8 h-8 bg-teal-50 rounded-xl flex items-center justify-center">
+									<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 								</div>
 								Review & Submit
 							</h2>
-							<div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
-								<p className="text-sm text-blue-800">
+							<div className="bg-teal-50 rounded-xl p-4 mb-6 border border-teal-200">
+								<p className="text-sm text-teal-800">
 									<strong>Review Summary:</strong> Please review all information before submitting. You can use the preview panel to see how the final document will look.
 								</p>
 							</div>
 							<div className="space-y-6">
 								{/* Summary of changes/suggestions */}
 								{Object.keys(suggestions).length > 0 && (
-									<div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-										<h3 className="font-semibold text-yellow-900 mb-2">Your Suggestions ({Object.keys(suggestions).length})</h3>
+									<div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+										<h3 className="font-semibold text-amber-900 mb-2">Your Suggestions ({Object.keys(suggestions).length})</h3>
 										<ul className="space-y-2">
 											{Object.entries(suggestions).map(([field, suggestion]) => (
-												<li key={field} className="text-sm text-yellow-800">
+												<li key={field} className="text-sm text-amber-800">
 													<strong>{field}:</strong> {suggestion.suggestedValue}
 													{suggestion.comment && <span className="italic"> - {suggestion.comment}</span>}
 												</li>
@@ -888,7 +888,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									</div>
 								)}
 								<div className="bg-gray-50 rounded-lg p-4">
-									<h3 className="font-semibold text-gray-900 mb-3">Document Summary</h3>
+									<h3 className="font-semibold text-ink mb-3">Document Summary</h3>
 									<div className="grid grid-cols-2 gap-3 text-sm">
 										<div><span className="text-gray-600">Document:</span> <strong>{values.docName}</strong></div>
 										<div><span className="text-gray-600">Effective Date:</span> <strong>{values.effective_date}</strong></div>
@@ -903,7 +903,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 					)}
 
 					{/* Step Navigation Buttons */}
-					<div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">
 						<div className="flex gap-4 justify-between flex-wrap">
 							<button
 								type="button"
@@ -941,7 +941,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 										<button
 											type="button"
 											onClick={() => setStep(step + 1)}
-											className="px-8 py-3 bg-linear-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+											className="px-8 py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-card flex items-center gap-2"
 										>
 											<span>Next Step</span>
 											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -975,7 +975,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											type="button"
 											onClick={submitForReview}
 											disabled={saving}
-											className="px-8 py-3 bg-linear-to-r from-teal-600 to-blue-600 text-white rounded-xl font-bold hover:from-teal-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+											className="px-8 py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-card disabled:opacity-50 flex items-center gap-2"
 										>
 											{saving ? (
 												<>
@@ -1005,7 +1005,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 						<div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-semibold text-gray-900">Live Preview</h3>
+									<h3 className="font-semibold text-ink">Live Preview</h3>
 									<p className="text-xs text-gray-600">Updates as you type</p>
 								</div>
 								<div className="flex gap-2">
@@ -1019,7 +1019,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 														newWindow.document.close();
 													}
 												}}
-												className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+												className="px-4 py-2 bg-teal-800 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
 												title="Open HTML preview in new tab"
 											>
 												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1056,7 +1056,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 							{previewLoading && (
 								<div className="flex items-center justify-center py-12">
 									<div className="text-center">
-										<div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+										<div className="w-12 h-12 border-4 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
 										<p className="text-gray-600">Generating preview...</p>
 									</div>
 								</div>
@@ -1084,13 +1084,13 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 					<div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative overflow-hidden">
 						<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
 							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-									<svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
+									<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 									</svg>
 								</div>
 								<div>
-									<h3 className="font-semibold text-gray-900 text-lg">Suggest a Change</h3>
+									<h3 className="font-semibold text-ink text-lg">Suggest a Change</h3>
 									<p className="text-xs text-gray-600">Propose a modification to this field</p>
 								</div>
 							</div>
@@ -1150,7 +1150,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 											saveSuggestion(suggestedValue, comment);
 										}
 									}}
-									className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-all duration-200"
+									className="px-5 py-2.5 bg-teal-800 text-white rounded-lg font-medium hover:bg-teal-700 transition-all duration-200"
 								>
 									Save Suggestion
 								</button>
@@ -1172,7 +1172,7 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 									</svg>
 								</div>
 								<div>
-									<h3 className="font-semibold text-gray-900 text-lg">PDF Preview</h3>
+									<h3 className="font-semibold text-ink text-lg">PDF Preview</h3>
 									<p className="text-xs text-gray-600">Generated NDA document</p>
 								</div>
 							</div>

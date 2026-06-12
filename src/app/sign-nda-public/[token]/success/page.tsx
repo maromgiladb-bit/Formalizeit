@@ -21,14 +21,14 @@ export default async function SignSuccessPage({
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="max-w-md w-full bg-white rounded-2xl shadow-float border border-gray-100 p-8 text-center animate-appear-zoom">
+                <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-10 h-10 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl font-bold text-ink mb-2">
                     Sign Sent Successfully!
                 </h1>
 
@@ -39,7 +39,7 @@ export default async function SignSuccessPage({
                 <div className="space-y-3">
                     <Link
                         href="/"
-                        className="block w-full px-5 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-all shadow-md hover:shadow-lg"
+                        className="block w-full px-5 py-3 bg-teal-800 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors shadow-card"
                     >
                         Back to Home Page
                     </Link>
@@ -54,6 +54,7 @@ export default async function SignSuccessPage({
             </div>
 
             <div className="mt-8 text-center text-sm text-gray-400">
+                <p className="mb-1">Encrypted &middot; Audit-trailed &middot; Powered by FormalizeIt</p>
                 &copy; {new Date().getFullYear()} FormalizeIt. All rights reserved.
             </div>
         </div>
