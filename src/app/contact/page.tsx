@@ -53,7 +53,7 @@ export default function Contact() {
             variants={stagger}
           >
             <motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Contact</motion.p>
-            <motion.h1 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Get in Touch</motion.h1>
+            <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight">Get in Touch</motion.h1>
             <motion.p variants={fadeUp} className="text-sm text-gray-500 leading-relaxed mt-1 max-w-lg">
               Have questions about our NDA platform? We&apos;re here to help!
             </motion.p>
@@ -73,12 +73,12 @@ export default function Contact() {
                 <motion.div
                   key={card.title}
                   variants={fadeUp}
-                  className="group bg-white p-6 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200"
+                  className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200"
                 >
-                  <div className="w-10 h-10 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-200">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center mb-4 transition-colors duration-200">
                     <card.icon className="w-5 h-5 text-teal-700" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-1.5">{card.title}</h3>
+                  <h3 className="text-sm font-bold text-ink mb-1.5">{card.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed whitespace-pre-line">{card.description}</p>
                   {card.link && card.linkLabel && (
                     <a
@@ -100,10 +100,10 @@ export default function Contact() {
               viewport={{ once: true, margin: "-60px" }}
               variants={fadeUp}
             >
-              <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
                 <div className="mb-6">
                   <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Message</p>
-                  <h2 className="text-2xl font-bold text-gray-900">Send us a Message</h2>
+                  <h2 className="text-2xl font-bold text-ink">Send us a Message</h2>
                 </div>
 
                 <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
@@ -112,7 +112,7 @@ export default function Contact() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="John"
                       />
                     </div>
@@ -120,7 +120,7 @@ export default function Contact() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Last Name</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="Doe"
                       />
                     </div>
@@ -130,14 +130,14 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
                     <input
                       type="email"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                       placeholder="john@example.com"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Subject</label>
-                    <select className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all bg-white text-gray-700">
+                    <select className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors bg-white text-gray-700">
                       <option value="">Select a topic</option>
                       <option value="support">Technical Support</option>
                       <option value="sales">Sales Inquiry</option>
@@ -150,14 +150,14 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Message</label>
                     <textarea
                       rows={5}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all resize-none"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors resize-none"
                       placeholder="How can we help you?"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                     Send Message
@@ -180,12 +180,12 @@ export default function Contact() {
             variants={fadeUp}
           >
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Looking for answers first?</h2>
+              <h2 className="text-lg font-bold text-ink">Looking for answers first?</h2>
               <p className="text-sm text-gray-500">Check our FAQ for quick answers to common questions.</p>
             </div>
             <Link
               href="/faq"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl shadow-card hover:bg-gray-50 transition-colors duration-200 text-sm cursor-pointer"
             >
               Browse FAQ
               <ArrowRight className="w-4 h-4" />

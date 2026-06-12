@@ -264,7 +264,7 @@ export default function HelpPage() {
 						<motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
 							Help Center
 						</motion.p>
-						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
 							Need help using FormalizeIt?
 						</motion.h1>
 						<motion.p variants={fadeUp} className="text-base text-gray-500 leading-relaxed">
@@ -316,20 +316,20 @@ export default function HelpPage() {
 											key={section.id}
 											id={section.id}
 											variants={fadeUp}
-											className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-6 sm:p-8 scroll-mt-24"
+											className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-6 sm:p-8 scroll-mt-24"
 										>
 											<div className="flex items-center gap-3 mb-4">
-												<div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200">
+												<div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200">
 													<Icon className="w-5 h-5 text-teal-700" />
 												</div>
-												<h2 className="text-sm font-bold text-gray-900">
+												<h2 className="text-sm font-bold text-ink">
 													{section.title}
 												</h2>
 											</div>
 											{section.content.map((block, i) => (
 												<div key={i}>
 													{block.heading && (
-														<h3 className="text-sm font-semibold text-gray-900 mb-2">
+														<h3 className="text-sm font-semibold text-ink mb-2">
 															{block.heading}
 														</h3>
 													)}
@@ -356,13 +356,13 @@ export default function HelpPage() {
 								{/* Need More Help */}
 								<motion.article
 									variants={fadeUp}
-									className="group bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200 p-6 sm:p-8"
+									className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-6 sm:p-8"
 								>
 									<div className="flex items-center gap-3 mb-4">
-										<div className="w-9 h-9 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200">
+										<div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200">
 											<MessageCircle className="w-5 h-5 text-teal-700" />
 										</div>
-										<h2 className="text-sm font-bold text-gray-900">Need more help?</h2>
+										<h2 className="text-sm font-bold text-ink">Need more help?</h2>
 									</div>
 									<p className="text-sm text-gray-500 leading-relaxed mb-4">
 										If you cannot find the answer you need, contact support and include:
@@ -386,7 +386,7 @@ export default function HelpPage() {
 									<div className="flex flex-col sm:flex-row gap-3">
 										<Link
 											href="/contact"
-											className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+											className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer"
 										>
 											Contact Support
 											<ArrowRight className="w-4 h-4" />

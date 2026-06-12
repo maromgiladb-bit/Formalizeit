@@ -18,7 +18,7 @@ import {
 
 function TemplateMockup() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
       <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
         <p className="text-xs font-semibold text-gray-500">Select a Template</p>
       </div>
@@ -56,7 +56,7 @@ function TemplateMockup() {
 
 function VariablesMockup() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
       <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
         <p className="text-xs font-semibold text-gray-500">Fill in the Details</p>
       </div>
@@ -84,12 +84,12 @@ function VariablesMockup() {
 function ReviewMockup() {
   return (
     <div className="relative w-full max-w-sm">
-      <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
           </div>
           <div className="text-xs font-semibold text-gray-400">NDA_Agreement.docx</div>
           <div className="w-12" />
@@ -114,7 +114,7 @@ function ReviewMockup() {
       </div>
       <div className="hidden sm:block absolute -right-2 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-44">
         <p className="text-xs font-semibold text-gray-800 leading-snug">Review only the changes:</p>
-        <p className="text-xs text-teal-600 font-medium mt-0.5">Variables &amp; Custom Clauses</p>
+        <p className="text-xs text-teal-700 font-medium mt-0.5">Variables &amp; Custom Clauses</p>
       </div>
     </div>
   )
@@ -122,7 +122,7 @@ function ReviewMockup() {
 
 function SignMockup() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden w-full max-w-sm">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
       <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
         <p className="text-xs font-semibold text-gray-500">Ready to Send</p>
       </div>
@@ -137,15 +137,15 @@ function SignMockup() {
           >
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                person.signed ? 'bg-teal-100' : 'bg-blue-100'
+                person.signed ? 'bg-teal-100' : 'bg-amber-50'
               }`}
             >
-              <span className={`text-xs font-bold ${person.signed ? 'text-teal-700' : 'text-blue-700'}`}>
+              <span className={`text-xs font-bold ${person.signed ? 'text-teal-700' : 'text-amber-700'}`}>
                 {person.initials}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-900">{person.name}</p>
+              <p className="text-xs font-semibold text-ink">{person.name}</p>
               <p className="text-xs text-gray-400 truncate">{person.email}</p>
             </div>
             {person.signed ? (
@@ -155,7 +155,7 @@ function SignMockup() {
             )}
           </div>
         ))}
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-800 text-white rounded-lg text-sm font-semibold">
+        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-800 text-white rounded-xl text-sm font-semibold">
           <Send className="w-4 h-4" />
           Send for Signature
         </button>
@@ -241,7 +241,7 @@ function TimelineStep({
           transition={{ duration: 0.5, delay: 0.15 }}
         >
           <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-1">{step.number}</p>
-          <h3 className="text-xl font-extrabold text-gray-900 mb-2">{step.title}</h3>
+          <h3 className="text-xl font-extrabold text-ink mb-2">{step.title}</h3>
           <p className="text-sm text-gray-500 leading-relaxed mb-6">{step.description}</p>
         </motion.div>
         <motion.div
@@ -265,7 +265,7 @@ function TimelineStep({
           {isEven ? (
             <div className="max-w-xs pr-12 text-right">
               <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
-              <h3 className="text-2xl font-extrabold text-gray-900 mb-3">{step.title}</h3>
+              <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
               <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
             </div>
           ) : (
@@ -289,7 +289,7 @@ function TimelineStep({
           ) : (
             <div className="max-w-xs pl-12">
               <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
-              <h3 className="text-2xl font-extrabold text-gray-900 mb-3">{step.title}</h3>
+              <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
               <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
             </div>
           )}
@@ -321,7 +321,7 @@ export default function About() {
           transition={{ duration: 0.55, ease: 'easeOut' }}
           className="text-center max-w-2xl mx-auto"
         >
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
             Send an NDA in minutes.
           </h1>
           <p className="text-base text-gray-500 leading-relaxed">
@@ -349,7 +349,7 @@ export default function About() {
             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
               The process
             </p>
-            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="text-3xl font-extrabold text-ink tracking-tight">
               From blank to signed
             </h2>
           </motion.div>
@@ -425,7 +425,7 @@ export default function About() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
+              <h2 className="text-2xl font-extrabold text-ink mb-2">
                 Send your first NDA in minutes.
               </h2>
               <p className="text-sm text-gray-500">
@@ -433,7 +433,7 @@ export default function About() {
               </p>
             </div>
             <SignUpButton mode="modal">
-              <button className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
+              <button className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer">
                 Get Started Free
                 <ArrowRight className="w-4 h-4" />
               </button>

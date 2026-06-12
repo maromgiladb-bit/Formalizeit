@@ -38,7 +38,7 @@ export default function FAQPage() {
 						<motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
 							Support
 						</motion.p>
-						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
 							Frequently Asked Questions
 						</motion.h1>
 						<motion.p variants={fadeUp} className="text-base text-gray-500 leading-relaxed">
@@ -62,9 +62,9 @@ export default function FAQPage() {
 								<motion.div key={index} variants={fadeUp}>
 									<AccordionItem
 										value={`item-${index}`}
-										className="bg-white rounded-xl border border-gray-200 px-6 hover:border-teal-300 transition-colors duration-200 data-[state=open]:border-teal-300"
+										className="bg-white rounded-2xl border border-gray-200 px-6 data-[state=open]:border-teal-600 transition-colors duration-200"
 									>
-										<AccordionTrigger className="text-gray-900 text-sm font-bold hover:no-underline py-5">
+										<AccordionTrigger className="text-ink text-sm font-semibold hover:no-underline py-5">
 											{faq.question}
 										</AccordionTrigger>
 										<AccordionContent className="text-sm text-gray-500 leading-relaxed pb-5">
@@ -93,13 +93,13 @@ export default function FAQPage() {
 								<MessageCircle className="w-5 h-5 text-teal-700" />
 							</div>
 							<div>
-								<h2 className="text-lg font-bold text-gray-900">Still have questions?</h2>
+								<h2 className="text-lg font-bold text-ink">Still have questions?</h2>
 								<p className="text-sm text-gray-500">Our support team is here to help.</p>
 							</div>
 						</div>
 						<Link
 							href="/contact"
-							className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+							className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer"
 						>
 							Contact Support
 							<ArrowRight className="w-4 h-4" />
