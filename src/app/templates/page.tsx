@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import Image from "next/image";
-import PublicToolbar from "@/components/PublicToolbar";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,7 +58,7 @@ export default function TemplateSelectionPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -71,17 +71,16 @@ export default function TemplateSelectionPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PublicToolbar />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Choose Your NDA Template {mode === "html" && <span className="text-teal-600">(HTML Editor)</span>}
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Step 1 of 2</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-ink mb-4">
+            Choose Your NDA Template {mode === "html" && <span className="text-teal-700">(HTML Editor)</span>}
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
             Select the template that best fits your needs. Each template is professionally designed and legally sound.
-            {mode === "html" && <span className="block mt-2 text-teal-600 font-medium">You&apos;ll be redirected to the HTML-based editor with live preview.</span>}
+            {mode === "html" && <span className="block mt-2 text-teal-700 font-medium">You&apos;ll be redirected to the HTML-based editor with live preview.</span>}
           </p>
         </div>
 
@@ -91,9 +90,9 @@ export default function TemplateSelectionPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 ${selectedCategory === category
-                  ? "bg-teal-600 text-white shadow-md"
-                  : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 cursor-pointer ${selectedCategory === category
+                  ? "bg-teal-800 text-white shadow-card"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                 }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -104,7 +103,7 @@ export default function TemplateSelectionPage() {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading templates...</p>
           </div>
         )}
@@ -115,7 +114,7 @@ export default function TemplateSelectionPage() {
             {filteredTemplates.map(template => (
               <div
                 key={template.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer border border-gray-200 w-full md:w-[calc(50%-2rem)] lg:w-[380px] flex flex-col"
+                className="bg-white rounded-2xl shadow-card hover:shadow-float transition-shadow duration-300 overflow-hidden group cursor-pointer border border-gray-100 w-full md:w-[calc(50%-2rem)] lg:w-[380px] flex flex-col"
                 onClick={() => handleSelectTemplate(template.id)}
               >
                 {/* Preview Image or Placeholder */}
@@ -145,12 +144,12 @@ export default function TemplateSelectionPage() {
                 {/* Content */}
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">
+                    <h3 className="text-xl font-semibold text-ink group-hover:text-teal-800 transition-colors">
                       {template.name}
                     </h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+                  <p className="text-gray-500 text-sm mb-4 line-clamp-3 flex-1">
                     {template.description}
                   </p>
 
@@ -167,30 +166,30 @@ export default function TemplateSelectionPage() {
                   </div>
 
                   {/* Action Button */}
-                  <button
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSelectTemplate(template.id);
                     }}
-                    className="w-full py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-auto"
+                    className="w-full mt-auto"
                   >
                     <span>Use This Template</span>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
             
             {/* Placeholder for future templates */}
-            <div className="bg-gray-50 rounded-xl shadow-sm border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
+            <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-500 mb-2">More Templates Coming Soon</h3>
+              <h3 className="text-xl font-semibold text-gray-500 mb-2">More Templates Coming Soon</h3>
               <p className="text-gray-400 text-sm">We are working hard to bring you more legally sound templates.</p>
             </div>
           </div>
@@ -202,22 +201,23 @@ export default function TemplateSelectionPage() {
             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+            <h3 className="text-lg font-medium text-ink mb-2">No templates found</h3>
             <p className="text-gray-600">Try selecting a different category</p>
           </div>
         )}
 
         {/* Back Button */}
         <div className="mt-12 text-center">
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push("/dashboard")}
-            className="px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-200 shadow-sm border border-gray-200 inline-flex items-center gap-2"
+            className="px-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     </div>

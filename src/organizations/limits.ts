@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { resolveLimits, getCurrentQuarterStart } from "@/billing/planLimits"
 import { DbMembershipRole } from '@/lib/organizationRoles'
@@ -41,7 +42,7 @@ export async function assertCanSendNda(organizationId: string) {
 
     const limits = resolveLimits(org)
 
-    const whereClause =
+    const whereClause: Prisma.NdaDraftWhereInput =
         limits.draftLimitPeriod === 'quarter'
             ? { organizationId, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
             : { organizationId, status: { in: ['SENT', 'SIGNED'] } }
@@ -58,7 +59,7 @@ export async function createDraft(data: {
     createdByUserId: string
     templateId?: string | null
     title?: string | null
-    content?: unknown
+    content?: Prisma.InputJsonValue
 }) {
     return prisma.ndaDraft.create({
         data,

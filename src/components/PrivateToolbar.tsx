@@ -1,13 +1,13 @@
-// Checked layout.tsx
+'use client'
 
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, UserButton } from '@clerk/nextjs'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import { Plus } from 'lucide-react'
 
-import OrgSwitcher from './OrgSwitcher'
-import { InteractiveHoverButton } from './ui/interactive-hover-button'
+import FloatingNavShell from './nav/FloatingNavShell'
 import { NotificationIcon } from './ui/notification-icon'
 import NotificationPanel from './NotificationPanel'
 
@@ -26,21 +26,20 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const [unreadCount, setUnreadCount] = useState(0)
   const moreMenuRef = useRef<HTMLDivElement>(null)
   const devMenuRef = useRef<HTMLDivElement>(null)
-  const moreMenuRefTablet = useRef<HTMLDivElement>(null)
-  const devMenuRefTablet = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
     { name: 'Fill NDA', href: '/templates', current: pathname === '/fillndahtml' || pathname === '/templates' },
-    { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
+    { name: 'Plans', href: '/#pricing', current: pathname === '/plans' },
   ]
 
   const router = useRouter()
 
   const primaryLinks = [
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Settings', href: '/settings' },
-    { name: 'Plans', href: '/plans' },
+    { name: 'Pricing', href: '/#pricing' },
   ]
 
   const secondaryLinks = [
@@ -69,16 +68,10 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node
-      if (
-        moreMenuRef.current && !moreMenuRef.current.contains(target) &&
-        moreMenuRefTablet.current && !moreMenuRefTablet.current.contains(target)
-      ) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(target)) {
         setIsMoreMenuOpen(false)
       }
-      if (
-        devMenuRef.current && !devMenuRef.current.contains(target) &&
-        devMenuRefTablet.current && !devMenuRefTablet.current.contains(target)
-      ) {
+      if (devMenuRef.current && !devMenuRef.current.contains(target)) {
         setIsDevMenuOpen(false)
       }
       if (notifRef.current && !notifRef.current.contains(target)) {
@@ -110,130 +103,79 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
   if (!userId) return null
 
+  const navLinkClass = (current: boolean) =>
+    `inline-flex items-center px-3.5 py-2 rounded-full text-sm transition-colors ${
+      current
+        ? 'bg-teal-50 text-teal-800 font-semibold'
+        : 'text-gray-600 hover:text-ink hover:bg-gray-100 font-medium'
+    }`
+
   return (
-    <nav className="bg-white shadow-md border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/dashboard" className="flex-shrink-0">
-              <div className="flex items-center">
+    <FloatingNavShell expanded={isMobileMenuOpen} scrolledMaxWidth="lg:max-w-4xl">
+      {(scrolled) => (
+        <>
+          <div
+            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+              scrolled ? 'h-13' : 'h-16'
+            }`}
+          >
+            <div className="flex items-center min-w-0">
+              <Link href="/dashboard" className="shrink-0" aria-label="Dashboard">
                 <Image
                   src="/formalizeIt-logo.png"
                   alt="FormalizeIt"
                   width={200}
                   height={50}
-                  className="h-35 w-auto"
+                  className={`w-auto transition-all duration-300 ease-out motion-reduce:transition-none ${
+                    scrolled ? 'h-20' : 'h-28'
+                  }`}
                   priority
                 />
-              </div>
-            </Link>
+              </Link>
 
-            {/* Organization Switcher - Hidden by default for now as requested
-            {organizationData && (
-              <OrgSwitcher
-                organizations={organizationData.organizations}
-                activeOrgId={organizationData.activeOrgId}
-              />
-            )}
-            */}
+              {/* Desktop navigation — centered in the bar */}
+              <div className="hidden lg:flex lg:items-center lg:gap-1 absolute left-1/2 -translate-x-1/2">
 
-            {/* Desktop Navigation - Show first 4 items */}
-            <div className="hidden xl:ml-8 xl:flex xl:items-center xl:space-x-1">
-              {navigation.slice(0, 4).map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${item.current
-                    ? 'bg-teal-800 text-white shadow-sm'
-                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
-                    }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+                {navigation.map((item) => (
+                  <Link key={item.name} href={item.href} className={navLinkClass(item.current)}>
+                    {item.name}
+                  </Link>
+                ))}
 
-              <div className="relative" ref={moreMenuRef}>
-                <button
-                  onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${isMoreMenuOpen ? 'bg-teal-800 text-white' : 'text-gray-700 hover:text-white hover:bg-teal-800'
-                    }`}
-                >
-                  More
-                  <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isMoreMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                    <div className="py-1">
-                      {navigation.slice(4).map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all duration-200 ${item.current
-                            ? 'bg-teal-800 text-white'
-                            : 'text-gray-700 hover:bg-teal-800 hover:text-white'
-                            }`}
-                          onClick={() => setIsMoreMenuOpen(false)}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                      {primaryLinks.map((link) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
-                          onClick={() => setIsMoreMenuOpen(false)}
-                        >
-                          {link.name}
-                        </Link>
-                      ))}
-                      <div className="border-t border-gray-200 my-1"></div>
-                      {secondaryLinks.map((link) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
-                          onClick={() => setIsMoreMenuOpen(false)}
-                        >
-                          {link.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Dev Dropdown for desktop */}
-              {isDev && (
-                <div className="relative" ref={devMenuRef}>
+                {/* More dropdown — folds away in the floating pill */}
+                <div className={`relative ${scrolled ? 'hidden' : ''}`} ref={moreMenuRef}>
                   <button
-                    onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                      }`}
+                    onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                    className={`inline-flex items-center px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                      isMoreMenuOpen ? 'bg-gray-100 text-ink' : 'text-gray-600 hover:text-ink hover:bg-gray-100'
+                    }`}
                   >
-                    🔧 Dev
-                    <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    More
+                    <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
-                  {isDevMenuOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-purple-200 rounded-xl shadow-2xl z-50 overflow-hidden">
-                      <div className="py-2 bg-gradient-to-r from-purple-50 to-purple-100">
-                        <div className="px-4 py-2 text-xs font-bold text-purple-700 uppercase tracking-wide">
-                          🔧 Development Tools
-                        </div>
-                      </div>
-                      <div className="py-1">
-                        {devLinks.map((link) => (
+                  {isMoreMenuOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-float z-50 overflow-hidden">
+                      <div className="py-1.5">
+                        {primaryLinks.map((link) => (
                           <Link
                             key={link.name}
                             href={link.href}
-                            className="block px-4 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition-all"
-                            onClick={() => setIsDevMenuOpen(false)}
+                            className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-ink transition-colors"
+                            onClick={() => setIsMoreMenuOpen(false)}
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                        <div className="border-t border-gray-100 my-1.5"></div>
+                        {secondaryLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-ink transition-colors"
+                            onClick={() => setIsMoreMenuOpen(false)}
                           >
                             {link.name}
                           </Link>
@@ -242,239 +184,166 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Tablet/Small Desktop - Show first 3 items */}
-            <div className="hidden lg:ml-8 lg:flex lg:space-x-1 xl:hidden">
-              {navigation.slice(0, 3).map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${item.current
-                    ? 'bg-teal-800 text-white shadow-sm'
-                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
-                    }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+                {/* Dev dropdown */}
+                {isDev && (
+                  <div className={`relative ${scrolled ? 'hidden' : ''}`} ref={devMenuRef}>
+                    <button
+                      onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
+                      className={`inline-flex items-center px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
+                        isDevMenuOpen ? 'bg-purple-50 text-purple-700' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                      }`}
+                    >
+                      🔧 Dev
+                      <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
-              {/* More Dropdown for tablet */}
-              <div className="relative" ref={moreMenuRefTablet}>
-                <button
-                  onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${isMoreMenuOpen ? 'bg-teal-800 text-white' : 'text-gray-700 hover:text-white hover:bg-teal-800'
-                    }`}
-                >
-                  More
-                  <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isMoreMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                    <div className="py-1">
-                      {navigation.slice(3).map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={`block px-4 py-3 text-sm font-bold transition-all duration-200 ${item.current
-                            ? 'bg-teal-800 text-white'
-                            : 'text-gray-700 hover:bg-teal-800 hover:text-white'
-                            }`}
-                          onClick={() => setIsMoreMenuOpen(false)}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                      <div className="border-t border-gray-200 my-1"></div>
-                      {secondaryLinks.map((link: { name: string; href: string }) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          className="block px-4 py-3 text-sm font-bold text-gray-700 hover:bg-teal-800 hover:text-white transition-all duration-200"
-                          onClick={() => setIsMoreMenuOpen(false)}
-                        >
-                          {link.name}
-                        </Link>
-                      ))}
-                    </div>
+                    {isDevMenuOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-purple-100 rounded-2xl shadow-float z-50 overflow-hidden">
+                        <div className="px-4 py-2.5 text-xs font-bold text-purple-700 uppercase tracking-wide bg-purple-50">
+                          Development Tools
+                        </div>
+                        <div className="py-1">
+                          {devLinks.map((link) => (
+                            <Link
+                              key={link.name}
+                              href={link.href}
+                              className="block px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                              onClick={() => setIsDevMenuOpen(false)}
+                            >
+                              {link.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-
-              {/* Dev Dropdown for tablet */}
-              {isDev && (
-                <div className="relative" ref={devMenuRefTablet}>
-                  <button
-                    onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                    className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDevMenuOpen ? 'bg-purple-50 text-purple-700 shadow-sm' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                      }`}
-                  >
-                    🔧 Dev
-                    <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {isDevMenuOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white border-2 border-purple-200 rounded-xl shadow-2xl z-50 overflow-hidden">
-                      <div className="py-2 bg-gradient-to-r from-purple-50 to-purple-100">
-                        <div className="px-4 py-2 text-xs font-bold text-purple-700 uppercase tracking-wide">
-                          🔧 Development Tools
-                        </div>
-                      </div>
-                      <div className="py-1">
-                        {devLinks.map((link) => (
-                          <Link
-                            key={link.name}
-                            href={link.href}
-                            className="block px-4 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition-all"
-                            onClick={() => setIsDevMenuOpen(false)}
-                          >
-                            {link.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* Right side buttons - Desktop */}
-          <div className="hidden lg:flex items-center space-x-4">
-            <div ref={notifRef} className="relative">
+            {/* Right side — desktop */}
+            <div className="hidden lg:flex items-center gap-2">
+              <div ref={notifRef} className="relative">
+                <button
+                  onClick={() => setIsNotifOpen(prev => !prev)}
+                  className="p-2 text-gray-500 hover:text-ink transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center"
+                  aria-label="Notifications"
+                >
+                  <NotificationIcon size={22} active={unreadCount > 0} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none pointer-events-none">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <NotificationPanel
+                  isOpen={isNotifOpen}
+                  onClose={() => setIsNotifOpen(false)}
+                  onUnreadCountChange={setUnreadCount}
+                />
+              </div>
               <button
-                onClick={() => setIsNotifOpen(prev => !prev)}
-                className="p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100 flex items-center justify-center"
-                aria-label="Notifications"
+                onClick={() => router.push('/templates')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer"
               >
-                <NotificationIcon size={24} active={unreadCount > 0} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none pointer-events-none">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
+                <Plus className="h-4 w-4" />
+                New NDA
+              </button>
+              <UserButton afterSignOutUrl="/" />
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="flex items-center lg:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-full text-gray-600 hover:text-ink hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 transition-colors"
+                aria-expanded={isMobileMenuOpen}
+              >
+                <span className="sr-only">Open main menu</span>
+                {!isMobileMenuOpen ? (
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                ) : (
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 )}
               </button>
-              <NotificationPanel
-                isOpen={isNotifOpen}
-                onClose={() => setIsNotifOpen(false)}
-                onUnreadCountChange={setUnreadCount}
-              />
             </div>
-            <InteractiveHoverButton
-              text="New NDA"
-              onClick={() => router.push('/templates')}
-            />
-            <UserButton afterSignOutUrl="/" />
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center lg:hidden">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-700 transition-all"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {!isMobileMenuOpen ? (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              ) : (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu dropdown */}
-      {
-        isMobileMenuOpen && (
-          <div className="lg:hidden border-t-2 border-gray-200 bg-white shadow-xl">
-            <div className="px-4 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`block px-4 py-3 rounded-xl text-base font-bold transition-all duration-200 ${item.current
-                    ? 'bg-teal-800 text-white'
-                    : 'text-gray-700 hover:text-white hover:bg-teal-800'
+          {/* Mobile menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden border-t border-gray-100 pb-4">
+              <div className="pt-2 pb-3 space-y-0.5">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`block px-4 py-3 rounded-xl text-base transition-colors ${
+                      item.current
+                        ? 'bg-teal-50 text-teal-800 font-semibold'
+                        : 'text-gray-700 hover:text-ink hover:bg-gray-100 font-medium'
                     }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <div className="border-t-2 border-gray-200 my-2"></div>
-              {primaryLinks.map((link: { name: string; href: string }) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              <div className="border-t-2 border-gray-200 my-2"></div>
-              {secondaryLinks.map((link: { name: string; href: string }) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              {isDev && (
-                <>
-                  <div className="border-t-2 border-gray-200 my-2"></div>
-                  <div className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
-                    🔧 Dev Tools
-                  </div>
-                  {devLinks.map((link) => (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      className="block px-4 py-3 rounded-xl text-base font-semibold text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-all"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
-                </>
-              )}
-            </div>
-            <div className="pt-4 pb-4 border-t-2 border-gray-200">
-              <div className="flex items-center px-4 mb-3">
-                <UserButton afterSignOutUrl="/" />
-                <span className="ml-3 text-sm font-semibold text-gray-700">Your Account</span>
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <div className="border-t border-gray-100 my-2"></div>
+                {[...primaryLinks, ...secondaryLinks].map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="block px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:text-ink hover:bg-gray-100 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+                {isDev && (
+                  <>
+                    <div className="border-t border-gray-100 my-2"></div>
+                    <div className="px-4 py-2 text-xs font-bold text-purple-700 uppercase tracking-wide">
+                      🔧 Dev Tools
+                    </div>
+                    {devLinks.map((link) => (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        className="block px-4 py-3 rounded-xl text-base font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </>
+                )}
               </div>
-              <div className="px-4">
-                <Link
-                  href="/templates"
-                  className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  New NDA
-                </Link>
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex items-center px-4 mb-3">
+                  <UserButton afterSignOutUrl="/" />
+                  <span className="ml-3 text-sm font-medium text-gray-700">Your Account</span>
+                </div>
+                <div className="px-1">
+                  <Link
+                    href="/templates"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Plus className="h-5 w-5" />
+                    New NDA
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        )
-      }
-    </nav>
+          )}
+        </>
+      )}
+    </FloatingNavShell>
   )
 }

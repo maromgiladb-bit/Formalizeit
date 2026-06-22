@@ -17,7 +17,7 @@ export default function MemberRoleDropdown({
     currentRole: string
     options: { value: string; label: string }[]
     label?: string
-    serverAction?: (fd: FormData) => Promise<void>
+    serverAction?: (fd: FormData) => Promise<unknown>
     fieldName?: string
 }) {
     const router = useRouter()

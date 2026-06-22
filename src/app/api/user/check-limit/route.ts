@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
@@ -27,7 +28,7 @@ export async function GET() {
 
     const limits = resolveLimits(organization)
 
-    const whereClause =
+    const whereClause: Prisma.NdaDraftWhereInput =
       limits.draftLimitPeriod === 'quarter'
         ? { organizationId: organization.id, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
         : { organizationId: organization.id, status: { in: ['SENT', 'SIGNED'] } }

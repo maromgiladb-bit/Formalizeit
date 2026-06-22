@@ -4,10 +4,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, SignInButton, SignUpButton } from '@clerk/nextjs'
 import { useState } from 'react'
+import FloatingNavShell from './nav/FloatingNavShell'
 
 interface PublicToolbarProps {
   onLinkClick?: (e: React.MouseEvent) => void;
 }
+
+// `core` links stay visible when the bar shrinks into the floating pill.
+const links = [
+  { name: 'Home', href: '/', core: false },
+  { name: 'About', href: '/about', core: true },
+  { name: 'Pricing', href: '/#pricing', core: true },
+  { name: 'Contact', href: '/contact', core: false },
+  { name: 'FAQ', href: '/faq', core: true },
+  { name: 'Help', href: '/help', core: false },
+]
 
 export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
   const { userId } = useAuth()
@@ -26,151 +37,122 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
   }
 
   return (
-    <nav className="bg-white shadow-md border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="shrink-0" onClick={onLinkClick}>
-              <div className="flex items-center">
+    <FloatingNavShell expanded={isMobileMenuOpen} scrolledMaxWidth="md:max-w-3xl">
+      {(scrolled) => (
+        <>
+          <div
+            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+              scrolled ? 'h-13' : 'h-16'
+            }`}
+          >
+            <div className="flex items-center">
+              <Link href="/" className="shrink-0" onClick={onLinkClick} aria-label="FormalizeIt home">
                 <Image
                   src="/formalizeIt-logo.png"
                   alt="FormalizeIt"
                   width={200}
                   height={50}
-                  className="h-30 w-auto"
+                  className={`w-auto transition-all duration-300 ease-out motion-reduce:transition-none ${
+                    scrolled ? 'h-20' : 'h-28'
+                  }`}
                   priority
                 />
+              </Link>
+
+              {/* Desktop navigation — centered in the bar */}
+              <div className="hidden md:flex md:items-center md:gap-1 absolute left-1/2 -translate-x-1/2">
+
+                {links.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={onLinkClick}
+                    className={`items-center px-3.5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-ink hover:bg-gray-100 transition-colors ${
+                      scrolled && !link.core ? 'hidden' : 'inline-flex'
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
               </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:ml-8 md:flex md:space-x-2">
-              <Link href="/" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                Home
-              </Link>
-              <Link href="/about" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                About
-              </Link>
-              <Link href="/plans" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                Plans
-              </Link>
-              <Link href="/contact" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                Contact
-              </Link>
-              <Link href="/faq" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                FAQ
-              </Link>
-              <Link href="/help" onClick={onLinkClick} className="inline-flex items-center px-4 py-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 text-sm font-semibold transition-all duration-200">
-                Help
-              </Link>
             </div>
-          </div>
 
-          {/* Desktop Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
-            <SignInButton mode="modal">
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-200 text-sm font-semibold rounded-lg text-(--navy-700) bg-white hover:bg-gray-50 hover:border-gray-300 transition-all">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-(--teal-600) hover:bg-(--teal-700) transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                Get Started →
-              </button>
-            </SignUpButton>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-700 transition-all"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {!isMobileMenuOpen ? (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              ) : (
-                <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu dropdown */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t-2 border-gray-200 bg-white shadow-xl">
-          <div className="px-4 pt-2 pb-3 space-y-1">
-            <Link
-              href="/"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              Home
-            </Link>
-            <Link
-              href="/about"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              About
-            </Link>
-            <Link
-              href="/plans"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              Plans
-            </Link>
-            <Link
-              href="/contact"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              Contact
-            </Link>
-            <Link
-              href="/faq"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              FAQ
-            </Link>
-            <Link
-              href="/help"
-              className="block px-4 py-3 rounded-xl text-base font-bold text-gray-700 hover:text-white hover:bg-teal-800 transition-all duration-200"
-              onClick={handleLinkClick}
-            >
-              Help
-            </Link>
-          </div>
-          <div className="pt-4 pb-4 border-t-2 border-gray-200">
-            <div className="px-4 space-y-2">
+            {/* Desktop buttons */}
+            <div className="hidden md:flex items-center gap-2">
               <SignInButton mode="modal">
                 <button
-                  className="w-full flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`items-center px-4 py-2 rounded-full text-sm font-semibold text-gray-700 hover:text-ink hover:bg-gray-100 transition-colors cursor-pointer ${
+                    scrolled ? 'hidden' : 'inline-flex'
+                  }`}
                 >
                   Sign In
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button
-                  className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-all"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Get Started →
+                <button className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer">
+                  Get Started
                 </button>
               </SignUpButton>
             </div>
+
+            {/* Mobile menu button */}
+            <div className="flex items-center md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-full text-gray-600 hover:text-ink hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 transition-colors"
+                aria-expanded={isMobileMenuOpen}
+              >
+                <span className="sr-only">Open main menu</span>
+                {!isMobileMenuOpen ? (
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                ) : (
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-100 pb-4">
+              <div className="pt-2 pb-3 space-y-0.5">
+                {links.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="block px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:text-ink hover:bg-gray-100 transition-colors"
+                    onClick={handleLinkClick}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+              <div className="pt-3 border-t border-gray-100 space-y-2 px-1">
+                <SignInButton mode="modal">
+                  <button
+                    className="w-full flex items-center justify-center px-5 py-3 border border-gray-200 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </button>
+                </SignUpButton>
+              </div>
+            </div>
+          )}
+        </>
       )}
-    </nav>
+    </FloatingNavShell>
   )
 }

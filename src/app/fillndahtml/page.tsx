@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
-import PublicToolbar from "@/components/PublicToolbar";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
 import { useFormi } from "@/components/ai/FormiProvider";
@@ -637,13 +636,13 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	const getFieldClass = (fieldName: string, baseClass: string = "p-2 border") => {
+	const getFieldClass = (fieldName: string, baseClass: string = "p-2.5 border") => {
 		const hasError = validationErrors.has(fieldName);
 		const hasSuggestion = incomingSuggestions[fieldName] && !suggestionResponses[fieldName];
 		if (hasSuggestion) {
-			return `${baseClass} border-yellow-400 bg-yellow-50`;
+			return `${baseClass} border-amber-400 bg-amber-50`;
 		}
-		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-gray-300"}`;
+		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`;
 	};
 
 	// Suggestion handlers
@@ -999,7 +998,7 @@ export default function FillNDAHTML() {
 				setWarning(data.error || 'Failed to delete draft');
 				return;
 			}
-			router.push('/mynda');
+			router.push('/dashboard');
 		} catch {
 			setWarning('Failed to delete draft');
 		} finally {
@@ -1283,18 +1282,8 @@ export default function FillNDAHTML() {
 	if (!isLoaded) return <div className="min-h-screen">Loading...</div>;
 	if (!user) return <RedirectToSignIn />;
 
-	const handleToolbarLinkClick = (e: React.MouseEvent) => {
-		const isDirty = JSON.stringify(values) !== JSON.stringify(lastSavedValues);
-		if (isDirty) {
-			if (!window.confirm("any unsaved changes may be deleted")) {
-				e.preventDefault();
-			}
-		}
-	};
-
 	return (
 		<div className="min-h-screen bg-gray-50">
-			<PublicToolbar onLinkClick={handleToolbarLinkClick} />
 
 			{/* Main Container with Fixed Layout */}
 			<div className="flex h-[calc(100vh-64px)]">
@@ -1310,7 +1299,7 @@ export default function FillNDAHTML() {
 									</svg>
 								</div>
 								<div>
-									<h1 className="text-base font-bold text-gray-900">{draftId ? "Edit NDA Draft" : "Create New NDA"}</h1>
+									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA Draft" : "Create New NDA"}</h1>
 									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Fill out the form to generate your agreement"}</p>
 								</div>
 							</div>
@@ -1327,7 +1316,7 @@ export default function FillNDAHTML() {
 								{isDev && (
 									<button
 										onClick={autoFillMockData}
-										className="px-3 py-1.5 text-sm text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors flex items-center gap-1.5"
+										className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
 									>
 										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1350,7 +1339,7 @@ export default function FillNDAHTML() {
 						)}
 						{warning && (
 							warning === "Draft saved successfully." ? (
-								<div className="flex items-center gap-3 text-sm text-green-700 mb-4 bg-green-50 px-4 py-3 rounded-xl border border-green-200">
+								<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-xl border border-teal-200">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
@@ -1368,24 +1357,24 @@ export default function FillNDAHTML() {
 
 						{/* Pending Suggestions Banner */}
 						{getPendingSuggestionsCount() > 0 && (
-							<div className="flex items-center gap-3 text-sm text-yellow-800 mb-4 bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-300">
+							<div className="flex items-center gap-3 text-sm text-amber-800 mb-4 bg-amber-50 px-4 py-3 rounded-xl border border-amber-200">
 								<span className="text-xl">💬</span>
 								<div className="flex-1">
 									<strong>Party B suggested {getPendingSuggestionsCount()} change{getPendingSuggestionsCount() > 1 ? 's' : ''}</strong>
-									<span className="ml-2 text-yellow-700">Review and accept/reject each suggestion below.</span>
+									<span className="ml-2 text-amber-700">Review and accept/reject each suggestion below.</span>
 								</div>
 							</div>
 						)}
 
 						{/* Form Card */}
-						<div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+						<div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
 							<div className="px-6 pt-5 pb-2">
 								{/* Compact Step Stepper */}
 								<div className="flex items-center">
 									{steps.map((s, i) => (
 										<React.Fragment key={s}>
 											<button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0">
-												<div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
 													i === step
 														? 'bg-teal-800 text-white'
 													: isStepComplete(i)
@@ -1423,7 +1412,7 @@ export default function FillNDAHTML() {
 												</svg>
 											</div>
 											<div>
-												<h2 className="text-xl font-bold text-gray-800">Document Details</h2>
+												<h2 className="text-xl font-bold text-ink">Document Details</h2>
 												<p className="text-sm text-gray-600">Basic information about your NDA</p>
 											</div>
 										</div>
@@ -1432,7 +1421,7 @@ export default function FillNDAHTML() {
 											<div className="md:col-span-2">
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Document Title *</label>
 												<input
-													className={`${getFieldClass("docName")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all`}
+													className={`${getFieldClass("docName")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.docName}
 													onChange={(e) => setField("docName", e.target.value)}
 													placeholder="e.g., Partnership NDA 2025"
@@ -1442,7 +1431,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Effective Date <span className="text-gray-700">*</span></label>
 												<input
 													type="date"
-													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all")}`}
+													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors")}`}
 													value={values.effective_date}
 													onChange={(e) => setField("effective_date", e.target.value)}
 													required
@@ -1453,7 +1442,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Term (months) *</label>
 												<input
 													type="number"
-													className={`${getFieldClass("term_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all`}
+													className={`${getFieldClass("term_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.term_months}
 													onChange={(e) => setField("term_months", e.target.value)}
 													placeholder="e.g., 12"
@@ -1463,7 +1452,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Confidentiality Period (months) *</label>
 												<input
 													type="number"
-													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all`}
+													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.confidentiality_period_months}
 													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
 													placeholder="e.g., 24"
@@ -1482,7 +1471,7 @@ export default function FillNDAHTML() {
 												</svg>
 											</div>
 											<div className="flex-1">
-												<h2 className="text-xl font-bold text-gray-800">Party A Information</h2>
+												<h2 className="text-xl font-bold text-ink">Party A Information</h2>
 												<p className="text-sm text-gray-600">Details of the first party</p>
 											</div>
 											<button
@@ -1508,15 +1497,15 @@ export default function FillNDAHTML() {
 										</div>
 
 										{/* Info box about company profile */}
-										<div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
+										<div className="bg-teal-50 rounded-lg p-4 border border-teal-200 mb-4">
 											<div className="flex gap-3">
-												<svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
 												<div>
-													<p className="text-sm text-green-800">
+													<p className="text-sm text-teal-800">
 														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
-														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-green-900">Company Details</a>.
+														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
 													</p>
 												</div>
 											</div>
@@ -1526,7 +1515,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Party Name *</label>
 												<input
-													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all`}
+													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_name}
 													onChange={(e) => setField("party_a_name", e.target.value)}
 													placeholder="Enter party name"
@@ -1536,7 +1525,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.party_a_address}
 													onChange={(e) => setField("party_a_address", e.target.value)}
@@ -1548,7 +1537,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.party_a_phone}
 													onChange={(e) => setField("party_a_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
@@ -1559,7 +1548,7 @@ export default function FillNDAHTML() {
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 														value={values.party_a_signatory_name}
 														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
 														placeholder="Full name"
@@ -1569,7 +1558,7 @@ export default function FillNDAHTML() {
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 														value={values.party_a_title}
 														onChange={(e) => setField("party_a_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
@@ -1582,7 +1571,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
 												<input
 													type="email"
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.party_a_email || ""}
 													onChange={(e) => setField("party_a_email", e.target.value)}
 													placeholder="email@example.com"
@@ -1596,13 +1585,13 @@ export default function FillNDAHTML() {
 								{step === 2 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
 												</svg>
 											</div>
 											<div className="flex-1">
-												<h2 className="text-xl font-bold text-gray-800">Party B Information</h2>
+												<h2 className="text-xl font-bold text-ink">Party B Information</h2>
 												<p className="text-sm text-gray-600">Details of the second party (check boxes to let receiver fill specific fields)</p>
 											</div>
 										</div>
@@ -1622,7 +1611,7 @@ export default function FillNDAHTML() {
 													</label>
 												</div>
 												<input
-													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_name}
 													onChange={(e) => setField("party_b_name", e.target.value)}
 													placeholder="Enter party name"
@@ -1644,7 +1633,7 @@ export default function FillNDAHTML() {
 													</label>
 												</div>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													rows={3}
 													value={values.party_b_address}
 													onChange={(e) => setField("party_b_address", e.target.value)}
@@ -1668,7 +1657,7 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													value={values.party_b_phone}
 													onChange={(e) => setField("party_b_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
@@ -1691,7 +1680,7 @@ export default function FillNDAHTML() {
 														</label>
 													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_signatory_name}
 														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 														placeholder="Full name"
@@ -1713,7 +1702,7 @@ export default function FillNDAHTML() {
 														</label>
 													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_title}
 														onChange={(e) => setField("party_b_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
@@ -1737,7 +1726,7 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="email"
-													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_email}
 													onChange={(e) => setField("party_b_email", e.target.value)}
 													placeholder="email@example.com"
@@ -1758,7 +1747,7 @@ export default function FillNDAHTML() {
 												</svg>
 											</div>
 											<div>
-												<h2 className="text-xl font-bold text-gray-800">Additional Clauses</h2>
+												<h2 className="text-xl font-bold text-ink">Additional Clauses</h2>
 												<p className="text-sm text-gray-600">Customize your agreement terms</p>
 											</div>
 										</div>
@@ -1767,7 +1756,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Purpose of Confidential Information Swap</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={2}
 													value={values.purpose}
 													onChange={(e) => setField("purpose", e.target.value)}
@@ -1777,7 +1766,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Governing Law</label>
 												<input
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.governing_law}
 													onChange={(e) => setField("governing_law", e.target.value)}
 													placeholder="e.g., State of California"
@@ -1786,7 +1775,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">IP Ownership Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.ip_ownership}
 													onChange={(e) => setField("ip_ownership", e.target.value)}
@@ -1796,7 +1785,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Non-Solicitation Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.non_solicit}
 													onChange={(e) => setField("non_solicit", e.target.value)}
@@ -1806,7 +1795,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Exclusivity Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.exclusivity}
 													onChange={(e) => setField("exclusivity", e.target.value)}
@@ -1816,7 +1805,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Additional Terms</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-lg shadow-sm focus:ring-2 focus:ring-teal-700 focus:border-teal-700 transition-all"
+													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.additional_terms}
 													onChange={(e) => setField("additional_terms", e.target.value)}
@@ -1830,13 +1819,13 @@ export default function FillNDAHTML() {
 								{step === 4 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
 											</div>
 											<div>
-												<h2 className="text-xl font-bold text-gray-800">Review Your NDA</h2>
+												<h2 className="text-xl font-bold text-ink">Review Your NDA</h2>
 												<p className="text-sm text-gray-600">Check all details before proceeding</p>
 											</div>
 										</div>
@@ -1918,7 +1907,7 @@ export default function FillNDAHTML() {
 									<button
 										onClick={goBack}
 										disabled={step === 0}
-										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${step === 0
+										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${step === 0
 											? 'bg-gray-100 text-gray-400 cursor-not-allowed'
 											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 											}`}
@@ -1943,7 +1932,7 @@ export default function FillNDAHTML() {
 								<div className="flex gap-2">
 									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
 									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
-										<span className="px-5 py-2.5 rounded-lg font-medium text-sm bg-blue-100 text-blue-800 border border-blue-300">
+										<span className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-teal-50 text-teal-700 border border-teal-200">
 											Awaiting Party B
 										</span>
 									)}
@@ -1954,14 +1943,14 @@ export default function FillNDAHTML() {
 											<button
 												onClick={approveChanges}
 												disabled={processingChanges}
-												className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${processingChanges ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'}`}
+												className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${processingChanges ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'}`}
 											>
 												{processingChanges ? 'Processing...' : 'Accept Changes'}
 											</button>
 											<button
 												onClick={() => setShowRequestChangesModal(true)}
 												disabled={processingChanges}
-												className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+												className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
 											>
 												Request Changes
 											</button>
@@ -1973,7 +1962,7 @@ export default function FillNDAHTML() {
 										<button
 											onClick={deleteDraft}
 											disabled={deleting}
-											className="px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 border border-red-200 text-red-600 bg-white hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+											className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 border border-red-200 text-red-600 bg-white hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											{deleting ? 'Deleting...' : 'Delete Draft'}
 										</button>
@@ -1984,9 +1973,9 @@ export default function FillNDAHTML() {
 										<button
 											onClick={sendForReview}
 											disabled={sendingForSignature}
-											className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
+											className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
 												? 'bg-gray-400 text-white cursor-not-allowed'
-												: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg'
+												: 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'
 												}`}
 										>
 											{sendingForSignature ? (
@@ -2010,7 +1999,7 @@ export default function FillNDAHTML() {
 									<button
 										onClick={saveDraft}
 										disabled={saving}
-										className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${saving
+										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${saving
 											? 'bg-gray-400 text-white cursor-not-allowed'
 											: 'bg-teal-800 text-white hover:bg-teal-700'
 											}`}
@@ -2032,7 +2021,7 @@ export default function FillNDAHTML() {
 						<div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-semibold text-gray-900">Live Preview</h3>
+									<h3 className="font-semibold text-ink">Live Preview</h3>
 									<p className="text-xs text-gray-600">Updates as you type</p>
 								</div>
 								<div className="flex gap-2">
@@ -2046,7 +2035,7 @@ export default function FillNDAHTML() {
 														newWindow.document.close();
 													}
 												}}
-												className="px-4 py-2 bg-teal-800 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+												className="px-4 py-2 bg-teal-800 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors duration-200 shadow-card flex items-center gap-2"
 												title="Open HTML preview in new tab"
 											>
 												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2057,7 +2046,7 @@ export default function FillNDAHTML() {
 											<button
 												onClick={previewPDF}
 												disabled={generatingPdf}
-												className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+												className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors duration-200 shadow-card flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 												title="Generate and preview as PDF"
 											>
 												{generatingPdf ? (
@@ -2151,7 +2140,7 @@ export default function FillNDAHTML() {
 										</svg>
 									</div>
 									<div>
-										<h2 className="text-xl font-bold text-white">Verify Receiving Party's Email</h2>
+										<h2 className="text-xl font-bold text-white">Verify Receiving Party&apos;s Email</h2>
 										<p className="text-sm text-white/80">Party B will fill in the missing fields</p>
 									</div>
 								</div>
@@ -2227,20 +2216,20 @@ export default function FillNDAHTML() {
 										</svg>
 									</div>
 									<div className="flex-1">
-										<h2 className="text-xl font-bold text-gray-800">NDA Ready to Share!</h2>
+										<h2 className="text-xl font-bold text-ink">NDA Ready to Share!</h2>
 										<p className="text-sm text-gray-600">Share this link with the recipient</p>
 									</div>
 								</div>
 							</div>
 							<div className="p-6">
 								{/* Email Sent Success Message */}
-								<div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-									<svg className="w-6 h-6 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div className="mb-6 bg-teal-50 border border-teal-200 rounded-lg p-4 flex items-start gap-3">
+									<svg className="w-6 h-6 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 									</svg>
 									<div>
-										<p className="font-semibold text-green-800 mb-1">✅ NDA Ready to Share!</p>
-										<p className="text-sm text-green-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
+										<p className="font-semibold text-teal-800 mb-1">✅ NDA Ready to Share!</p>
+										<p className="text-sm text-teal-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
 									</div>
 								</div>
 
@@ -2281,6 +2270,10 @@ export default function FillNDAHTML() {
 									</div>
 
 									{/* Share Options */}
+									{/* Deliberate exception to the Calm Precision color rules: external share
+									    channels keep their recognizable brand colors (WhatsApp green, Telegram
+									    blue) so recipients identify them at a glance. Non-brand buttons (Email,
+									    More) stay neutral. Do not "fix" the brand colors in a future redesign pass. */}
 									<div className="mt-6">
 										<p className="text-sm font-semibold text-gray-700 mb-3">Or share via:</p>
 										<div className="grid grid-cols-2 gap-3">
@@ -2308,12 +2301,12 @@ export default function FillNDAHTML() {
 												href={`https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent('Please review and sign our NDA')}`}
 												target="_blank"
 												rel="noopener noreferrer"
-												className="flex items-center justify-center gap-2 px-4 py-3 bg-teal-50 hover:bg-blue-200 rounded-lg transition-colors border border-blue-300"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
 											>
-												<svg className="w-5 h-5 text-teal-700" fill="currentColor" viewBox="0 0 24 24">
+												<svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
 													<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
 												</svg>
-												<span className="font-medium text-teal-700">Telegram</span>
+												<span className="font-medium text-blue-600">Telegram</span>
 											</a>
 											<button
 												onClick={async () => {
@@ -2334,7 +2327,7 @@ export default function FillNDAHTML() {
 														setTimeout(() => setWarning(""), 2000);
 													}
 												}}
-												className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors border border-purple-300"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
 											>
 												<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -2349,7 +2342,7 @@ export default function FillNDAHTML() {
 											<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 											</svg>
-											<div className="text-sm text-blue-800">
+											<div className="text-sm text-ink">
 												<p className="font-semibold mb-1">What the recipient can do:</p>
 												<ul className="list-disc list-inside space-y-1 text-teal-700">
 													<li>Review all NDA terms and details</li>
@@ -2394,7 +2387,7 @@ export default function FillNDAHTML() {
 								setSuggestedEmailBody("");
 								setEmailSent(false);
 								setShowMoreShareOptions(false);
-								if (emailSent) router.push('/mynda');
+								if (emailSent) router.push('/dashboard');
 							}
 						}}
 					>
@@ -2421,7 +2414,7 @@ export default function FillNDAHTML() {
 										setSuggestedEmailSubject("");
 										setSuggestedEmailBody("");
 										setEmailSent(false);
-										if (emailSent) router.push('/mynda');
+										if (emailSent) router.push('/dashboard');
 									}}
 									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
 									aria-label="Close"
@@ -2484,7 +2477,8 @@ export default function FillNDAHTML() {
 								<div className="flex-1 h-px bg-gray-100" />
 							</div>
 
-							{/* Share options grid */}
+							{/* Share options grid — brand colors are an intentional exception to the
+							    Calm Precision palette (Gmail/Outlook/WhatsApp) so channels are recognizable. */}
 							<div className="px-6 pt-3 pb-5 grid grid-cols-3 gap-2">
 								{/* Gmail */}
 								<button
@@ -2552,7 +2546,7 @@ export default function FillNDAHTML() {
 									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									<svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 									</svg>
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Copy Link</span>
@@ -2614,7 +2608,7 @@ export default function FillNDAHTML() {
 										setSuggestedEmailSubject("");
 										setSuggestedEmailBody("");
 										setEmailSent(false);
-										if (emailSent) router.push('/mynda');
+										if (emailSent) router.push('/dashboard');
 									}}
 									className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
 								>
@@ -2700,7 +2694,7 @@ export default function FillNDAHTML() {
 								<ul className="space-y-2 mb-6">
 									{['Company name', 'Address', 'Signatory name & title', 'Email & phone'].map((item) => (
 										<li key={item} className="flex items-center gap-2 text-sm text-gray-600">
-											<svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg className="w-4 h-4 text-teal-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 											</svg>
 											{item}

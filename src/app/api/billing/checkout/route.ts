@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (embedded) {
       const session = await stripe.checkout.sessions.create({
         ...commonParams,
-        ui_mode: 'embedded',
+        ui_mode: 'embedded_page',
         return_url: `${resolvedAppUrl}/dashboard?checkout=success`,
       })
       if (!session.client_secret) {
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       ...commonParams,
-      ui_mode: 'hosted',
+      ui_mode: 'hosted_page',
       success_url: `${resolvedAppUrl}/dashboard?checkout=success`,
       cancel_url: `${resolvedAppUrl}/plans`,
     })

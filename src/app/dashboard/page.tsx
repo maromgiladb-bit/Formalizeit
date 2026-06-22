@@ -20,17 +20,6 @@ export default async function DashboardPage({
   let user = await prisma.user.findUnique({
     where: { externalId: userId },
     include: {
-      createdDrafts: {
-        include: {
-          signRequests: {
-            include: {
-              ndaPdfs: true,
-              signers: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      },
       signers: {
         // Include ALL signer roles — both SIGNER (received as Party B)
         // and SENDER (received sign-back request as Party A)
@@ -40,6 +29,7 @@ export default async function DashboardPage({
               draft: {
                 include: {
                   createdBy: true,
+                  organization: true,
                 }
               },
               ndaPdfs: true,
@@ -61,7 +51,7 @@ export default async function DashboardPage({
     include: {
       signRequest: {
         include: {
-          draft: { include: { createdBy: true } },
+          draft: { include: { createdBy: true, organization: true } },
           ndaPdfs: true,
         }
       }
@@ -70,27 +60,28 @@ export default async function DashboardPage({
   }) : [];
 
   if (!user) {
-    // ensureDbUser() in layout guarantees the user exists;
-    // if somehow missing, redirect to team settings
     redirect('/settings/team');
   }
 
   // Fetch org-scoped drafts if user belongs to an organization
   const membership = await getActiveOrganization();
-  const draftSource = membership
-    ? await prisma.ndaDraft.findMany({
-        where: { organizationId: membership.organizationId },
+
+  if (!membership) {
+    redirect('/onboarding');
+  }
+
+  const draftSource = await prisma.ndaDraft.findMany({
+    where: { organizationId: membership.organizationId },
+    include: {
+      signRequests: {
         include: {
-          signRequests: {
-            include: {
-              ndaPdfs: true,
-              signers: true,
-            },
-          },
+          ndaPdfs: true,
+          signers: true,
         },
-        orderBy: { createdAt: 'desc' },
-      })
-    : user.createdDrafts;
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
   // Transform created/sent NDAs
   const createdNdas = draftSource.map((draft) => {
@@ -134,6 +125,8 @@ export default async function DashboardPage({
       const sender = (draft as { createdBy?: { name?: string; email?: string } }).createdBy;
       const content = draft.content as Record<string, unknown> | null;
 
+      const senderOrg = (draft as { organization?: { name?: string } }).organization;
+
       return {
         id: draft.id,
         partyName: draft.title || 'Untitled NDA',
@@ -145,13 +138,25 @@ export default async function DashboardPage({
         signerId: signer.id,
         senderName: sender?.name || (content?.party_a_name as string) || undefined,
         senderEmail: sender?.email || undefined,
+        senderOrganizationName: senderOrg?.name || undefined,
       };
     });
 
-  // Combine all NDAs
-  const allNdas = [...createdNdas, ...receivedNdas].sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-  );
+  // Combine all NDAs. A draft created by a teammate in the same org can appear
+  // in both createdNdas (org-scoped) and receivedNdas (current user is a signer
+  // on it). Keep the created/Sent entry and drop the duplicate received one so
+  // every row has a unique key.
+  const createdIds = new Set(createdNdas.map((n) => n.id));
+  const allNdas = [
+    ...createdNdas,
+    ...receivedNdas.filter((n) => !createdIds.has(n.id)),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  return <DashboardClient ndas={allNdas} checkoutSuccess={checkoutSuccess} />;
+  const companyProfile = await prisma.companyProfile.findUnique({
+    where: { organizationId: membership.organizationId },
+    select: { companyName: true },
+  });
+  const hasCompanyProfile = !!(companyProfile?.companyName);
+
+  return <DashboardClient ndas={allNdas} checkoutSuccess={checkoutSuccess} hasCompanyProfile={hasCompanyProfile} />;
 }

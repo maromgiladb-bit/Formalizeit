@@ -76,7 +76,7 @@ export function getOrganizationRoleLabel(role: DbMembershipRole): string {
 export function getOrganizationRoleBadgeClass(role: DbMembershipRole): string {
   switch (role) {
     case 'OWNER':
-      return 'bg-indigo-100 text-indigo-800'
+      return 'bg-teal-800 text-white'
     case 'SIGNER':
       return 'bg-teal-100 text-teal-800'
     case 'CONTRIBUTOR':

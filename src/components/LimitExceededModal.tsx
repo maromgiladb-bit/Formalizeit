@@ -13,7 +13,7 @@ export default function LimitExceededModal({ isOpen, onClose }: LimitExceededMod
   if (!isOpen) return null
 
   const handleUpgrade = () => {
-    router.push('/plans')
+    router.push('/#pricing')
   }
 
   return (
@@ -61,25 +61,25 @@ export default function LimitExceededModal({ isOpen, onClose }: LimitExceededMod
             <p className="text-sm font-semibold text-gray-900 mb-2">Pro Plan Includes:</p>
             <ul className="space-y-2">
               <li className="flex items-start text-sm text-gray-700">
-                <svg className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-teal-700 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span><strong>Unlimited NDAs</strong></span>
               </li>
               <li className="flex items-start text-sm text-gray-700">
-                <svg className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-teal-700 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Custom templates</span>
               </li>
               <li className="flex items-start text-sm text-gray-700">
-                <svg className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-teal-700 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Priority support</span>
               </li>
               <li className="flex items-start text-sm text-gray-700">
-                <svg className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 text-teal-700 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span>Only $19.99/month</span>
@@ -97,7 +97,7 @@ export default function LimitExceededModal({ isOpen, onClose }: LimitExceededMod
             </button>
             <button
               onClick={handleUpgrade}
-              className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="flex-1 px-4 py-2.5 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
             >
               Upgrade to Pro
             </button>

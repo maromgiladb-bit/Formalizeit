@@ -62,7 +62,7 @@ export default async function TeamSettingsPage() {
         return (
             <div className="space-y-6">
                 {pendingInvitesSection}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
                     <div className="px-6 py-5 border-b border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
@@ -100,7 +100,7 @@ export default async function TeamSettingsPage() {
         <div className="space-y-6">
             {pendingInvitesSection}
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
 
                 {/* Card Header */}
                 <div className="px-6 py-5 border-b border-gray-100">

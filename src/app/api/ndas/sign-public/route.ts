@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
                     console.log('📧 "Time to Sign" email sent to:', recipientEmail, 'with link:', signPageLink);
                 } else if (recipientEmail) {
                     // Fallback: If we couldn't create a signer record, send to dashboard
-                    const dashboardLink = `${appUrl}/mynda`;
+                    const dashboardLink = `${appUrl}/dashboard`;
                     const signerCompanyFallback = isPartyA
                         ? ((updatedContent as Record<string, unknown>).party_a_name as string) || ''
                         : ((updatedContent as Record<string, unknown>).party_b_name as string) || ''

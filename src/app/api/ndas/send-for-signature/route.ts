@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, recipientSignRequestEmailHtml, getAppUrl } from '@/lib/email';
 import { getActiveOrganization } from '@/lib/db-organization';
-import { canSignNDA } from '@/lib/organizationRoles';
+import { canSendNDA } from '@/lib/organizationRoles';
 import { assertCanSendNda } from '@/organizations/limits';
 import { createNotification } from '@/lib/notifications';
 
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
         }
 
-        if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only signers and owners can send NDAs for signature' }, { status: 403 });
+        if (!canSendNDA(activeMembership)) {
+            return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 });
         }
 
         // Get draft in active organization

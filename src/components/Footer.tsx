@@ -1,173 +1,91 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, HelpCircle, Info, Mail, Shield, BookOpen, Scale } from "lucide-react";
+import Image from "next/image";
+
+const columns = [
+	{
+		heading: "Product",
+		links: [
+			{ name: "Browse Templates", href: "/templates" },
+			{ name: "Pricing", href: "/#pricing" },
+			{ name: "Dashboard", href: "/dashboard" },
+			{ name: "My Drafts", href: "/mydrafts" },
+		],
+	},
+	{
+		heading: "Company",
+		links: [
+			{ name: "About", href: "/about" },
+			{ name: "Contact", href: "/contact" },
+			{ name: "FAQ", href: "/faq" },
+			{ name: "Help Center", href: "/help" },
+		],
+	},
+	{
+		heading: "Legal",
+		links: [
+			{ name: "Terms of Service", href: "/terms" },
+			{ name: "Privacy Policy", href: "/privacy" },
+			{ name: "Security", href: "/security" },
+			{ name: "Compliance", href: "/compliance" },
+		],
+	},
+];
 
 export default function Footer() {
 	const currentYear = new Date().getFullYear();
 
 	return (
-		<footer className="bg-slate-900 text-gray-300 border-t border-slate-800">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-					{/* Learn Section */}
-					<div>
-						<h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-							<BookOpen className="w-4 h-4" />
-							Learn
-						</h3>
-						<ul className="space-y-2">
-							<li>
-								<Link href="/about" className="hover:text-teal-400 transition-colors text-sm">
-									What is an NDA?
-								</Link>
-							</li>
-							<li>
-								<Link href="/about#types" className="hover:text-teal-400 transition-colors text-sm">
-									Types of NDAs
-								</Link>
-							</li>
-							<li>
-								<Link href="/about#best-practices" className="hover:text-teal-400 transition-colors text-sm">
-									Best Practices
-								</Link>
-							</li>
-							<li>
-								<Link href="/templates" className="hover:text-teal-400 transition-colors text-sm">
-									Browse Templates
-								</Link>
-							</li>
-						</ul>
+		<footer className="bg-gray-50 border-t border-gray-200">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+					<div className="col-span-2 md:col-span-1">
+						<Link href="/" aria-label="FormalizeIt home" className="inline-block -my-6">
+							<Image
+								src="/formalizeIt-logo.png"
+								alt="FormalizeIt"
+								width={200}
+								height={50}
+								className="h-24 w-auto"
+							/>
+						</Link>
+						<p className="text-sm text-gray-500 leading-relaxed max-w-xs">
+							Pick a template, fill in what&apos;s different, send — in minutes. No lawyer required.
+						</p>
 					</div>
 
-					{/* Resources Section */}
-					<div>
-						<h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-							<FileText className="w-4 h-4" />
-							Resources
-						</h3>
-						<ul className="space-y-2">
-							<li>
-								<Link href="/templates" className="hover:text-teal-400 transition-colors text-sm">
-									Template Library
-								</Link>
-							</li>
-							<li>
-								<Link href="/plans" className="hover:text-teal-400 transition-colors text-sm">
-									Pricing Plans
-								</Link>
-							</li>
-							<li>
-								<Link href="/dashboard" className="hover:text-teal-400 transition-colors text-sm">
-									Dashboard
-								</Link>
-							</li>
-							<li>
-								<Link href="/mydrafts" className="hover:text-teal-400 transition-colors text-sm">
-									My Drafts
-								</Link>
-							</li>
-						</ul>
-					</div>
-
-					{/* Legal Section */}
-					<div>
-						<h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-							<Scale className="w-4 h-4" />
-							Legal
-						</h3>
-						<ul className="space-y-2">
-							<li>
-								<Link href="/terms" className="hover:text-teal-400 transition-colors text-sm">
-									Terms of Service
-								</Link>
-							</li>
-							<li>
-								<Link href="/privacy" className="hover:text-teal-400 transition-colors text-sm">
-									Privacy Policy
-								</Link>
-							</li>
-							<li>
-								<Link href="/security" className="hover:text-teal-400 transition-colors text-sm">
-									Security
-								</Link>
-							</li>
-							<li>
-								<Link href="/compliance" className="hover:text-teal-400 transition-colors text-sm">
-									Compliance
-								</Link>
-							</li>
-						</ul>
-					</div>
-
-					{/* Help Section */}
-					<div>
-						<h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-							<HelpCircle className="w-4 h-4" />
-							Help
-						</h3>
-						<ul className="space-y-2">
-							<li>
-								<Link href="/contact" className="hover:text-teal-400 transition-colors text-sm">
-									Contact Us
-								</Link>
-							</li>
-							<li>
-								<Link href="/faq" className="hover:text-teal-400 transition-colors text-sm">
-									FAQ
-								</Link>
-							</li>
-							<li>
-								<Link href="/help" className="hover:text-teal-400 transition-colors text-sm">
-									Help Center
-								</Link>
-							</li>
-							<li>
-								<Link href="/support" className="hover:text-teal-400 transition-colors text-sm">
-									Support Center
-								</Link>
-							</li>
-							<li>
-								<Link href="/about" className="hover:text-teal-400 transition-colors text-sm">
-									About Us
-								</Link>
-							</li>
-						</ul>
-					</div>
+					{columns.map((column) => (
+						<div key={column.heading}>
+							<h3 className="text-sm font-semibold text-ink mb-4">{column.heading}</h3>
+							<ul className="space-y-2.5">
+								{column.links.map((link) => (
+									<li key={link.name}>
+										<Link
+											href={link.href}
+											className="text-sm text-gray-500 hover:text-ink transition-colors"
+										>
+											{link.name}
+										</Link>
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
 				</div>
 
-				{/* Bottom Bar */}
-				<div className="mt-12 pt-8 border-t border-slate-800">
-					<div className="flex flex-col md:flex-row justify-between items-center gap-4">
-						<div className="flex items-center gap-2">
-							<Shield className="w-5 h-5 text-teal-500" />
-							<span className="text-sm font-semibold text-white">NDA SaaS</span>
-							<span className="text-sm text-gray-500">© {currentYear} All rights reserved.</span>
-						</div>
-						
+				<div className="mt-12 pt-8 border-t border-gray-200">
+					<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+						<span className="text-sm text-gray-500">
+							© {currentYear} FormalizeIt. All rights reserved.
+						</span>
 						<div className="flex items-center gap-6">
-							<Link 
-								href="/contact" 
-								className="flex items-center gap-2 text-sm hover:text-teal-400 transition-colors"
-							>
-								<Mail className="w-4 h-4" />
+							<Link href="/contact" className="text-sm text-gray-500 hover:text-ink transition-colors">
 								Contact
 							</Link>
-							<Link 
-								href="/about" 
-								className="flex items-center gap-2 text-sm hover:text-teal-400 transition-colors"
-							>
-								<Info className="w-4 h-4" />
+							<Link href="/about" className="text-sm text-gray-500 hover:text-ink transition-colors">
 								About
 							</Link>
-							<a 
-								href="https://github.com" 
-								target="_blank" 
-								rel="noopener noreferrer"
-								className="text-sm hover:text-teal-400 transition-colors"
-							>
-								GitHub
-							</a>
 						</div>
 					</div>
 				</div>

@@ -56,7 +56,7 @@ export default function SettingsPage() {
     >
 
       {/* Account Information */}
-      <motion.div variants={fadeUp} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
@@ -83,7 +83,7 @@ export default function SettingsPage() {
       </motion.div>
 
       {/* Preferences */}
-      <motion.div variants={fadeUp} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">

@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, ArrowRight } from "lucide-react";
+import { Mail, Phone, MapPin, Send, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const fadeUp = {
@@ -19,8 +20,8 @@ const contactCards = [
     icon: Mail,
     title: "Email Us",
     description: "For general inquiries and support",
-    link: "mailto:support@ndasaas.com",
-    linkLabel: "support@ndasaas.com",
+    link: "mailto:maromgiladb@gmail.com",
+    linkLabel: "maromgiladb@gmail.com",
   },
   {
     icon: Phone,
@@ -38,7 +39,39 @@ const contactCards = [
   },
 ];
 
+const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "" };
+
 export default function Contact() {
+  const [form, setForm] = useState(emptyForm);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [error, setError] = useState("");
+
+  const update = (field: keyof typeof emptyForm) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("submitting");
+    setError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to send your message.");
+      }
+      setStatus("success");
+      setForm(emptyForm);
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans">
 
@@ -53,7 +86,7 @@ export default function Contact() {
             variants={stagger}
           >
             <motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Contact</motion.p>
-            <motion.h1 variants={fadeUp} className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Get in Touch</motion.h1>
+            <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight">Get in Touch</motion.h1>
             <motion.p variants={fadeUp} className="text-sm text-gray-500 leading-relaxed mt-1 max-w-lg">
               Have questions about our NDA platform? We&apos;re here to help!
             </motion.p>
@@ -73,12 +106,12 @@ export default function Contact() {
                 <motion.div
                   key={card.title}
                   variants={fadeUp}
-                  className="group bg-white p-6 rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all duration-200"
+                  className="group bg-white p-6 rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200"
                 >
-                  <div className="w-10 h-10 bg-teal-50 group-hover:bg-teal-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-200">
+                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center mb-4 transition-colors duration-200">
                     <card.icon className="w-5 h-5 text-teal-700" />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-1.5">{card.title}</h3>
+                  <h3 className="text-sm font-bold text-ink mb-1.5">{card.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed whitespace-pre-line">{card.description}</p>
                   {card.link && card.linkLabel && (
                     <a
@@ -100,19 +133,38 @@ export default function Contact() {
               viewport={{ once: true, margin: "-60px" }}
               variants={fadeUp}
             >
-              <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
                 <div className="mb-6">
                   <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Message</p>
-                  <h2 className="text-2xl font-bold text-gray-900">Send us a Message</h2>
+                  <h2 className="text-2xl font-bold text-ink">Send us a Message</h2>
                 </div>
 
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                {status === "success" ? (
+                  <div className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4">
+                    <CheckCircle className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-teal-800">Message sent</p>
+                      <p className="text-sm text-teal-700">Thanks for reaching out — we&apos;ll get back to you soon.</p>
+                      <button
+                        type="button"
+                        onClick={() => setStatus("idle")}
+                        className="mt-3 text-sm font-semibold text-teal-700 hover:text-teal-900 transition-colors"
+                      >
+                        Send another message
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                <form className="space-y-5" onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                        required
+                        value={form.firstName}
+                        onChange={update("firstName")}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="John"
                       />
                     </div>
@@ -120,7 +172,9 @@ export default function Contact() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Last Name</label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                        value={form.lastName}
+                        onChange={update("lastName")}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="Doe"
                       />
                     </div>
@@ -130,19 +184,26 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
                     <input
                       type="email"
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all"
+                      required
+                      value={form.email}
+                      onChange={update("email")}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                       placeholder="john@example.com"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Subject</label>
-                    <select className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all bg-white text-gray-700">
+                    <select
+                      value={form.subject}
+                      onChange={update("subject")}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors bg-white text-gray-700"
+                    >
                       <option value="">Select a topic</option>
-                      <option value="support">Technical Support</option>
-                      <option value="sales">Sales Inquiry</option>
-                      <option value="partnership">Partnership Opportunity</option>
-                      <option value="other">Other</option>
+                      <option value="Technical Support">Technical Support</option>
+                      <option value="Sales Inquiry">Sales Inquiry</option>
+                      <option value="Partnership Opportunity">Partnership Opportunity</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
 
@@ -150,19 +211,37 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Message</label>
                     <textarea
                       rows={5}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all resize-none"
+                      required
+                      value={form.message}
+                      onChange={update("message")}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors resize-none"
                       placeholder="How can we help you?"
                     />
                   </div>
 
+                  {status === "error" && (
+                    <p className="text-sm text-red-600">{error}</p>
+                  )}
+
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
+                    disabled={status === "submitting"}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-4 h-4" />
-                    Send Message
+                    {status === "submitting" ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Message
+                      </>
+                    )}
                   </button>
                 </form>
+                )}
               </div>
             </motion.div>
           </div>
@@ -180,12 +259,12 @@ export default function Contact() {
             variants={fadeUp}
           >
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Looking for answers first?</h2>
+              <h2 className="text-lg font-bold text-ink">Looking for answers first?</h2>
               <p className="text-sm text-gray-500">Check our FAQ for quick answers to common questions.</p>
             </div>
             <Link
               href="/faq"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl shadow-card hover:bg-gray-50 transition-colors duration-200 text-sm cursor-pointer"
             >
               Browse FAQ
               <ArrowRight className="w-4 h-4" />
