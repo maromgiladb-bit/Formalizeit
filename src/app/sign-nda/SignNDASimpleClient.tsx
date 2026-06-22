@@ -46,12 +46,15 @@ export default function SignNDASimpleClient() {
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showSendModal, setShowSendModal] = useState(false);
   const [partyBInfo, setPartyBInfo] = useState({ email: '', name: '' });
-  const [signAllowed, setSignAllowed] = useState<'loading' | 'allowed' | 'blocked'>('loading');
+  const [signAllowed, setSignAllowed] = useState<'loading' | 'allowed' | 'blocked' | 'error'>('loading');
 
-  // Check signing permission
-  useEffect(() => {
+  const checkSignPermission = () => {
+    setSignAllowed('loading');
     fetch('/api/user/role')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('non-ok response');
+        return r.json();
+      })
       .then(data => {
         if (data.role && canSignNDA({ role: data.role, isApprover: data.isApprover ?? false })) {
           setSignAllowed('allowed');
@@ -59,8 +62,10 @@ export default function SignNDASimpleClient() {
           setSignAllowed('blocked');
         }
       })
-      .catch(() => setSignAllowed('blocked'));
-  }, []);
+      .catch(() => setSignAllowed('error'));
+  };
+
+  useEffect(() => { checkSignPermission(); }, []);
 
   // Load data from session storage
   useEffect(() => {
@@ -447,6 +452,35 @@ export default function SignNDASimpleClient() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center text-gray-500">Checking permissions...</div>
+      </div>
+    );
+  }
+
+  if (signAllowed === 'error') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="flex-none">
+          <PublicToolbar />
+        </div>
+        <div className="flex flex-1 items-center justify-center px-4">
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-card max-w-md w-full p-10 text-center">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-ink mb-2">Something went wrong</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              We couldn&apos;t verify your signing permissions. Check your connection and try again.
+            </p>
+            <button
+              onClick={checkSignPermission}
+              className="px-6 py-2.5 bg-teal-800 text-white rounded-xl text-sm font-semibold hover:bg-teal-900 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
