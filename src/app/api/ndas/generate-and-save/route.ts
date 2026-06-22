@@ -6,7 +6,7 @@ import { sanitizeForHtml } from '@/lib/sanitize';
 import { htmlToPdf } from '@/lib/htmlToPdf';
 import { storeNdaPdf } from '@/lib/storeNdaPdf';
 import { getActiveOrganization } from '@/lib/db-organization';
-import { canSignNDA } from '@/lib/organizationRoles';
+import { canSendNDA } from '@/lib/organizationRoles';
 import { assertCanSendNda } from '@/organizations/limits';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
         }
 
-        if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'You do not have permission to generate and save NDAs.' }, { status: 403 });
+        if (!canSendNDA(activeMembership)) {
+            return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 });
         }
 
         // Get the draft in active organization

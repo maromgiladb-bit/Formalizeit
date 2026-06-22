@@ -59,7 +59,7 @@ export async function POST(
     }
 
     await prisma.ndaDraft.update({
-      where: { id: draftId },
+      where: { id: draftId, organizationId: activeMembership.organizationId },
       data: { status: 'CANCELLED' },
     })
 

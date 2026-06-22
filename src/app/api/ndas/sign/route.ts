@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Only signers and owners can sign on behalf of the company' }, { status: 403 });
         }
 
-        // Find the draft with sign request info
-        const draft = await prisma.ndaDraft.findUnique({
-            where: { id: draftId },
+        // Find the draft with sign request info — scope to active org to prevent cross-org signing
+        const draft = await prisma.ndaDraft.findFirst({
+            where: { id: draftId, organizationId: activeMembership.organizationId },
             include: {
                 signRequests: {
                     include: {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Party A is signing (internal user)
-        const currentContent = draft.content as Record<string, any>;
+        const currentContent = (draft.content ?? {}) as Record<string, any>;
         const updatedContent = {
             ...currentContent,
             party_1_signatory_name: signerName,
@@ -88,9 +88,9 @@ export async function POST(request: NextRequest) {
             newStatus = 'SENT';
         }
 
-        // Update draft
+        // Update draft — keep organizationId in where for defence-in-depth
         const updatedDraft = await prisma.ndaDraft.update({
-            where: { id: draftId },
+            where: { id: draftId, organizationId: activeMembership.organizationId },
             data: {
                 content: updatedContent,
                 status: newStatus as any,

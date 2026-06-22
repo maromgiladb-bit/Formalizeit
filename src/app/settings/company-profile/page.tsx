@@ -61,7 +61,7 @@ export default function CompanyProfileSettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/company-profile');
+      const response = await fetch('/api/company-profile', { cache: 'no-store' });
       const data = await response.json();
       setCanEdit(!!data.canEdit);
       const orgName = data.organizationName || '';
@@ -114,6 +114,7 @@ export default function CompanyProfileSettingsPage() {
       if (response.ok) {
         setMessage({ type: 'success', text: 'Company profile saved successfully.' });
         setTimeout(() => setMessage(null), 3000);
+        fetchProfile();
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save profile' });
       }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { sendEmail } from '@/lib/email'
 import { sanitizeForHtml } from '@/lib/sanitize'
 
@@ -6,9 +7,15 @@ import { sanitizeForHtml } from '@/lib/sanitize'
 const CONTACT_INBOX = process.env.CONTACT_INBOX || 'maromgiladb@gmail.com'
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+const stripNewlines = (v: string) => v.replace(/[\r\n]/g, ' ')
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const firstName = String(body.firstName ?? '').trim()
     const lastName = String(body.lastName ?? '').trim()
@@ -23,8 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 })
     }
 
-    const fullName = `${firstName} ${lastName}`.trim()
-    const topic = subject || 'General'
+    const fullName = stripNewlines(`${firstName} ${lastName}`.trim())
+    const topic = stripNewlines(subject) || 'General'
 
     const html = `
       <h2>New contact form message</h2>
