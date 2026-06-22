@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, getAppUrl, timeToSignEmailHtml, congratulationsEmailHtml } from '@/lib/email';
 import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/notifications';
+import { getActiveOrganization } from '@/lib/db-organization';
+import { canSignNDA } from '@/lib/organizationRoles';
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,6 +29,16 @@ export async function POST(request: NextRequest) {
 
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        // Only signers and owners may apply the company's (Party A) signature.
+        // Contributors can do everything else (create, edit, send) but cannot sign.
+        const activeMembership = await getActiveOrganization();
+        if (!activeMembership) {
+            return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
+        }
+        if (!canSignNDA(activeMembership)) {
+            return NextResponse.json({ error: 'Only signers and owners can sign on behalf of the company' }, { status: 403 });
         }
 
         // Find the draft with sign request info
@@ -162,7 +174,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Send Congratulations to BOTH parties
-                const dashboardLink = `${appUrl}/mynda`;
+                const dashboardLink = `${appUrl}/dashboard`;
 
                 // Email Party A (current signer)
                 if (signerEmail || user.email) {
@@ -190,7 +202,7 @@ export async function POST(request: NextRequest) {
                 if (partyBSigner) {
                     const fillPageLink = `${appUrl}/fillndahtml-public/${partyBSigner.id}`;
 
-                    const partyACompany = (updatedContent.party_a_name as string) || ''
+                    const partyACompany = (currentContent.party_a_name as string) || ''
                     await sendEmail({
                         to: partyBSigner.email,
                         subject: `Time to sign! ${signerName}${partyACompany ? ` from ${partyACompany}` : ''} has already signed the NDA`,

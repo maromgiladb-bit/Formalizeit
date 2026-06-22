@@ -12,19 +12,15 @@ The system supports a full back-and-forth negotiation loop: B can suggest change
 
 ---
 
-## 2. Party A Roles — Who Can Send?
+## 2. Party A Roles — Who Can Send vs Sign?
 
-**Approver or Owner (isApprover=true)**
-- Can send directly to Party B (review, input request, or signature)
-- Can accept/reject/counter Party B's suggestions
-- Can sign on behalf of the org
+All org members (Owner, Signer, Contributor) can create, edit, and **send** NDAs to Party B — for review, input, or signature. There is **no** internal approval step.
 
-**Contributor (or Owner with isApprover=false)**
-- Must submit draft for internal org approval first (`PENDING_INTERNAL_APPROVAL`)
-- Cannot send externally until an Approver/Owner approves the draft
-- Cannot sign or finalize
+**Signer, or Owner with isApprover=true** — can additionally **sign on behalf of the org**.
 
-Guard function: `canApproveAndSend(membership)` in `src/lib/organizationRoles.ts`
+**Contributor, or Owner with isApprover=false** — can do everything **except** apply the company's signature.
+
+Guard functions in `src/lib/organizationRoles.ts`: `canSendNDA(membership)` (true for all roles) and `canSignNDA(membership)` (signers / owner-with-isApprover only).
 
 ---
 
@@ -33,13 +29,7 @@ Guard function: `canApproveAndSend(membership)` in `src/lib/organizationRoles.ts
 ```
 DRAFT
   │
-  ├─ [Contributor] submit-for-approval
-  │       ↓
-  │  PENDING_INTERNAL_APPROVAL
-  │       ├─ internal-approve → DRAFT (Approver can now send)
-  │       └─ internal-reject  → DRAFT (with feedback, contributor edits again)
-  │
-  ├─ [Approver/Owner] send to Party B for review:
+  ├─ [Any role] send to Party B for review:
   │   • send-for-review → AWAITING_PARTY_B_REVIEW
   │   • send-for-input  → AWAITING_PARTY_B_REVIEW  (specific pending fields only)
   │
@@ -79,9 +69,6 @@ AWAITING_PARTY_B_REVIEW
 
 | Trigger | API Route | Email Template | Recipient |
 |---------|-----------|----------------|-----------|
-| Contributor submits draft | `submit-for-approval` | `approvalRequestEmailHtml` | All org approvers |
-| Internal approved | `internal-approve` | `approvalApprovedEmailHtml` | Draft creator |
-| Internal rejected | `internal-reject` | `approvalRejectedEmailHtml` + message | Draft creator |
 | Send for review | `send-for-review` | `recipientEditEmailHtml` | Party B |
 | Send for input (fields) | `send-for-input` | `inputRequestEmailHtml` | Party B |
 | Party A signs + sends | `send-for-signature` | `recipientSignRequestEmailHtml` | Party B |
@@ -105,7 +92,7 @@ All email functions live in `src/lib/email.ts`. Sender address is `MAIL_FROM` en
 
 Party A also receives a `/fillndahtml-public/{partyA_signerId}` link (via `partyBSuggestionsEmailHtml`) when Party B submits suggestions — so A can review without opening the dashboard.
 
-`signerId` is the `Signer.id` UUID. `role=SIGNER` → Party B. `role=APPROVER` → Party A.
+`signerId` is the `Signer.id` UUID. `role=SIGNER` → Party B. `role=SENDER` → Party A.
 
 ---
 
@@ -122,9 +109,6 @@ Party A also receives a `/fillndahtml-public/{partyA_signerId}` link (via `party
 | `src/app/api/ndas/sign-public/route.ts` | Public signature submission, PDF generation, COMPLETE transition |
 | `src/app/api/ndas/approve-changes/route.ts` | A approves B suggestions → AWAITING_PARTY_A_SIGNATURE |
 | `src/app/api/ndas/request-changes/route.ts` | A sends B back for revision → AWAITING_PARTY_B_REVIEW |
-| `src/app/api/ndas/submit-for-approval/route.ts` | Contributor submits → PENDING_INTERNAL_APPROVAL |
-| `src/app/api/ndas/internal-approve/route.ts` | Org approver approves contributor draft → DRAFT |
-| `src/app/api/ndas/internal-reject/route.ts` | Org approver rejects with feedback → DRAFT |
 | `src/app/fillndahtml-public/[token]/page.tsx` | Party B (and A) review/fill/suggest UI |
 | `src/app/sign-nda-public/[token]/page.tsx` | Signature capture (type, draw, or upload) |
 | `src/lib/linkSignerToUser.ts` | Associates Party B's Signer record to a registered User account post-signing |
@@ -136,7 +120,7 @@ Party A also receives a `/fillndahtml-public/{partyA_signerId}` link (via `party
 
 - **`NdaDraft.workflowState`** — the primary state machine field (enum `NdaWorkflowState`)
 - **`Signer.id`** — UUID used as the token in all public URLs
-- **`Signer.role`** — `SIGNER` = Party B, `APPROVER` = Party A
+- **`Signer.role`** — `SIGNER` = Party B, `SENDER` = Party A
 - **`NdaRevision.content`** — stores `filledFields`, `suggestedChanges`, `suggestionResponses` per negotiation round
 - **`NdaDraft.pendingInputFields`** — JSON array of field names Party A asked B to fill
 - **`NdaDraft.lastEditedBy`** — `"party_a"` or `"party_b"`, tracks who last touched the draft

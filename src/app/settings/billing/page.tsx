@@ -9,6 +9,7 @@ import {
   Check, Download, ExternalLink, FileText, Zap,
 } from 'lucide-react'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
+import { Button } from '@/components/ui/button'
 
 interface SubscriptionInfo {
   plan: 'FREE' | 'PRO' | 'ENTERPRISE' | 'DEV'
@@ -193,7 +194,7 @@ export default function BillingSettingsPage() {
           <button
             onClick={handleManageSubscription}
             disabled={portalLoading}
-            className="text-sm font-semibold text-gray-900 underline underline-offset-2 shrink-0 cursor-pointer"
+            className="text-sm font-semibold text-ink underline underline-offset-2 shrink-0 cursor-pointer"
           >
             Update Payment
           </button>
@@ -209,7 +210,7 @@ export default function BillingSettingsPage() {
             <div>
               <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Current Plan</p>
               <div className="flex items-center gap-3 mb-1">
-                <span className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                <span className="text-3xl font-extrabold text-ink tracking-tight">
                   {getPlanDisplayName(subscription.plan)}
                 </span>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -276,13 +277,10 @@ export default function BillingSettingsPage() {
           {subscription.plan === 'FREE' ? (
             <>
               {isOwner ? (
-                <button
-                  onClick={() => setCheckoutOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer"
-                >
+                <Button onClick={() => setCheckoutOpen(true)}>
                   Upgrade to Pro
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </Button>
               ) : (
                 <p className="text-sm text-gray-500">Only the organization owner can upgrade the plan.</p>
               )}
@@ -292,22 +290,15 @@ export default function BillingSettingsPage() {
             </>
           ) : subscription.hasStripeSubscription && isOwner ? (
             <div className="flex flex-col gap-1.5">
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm disabled:opacity-60 cursor-pointer"
-              >
+              <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
                 {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
-              </button>
+              </Button>
               {portalError && <p className="text-xs text-red-600">{portalError}</p>}
             </div>
           ) : (
-            <button
-              disabled
-              className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-400 font-semibold rounded-lg text-sm cursor-not-allowed bg-gray-50"
-            >
+            <Button variant="outline" disabled>
               Current Plan Active
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -318,7 +309,7 @@ export default function BillingSettingsPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Billing Details</p>
-              <h3 className="text-sm font-bold text-gray-900">Subscription &amp; payment information</h3>
+              <h3 className="text-sm font-semibold text-ink">Subscription &amp; payment information</h3>
             </div>
             <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5 text-teal-700" />
@@ -328,7 +319,7 @@ export default function BillingSettingsPage() {
         <dl className="divide-y divide-gray-100">
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <dt className="text-sm font-medium text-gray-500">Billing Cycle</dt>
-            <dd className="text-sm text-gray-900 col-span-2">
+            <dd className="text-sm text-ink col-span-2">
               {subscription.plan === 'FREE' || subscription.plan === 'DEV'
                 ? 'None'
                 : subscription.billingCycle === 'annual'
@@ -338,14 +329,14 @@ export default function BillingSettingsPage() {
           </div>
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
-            <dd className="text-sm text-gray-900 col-span-2">
+            <dd className="text-sm text-ink col-span-2">
               {subscription.hasStripeSubscription ? 'Managed via Stripe' : 'None'}
             </dd>
           </div>
           {subscription.stripeCurrentPeriodEnd && (
             <div className="px-6 py-4 grid grid-cols-3 gap-4">
               <dt className="text-sm font-medium text-gray-500">Renews On</dt>
-              <dd className="text-sm text-gray-900 col-span-2">
+              <dd className="text-sm text-ink col-span-2">
                 {new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString('en-US', {
                   year: 'numeric', month: 'long', day: 'numeric',
                 })}
@@ -358,7 +349,7 @@ export default function BillingSettingsPage() {
               {subscription.billingStatus === 'PAST_DUE' ? (
                 <span className="text-red-600 font-medium">Past Due</span>
               ) : (
-                <span className="text-gray-900 capitalize">{subscription.billingStatus.toLowerCase()}</span>
+                <span className="text-ink capitalize">{subscription.billingStatus.toLowerCase()}</span>
               )}
             </dd>
           </div>
@@ -371,7 +362,7 @@ export default function BillingSettingsPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Invoice History</p>
-              <h3 className="text-sm font-bold text-gray-900">Past payments and receipts</h3>
+              <h3 className="text-sm font-semibold text-ink">Past payments and receipts</h3>
             </div>
             <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-teal-700" />
@@ -399,7 +390,7 @@ export default function BillingSettingsPage() {
                 <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-3.5 text-sm text-gray-700">{formatDate(inv.date)}</td>
                   <td className="px-6 py-3.5 text-sm text-gray-500">{inv.number ?? '—'}</td>
-                  <td className="px-6 py-3.5 text-sm font-medium text-gray-900">
+                  <td className="px-6 py-3.5 text-sm font-medium text-ink">
                     {formatCurrency(inv.amountPaid, inv.currency)}
                   </td>
                   <td className="px-6 py-3.5">

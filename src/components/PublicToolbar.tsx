@@ -41,7 +41,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
       {(scrolled) => (
         <>
           <div
-            className={`flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
               scrolled ? 'h-13' : 'h-16'
             }`}
           >
@@ -59,8 +59,9 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                 />
               </Link>
 
-              {/* Desktop navigation */}
-              <div className={`hidden md:flex md:items-center md:gap-1 transition-all duration-300 ${scrolled ? 'md:ml-3' : 'md:ml-8'}`}>
+              {/* Desktop navigation — centered in the bar */}
+              <div className="hidden md:flex md:items-center md:gap-1 absolute left-1/2 -translate-x-1/2">
+
                 {links.map((link) => (
                   <Link
                     key={link.name}

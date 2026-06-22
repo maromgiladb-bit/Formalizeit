@@ -63,11 +63,11 @@ Company
   - id, name, createdAt, ...
 
 CompanyMember
-  - companyId, userId, role (owner | approver | contributor)
+  - companyId, userId, role (owner | signer | contributor)
 
 Document
   - companyId (not userId — this is the key shift)
-  - status: draft | pending_approval | approved | rejected | sent | signed
+  - status: draft | sent | signed
 
 Billing
   - companyId
@@ -86,29 +86,34 @@ Three roles. Keep permission logic consistent with this model.
 
 ### Owner
 - Manages company settings, billing, members
-- Can do everything an Approver can do
+- Can do everything a Signer can do (signing requires the signer toggle, `isApprover`)
 
-### Approver
+### Signer (role `SIGNER`; formerly "Approver")
 - Creates and edits documents
 - Reviews and accepts/rejects contributor suggestions
-- Sends, finalizes, and signs NDAs
+- Sends NDAs and **signs on behalf of the company**
 
 ### Contributor
-- Creates and edits **draft** NDAs
+- Creates and edits draft NDAs
 - Adds comments and suggests changes
-- Submits documents for approval
-- **Cannot** sign, send, finalize, or directly approve their own changes
+- Sends NDAs for review, input, and signature
+- **Can do everything except sign on behalf of the company**
 
-**Important:** Contributors are active draft collaborators, not passive viewers. Permission gating happens at the action level (buttons, API routes), not by showing separate pages per role.
+**Important:** Contributors are full collaborators, not passive viewers — the *only*
+action they cannot take is applying the company's signature. Permission gating happens
+at the action level (buttons, API routes), not by showing separate pages per role. The
+single signing guard is `canSignNDA()` in `src/lib/organizationRoles.ts`.
 
 ---
 
 ## Document workflow
 
 ```
-draft → pending_approval → approved → sent → signed
-                        ↘ rejected → (back to draft)
+draft → sent → signed
 ```
+
+There is no internal approval step — any role can take a draft through to `sent`;
+only signers/owners apply the company signature at the `signed` step.
 
 ---
 
@@ -124,7 +129,7 @@ draft → pending_approval → approved → sent → signed
 ## Key product rules to keep in mind
 
 1. **Documents belong to a company**, not a user directly
-2. **Contributors need approval before sending** — never let a contributor finalize
+2. **Only signers/owners can sign on behalf of the company** — contributors can do everything else (create, edit, send for review/input/signature)
 3. **Billing is company-level** — one plan per company, users inherit access
 4. **Template reuse is core** — the product is not a freeform doc editor
 5. **MVP first** — do not overbuild; avoid complex permission engines or separate role UIs

@@ -56,9 +56,9 @@ Tokens are defined in `src/app/globals.css` (`@theme`). Never invent new colors.
 - **Buttons:** `@/components/ui/button` (`Button` / `buttonVariants`). Default = teal-800. Variants: outline, secondary, ghost, link, destructive. Never hand-roll a teal button.
 - **Inputs:** `@/components/ui/input` — `Input`, `Textarea`, or the `inputClasses` string for legacy forms. Focus = `focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700`.
 - **Status:** `@/components/ui/status-pill` — `<StatusPill tone label />`. Tones:
-  - `neutral` (gray) — DRAFT, FILLING
+  - `neutral` (gray) — DRAFT, FILLING, CANCELLED
   - `progress` (teal-50/teal-700 ring) — SENT, AWAITING_*  on the other side
-  - `action` (amber, pulsing dot) — SIGN NOW, CHANGES TO REVIEW, PENDING_INTERNAL_APPROVAL
+  - `action` (amber, pulsing dot) — SIGN NOW, CHANGES TO REVIEW
   - `done` (solid teal-700 + check) — SIGNED, COMPLETE
 - **Scroll reveals:** `@/components/ui/reveal` — `<Reveal>`, `<RevealGroup>` + `<RevealItem>`. The ONLY scroll-animation mechanism. Honors `prefers-reduced-motion` automatically.
 - **Cards:** `@/components/ui/card` or the card classes above.

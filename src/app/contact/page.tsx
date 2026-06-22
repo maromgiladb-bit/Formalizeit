@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, ArrowRight } from "lucide-react";
+import { Mail, Phone, MapPin, Send, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const fadeUp = {
@@ -19,8 +20,8 @@ const contactCards = [
     icon: Mail,
     title: "Email Us",
     description: "For general inquiries and support",
-    link: "mailto:support@ndasaas.com",
-    linkLabel: "support@ndasaas.com",
+    link: "mailto:maromgiladb@gmail.com",
+    linkLabel: "maromgiladb@gmail.com",
   },
   {
     icon: Phone,
@@ -38,7 +39,39 @@ const contactCards = [
   },
 ];
 
+const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "" };
+
 export default function Contact() {
+  const [form, setForm] = useState(emptyForm);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [error, setError] = useState("");
+
+  const update = (field: keyof typeof emptyForm) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("submitting");
+    setError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to send your message.");
+      }
+      setStatus("success");
+      setForm(emptyForm);
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans">
 
@@ -106,12 +139,31 @@ export default function Contact() {
                   <h2 className="text-2xl font-bold text-ink">Send us a Message</h2>
                 </div>
 
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                {status === "success" ? (
+                  <div className="flex items-start gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4">
+                    <CheckCircle className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-teal-800">Message sent</p>
+                      <p className="text-sm text-teal-700">Thanks for reaching out — we&apos;ll get back to you soon.</p>
+                      <button
+                        type="button"
+                        onClick={() => setStatus("idle")}
+                        className="mt-3 text-sm font-semibold text-teal-700 hover:text-teal-900 transition-colors"
+                      >
+                        Send another message
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                <form className="space-y-5" onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>
                       <input
                         type="text"
+                        required
+                        value={form.firstName}
+                        onChange={update("firstName")}
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="John"
                       />
@@ -120,6 +172,8 @@ export default function Contact() {
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Last Name</label>
                       <input
                         type="text"
+                        value={form.lastName}
+                        onChange={update("lastName")}
                         className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                         placeholder="Doe"
                       />
@@ -130,6 +184,9 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
                     <input
                       type="email"
+                      required
+                      value={form.email}
+                      onChange={update("email")}
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
                       placeholder="john@example.com"
                     />
@@ -137,12 +194,16 @@ export default function Contact() {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Subject</label>
-                    <select className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors bg-white text-gray-700">
+                    <select
+                      value={form.subject}
+                      onChange={update("subject")}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors bg-white text-gray-700"
+                    >
                       <option value="">Select a topic</option>
-                      <option value="support">Technical Support</option>
-                      <option value="sales">Sales Inquiry</option>
-                      <option value="partnership">Partnership Opportunity</option>
-                      <option value="other">Other</option>
+                      <option value="Technical Support">Technical Support</option>
+                      <option value="Sales Inquiry">Sales Inquiry</option>
+                      <option value="Partnership Opportunity">Partnership Opportunity</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
 
@@ -150,19 +211,37 @@ export default function Contact() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Message</label>
                     <textarea
                       rows={5}
+                      required
+                      value={form.message}
+                      onChange={update("message")}
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors resize-none"
                       placeholder="How can we help you?"
                     />
                   </div>
 
+                  {status === "error" && (
+                    <p className="text-sm text-red-600">{error}</p>
+                  )}
+
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer"
+                    disabled={status === "submitting"}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-4 h-4" />
-                    Send Message
+                    {status === "submitting" ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Message
+                      </>
+                    )}
                   </button>
                 </form>
+                )}
               </div>
             </motion.div>
           </div>

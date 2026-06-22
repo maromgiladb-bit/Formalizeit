@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle } from 'lucide-react';
+import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, X, Search } from 'lucide-react';
 import Link from 'next/link';
 import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
+import ProfilePrompt from './ProfilePrompt';
 
 interface NDA {
   id: string;
@@ -22,11 +23,13 @@ interface NDA {
   signerId?: string | null;
   senderName?: string;
   senderEmail?: string;
+  senderOrganizationName?: string;
 }
 
 interface DashboardClientProps {
   ndas: NDA[];
   checkoutSuccess?: boolean;
+  hasCompanyProfile?: boolean;
 }
 
 function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
@@ -55,11 +58,11 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
         return { label: 'Sign now', tone: 'action' };
       }
       return { label: 'Waiting signature', tone: 'progress' };
-    case 'PENDING_INTERNAL_APPROVAL':
-      return { label: 'Pending approval', tone: 'action' };
     case 'FILLING':
     default:
-      if (nda.status === 'signed') {
+      if (nda.status === 'cancelled') {
+        return { label: 'Cancelled', tone: 'neutral' };
+      } else if (nda.status === 'signed') {
         return { label: 'Signed', tone: 'done' };
       } else if (nda.status === 'sent' || nda.status === 'pending') {
         return { label: 'Sent', tone: 'progress' };
@@ -69,9 +72,12 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
   }
 }
 
-export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClientProps) {
+export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfile }: DashboardClientProps) {
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -140,19 +146,66 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
     }
   };
 
-  const filteredNdas = localNdas.filter((nda) => {
-    if (filter === 'all') return true;
-    const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
-      (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
-    const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
+  const handleCancel = async (id: string, name: string) => {
+    if (!confirm(`Cancel "${name}"? The recipient will no longer be able to act on it.`)) return;
 
-    if (filter === 'action') return isActionRequired;
-    if (filter === 'signed') return isSigned && !isActionRequired;
-    if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created' && !isActionRequired && !isSigned;
-    if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending') && !isActionRequired && !isSigned;
-    if (filter === 'received') return nda.type === 'received';
-    return true;
-  });
+    setCancellingId(id);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/ndas/${id}/cancel`, { method: 'POST' });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to cancel NDA');
+      }
+
+      setLocalNdas(prev => prev.map(nda => (nda.id === id ? { ...nda, status: 'cancelled' } : nda)));
+      setMessage({ type: 'success', text: 'NDA cancelled' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error('Cancel error:', error);
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to cancel NDA',
+      });
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const isCancellable = (nda: NDA) =>
+    nda.type === 'created' &&
+    !['draft', 'signed', 'cancelled'].includes(nda.status) &&
+    nda.workflowState !== 'COMPLETE' &&
+    nda.workflowState !== 'SIGNING_COMPLETE' &&
+    (nda.status === 'sent' || nda.status === 'pending' || (nda.workflowState?.startsWith('AWAITING') ?? false));
+
+  const filteredNdas = localNdas
+    .filter((nda) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const recipient = nda.type === 'received'
+          ? (nda.senderName || nda.senderEmail || '')
+          : (nda.partyBName || nda.partyBEmail || nda.recipientEmail || '');
+        if (!nda.partyName.toLowerCase().includes(q) && !recipient.toLowerCase().includes(q)) return false;
+      }
+      if (filter === 'all') return true;
+      const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
+        (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
+      const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
+      if (filter === 'action') return isActionRequired;
+      if (filter === 'signed') return isSigned && !isActionRequired;
+      if (filter === 'draft') return nda.status === 'draft' && nda.type === 'created' && !isActionRequired && !isSigned;
+      if (filter === 'sent') return nda.type === 'created' && (nda.status === 'sent' || nda.status === 'pending') && !isActionRequired && !isSigned;
+      if (filter === 'received') return nda.type === 'received';
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sortBy === 'name') return a.partyName.localeCompare(b.partyName);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   const actionRequired = (n: NDA) =>
     ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '') ||
@@ -211,7 +264,8 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
 
   const getRecipient = (nda: NDA) => {
     if (nda.type === 'received') {
-      return nda.senderName || nda.senderEmail || '—';
+      const name = nda.senderName || nda.senderEmail || '—';
+      return nda.senderOrganizationName ? `${name} at ${nda.senderOrganizationName}` : name;
     }
     return nda.partyBName || nda.partyBEmail || nda.recipientEmail || '—';
   };
@@ -314,6 +368,18 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
 
         return null;
       })()}
+
+      {/* In-flight: Cancel */}
+      {isCancellable(nda) && (
+        <button
+          onClick={() => handleCancel(nda.id, nda.partyName)}
+          disabled={cancellingId === nda.id}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <X className="w-3.5 h-3.5" />
+          {cancellingId === nda.id ? 'Cancelling...' : 'Cancel'}
+        </button>
+      )}
     </>
   );
 
@@ -386,9 +452,34 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
           })}
         </div>
 
+        {/* Search + sort */}
+        <div className="flex flex-col sm:flex-row gap-3 pb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by title or counterparty..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 bg-white"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white text-gray-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
+
         {/* Recent activity */}
         <div className="mb-12">
-          <h2 className="text-sm font-semibold text-ink mb-3">Recent Activity</h2>
+          <h2 className="text-sm font-semibold text-ink mb-3">
+            {searchQuery ? `Results for "${searchQuery}"` : 'Recent Activity'}
+          </h2>
 
           {filteredNdas.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-12 text-center">
@@ -470,6 +561,9 @@ export default function DashboardClient({ ndas, checkoutSuccess }: DashboardClie
           )}
         </div>
       </div>
+
+      {/* Profile setup prompt — bottom-right, shown when profile is incomplete */}
+      {!hasCompanyProfile && <ProfilePrompt />}
 
       {/* Pro upgrade toast — bottom-right */}
       <AnimatePresence>

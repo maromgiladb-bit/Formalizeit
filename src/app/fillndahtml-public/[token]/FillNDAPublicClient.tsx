@@ -819,7 +819,7 @@ export default function FillNDAPublicClient({
         if (isSignedIn) {
             return (
                 <Link
-                    href="/mynda"
+                    href="/dashboard"
                     className="inline-flex items-center justify-center px-6 py-3 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all shadow-md"
                 >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

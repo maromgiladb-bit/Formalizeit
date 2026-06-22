@@ -20,8 +20,6 @@ function getStatusBadge(workflowState: string, status: string): { label: string;
       return { label: 'Waiting review', tone: 'progress' };
     case 'AWAITING_PARTY_B_SIGNATURE':
       return { label: 'Waiting signature', tone: 'progress' };
-    case 'PENDING_INTERNAL_APPROVAL':
-      return { label: 'Awaiting approval', tone: 'action' };
     case 'AWAITING_PARTY_A_SIGNATURE':
       return { label: 'Awaiting signature', tone: 'action' };
     case 'COMPLETE':

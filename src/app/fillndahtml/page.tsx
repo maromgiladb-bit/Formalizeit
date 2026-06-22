@@ -998,7 +998,7 @@ export default function FillNDAHTML() {
 				setWarning(data.error || 'Failed to delete draft');
 				return;
 			}
-			router.push('/mynda');
+			router.push('/dashboard');
 		} catch {
 			setWarning('Failed to delete draft');
 		} finally {
@@ -1316,7 +1316,7 @@ export default function FillNDAHTML() {
 								{isDev && (
 									<button
 										onClick={autoFillMockData}
-										className="px-3 py-1.5 text-sm text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors flex items-center gap-1.5"
+										className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
 									>
 										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1339,7 +1339,7 @@ export default function FillNDAHTML() {
 						)}
 						{warning && (
 							warning === "Draft saved successfully." ? (
-								<div className="flex items-center gap-3 text-sm text-green-700 mb-4 bg-green-50 px-4 py-3 rounded-xl border border-green-200">
+								<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-xl border border-teal-200">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
@@ -1497,15 +1497,15 @@ export default function FillNDAHTML() {
 										</div>
 
 										{/* Info box about company profile */}
-										<div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-4">
+										<div className="bg-teal-50 rounded-lg p-4 border border-teal-200 mb-4">
 											<div className="flex gap-3">
-												<svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
 												<div>
-													<p className="text-sm text-green-800">
+													<p className="text-sm text-teal-800">
 														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
-														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-green-900">Company Details</a>.
+														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
 													</p>
 												</div>
 											</div>
@@ -1585,8 +1585,8 @@ export default function FillNDAHTML() {
 								{step === 2 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
 												</svg>
 											</div>
@@ -1819,8 +1819,8 @@ export default function FillNDAHTML() {
 								{step === 4 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
 											</div>
@@ -2223,13 +2223,13 @@ export default function FillNDAHTML() {
 							</div>
 							<div className="p-6">
 								{/* Email Sent Success Message */}
-								<div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-									<svg className="w-6 h-6 text-green-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div className="mb-6 bg-teal-50 border border-teal-200 rounded-lg p-4 flex items-start gap-3">
+									<svg className="w-6 h-6 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 									</svg>
 									<div>
-										<p className="font-semibold text-green-800 mb-1">✅ NDA Ready to Share!</p>
-										<p className="text-sm text-green-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
+										<p className="font-semibold text-teal-800 mb-1">✅ NDA Ready to Share!</p>
+										<p className="text-sm text-teal-700">Share the link below with <strong>{signersEmail}</strong> to review and sign.</p>
 									</div>
 								</div>
 
@@ -2270,6 +2270,10 @@ export default function FillNDAHTML() {
 									</div>
 
 									{/* Share Options */}
+									{/* Deliberate exception to the Calm Precision color rules: external share
+									    channels keep their recognizable brand colors (WhatsApp green, Telegram
+									    blue) so recipients identify them at a glance. Non-brand buttons (Email,
+									    More) stay neutral. Do not "fix" the brand colors in a future redesign pass. */}
 									<div className="mt-6">
 										<p className="text-sm font-semibold text-gray-700 mb-3">Or share via:</p>
 										<div className="grid grid-cols-2 gap-3">
@@ -2297,12 +2301,12 @@ export default function FillNDAHTML() {
 												href={`https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent('Please review and sign our NDA')}`}
 												target="_blank"
 												rel="noopener noreferrer"
-												className="flex items-center justify-center gap-2 px-4 py-3 bg-teal-50 hover:bg-blue-200 rounded-lg transition-colors border border-blue-300"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
 											>
-												<svg className="w-5 h-5 text-teal-700" fill="currentColor" viewBox="0 0 24 24">
+												<svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
 													<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
 												</svg>
-												<span className="font-medium text-teal-700">Telegram</span>
+												<span className="font-medium text-blue-600">Telegram</span>
 											</a>
 											<button
 												onClick={async () => {
@@ -2323,7 +2327,7 @@ export default function FillNDAHTML() {
 														setTimeout(() => setWarning(""), 2000);
 													}
 												}}
-												className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors border border-purple-300"
+												className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
 											>
 												<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -2338,7 +2342,7 @@ export default function FillNDAHTML() {
 											<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 											</svg>
-											<div className="text-sm text-blue-800">
+											<div className="text-sm text-ink">
 												<p className="font-semibold mb-1">What the recipient can do:</p>
 												<ul className="list-disc list-inside space-y-1 text-teal-700">
 													<li>Review all NDA terms and details</li>
@@ -2383,7 +2387,7 @@ export default function FillNDAHTML() {
 								setSuggestedEmailBody("");
 								setEmailSent(false);
 								setShowMoreShareOptions(false);
-								if (emailSent) router.push('/mynda');
+								if (emailSent) router.push('/dashboard');
 							}
 						}}
 					>
@@ -2410,7 +2414,7 @@ export default function FillNDAHTML() {
 										setSuggestedEmailSubject("");
 										setSuggestedEmailBody("");
 										setEmailSent(false);
-										if (emailSent) router.push('/mynda');
+										if (emailSent) router.push('/dashboard');
 									}}
 									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
 									aria-label="Close"
@@ -2473,7 +2477,8 @@ export default function FillNDAHTML() {
 								<div className="flex-1 h-px bg-gray-100" />
 							</div>
 
-							{/* Share options grid */}
+							{/* Share options grid — brand colors are an intentional exception to the
+							    Calm Precision palette (Gmail/Outlook/WhatsApp) so channels are recognizable. */}
 							<div className="px-6 pt-3 pb-5 grid grid-cols-3 gap-2">
 								{/* Gmail */}
 								<button
@@ -2541,7 +2546,7 @@ export default function FillNDAHTML() {
 									disabled={!generatedShareLink}
 									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
 								>
-									<svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 									</svg>
 									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Copy Link</span>
@@ -2603,7 +2608,7 @@ export default function FillNDAHTML() {
 										setSuggestedEmailSubject("");
 										setSuggestedEmailBody("");
 										setEmailSent(false);
-										if (emailSent) router.push('/mynda');
+										if (emailSent) router.push('/dashboard');
 									}}
 									className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
 								>
@@ -2689,7 +2694,7 @@ export default function FillNDAHTML() {
 								<ul className="space-y-2 mb-6">
 									{['Company name', 'Address', 'Signatory name & title', 'Email & phone'].map((item) => (
 										<li key={item} className="flex items-center gap-2 text-sm text-gray-600">
-											<svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg className="w-4 h-4 text-teal-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 											</svg>
 											{item}

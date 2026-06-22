@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -143,12 +144,12 @@ export default function TemplateSelectionPage() {
                 {/* Content */}
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-ink group-hover:text-teal-800 transition-colors">
+                    <h3 className="text-xl font-semibold text-ink group-hover:text-teal-800 transition-colors">
                       {template.name}
                     </h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+                  <p className="text-gray-500 text-sm mb-4 line-clamp-3 flex-1">
                     {template.description}
                   </p>
 
@@ -165,30 +166,30 @@ export default function TemplateSelectionPage() {
                   </div>
 
                   {/* Action Button */}
-                  <button
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSelectTemplate(template.id);
                     }}
-                    className="w-full py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors duration-200 shadow-card flex items-center justify-center gap-2 mt-auto cursor-pointer"
+                    className="w-full mt-auto"
                   >
                     <span>Use This Template</span>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
             
             {/* Placeholder for future templates */}
-            <div className="bg-gray-50 rounded-xl shadow-sm border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
+            <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-500 mb-2">More Templates Coming Soon</h3>
+              <h3 className="text-xl font-semibold text-gray-500 mb-2">More Templates Coming Soon</h3>
               <p className="text-gray-400 text-sm">We are working hard to bring you more legally sound templates.</p>
             </div>
           </div>
@@ -207,15 +208,16 @@ export default function TemplateSelectionPage() {
 
         {/* Back Button */}
         <div className="mt-12 text-center">
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push("/dashboard")}
-            className="px-6 py-3 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200 shadow-card border border-gray-200 inline-flex items-center gap-2 cursor-pointer"
+            className="px-6"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Back to Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     </div>

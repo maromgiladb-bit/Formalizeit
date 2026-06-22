@@ -17,23 +17,22 @@ export async function GET() {
       return NextResponse.json({ error: 'No active organization found' }, { status: 404 });
     }
 
-    // Get company profile for this organization
-    const profile = await prisma.companyProfile.findUnique({
-      where: {
-        organizationId: activeMembership.organizationId
-      }
-    });
+    const [profile, organization] = await Promise.all([
+      prisma.companyProfile.findUnique({
+        where: { organizationId: activeMembership.organizationId }
+      }),
+      prisma.organization.findUnique({
+        where: { id: activeMembership.organizationId },
+        select: { name: true }
+      })
+    ]);
 
-    if (!profile) {
-      return NextResponse.json({ 
-        profile: null,
-        canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER'
-      }, { status: 200 });
-    }
+    const canEdit = activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER';
 
-    return NextResponse.json({ 
-      profile,
-      canEdit: activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER'
+    return NextResponse.json({
+      profile: profile ?? null,
+      organizationName: organization?.name ?? '',
+      canEdit,
     });
   } catch (error) {
     console.error('Error fetching company profile:', error);
@@ -72,48 +71,32 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    let profile;
+    const profileData = {
+      companyName: data.companyname,
+      email: data.email,
+      phone: data.phone || null,
+      website: data.website || null,
+      address: data.addressline1,
+      addressLine2: data.addressline2 || null,
+      city: data.city,
+      state: data.state || null,
+      zipCode: data.postalcode || null,
+      country: data.country,
+      signatoryName: data.signatoryname,
+      signatoryTitle: data.signatorytitle || null,
+    };
 
-    if (existingProfile) {
-      // Update existing profile
-      profile = await prisma.companyProfile.update({
-        where: { id: existingProfile.id },
-        data: {
-          companyName: data.companyname,
-          email: data.email,
-          phone: data.phone || null,
-          website: data.website || null,
-          address: data.addressline1,
-          addressLine2: data.addressline2 || null,
-          city: data.city,
-          state: data.state || null,
-          zipCode: data.postalcode || null,
-          country: data.country,
-          signatoryName: data.signatoryname,
-          signatoryTitle: data.signatorytitle || null,
-          // meta: data.meta || null, // Removed as not in schema
-        }
-      });
-    } else {
-      // Create new profile
-      profile = await prisma.companyProfile.create({
-        data: {
-          organizationId: activeMembership.organizationId,
-          companyName: data.companyname,
-          email: data.email,
-          phone: data.phone || null,
-          website: data.website || null,
-          address: data.addressline1,
-          addressLine2: data.addressline2 || null,
-          city: data.city,
-          state: data.state || null,
-          zipCode: data.postalcode || null,
-          country: data.country,
-          signatoryName: data.signatoryname,
-          signatoryTitle: data.signatorytitle || null,
-        }
-      });
-    }
+    const [profile] = await Promise.all([
+      existingProfile
+        ? prisma.companyProfile.update({ where: { id: existingProfile.id }, data: profileData })
+        : prisma.companyProfile.create({ data: { organizationId: activeMembership.organizationId, ...profileData } }),
+      data.organizationname
+        ? prisma.organization.update({
+            where: { id: activeMembership.organizationId },
+            data: { name: data.organizationname },
+          })
+        : Promise.resolve(),
+    ]);
 
     return NextResponse.json({
       success: true,

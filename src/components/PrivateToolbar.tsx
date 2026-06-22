@@ -31,12 +31,13 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
     { name: 'Fill NDA', href: '/templates', current: pathname === '/fillndahtml' || pathname === '/templates' },
-    { name: 'My NDAs', href: '/mynda', current: pathname === '/mynda' },
+    { name: 'Plans', href: '/#pricing', current: pathname === '/plans' },
   ]
 
   const router = useRouter()
 
   const primaryLinks = [
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Settings', href: '/settings' },
     { name: 'Pricing', href: '/#pricing' },
   ]
@@ -114,7 +115,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
       {(scrolled) => (
         <>
           <div
-            className={`flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
               scrolled ? 'h-13' : 'h-16'
             }`}
           >
@@ -132,8 +133,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 />
               </Link>
 
-              {/* Desktop navigation */}
-              <div className={`hidden lg:flex lg:items-center lg:gap-1 transition-all duration-300 ${scrolled ? 'lg:ml-2' : 'lg:ml-8'}`}>
+              {/* Desktop navigation — centered in the bar */}
+              <div className="hidden lg:flex lg:items-center lg:gap-1 absolute left-1/2 -translate-x-1/2">
+
                 {navigation.map((item) => (
                   <Link key={item.name} href={item.href} className={navLinkClass(item.current)}>
                     {item.name}

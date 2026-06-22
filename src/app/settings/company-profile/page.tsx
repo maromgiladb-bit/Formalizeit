@@ -4,29 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Building2, Info, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { inputClasses } from '@/components/ui/input';
 
 interface CompanyProfile {
   id: string;
+  organizationname: string;
   companyname: string;
   email: string;
-  phone?: string;
-  website?: string;
+  phone: string;
+  website: string;
   addressline1: string;
-  addressline2?: string;
+  addressline2: string;
   city: string;
-  state?: string;
-  postalcode?: string;
+  state: string;
+  postalcode: string;
   country: string;
   signatoryname: string;
-  signatorytitle?: string;
+  signatorytitle: string;
 }
-
-const inputClass = (disabled: boolean) =>
-  `w-full px-3 py-2.5 border rounded-lg text-sm outline-none transition-colors duration-150 ${
-    disabled
-      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-      : 'border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
-  }`
 
 export default function CompanyProfileSettingsPage() {
   const router = useRouter();
@@ -39,6 +35,7 @@ export default function CompanyProfileSettingsPage() {
 
   const [formData, setFormData] = useState<CompanyProfile>({
     id: '',
+    organizationname: '',
     companyname: '',
     email: '',
     phone: '',
@@ -50,7 +47,7 @@ export default function CompanyProfileSettingsPage() {
     postalcode: '',
     country: '',
     signatoryname: '',
-    signatorytitle: ''
+    signatorytitle: '',
   });
 
   useEffect(() => {
@@ -67,10 +64,13 @@ export default function CompanyProfileSettingsPage() {
       const response = await fetch('/api/company-profile');
       const data = await response.json();
       setCanEdit(!!data.canEdit);
-      if (data.profile) {
-        setFormData({
+      const orgName = data.organizationName || '';
+      setFormData(prev => ({
+        ...prev,
+        organizationname: orgName,
+        ...(data.profile ? {
           id: data.profile.id,
-          companyname: data.profile.companyName || '',
+          companyname: data.profile.companyName || orgName,
           email: data.profile.email || '',
           phone: data.profile.phone || '',
           website: data.profile.website || '',
@@ -81,9 +81,11 @@ export default function CompanyProfileSettingsPage() {
           postalcode: data.profile.zipCode || '',
           country: data.profile.country || '',
           signatoryname: data.profile.signatoryName || '',
-          signatorytitle: data.profile.signatoryTitle || ''
-        });
-      }
+          signatorytitle: data.profile.signatoryTitle || '',
+        } : {
+          companyname: orgName,
+        }),
+      }));
     } catch (error) {
       console.error('Error loading profile:', error);
       setMessage({ type: 'error', text: 'Failed to load company profile' });
@@ -106,7 +108,7 @@ export default function CompanyProfileSettingsPage() {
       const response = await fetch('/api/company-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
       const data = await response.json();
       if (response.ok) {
@@ -146,7 +148,7 @@ export default function CompanyProfileSettingsPage() {
             <Building2 className="w-5 h-5 text-teal-700" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-900">Company Profile</h3>
+            <h3 className="text-sm font-semibold text-ink">Company Profile</h3>
             <p className="text-sm text-gray-500">Default company information for NDA generation</p>
           </div>
         </div>
@@ -160,10 +162,9 @@ export default function CompanyProfileSettingsPage() {
             <Info className="w-4 h-4 text-teal-700" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900 mb-0.5">Quick NDA Generation</p>
+            <p className="text-sm font-semibold text-ink mb-0.5">Saves you time</p>
             <p className="text-sm text-gray-500 leading-relaxed">
-              This information will be automatically filled in as Party A when you create a new NDA.
-              You can always modify these details for individual NDAs.
+              Fill this in once and we&apos;ll auto-fill your company details as Party A every time you create a new NDA. All fields are optional.
             </p>
           </div>
         </div>
@@ -184,19 +185,19 @@ export default function CompanyProfileSettingsPage() {
         {message && (
           <div className={`rounded-xl p-4 flex items-start gap-3 ${
             message.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200'
+              ? 'bg-teal-50 border border-teal-200'
               : 'bg-red-50 border border-red-200'
           }`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-              message.type === 'success' ? 'bg-emerald-100' : 'bg-red-100'
+              message.type === 'success' ? 'bg-teal-100' : 'bg-red-100'
             }`}>
               {message.type === 'success'
-                ? <CheckCircle className="w-4 h-4 text-emerald-600" />
+                ? <CheckCircle className="w-4 h-4 text-teal-700" />
                 : <AlertCircle className="w-4 h-4 text-red-600" />
               }
             </div>
             <p className={`text-sm font-medium ${
-              message.type === 'success' ? 'text-emerald-800' : 'text-red-800'
+              message.type === 'success' ? 'text-teal-800' : 'text-red-800'
             }`}>
               {message.text}
             </p>
@@ -211,33 +212,48 @@ export default function CompanyProfileSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Company Name <span className="text-red-500">*</span>
+                  Organization Name
+                </label>
+                <input
+                  type="text"
+                  name="organizationname"
+                  value={formData.organizationname}
+                  onChange={handleChange}
+                  disabled={!canEdit}
+                  placeholder="e.g., Acme Corp"
+                  className={inputClasses}
+                />
+                <p className="mt-1 text-xs text-gray-400">Your workspace name — shown on your team page and in notifications.</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                  Legal Company Name
                 </label>
                 <input
                   type="text"
                   name="companyname"
                   value={formData.companyname}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="e.g., Acme Corporation Inc."
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
+                <p className="mt-1 text-xs text-gray-400">Used as Party A in NDA documents.</p>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Email <span className="text-red-500">*</span>
+                  Email
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="contact@company.com"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -252,7 +268,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="+1 (555) 123-4567"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -267,7 +283,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="https://www.company.com"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
             </div>
@@ -281,17 +297,16 @@ export default function CompanyProfileSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Address Line 1 <span className="text-red-500">*</span>
+                  Address Line 1
                 </label>
                 <input
                   type="text"
                   name="addressline1"
                   value={formData.addressline1}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="123 Main Street"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -306,23 +321,22 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="Suite 100"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  City <span className="text-red-500">*</span>
+                  City
                 </label>
                 <input
                   type="text"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="San Francisco"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -337,7 +351,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="California"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -352,23 +366,22 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="94102"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Country <span className="text-red-500">*</span>
+                  Country
                 </label>
                 <input
                   type="text"
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="United States"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
             </div>
@@ -382,17 +395,16 @@ export default function CompanyProfileSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Signatory Name <span className="text-red-500">*</span>
+                  Signatory Name
                 </label>
                 <input
                   type="text"
                   name="signatoryname"
                   value={formData.signatoryname}
                   onChange={handleChange}
-                  required
                   disabled={!canEdit}
                   placeholder="John Smith"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
 
@@ -407,7 +419,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="CEO"
-                  className={inputClass(!canEdit)}
+                  className={inputClasses}
                 />
               </div>
             </div>
@@ -415,14 +427,10 @@ export default function CompanyProfileSettingsPage() {
 
           {canEdit && (
             <div className="flex justify-end pt-4 border-t border-gray-100">
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <Button type="submit" disabled={saving}>
                 {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {saving ? 'Saving...' : 'Save Profile'}
-              </button>
+              </Button>
             </div>
           )}
         </form>
