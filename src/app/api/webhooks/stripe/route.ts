@@ -54,6 +54,13 @@ export async function POST(req: NextRequest) {
 
 type DbBillingStatus = 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
 
+// As of the 2026-04-22.dahlia API, current_period_end is no longer on the
+// Subscription object — it lives on each subscription item. For our single-item
+// plans the first item's value is the subscription's period end.
+function getCurrentPeriodEnd(subscription: Stripe.Subscription): number | null {
+  return subscription.items.data[0]?.current_period_end ?? null
+}
+
 const SUBSCRIPTION_STATUS_MAP: Record<string, DbBillingStatus> = {
   active: 'ACTIVE',
   trialing: 'TRIALING',
@@ -87,6 +94,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
+  const periodEnd = getCurrentPeriodEnd(subscription)
 
   await prisma.organization.update({
     where: { id: organizationId },
@@ -95,7 +103,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       billingStatus,
       stripeSubscriptionId: subscription.id,
       stripePriceId: subscription.items.data[0]?.price.id ?? null,
-      stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      stripeCurrentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
     },
   })
 }
@@ -119,6 +127,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // which is handled here or via handleSubscriptionDeleted.
   const gracePlanStatuses = new Set(['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'])
   const isActivePlan = gracePlanStatuses.has(subscription.status)
+  const periodEnd = getCurrentPeriodEnd(subscription)
 
   await prisma.organization.update({
     where: { id: organization.id },
@@ -126,7 +135,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       billingPlan: isActivePlan ? 'PRO' : 'FREE',
       billingStatus,
       stripePriceId: isActivePlan ? (subscription.items.data[0]?.price.id ?? null) : null,
-      stripeCurrentPeriodEnd: isActivePlan ? new Date(subscription.current_period_end * 1000) : null,
+      stripeCurrentPeriodEnd: isActivePlan && periodEnd ? new Date(periodEnd * 1000) : null,
       stripeSubscriptionId: isActivePlan ? undefined : null,
     },
   })
