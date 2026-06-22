@@ -38,17 +38,21 @@ export default async function SignSuccessPage({
 
                 <div className="space-y-3">
                     <Link
-                        href="/"
+                        href={`/api/claim?signerId=${signer.id}`}
                         className="block w-full px-5 py-3 bg-teal-800 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors shadow-card"
                     >
-                        Back to Home Page
+                        Create a free account to keep this NDA
                     </Link>
 
+                    <p className="text-xs text-gray-400">
+                        Your signed NDA stays accessible for 5 years. Create an account to download it anytime — even if you sign up with a different email.
+                    </p>
+
                     <Link
-                        href="/about"
+                        href="/"
                         className="block w-full px-5 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
                     >
-                        Learn more about FormalizeIt
+                        Back to Home Page
                     </Link>
                 </div>
             </div>

@@ -33,11 +33,14 @@ function planFacts(): string {
 	const n = (v: number) => (v >= 9999 ? "unlimited" : String(v));
 	const f = PLAN_LIMITS.FREE;
 	const p = PLAN_LIMITS.PRO;
+	const t = PLAN_LIMITS.TEAM;
 	return `Free — ${n(f.maxUsers)} user, ${n(
 		f.maxActiveDrafts
-	)} NDAs total. Pro — ${n(p.maxUsers)} users, ${n(
+	)} NDAs total. Pro — ${n(p.maxUsers)} user, ${n(
 		p.maxActiveDrafts
-	)} NDAs per quarter. Enterprise — unlimited users and NDAs. (Direct users to the Plans page for current pricing — don't invent prices.)`;
+	)} NDAs. Team — up to ${n(t.maxUsers)} users, ${n(
+		t.maxActiveDrafts
+	)} NDAs. Enterprise — contact sales. (Direct users to the Plans page for current pricing — don't invent prices.)`;
 }
 
 // Compact product knowledge base — what Formi needs to answer app questions.
@@ -83,7 +86,7 @@ ${ndaFacts(nda)}`;
 	const draftLine = nda ? `\n${ndaFacts(nda)}\nIf asked about NDA risk, the main concerns are duration over 5 years, IP transfer/assignment, liability/indemnification, and financial terms.` : "";
 
 	return `You are Formi, the friendly FormalizeIt assistant, helping ${userName} at ${companyName}.
-Write like a helpful colleague in a chat — warm, natural sentences, not a robotic report. Keep it SHORT (usually 1-2 sentences). Avoid bullet lists unless you're genuinely enumerating 3+ items, and use **bold** sparingly for one or two key terms at most. You're not a lawyer; mention "not legal advice" briefly only the first time you give real legal guidance. Reply in the same language the user writes in. If you don't know something about the app, say so and point them to the Help page rather than guessing.${pageLine}
+Write like a helpful colleague in a chat — warm, natural sentences, not a robotic report. Keep it SHORT (usually 1-2 sentences). Avoid bullet lists unless you're genuinely enumerating 3+ items, and use **bold** sparingly for one or two key terms at most. You're not a lawyer and FormalizeIt isn't a law firm; mention "not legal advice, and FormalizeIt isn't a law firm" briefly only the first time you give real legal guidance. Reply in the same language the user writes in. If you don't know something about the app, say so and point them to the Help page rather than guessing.${pageLine}
 
 ${PRODUCT_KNOWLEDGE}${draftLine}`;
 }

@@ -37,31 +37,31 @@ interface Invoice {
 const PLAN_FEATURES: Record<string, string[]> = {
   FREE: [
     'Up to 3 NDAs total',
-    '1 team member',
-    'Basic templates',
-    'E-signature support',
-    'Email support',
-    '7-day document storage',
+    '1 user',
+    'Send, review & e-sign NDAs',
+    'Basic dashboard & counterparty management',
+    '5-year document storage',
   ],
   PRO: [
-    '25 NDAs per quarter',
-    'Up to 10 team members',
-    'All professional templates',
-    'E-signature support',
-    'Priority support',
-    'Advanced tracking & audit trail',
-    'Custom branding',
-    'Bidirectional editing',
+    'Unlimited NDA generation',
+    '1 user',
+    'NDA dashboard & search',
+    'Full audit trail',
+  ],
+  TEAM: [
+    'Everything in Pro',
+    'Up to 10 users',
+    'Shared workspace & team dashboard',
+    'Centralized NDA repository',
+    'Role-based permissions',
   ],
   ENTERPRISE: [
-    'Unlimited everything',
-    'Custom templates',
-    'Dedicated account manager',
-    'API access',
-    'SSO authentication',
-    'Custom integrations',
-    'SLA agreement',
-    'On-premise option',
+    'SSO',
+    'Legal approval workflow',
+    'Private NDA standard',
+    'Compliance requirements',
+    'CRM integrations',
+    'Custom API',
   ],
   DEV: [
     'Full Pro access',
@@ -147,6 +147,7 @@ export default function BillingSettingsPage() {
     switch (plan) {
       case 'FREE': return 'Free'
       case 'PRO': return 'Pro'
+      case 'TEAM': return 'Team'
       case 'ENTERPRISE': return 'Enterprise'
       case 'DEV': return 'Developer'
       default: return plan
@@ -157,8 +158,11 @@ export default function BillingSettingsPage() {
     switch (plan) {
       case 'FREE': return '$0 / month'
       case 'PRO': return billingCycle === 'annual'
-        ? '$15.99 / month, billed annually'
-        : '$19.99 / month'
+        ? '$15 / month, billed annually'
+        : '$19 / month'
+      case 'TEAM': return billingCycle === 'annual'
+        ? '$60 / month, billed annually'
+        : '$75 / month'
       case 'ENTERPRISE': return 'Custom pricing'
       case 'DEV': return 'Complimentary'
       default: return '—'

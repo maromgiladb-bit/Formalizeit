@@ -12,6 +12,7 @@ datasource db {
 enum BillingPlan {
   FREE
   PRO
+  TEAM
   ENTERPRISE
   DEV
 
@@ -97,6 +98,7 @@ enum NdaEventType {
   CHANGES_ACCEPTED   // Party A accepted Party B suggestions
   CHANGES_REQUESTED  // Party A sent changes back to Party B
   PDF_EXPORTED       // PDF was generated/exported
+  RETENTION_DELETED  // Document content/PDFs purged after the retention window (audit stub kept)
 
   @@map("nda_event_type")
 }
@@ -259,6 +261,8 @@ model NdaDraft {
   lastEditedBy    String?   @map("last_edited_by") // "party_a" or "party_b" - for dynamic sign order
   content         Json? // Storing form data/content
   sentAt          DateTime? @map("sent_at")
+  completedAt     DateTime? @map("completed_at") // Set when both parties sign (workflowState → COMPLETE); anchors retention
+  retentionNoticeSentAt DateTime? @map("retention_notice_sent_at") // Advance-deletion notice sent (free-plan 5y retention)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

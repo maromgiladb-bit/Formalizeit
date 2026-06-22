@@ -28,24 +28,57 @@ export async function GET(request: NextRequest) {
                 ndaPdfs: {
                     orderBy: { createdAt: 'desc' },
                 },
+                draft: {
+                    select: { content: true, templateId: true, title: true, workflowState: true },
+                },
             },
         })
 
-        if (!signRequest || signRequest.ndaPdfs.length === 0) {
-            return NextResponse.json(
-                { error: 'No PDF found for this NDA' },
-                { status: 404 }
-            )
-        }
+        // Prefer a stored SIGNED PDF, fall back to SENT.
+        let pdf =
+            signRequest?.ndaPdfs.find((p) => p.kind === 'SIGNED') ||
+            signRequest?.ndaPdfs.find((p) => p.kind === 'SENT')
 
-        // Prefer SIGNED PDF, fall back to SENT
-        const pdf =
-            signRequest.ndaPdfs.find((p) => p.kind === 'SIGNED') ||
-            signRequest.ndaPdfs.find((p) => p.kind === 'SENT')
+        // Regenerate-on-demand fallback: completed NDAs whose SIGNED PDF was never
+        // persisted (e.g. an earlier storeNdaPdf failure, or pre-dating PDF storage)
+        // would otherwise 404 here. Rebuild the signed PDF from the draft content,
+        // store it, and serve it.
+        if (
+            signRequest &&
+            (!pdf || !pdf.s3Key) &&
+            signRequest.draft?.workflowState === 'COMPLETE' &&
+            signRequest.draft.content
+        ) {
+            try {
+                const { renderNdaHtml } = await import('@/lib/renderNdaHtml')
+                const { renderHtmlToPdf } = await import('@/lib/htmlToPdf')
+                const { storeNdaPdf } = await import('@/lib/storeNdaPdf')
+                const { getAppUrl } = await import('@/lib/email')
+
+                const html = await renderNdaHtml(
+                    signRequest.draft.content as Record<string, unknown>,
+                    signRequest.draft.templateId || 'professional_mutual_nda_v1'
+                )
+                const pdfBuffer = await renderHtmlToPdf(html, {
+                    pageWidthPx: 900,
+                    baseUrl: getAppUrl(),
+                    isA4: true,
+                })
+
+                await storeNdaPdf({ signRequestId: signRequest.id, kind: 'SIGNED', pdfBuffer })
+                console.log('✅ Regenerated missing SIGNED PDF for draft', draftId)
+
+                pdf = (await prisma.ndaPdf.findUnique({
+                    where: { signRequestId_kind: { signRequestId: signRequest.id, kind: 'SIGNED' } },
+                })) ?? undefined
+            } catch (regenError) {
+                console.error('❌ Failed to regenerate SIGNED PDF:', regenError)
+            }
+        }
 
         if (!pdf || !pdf.s3Key) {
             return NextResponse.json(
-                { error: 'PDF record found but no S3 key' },
+                { error: 'No PDF found for this NDA' },
                 { status: 404 }
             )
         }

@@ -134,6 +134,21 @@ only signers/owners apply the company signature at the `signed` step.
 4. **Template reuse is core** — the product is not a freeform doc editor
 5. **MVP first** — do not overbuild; avoid complex permission engines or separate role UIs
 
+### Plan limits & retention (decided June 2026 — see `docs/strategy-gap-checklist.md` §1, §2)
+- **Plans** (`BillingPlan`): **FREE** = 3 NDAs total, 1 user · **PRO** ($19/mo, $15 annual) =
+  unlimited NDAs, 1 user · **TEAM** ($75/mo, $60 annual) = unlimited NDAs, up to 10 users ·
+  **ENTERPRISE** = contact sales. Limits in `src/billing/planLimits.ts` (`PLAN_LIMITS`); send gate
+  `assertCanSendNda` in `src/organizations/limits.ts`. Stripe price→plan map in
+  `src/lib/stripe-price-ids.ts` (`priceIdFor`/`planFromPriceId`); checkout takes a `plan` arg and the
+  webhook maps the subscription price → plan. Receivers are always free/no-account.
+- **Retention**: signed NDAs kept **5 years from execution** (free included); advance notice before
+  any deletion. Enforced by `src/app/api/cron/retention-cleanup` (notice at 5y−30d, delete at 5y
+  keeping the draft row + a `RETENTION_DELETED` audit stub) using `NdaDraft.completedAt` /
+  `retentionNoticeSentAt`. PRO/ENTERPRISE retained while subscription active.
+- **Counterparty access**: counterparty receives the signed PDF by email on execution and can access
+  it after creating an account. Linkage: `ensureDbUser` → `claimPendingSigners` (case-insensitive,
+  all verified Clerk emails) + claim-by-token cookie (`/api/claim`) for a different signup email.
+
 ---
 
 ## What already exists (do not rebuild)

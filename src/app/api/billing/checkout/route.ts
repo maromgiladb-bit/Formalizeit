@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe'
+import { stripe, priceIdFor, type PaidPlan } from '@/lib/stripe'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 
 export async function POST(req: NextRequest) {
@@ -29,13 +29,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    if (organization.billingPlan === 'PRO' || organization.billingPlan === 'ENTERPRISE') {
+    // Already-paid orgs switch plans (PRO ↔ TEAM) through the Stripe billing portal,
+    // which handles proration — this checkout flow is for FREE → paid only.
+    if (organization.billingPlan === 'PRO' || organization.billingPlan === 'TEAM' || organization.billingPlan === 'ENTERPRISE') {
       return NextResponse.json({ error: 'Already on a paid plan' }, { status: 400 })
     }
 
     const body = await req.json().catch(() => ({}))
     const billingCycle: 'monthly' | 'annual' = body.billingCycle === 'annual' ? 'annual' : 'monthly'
-    const priceId = billingCycle === 'annual' ? STRIPE_PRICE_IDS.PRO_ANNUAL : STRIPE_PRICE_IDS.PRO_MONTHLY
+    const plan: PaidPlan = body.plan === 'TEAM' ? 'TEAM' : 'PRO'
+    const priceId = priceIdFor(plan, billingCycle)
 
     // Get or create Stripe customer
     let stripeCustomerId = organization.stripeCustomerId

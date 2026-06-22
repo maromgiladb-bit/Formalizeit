@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Configure S3 Client
@@ -57,4 +57,18 @@ export async function getSignedS3Url(
     });
 
     return signedUrl;
+}
+
+/**
+ * Delete an object from S3. Used by the retention cleanup cron when a
+ * free-plan signed NDA passes its 5-year retention window.
+ * @param key - S3 object key (path)
+ */
+export async function deleteFromS3(key: string): Promise<void> {
+    const command = new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+    });
+
+    await s3Client.send(command);
 }

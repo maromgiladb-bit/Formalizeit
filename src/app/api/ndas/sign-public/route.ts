@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
                 status: newStatus,
                 workflowState: newWorkflowState,
                 sentAt: draft.sentAt ?? new Date(),
+                completedAt: newWorkflowState === 'COMPLETE' ? new Date() : undefined,
             },
         });
 

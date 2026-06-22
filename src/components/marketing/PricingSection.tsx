@@ -15,36 +15,47 @@ const pricingPlans = [
     period: "month",
     features: [
       "Up to 3 NDAs total",
-      "1 team member",
-      "Basic templates",
-      "E-signature support",
-      "Email support",
-      "7-day document storage",
+      "Send, review & e-sign NDAs",
+      "Receive & sign NDAs free (no account needed)",
+      "Basic dashboard & counterparty management",
+      "5-year document storage",
     ],
-    description: "Perfect for trying out Formalize It",
+    description: "Send your first NDA in 30 seconds",
     buttonText: "Get Started Free",
     href: "/dashboard",
     isPopular: false,
   },
   {
     name: "Pro",
-    price: "20",
-    yearlyPrice: "16",
+    price: "19",
+    yearlyPrice: "15",
     period: "month",
     features: [
-      "25 NDAs per quarter",
-      "Up to 10 team members",
-      "All professional templates",
-      "E-signature support",
-      "Priority support",
-      "Advanced tracking & audit trail",
-      "Custom branding",
-      "Bidirectional editing",
+      "Unlimited NDA generation",
+      "NDA dashboard & search",
+      "Full audit trail",
     ],
-    description: "Most popular for growing teams",
+    description: "For consultants, freelancers & founders",
     buttonText: "Upgrade to Pro",
     href: "/dashboard",
     isPopular: true,
+  },
+  {
+    name: "Team",
+    price: "75",
+    yearlyPrice: "60",
+    period: "month",
+    features: [
+      "Everything in Pro",
+      "Up to 10 users",
+      "Shared workspace & team dashboard",
+      "Centralized NDA repository",
+      "Role-based permissions",
+    ],
+    description: "For VC firms, accelerators & SMBs",
+    buttonText: "Upgrade to Team",
+    href: "/dashboard",
+    isPopular: false,
   },
   {
     name: "Enterprise",
@@ -52,14 +63,12 @@ const pricingPlans = [
     yearlyPrice: "Custom",
     period: "",
     features: [
-      "Unlimited everything",
-      "Custom templates",
-      "Dedicated account manager",
-      "API access",
-      "SSO authentication",
-      "Custom integrations",
-      "SLA agreement",
-      "On-premise option",
+      "SSO",
+      "Legal approval workflow",
+      "Private NDA standard",
+      "Compliance requirements",
+      "CRM integrations",
+      "Custom API",
     ],
     description: "For large organizations with specific needs",
     buttonText: "Contact Sales",
@@ -84,17 +93,20 @@ export default function PricingSection() {
   const { userId } = useAuth()
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+  const [checkoutPlan, setCheckoutPlan] = useState<'PRO' | 'TEAM'>('PRO')
 
-  function handleProUpgrade(isMonthly: boolean) {
+  function openCheckout(plan: 'PRO' | 'TEAM', isMonthly: boolean) {
+    setCheckoutPlan(plan)
     setBillingCycle(isMonthly ? 'monthly' : 'annual')
     setCheckoutOpen(true)
   }
 
   const plans = pricingPlans.map(plan => {
-    if (plan.name === 'Pro') {
+    if (plan.name === 'Pro' || plan.name === 'Team') {
+      const planKey = plan.name === 'Team' ? 'TEAM' : 'PRO'
       // Signed-out users can't check out — send them through sign-up instead.
       return userId
-        ? { ...plan, onClickAction: handleProUpgrade }
+        ? { ...plan, onClickAction: (isMonthly: boolean) => openCheckout(planKey, isMonthly) }
         : { ...plan, href: '/signup' }
     }
     if (plan.name === 'Free' && !userId) {
@@ -133,6 +145,7 @@ export default function PricingSection() {
         isOpen={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
         billingCycle={billingCycle}
+        plan={checkoutPlan}
       />
     </div>
   )
