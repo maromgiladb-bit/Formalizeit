@@ -30,20 +30,20 @@ export default function ProfilePrompt() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
           exit={{ opacity: 0, y: 8, transition: { duration: 0.2 } }}
-          className="fixed bottom-6 right-6 z-50 bg-white border border-gray-200 rounded-2xl shadow-float p-4 flex items-start gap-3 max-w-xs w-full"
+          className="fixed bottom-6 right-6 z-50 bg-white border border-gray-200 rounded-2xl shadow-xl p-4 flex items-start gap-3 max-w-xs w-full"
         >
-          <div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center shrink-0">
             <Zap className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-ink">Saves you time</p>
-            <p className="text-sm text-gray-500 mt-0.5 leading-snug">
+            <p className="text-sm font-bold text-black">Saves you time</p>
+            <p className="text-sm text-gray-600 mt-0.5 leading-snug">
               Fill in your company profile once and we&apos;ll auto-fill Party A details on every NDA.
             </p>
             <Link
               href="/settings/company-profile"
               onClick={dismiss}
-              className="inline-block mt-2.5 text-sm font-semibold text-teal-800 hover:text-teal-700 transition-colors"
+              className="inline-block mt-2.5 text-sm font-semibold text-black hover:text-gray-700 transition-colors"
             >
               Set up profile →
             </Link>
@@ -52,7 +52,7 @@ export default function ProfilePrompt() {
                 type="checkbox"
                 checked={neverShow}
                 onChange={e => setNeverShow(e.target.checked)}
-                className="w-3.5 h-3.5 rounded accent-teal-700 cursor-pointer"
+                className="w-3.5 h-3.5 rounded accent-gray-700 cursor-pointer"
               />
               <span className="text-xs text-gray-400">Don&apos;t show again</span>
             </label>

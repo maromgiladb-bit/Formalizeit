@@ -142,10 +142,15 @@ export default async function DashboardPage({
       };
     });
 
-  // Combine all NDAs
-  const allNdas = [...createdNdas, ...receivedNdas].sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-  );
+  // Combine all NDAs. A draft created by a teammate in the same org can appear
+  // in both createdNdas (org-scoped) and receivedNdas (current user is a signer
+  // on it). Keep the created/Sent entry and drop the duplicate received one so
+  // every row has a unique key.
+  const createdIds = new Set(createdNdas.map((n) => n.id));
+  const allNdas = [
+    ...createdNdas,
+    ...receivedNdas.filter((n) => !createdIds.has(n.id)),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const companyProfile = await prisma.companyProfile.findUnique({
     where: { organizationId: membership.organizationId },
