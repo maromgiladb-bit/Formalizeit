@@ -29,7 +29,7 @@ enum BillingStatus {
 }
 
 enum MembershipRole {
-  OWNER
+  ADMINISTRATOR
   SIGNER
   CONTRIBUTOR
 
@@ -192,7 +192,7 @@ model Membership {
   organizationId String           @map("organization_id") @db.Uuid
   role           MembershipRole   @default(CONTRIBUTOR) @map("role")
   status         MembershipStatus @default(ACTIVE) @map("status")
-  isApprover     Boolean          @default(false) @map("is_approver")
+  isSigner       Boolean          @default(false) @map("is_signer")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
 
@@ -263,6 +263,8 @@ model NdaDraft {
   sentAt          DateTime? @map("sent_at")
   completedAt     DateTime? @map("completed_at") // Set when both parties sign (workflowState → COMPLETE); anchors retention
   retentionNoticeSentAt DateTime? @map("retention_notice_sent_at") // Advance-deletion notice sent (free-plan 5y retention)
+  reminder48hSentAt DateTime? @map("reminder_48h_sent_at") // First unsigned-NDA reminder to receiver (48h after sent)
+  reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

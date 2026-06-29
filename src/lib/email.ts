@@ -306,6 +306,31 @@ export function recipientSignRequestEmailHtml(
   return getBaseEmailHtml('Signature Request', content)
 }
 
+export function signReminderEmailHtml(
+  draftTitle: string,
+  signLink: string,
+  senderName?: string,
+  secondReminder = false
+): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeSenderName = sanitizeForHtml(senderName)
+  const fromLine = safeSenderName
+    ? `${safeSenderName} is still waiting on your signature.`
+    : 'This agreement is still waiting on your signature.'
+  const lead = secondReminder
+    ? 'It only takes a minute, and it has been a few days — please sign so this can be finalized.'
+    : 'Just a quick nudge — the NDA below is ready and only needs your signature to move forward.'
+  const content = `
+    ${emailAccentLabel(secondReminder ? 'Second reminder' : 'Reminder')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is waiting for your signature</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} ${lead}</p>
+    ${emailDocTitle(safeDraftTitle)}
+    ${emailButton('Review and Sign', signLink)}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires in 30 days')}
+  `
+  return getBaseEmailHtml('Reminder: NDA awaiting your signature', content)
+}
+
 export function timeToSignEmailHtml(
   draftTitle: string,
   signLink: string,

@@ -18,7 +18,7 @@ export async function inviteMember(formData: FormData) {
     const role = toDbMembershipRole(requestedRole)
 
     if (!email || !role) return { error: 'Email and valid role are required' }
-    if (role === 'OWNER') return { error: 'Cannot invite someone as Owner. Assign Approver or Contributor instead.' }
+    if (role === 'ADMINISTRATOR') return { error: 'Cannot invite someone as Administrator. Assign Signer or Contributor instead.' }
 
     try {
         const activeMembership = await getActiveOrganization()
@@ -100,8 +100,8 @@ export async function removeMember(formData: FormData) {
         if (!target || target.organizationId !== activeMembership.organizationId) {
             return { error: 'Member not found in this organization' }
         }
-        if (target.role === 'OWNER') {
-            return { error: 'Cannot remove the organization owner' }
+        if (target.role === 'ADMINISTRATOR') {
+            return { error: 'Cannot remove the organization administrator' }
         }
 
         await prisma.membership.delete({ where: { id: membershipId } })
@@ -122,7 +122,7 @@ export async function updateMemberRole(_formData: FormData) {
     const nextRole = toDbMembershipRole(requestedRole)
 
     if (!membershipId || !nextRole) return { error: 'Membership and valid role are required' }
-    if (nextRole === 'OWNER') return { error: 'Cannot assign Owner role via settings' }
+    if (nextRole === 'ADMINISTRATOR') return { error: 'Cannot assign Administrator role via settings' }
 
     try {
         const activeMembership = await getActiveOrganization()
@@ -139,8 +139,8 @@ export async function updateMemberRole(_formData: FormData) {
         if (!target || target.organizationId !== activeMembership.organizationId) {
             return { error: 'Member not found in active organization' }
         }
-        if (target.role === 'OWNER') {
-            return { error: "Cannot change the Owner's role" }
+        if (target.role === 'ADMINISTRATOR') {
+            return { error: "Cannot change the Administrator's role" }
         }
         if (target.role === nextRole) return { success: true }
 
@@ -153,13 +153,13 @@ export async function updateMemberRole(_formData: FormData) {
     }
 }
 
-/** Toggle the isApprover flag on an OWNER membership */
-export async function updateMemberApprover(formData: FormData) {
+/** Toggle the isSigner flag on an ADMINISTRATOR membership */
+export async function updateMemberSigner(formData: FormData) {
     const { userId } = await auth()
     if (!userId) return { error: 'Unauthorized' }
 
     const membershipId = formData.get('membershipId') as string | null
-    const isApprover = formData.get('isApprover') === 'true'
+    const isSigner = formData.get('isSigner') === 'true'
 
     if (!membershipId) return { error: 'Membership ID is required' }
 
@@ -168,7 +168,7 @@ export async function updateMemberApprover(formData: FormData) {
         if (!activeMembership) return { error: 'No active organization found' }
 
         if (!isOrganizationOwner(activeMembership.role)) {
-            return { error: 'Only the organization owner can manage approver settings' }
+            return { error: 'Only the organization administrator can manage signer settings' }
         }
 
         const target = await prisma.membership.findUnique({
@@ -178,16 +178,16 @@ export async function updateMemberApprover(formData: FormData) {
         if (!target || target.organizationId !== activeMembership.organizationId) {
             return { error: 'Member not found in this organization' }
         }
-        if (target.role !== 'OWNER') {
-            return { error: 'Approver toggle only applies to Owner members' }
+        if (target.role !== 'ADMINISTRATOR') {
+            return { error: 'Signer toggle only applies to Administrator members' }
         }
 
-        await prisma.membership.update({ where: { id: membershipId }, data: { isApprover } })
+        await prisma.membership.update({ where: { id: membershipId }, data: { isSigner } })
         revalidatePath('/settings/team')
         return { success: true }
     } catch (error) {
-        console.error('Update approver error:', error)
-        return { error: 'Failed to update approver setting' }
+        console.error('Update signer toggle error:', error)
+        return { error: 'Failed to update signer setting' }
     }
 }
 
@@ -212,7 +212,7 @@ export async function createOrganization(name: string): Promise<{ success?: bool
                 slug,
                 ownerUserId: user.id,
                 memberships: {
-                    create: { userId: user.id, role: 'OWNER' },
+                    create: { userId: user.id, role: 'ADMINISTRATOR' },
                 },
             },
         })
@@ -303,8 +303,8 @@ export async function leaveOrganization(membershipId: string) {
             return { error: 'Membership not found' }
         }
 
-        if (membership.role === 'OWNER') {
-            return { error: 'Owners cannot leave the organization' }
+        if (membership.role === 'ADMINISTRATOR') {
+            return { error: 'Administrators cannot leave the organization' }
         }
 
         await prisma.membership.delete({ where: { id: membershipId } })

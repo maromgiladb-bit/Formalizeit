@@ -5,6 +5,9 @@ import { sendEmail, getAppUrl, timeToSignEmailHtml, congratulationsEmailHtml } f
 import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/notifications';
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canSignNDA } from '@/lib/organizationRoles';
+import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+
+export const runtime = 'nodejs'; // Required for Puppeteer (final PDF generation)
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,12 +18,22 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { draftId, signerEmail, signerName, signerTitle, signatureImage, signatureDate } = body;
+        const { draftId, signerEmail, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
 
         // Validate required fields
         if (!draftId || !signatureImage || !signerName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
+
+        // Authority-to-sign affirmation is required before applying the company's signature.
+        if (authorityConfirmed !== true) {
+            return NextResponse.json(
+                { error: 'You must confirm you are authorized to sign on behalf of your company.' },
+                { status: 400 }
+            );
+        }
+
+        const clientIp = getClientIp(request);
 
         // Get user
         const user = await prisma.user.findUnique({
@@ -124,6 +137,9 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // SHA-256 fingerprint of the final signed PDF, set when the document is fully executed.
+        let agreementHash: string | null = null;
+
         // Send Email Notifications
         try {
             const appUrl = getAppUrl();
@@ -144,6 +160,8 @@ export async function POST(request: NextRequest) {
                         baseUrl: appUrl,
                         isA4: true,
                     });
+
+                    agreementHash = sha256Hex(pdfBuffer);
 
                     const pdfBase64 = pdfBuffer.toString('base64');
                     pdfAttachment = [{
@@ -221,19 +239,25 @@ export async function POST(request: NextRequest) {
             // Don't fail the request if email fails
         }
 
-        // Create audit event
+        // Create audit event with signature evidence (IP, template version snapshot, authority
+        // affirmation, and — once fully executed — the agreement hash).
         await prisma.auditEvent.create({
             data: {
                 organizationId: draft.organizationId,
                 draftId: draft.id,
                 userId: user.id,
                 eventType: 'SIGNED',
+                ipAddress: clientIp,
                 metadata: {
                     signer_email: signerEmail || user.email,
                     signer_name: signerName,
                     action: 'internal_signature_submitted',
                     party: 'party_a',
                     new_state: newWorkflowState,
+                    templateSnapshot: templateSnapshot(draft.templateId || 'professional_mutual_nda_v1'),
+                    parties: partiesSnapshot(currentContent),
+                    authority: authorityConsent(true),
+                    ...(agreementHash ? { agreementHash } : {}),
                 },
             },
         });

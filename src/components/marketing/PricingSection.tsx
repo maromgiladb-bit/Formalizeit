@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { Check } from 'lucide-react'
 import { Pricing } from '@/components/ui/pricing'
@@ -27,8 +27,8 @@ const pricingPlans = [
   },
   {
     name: "Pro",
-    price: "19",
-    yearlyPrice: "15",
+    price: "9",
+    yearlyPrice: "7.65",
     period: "month",
     features: [
       "Unlimited NDA generation",
@@ -42,8 +42,8 @@ const pricingPlans = [
   },
   {
     name: "Team",
-    price: "75",
-    yearlyPrice: "60",
+    price: "50",
+    yearlyPrice: "42.50",
     period: "month",
     features: [
       "Everything in Pro",
@@ -55,24 +55,6 @@ const pricingPlans = [
     description: "For VC firms, accelerators & SMBs",
     buttonText: "Upgrade to Team",
     href: "/dashboard",
-    isPopular: false,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    yearlyPrice: "Custom",
-    period: "",
-    features: [
-      "SSO",
-      "Legal approval workflow",
-      "Private NDA standard",
-      "Compliance requirements",
-      "CRM integrations",
-      "Custom API",
-    ],
-    description: "For large organizations with specific needs",
-    buttonText: "Contact Sales",
-    href: "/contact",
     isPopular: false,
   },
 ]
@@ -94,6 +76,16 @@ export default function PricingSection() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
   const [checkoutPlan, setCheckoutPlan] = useState<'PRO' | 'TEAM'>('PRO')
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null)
+  const [upgradeLoading, setUpgradeLoading] = useState(false)
+
+  useEffect(() => {
+    if (!userId) return
+    fetch('/api/user/check-limit')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.plan) setCurrentPlan(data.plan) })
+      .catch(() => {})
+  }, [userId])
 
   function openCheckout(plan: 'PRO' | 'TEAM', isMonthly: boolean) {
     setCheckoutPlan(plan)
@@ -101,13 +93,42 @@ export default function PricingSection() {
     setCheckoutOpen(true)
   }
 
+  async function handleUpgradeToTeam(isMonthly: boolean) {
+    setUpgradeLoading(true)
+    try {
+      const res = await fetch('/api/billing/upgrade-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billingCycle: isMonthly ? 'monthly' : 'annual' }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch {
+      // fallback: just open the checkout for the case where something goes wrong
+      openCheckout('TEAM', isMonthly)
+    } finally {
+      setUpgradeLoading(false)
+    }
+  }
+
   const plans = pricingPlans.map(plan => {
-    if (plan.name === 'Pro' || plan.name === 'Team') {
-      const planKey = plan.name === 'Team' ? 'TEAM' : 'PRO'
-      // Signed-out users can't check out — send them through sign-up instead.
-      return userId
-        ? { ...plan, onClickAction: (isMonthly: boolean) => openCheckout(planKey, isMonthly) }
-        : { ...plan, href: '/signup' }
+    if (plan.name === 'Pro') {
+      if (!userId) return { ...plan, href: '/signup' }
+      if (currentPlan === 'PRO') return { ...plan, buttonText: 'Current plan', href: '/settings/billing' }
+      if (currentPlan === 'TEAM') return { ...plan, buttonText: 'Manage plan', href: '/settings/billing' }
+      return { ...plan, onClickAction: (isMonthly: boolean) => openCheckout('PRO', isMonthly) }
+    }
+    if (plan.name === 'Team') {
+      if (!userId) return { ...plan, href: '/signup' }
+      if (currentPlan === 'TEAM') return { ...plan, buttonText: 'Current plan', href: '/settings/billing' }
+      if (currentPlan === 'PRO') return {
+        ...plan,
+        buttonText: upgradeLoading ? 'Redirecting…' : 'Upgrade to Team',
+        onClickAction: handleUpgradeToTeam,
+      }
+      return { ...plan, onClickAction: (isMonthly: boolean) => openCheckout('TEAM', isMonthly) }
     }
     if (plan.name === 'Free' && !userId) {
       return { ...plan, href: '/signup' }

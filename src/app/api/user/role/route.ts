@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { getActiveOrganization } from '@/lib/db-organization'
 
 /**
- * Returns the current user's membership role and isApprover flag.
+ * Returns the current user's membership role and isSigner flag.
  * Used by client components to conditionally render role-based UI.
  * GET /api/user/role
  */
@@ -16,6 +16,6 @@ export async function GET() {
 
     return NextResponse.json({
         role: membership.role,
-        isApprover: membership.isApprover,
+        isSigner: membership.isSigner,
     })
 }

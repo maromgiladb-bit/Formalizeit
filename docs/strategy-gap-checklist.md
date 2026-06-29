@@ -3,11 +3,35 @@
 Working list comparing the Standard NDA Platform strategy (22 Jun 2026) to the built product.
 For each open item, fill in **Decision**: `keep current`, `apply`, or custom instructions.
 
+## 29 Jun 2026 review (post-meeting decisions)
+
+New strategy doc (`29_06Formalizeit_Strategy.pdf`). Decisions taken — see the approved plan and
+`CLAUDE.md`:
+
+- **Pricing → apply:** PRO **$9/mo**, TEAM **$50/mo**, annual = **15% off** ($7.65 / $42.50).
+  **Supersedes** the $19/$75 shipped in commit `cf267af` and the §2 pricing note. PRO/TEAM stay
+  unlimited NDAs; FREE stays 3 total. Update PricingSection, settings/billing, CheckoutModal,
+  Stripe price IDs + env. (§1/§2)
+- **No-legal-advice prominence → apply (MVP):** add the disclaimer to the fill/review/sign pages
+  (not just Formi/Terms/FAQ). Overrides the earlier "Formi only" deferral in §2.
+- **Signature evidence → apply (MVP):** capture **IP**, a **snapshot of the exact template
+  version actually signed**, and an **agreement hash** (SHA-256 of the PDF); add an
+  **authority-to-sign checkbox** (company's responsibility) before signing. (§3)
+- **Reminders 48h/5d → apply (MVP).** (§3)
+- **2FA sign-in → apply (MVP).** (§3)
+- **Legal pages → apply:** Electronic Signature Consent, viewable Standard NDA, NDA Governance
+  Policy, NDA Changelog. (§3)
+- **Role rename → apply:** `OWNER` → `ADMINISTRATOR`, `isApprover` → `isSigner` (strategy
+  terminology; permission model unchanged). Distinct "Legal approver/filler" role deferred.
+- **Deferred (non-MVP):** Enterprise tier, custom-NDA upload + AI, audit-log export UI,
+  webhooks/Zapier, public API, advanced analytics.
+
 ## Already aligned (no action)
 - [x] Single fixed standard mutual NDA, fill-only variables — `templates/template-config.json`
 - [x] No-account receiver fill + sign — `src/app/fillndahtml-public/[token]`, `src/app/sign-nda-public/[token]`
 - [x] Receivers free; send-only limits
-- [x] Records email + timestamp + IP + version — `AuditEvent` + `NdaRevision`
+- [x] Records email + timestamp — `AuditEvent` + `NdaRevision` (IP field exists but is **not
+  populated**; document hash + signed-version snapshot **not yet captured** — see 29 Jun review)
 - [x] Audit trail — `src/lib/writeActivity.ts`
 - [x] S3 storage + presigned URLs — `src/lib/s3.ts`, `NdaPdf`
 - [x] Dashboard status + search — `src/components/dashboard/DashboardClient.tsx`

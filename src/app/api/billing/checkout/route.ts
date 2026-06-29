@@ -29,15 +29,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    // Already-paid orgs switch plans (PRO ↔ TEAM) through the Stripe billing portal,
-    // which handles proration — this checkout flow is for FREE → paid only.
-    if (organization.billingPlan === 'PRO' || organization.billingPlan === 'TEAM' || organization.billingPlan === 'ENTERPRISE') {
-      return NextResponse.json({ error: 'Already on a paid plan' }, { status: 400 })
-    }
-
     const body = await req.json().catch(() => ({}))
     const billingCycle: 'monthly' | 'annual' = body.billingCycle === 'annual' ? 'annual' : 'monthly'
     const plan: PaidPlan = body.plan === 'TEAM' ? 'TEAM' : 'PRO'
+
+    // Block if there is already an active paid subscription.
+    // A cancelled subscription is treated as FREE so re-subscribing is allowed.
+    // PRO → TEAM upgrades go through /api/billing/upgrade-session (portal flow), not here.
+    const hasActivePaidSubscription =
+      (organization.billingPlan === 'PRO' || organization.billingPlan === 'TEAM' || organization.billingPlan === 'ENTERPRISE') &&
+      organization.billingStatus !== 'CANCELLED'
+
+    if (hasActivePaidSubscription) {
+      return NextResponse.json({ error: 'Already on an active paid plan' }, { status: 400 })
+    }
     const priceId = priceIdFor(plan, billingCycle)
 
     // Get or create Stripe customer

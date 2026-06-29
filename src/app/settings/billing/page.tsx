@@ -12,7 +12,7 @@ import { CheckoutModal } from '@/components/billing/CheckoutModal'
 import { Button } from '@/components/ui/button'
 
 interface SubscriptionInfo {
-  plan: 'FREE' | 'PRO' | 'ENTERPRISE' | 'DEV'
+  plan: 'FREE' | 'PRO' | 'TEAM' | 'ENTERPRISE' | 'DEV'
   ndaCount: number
   limit: number | null
   remaining: number | null
@@ -95,6 +95,7 @@ export default function BillingSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutPlan, setCheckoutPlan] = useState<'PRO' | 'TEAM'>('PRO')
 
   useEffect(() => {
     if (!userId) return
@@ -123,6 +124,11 @@ export default function BillingSettingsPage() {
   useEffect(() => {
     if (isLoaded && !userId) router.replace('/sign-in')
   }, [isLoaded, userId, router])
+
+  function openCheckoutFor(plan: 'PRO' | 'TEAM') {
+    setCheckoutPlan(plan)
+    setCheckoutOpen(true)
+  }
 
   async function handleManageSubscription() {
     setPortalError(null)
@@ -158,11 +164,11 @@ export default function BillingSettingsPage() {
     switch (plan) {
       case 'FREE': return '$0 / month'
       case 'PRO': return billingCycle === 'annual'
-        ? '$15 / month, billed annually'
-        : '$19 / month'
+        ? '$7.65 / month, billed annually'
+        : '$9 / month'
       case 'TEAM': return billingCycle === 'annual'
-        ? '$60 / month, billed annually'
-        : '$75 / month'
+        ? '$42.50 / month, billed annually'
+        : '$50 / month'
       case 'ENTERPRISE': return 'Custom pricing'
       case 'DEV': return 'Complimentary'
       default: return '—'
@@ -277,11 +283,22 @@ export default function BillingSettingsPage() {
         </div>
 
         {/* Action */}
-        <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-4">
-          {subscription.plan === 'FREE' ? (
+        <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-4 flex-wrap">
+          {subscription.billingStatus === 'CANCELLED' && isOwner ? (
+            /* Subscription was cancelled — allow re-subscribing */
+            <>
+              <Button onClick={() => openCheckoutFor(subscription.plan === 'TEAM' ? 'TEAM' : 'PRO')}>
+                Re-subscribe
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                View all plans
+              </Link>
+            </>
+          ) : subscription.plan === 'FREE' ? (
             <>
               {isOwner ? (
-                <Button onClick={() => setCheckoutOpen(true)}>
+                <Button onClick={() => openCheckoutFor('PRO')}>
                   Upgrade to Pro
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -292,6 +309,18 @@ export default function BillingSettingsPage() {
                 View all plans
               </Link>
             </>
+          ) : subscription.plan === 'PRO' && isOwner ? (
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex flex-col gap-1">
+                <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                  {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
+                </Button>
+                {portalError && <p className="text-xs text-red-600">{portalError}</p>}
+              </div>
+              <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                Upgrade to Team
+              </Link>
+            </div>
           ) : subscription.hasStripeSubscription && isOwner ? (
             <div className="flex flex-col gap-1.5">
               <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
@@ -443,6 +472,7 @@ export default function BillingSettingsPage() {
       <CheckoutModal
         isOpen={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
+        plan={checkoutPlan}
       />
     </div>
   )

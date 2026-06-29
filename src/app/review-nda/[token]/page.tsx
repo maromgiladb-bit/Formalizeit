@@ -2,6 +2,7 @@
 import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import PublicToolbar from "@/components/PublicToolbar";
+import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
 
@@ -454,6 +455,9 @@ export default function ReviewNDA({ params }: { params: Promise<{ token: string 
 								</div>
 							</div>
 						</div>
+
+						{/* Legal disclaimer */}
+						<LegalDisclaimer className="mb-6" />
 
 						{/* Step Progress Bar */}
 						<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6">

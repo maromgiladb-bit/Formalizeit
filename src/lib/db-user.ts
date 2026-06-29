@@ -106,16 +106,57 @@ export async function ensureDbUser(clerkUserId: string) {
     }
   }
 
-  // No record at all: create new user
-  const created = await prisma.user.create({
-    data: {
-      externalId: clerkUserId,
-      email,
-      name: clerkUser?.fullName || clerkUser?.firstName || email.split('@')[0],
-      image: clerkUser?.imageUrl,
-    },
-    include,
+  // No record at all: create new user + personal org + administrator membership atomically
+  const displayName = clerkUser?.fullName || clerkUser?.firstName || email.split('@')[0]
+  const slugBase = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+  const slug = `${slugBase}-${Math.random().toString(36).slice(2, 7)}`
+
+  const created = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        externalId: clerkUserId,
+        email,
+        name: displayName,
+        image: clerkUser?.imageUrl,
+      },
+    })
+
+    const org = await tx.organization.create({
+      data: {
+        name: displayName,
+        slug,
+        ownerUserId: user.id,
+      },
+    })
+
+    await tx.membership.create({
+      data: {
+        userId: user.id,
+        organizationId: org.id,
+        role: 'ADMINISTRATOR',
+        status: 'ACTIVE',
+        isSigner: true,
+      },
+    })
+
+    return tx.user.findUnique({
+      where: { id: user.id },
+      include: { memberships: { include: { organization: true } } },
+    })
   })
+
+  if (!created) throw new Error('Failed to create user with personal organization')
+
+  // Set active-org cookie so first request resolves immediately
+  try {
+    const cookieStore = await cookies()
+    cookieStore.set('active-org-id', created.memberships[0].organizationId, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+    })
+  } catch {
+    // cookies() may not be available in all contexts (e.g. webhooks) — skip silently
+  }
 
   // Claim any NDA signer records that were sent to this user before they existed
   await claimPendingSigners(allEmails, created.id)

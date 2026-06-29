@@ -40,7 +40,7 @@ function planFacts(): string {
 		p.maxActiveDrafts
 	)} NDAs. Team — up to ${n(t.maxUsers)} users, ${n(
 		t.maxActiveDrafts
-	)} NDAs. Enterprise — contact sales. (Direct users to the Plans page for current pricing — don't invent prices.)`;
+	)} NDAs. (Direct users to the Plans page for current pricing — don't invent prices.)`;
 }
 
 // Compact product knowledge base — what Formi needs to answer app questions.
@@ -54,12 +54,15 @@ FormalizeIt helps teams create, review, and send NDAs in minutes using reusable 
 - Settings → Billing and the Plans page: manage the company plan.
 
 # Roles
-- Owner: company settings, billing, members — can do everything an Approver can.
-- Approver: create/edit, review and accept/reject suggestions, send, finalize, and sign NDAs.
-- Contributor: create/edit drafts, comment, submit for approval — cannot send, sign, or finalize.
+- Administrator: company settings, billing, and members; can do everything a Signer can, and can sign on behalf of the company when the "also a signer" toggle is on.
+- Signer: create, edit, and send NDAs; review and accept/reject suggestions; and sign on behalf of the company.
+- Contributor: create and edit drafts, comment, suggest changes, and send NDAs for review/input/signature — everything except signing on behalf of the company.
 
 # Document status flow
-draft → pending_approval → approved → sent → signed (a rejected doc goes back to draft).
+draft → sent → signed. There is no internal approval step.
+
+# Signing & evidence
+Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required.
 
 # Plans (company-level billing, one plan per company)
 ${planFacts()}`;

@@ -2,9 +2,10 @@
 
 import { useAuth, useUser } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, ToggleLeft, AlertTriangle } from 'lucide-react'
+import { User, ToggleLeft, AlertTriangle, ShieldCheck, ChevronRight } from 'lucide-react'
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -80,6 +81,25 @@ export default function SettingsPage() {
             <p className="text-base text-gray-900 font-medium">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Sign-in & Security */}
+      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+        <Link
+          href="/settings/account-security"
+          className="flex items-center gap-3 px-6 py-5 hover:bg-gray-50 transition-colors duration-200"
+        >
+          <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-teal-700" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-gray-900">Sign-in &amp; Security</h3>
+            <p className="text-sm text-gray-500">
+              Update your password and turn on two-factor authentication (2FA).
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
+        </Link>
       </motion.div>
 
       {/* Preferences */}

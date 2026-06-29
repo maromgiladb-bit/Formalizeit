@@ -27,7 +27,7 @@ export async function GET() {
       })
     ]);
 
-    const canEdit = activeMembership.role === 'OWNER' || activeMembership.role === 'SIGNER';
+    const canEdit = activeMembership.role === 'ADMINISTRATOR' || activeMembership.role === 'SIGNER';
 
     return NextResponse.json({
       profile: profile ?? null,
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     }
 
     const role = activeMembership.role
-    if (role !== 'OWNER' && role !== 'SIGNER') {
-      return NextResponse.json({ error: 'Only owners and signers can update company profile' }, { status: 403 });
+    if (role !== 'ADMINISTRATOR' && role !== 'SIGNER') {
+      return NextResponse.json({ error: 'Only administrators and signers can update company profile' }, { status: 403 });
     }
 
     // Check if profile exists

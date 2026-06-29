@@ -17,8 +17,8 @@ interface CheckoutModalProps {
 }
 
 const PLAN_PRICING = {
-  PRO: { label: 'Upgrade to Pro', monthly: '$19 / month · billed monthly', annual: '$15 / month · billed annually' },
-  TEAM: { label: 'Upgrade to Team', monthly: '$75 / month · billed monthly', annual: '$60 / month · billed annually' },
+  PRO: { label: 'Upgrade to Pro', monthly: '$9 / month · billed monthly', annual: '$7.65 / month · billed annually' },
+  TEAM: { label: 'Upgrade to Team', monthly: '$50 / month · billed monthly', annual: '$42.50 / month · billed annually' },
 } as const
 
 export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan = 'PRO' }: CheckoutModalProps) {

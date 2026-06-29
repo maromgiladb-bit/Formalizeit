@@ -201,12 +201,12 @@ const sections: Section[] = [
 			},
 			{
 				heading: "Plans",
-				body: "FormalizeIt offers four plans:",
+				body: "FormalizeIt offers three plans:",
 				list: [
 					"Free — up to 3 NDAs total, 1 user, 5-year document storage. Receiving and signing NDAs is always free.",
-					"Pro ($19/month or $15/month billed annually) — unlimited NDAs for a single user, search, full audit trail",
-					"Team ($75/month or $60/month billed annually) — everything in Pro for up to 10 users, shared workspace, centralized repository, role-based permissions",
-					"Enterprise — SSO, legal approval workflow, private NDA standard, compliance, CRM integrations, custom API",
+					"Pro ($9/month or $7.65/month billed annually) — unlimited NDAs for a single user, search, full audit trail",
+					"Team ($50/month or $42.50/month billed annually) — everything in Pro for up to 10 users, shared workspace, centralized repository, role-based permissions",
+					
 				],
 				listNote: "You can cancel a paid plan at any time. Your plan stays active until the end of the billing period.",
 			},

@@ -66,11 +66,11 @@ export function Pricing({
                     </Label>
                 </label>
                 <span className={cn("text-sm font-medium", !isMonthly ? "text-ink" : "text-gray-500")}>
-                    Annual <span className="text-teal-700 font-semibold">(Save 20%)</span>
+                    Annual <span className="text-teal-700 font-semibold">(Save 15%)</span>
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${plans.length <= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`}>
                 {plans.map((plan, index) => (
                     <motion.div
                         key={index}
@@ -108,7 +108,7 @@ export function Pricing({
                                                 style: "currency",
                                                 currency: "USD",
                                                 minimumFractionDigits: 0,
-                                                maximumFractionDigits: 0,
+                                                maximumFractionDigits: 2,
                                             }}
                                             transformTiming={{
                                                 duration: 500,

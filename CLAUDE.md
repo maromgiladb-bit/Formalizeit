@@ -84,9 +84,15 @@ Comment / Suggestion
 
 Three roles. Keep permission logic consistent with this model.
 
-### Owner
+> **Renamed June 2026 (strategy terminology):** the role is now `ADMINISTRATOR` (was `OWNER`) and
+> the signer toggle field is `isSigner` (was `isApprover`). Code + schema use the new names;
+> apply the DB rename via migration `20260629000001_rename_owner_to_administrator_and_signer_flag`
+> (`prisma generate` + `migrate deploy`). The strategy's future "Legal approver/filler" role is
+> deferred (today covered by an administrator with the signer toggle on).
+
+### Administrator (role `ADMINISTRATOR`; formerly "Owner")
 - Manages company settings, billing, members
-- Can do everything a Signer can do (signing requires the signer toggle, `isApprover`)
+- Can do everything a Signer can do (signing requires the signer toggle, `isSigner`)
 
 ### Signer (role `SIGNER`; formerly "Approver")
 - Creates and edits documents
@@ -113,7 +119,7 @@ draft → sent → signed
 ```
 
 There is no internal approval step — any role can take a draft through to `sent`;
-only signers/owners apply the company signature at the `signed` step.
+only signers/administrators apply the company signature at the `signed` step.
 
 ---
 
@@ -129,15 +135,29 @@ only signers/owners apply the company signature at the `signed` step.
 ## Key product rules to keep in mind
 
 1. **Documents belong to a company**, not a user directly
-2. **Only signers/owners can sign on behalf of the company** — contributors can do everything else (create, edit, send for review/input/signature)
+2. **Only signers/administrators can sign on behalf of the company** — contributors can do everything else (create, edit, send for review/input/signature)
 3. **Billing is company-level** — one plan per company, users inherit access
-4. **Template reuse is core** — the product is not a freeform doc editor
+4. **Template reuse is core** — the product is not a freeform doc editor. The legal text of the
+   standard NDA is **not user-editable**; users only complete approved deal variables (party
+   names, contact info, effective date, purpose, term, governing law, notice info) plus the
+   single optional open clause (`additional_terms`)
 5. **MVP first** — do not overbuild; avoid complex permission engines or separate role UIs
+6. **Not legal advice** — the "FormalizeIt is not a law firm / does not provide legal advice"
+   disclaimer must appear **prominently in the product UI** (fill, review, sign pages), not only
+   in Terms/FAQ
+7. **Signature evidence** — every executed NDA must record signer email, timestamp, **IP address,
+   the exact template version actually signed (snapshot — never re-derive from the current active
+   template), and an agreement hash** (SHA-256 of the rendered PDF). An **authority-to-sign
+   checkbox** (signer affirms authority to sign in the company's name — the company's
+   responsibility) is required before signing
+8. **Receiver reminders** fire automatically at **48h and 5 days** for unsigned NDAs; **2FA
+   sign-in** (Clerk) is in MVP scope
 
 ### Plan limits & retention (decided June 2026 — see `docs/strategy-gap-checklist.md` §1, §2)
-- **Plans** (`BillingPlan`): **FREE** = 3 NDAs total, 1 user · **PRO** ($19/mo, $15 annual) =
-  unlimited NDAs, 1 user · **TEAM** ($75/mo, $60 annual) = unlimited NDAs, up to 10 users ·
-  **ENTERPRISE** = contact sales. Limits in `src/billing/planLimits.ts` (`PLAN_LIMITS`); send gate
+- **Plans** (`BillingPlan`): **FREE** = 3 NDAs total, 1 user · **PRO** ($9/mo, $7.65/mo annual) =
+  unlimited NDAs, 1 user · **TEAM** ($50/mo, $42.50/mo annual) = unlimited NDAs, up to 10 users ·
+  **ENTERPRISE** = contact sales (deferred, not launched now). Annual = **15% off** monthly. Limits
+  in `src/billing/planLimits.ts` (`PLAN_LIMITS`); send gate
   `assertCanSendNda` in `src/organizations/limits.ts`. Stripe price→plan map in
   `src/lib/stripe-price-ids.ts` (`priceIdFor`/`planFromPriceId`); checkout takes a `plan` arg and the
   webhook maps the subscription price → plan. Receivers are always free/no-account.
@@ -148,6 +168,32 @@ only signers/owners apply the company signature at the `signed` step.
 - **Counterparty access**: counterparty receives the signed PDF by email on execution and can access
   it after creating an account. Linkage: `ensureDbUser` → `claimPendingSigners` (case-insensitive,
   all verified Clerk emails) + claim-by-token cookie (`/api/claim`) for a different signup email.
+
+### Required legal documents (before launch)
+Website Disclaimer · Terms of Service · Privacy Policy · Electronic Signature Consent · viewable
+Standard NDA · NDA Governance Policy · NDA Changelog (human-readable summary of standard-NDA
+changes). Existing today: Terms (`src/app/terms`), Privacy (`src/app/privacy`), Compliance
+(`src/app/compliance`). Still to add: E-Signature Consent, viewable Standard NDA, Governance
+Policy, Changelog. All documents should be reviewed by qualified legal counsel before launch.
+
+---
+
+## Formi (AI assistant) — keep its knowledge in sync
+
+Formi is the in-app AI assistant. It answers questions about the whole product — what the site
+does, where things are, roles, plans, workflow, and NDA help. **Whenever you add or change
+anything users could ask Formi about** (features, pages/routes, roles, permissions, pricing,
+workflow steps, legal/disclaimer behavior, plan limits), you MUST also update what Formi knows so
+it stays accurate. This is a standing rule, not optional.
+
+- Formi's knowledge lives in `src/ai/prompts/formi_systemPrompt.ts` — `PRODUCT_KNOWLEDGE` (about,
+  "where things are", roles, status flow) and `planFacts()` (derives plan limits from
+  `PLAN_LIMITS` so they stay correct automatically — don't hardcode plan numbers there).
+- Prefer teaching Formi the way it already learns: edit `PRODUCT_KNOWLEDGE`/instructions, or wire
+  a derived fact (like `planFacts()`) so it can't drift. Keep prices out of the prompt — Formi
+  points users to the Plans page rather than quoting prices.
+- After any change above, re-read the prompt and confirm roles, routes, workflow, and feature copy
+  match reality. Out-of-date Formi answers are treated as a bug in the change that caused them.
 
 ---
 

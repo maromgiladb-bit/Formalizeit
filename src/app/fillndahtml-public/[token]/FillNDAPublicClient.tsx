@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
+import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 
 // All required fields (except additional_terms)
 const REQUIRED_FIELDS = [
@@ -912,6 +913,9 @@ export default function FillNDAPublicClient({
                                 {showLivePreview ? "Hide Preview" : "Show Preview"}
                             </button>
                         </div>
+
+                        {/* Legal disclaimer */}
+                        <LegalDisclaimer className="mb-4" />
 
                         {/* Alerts */}
                         {error && (

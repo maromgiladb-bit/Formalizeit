@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Settings, Users, Building2, CreditCard } from 'lucide-react'
+import { Settings, Users, Building2, CreditCard, ShieldCheck } from 'lucide-react'
 
 const navigation = [
     { name: 'General', href: '/settings', icon: Settings },
+    { name: 'Sign-in & Security', href: '/settings/account-security', icon: ShieldCheck },
     { name: 'Team', href: '/settings/team', icon: Users },
     { name: 'Company Profile', href: '/settings/company-profile', icon: Building2 },
     { name: 'Billing', href: '/settings/billing', icon: CreditCard },

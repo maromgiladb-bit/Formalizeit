@@ -51,11 +51,14 @@ export async function GET() {
       billingStatus: organization.billingStatus,
       stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
       hasStripeSubscription: !!organization.stripeSubscriptionId,
-      billingCycle: organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL
-        ? 'annual'
-        : organization.stripePriceId === STRIPE_PRICE_IDS.PRO_MONTHLY
-        ? 'monthly'
-        : null,
+      billingCycle:
+        organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL ||
+        organization.stripePriceId === STRIPE_PRICE_IDS.TEAM_ANNUAL
+          ? 'annual'
+          : organization.stripePriceId === STRIPE_PRICE_IDS.PRO_MONTHLY ||
+            organization.stripePriceId === STRIPE_PRICE_IDS.TEAM_MONTHLY
+          ? 'monthly'
+          : null,
     })
   } catch (error) {
     console.error('Check limit error:', error)
