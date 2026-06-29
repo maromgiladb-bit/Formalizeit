@@ -281,13 +281,15 @@ export async function POST(request: NextRequest) {
             if (newWorkflowState === 'COMPLETE') {
                 // PDF link uses the signer-id bearer token so counterparties (often not
                 // logged in / not yet a member) can open it; viewpdf authorizes by signer id.
-                const pdfDownloadLink = `${appUrl}/api/ndas/viewpdf?signerId=${signer.id}`;
+                // Each recipient gets a link scoped to THEIR OWN signer id so one party's
+                // claimable token (see /api/claim) is never exposed in the other's email.
+                const viewPdfLink = (id: string) => `${appUrl}/api/ndas/viewpdf?signerId=${id}`;
 
                 // Email Current Signer
                 await sendEmail({
                     to: signer.email,
                     subject: `Congratulations! Your NDA is complete`,
-                    html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
+                    html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(signer.id)),
                     attachments: pdfAttachment || undefined
                 });
                 console.log('📧 Congratulations email sent to current signer:', signer.email, pdfAttachment ? 'with PDF attachment' : '');
@@ -298,7 +300,7 @@ export async function POST(request: NextRequest) {
                     await sendEmail({
                         to: otherRecipientEmail,
                         subject: `Congratulations! Your NDA is complete`,
-                        html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
+                        html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(otherSigner?.id ?? signer.id)),
                         attachments: pdfAttachment || undefined
                     });
                     console.log('📧 Congratulations email sent to other signer:', otherRecipientEmail, pdfAttachment ? 'with PDF attachment' : '');
