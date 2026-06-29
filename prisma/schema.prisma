@@ -12,6 +12,7 @@ datasource db {
 enum BillingPlan {
   FREE
   PRO
+  TEAM
   ENTERPRISE
   DEV
 
@@ -28,7 +29,7 @@ enum BillingStatus {
 }
 
 enum MembershipRole {
-  OWNER
+  ADMINISTRATOR
   SIGNER
   CONTRIBUTOR
 
@@ -97,6 +98,7 @@ enum NdaEventType {
   CHANGES_ACCEPTED   // Party A accepted Party B suggestions
   CHANGES_REQUESTED  // Party A sent changes back to Party B
   PDF_EXPORTED       // PDF was generated/exported
+  RETENTION_DELETED  // Document content/PDFs purged after the retention window (audit stub kept)
 
   @@map("nda_event_type")
 }
@@ -190,7 +192,7 @@ model Membership {
   organizationId String           @map("organization_id") @db.Uuid
   role           MembershipRole   @default(CONTRIBUTOR) @map("role")
   status         MembershipStatus @default(ACTIVE) @map("status")
-  isApprover     Boolean          @default(false) @map("is_approver")
+  isSigner       Boolean          @default(false) @map("is_signer")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
 
@@ -259,6 +261,10 @@ model NdaDraft {
   lastEditedBy    String?   @map("last_edited_by") // "party_a" or "party_b" - for dynamic sign order
   content         Json? // Storing form data/content
   sentAt          DateTime? @map("sent_at")
+  completedAt     DateTime? @map("completed_at") // Set when both parties sign (workflowState → COMPLETE); anchors retention
+  retentionNoticeSentAt DateTime? @map("retention_notice_sent_at") // Advance-deletion notice sent (free-plan 5y retention)
+  reminder48hSentAt DateTime? @map("reminder_48h_sent_at") // First unsigned-NDA reminder to receiver (48h after sent)
+  reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

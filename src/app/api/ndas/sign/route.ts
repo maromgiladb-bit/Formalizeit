@@ -5,6 +5,9 @@ import { sendEmail, getAppUrl, timeToSignEmailHtml, congratulationsEmailHtml } f
 import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/notifications';
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canSignNDA } from '@/lib/organizationRoles';
+import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+
+export const runtime = 'nodejs'; // Required for Puppeteer (final PDF generation)
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,12 +18,22 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { draftId, signerEmail, signerName, signerTitle, signatureImage, signatureDate } = body;
+        const { draftId, signerEmail, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
 
         // Validate required fields
         if (!draftId || !signatureImage || !signerName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
+
+        // Authority-to-sign affirmation is required before applying the company's signature.
+        if (authorityConfirmed !== true) {
+            return NextResponse.json(
+                { error: 'You must confirm you are authorized to sign on behalf of your company.' },
+                { status: 400 }
+            );
+        }
+
+        const clientIp = getClientIp(request);
 
         // Get user
         const user = await prisma.user.findUnique({
@@ -96,6 +109,7 @@ export async function POST(request: NextRequest) {
                 status: newStatus as any,
                 workflowState: newWorkflowState as any,
                 sentAt: draft.sentAt ?? new Date(),
+                completedAt: newWorkflowState === 'COMPLETE' ? new Date() : undefined,
             },
         });
 
@@ -123,56 +137,61 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // Final signed PDF (when fully executed): generate once, fingerprint it for
+        // tamper-evidence, and reuse the same bytes for S3 storage and the email
+        // attachment — so the recorded agreementHash always matches the persisted PDF.
+        // Kept OUT of the email try/catch so an email failure can never drop the hash.
+        let agreementHash: string | null = null;
+        let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
+
+        if (newWorkflowState === 'COMPLETE') {
+            try {
+                const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
+                const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
+
+                console.log('📄 Generating final PDF with both signatures...');
+
+                const html = await renderNdaHtml(updatedContent, draft.templateId || 'professional_mutual_nda_v1');
+                const pdfBuffer = await renderHtmlToPdf(html, {
+                    pageWidthPx: 900,
+                    baseUrl: getAppUrl(),
+                    isA4: true,
+                });
+
+                agreementHash = sha256Hex(pdfBuffer);
+
+                pdfAttachment = [{
+                    filename: `${draft.title || 'NDA'}_Signed.pdf`,
+                    content: pdfBuffer.toString('base64'),
+                    contentType: 'application/pdf'
+                }];
+
+                console.log('✅ Final PDF generated with both signatures');
+
+                // Store the SAME bytes to S3 (failure here must not drop the hash or block completion)
+                if (signRequest) {
+                    try {
+                        const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                        await storeNdaPdf({
+                            signRequestId: signRequest.id,
+                            kind: 'SIGNED',
+                            pdfBuffer: pdfBuffer,
+                        });
+                        console.log('✅ SIGNED PDF stored in S3');
+                    } catch (s3Error) {
+                        console.error('❌ Failed to store PDF to S3:', s3Error);
+                    }
+                }
+            } catch (pdfError) {
+                console.error('❌ Failed to generate final signed PDF:', pdfError);
+            }
+        }
+
         // Send Email Notifications
         try {
             const appUrl = getAppUrl();
 
             if (newWorkflowState === 'COMPLETE') {
-                // Both signed - Generate final PDF with both signatures
-                let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
-
-                try {
-                    const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
-                    const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
-
-                    console.log('📄 Generating final PDF with both signatures...');
-
-                    const html = await renderNdaHtml(updatedContent, draft.templateId || 'professional_mutual_nda_v1');
-                    const pdfBuffer = await renderHtmlToPdf(html, {
-                        pageWidthPx: 900,
-                        baseUrl: appUrl,
-                        isA4: true,
-                    });
-
-                    const pdfBase64 = pdfBuffer.toString('base64');
-                    pdfAttachment = [{
-                        filename: `${draft.title || 'NDA'}_Signed.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf'
-                    }];
-
-                    console.log('✅ Final PDF generated with both signatures');
-
-                    // Store SIGNED PDF to S3
-                    if (signRequest) {
-                        try {
-                            const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
-                            await storeNdaPdf({
-                                signRequestId: signRequest.id,
-                                kind: 'SIGNED',
-                                pdfBuffer: pdfBuffer,
-                            });
-                            console.log('✅ SIGNED PDF stored in S3');
-                        } catch (s3Error) {
-                            console.error('❌ Failed to store PDF to S3:', s3Error);
-                            // Continue - S3 storage failure shouldn't block completion
-                        }
-                    }
-                } catch (pdfError) {
-                    console.error('❌ Failed to generate PDF:', pdfError);
-                    // Continue without attachment
-                }
-
                 // Send Congratulations to BOTH parties
                 const dashboardLink = `${appUrl}/dashboard`;
 
@@ -220,19 +239,25 @@ export async function POST(request: NextRequest) {
             // Don't fail the request if email fails
         }
 
-        // Create audit event
+        // Create audit event with signature evidence (IP, template version snapshot, authority
+        // affirmation, and — once fully executed — the agreement hash).
         await prisma.auditEvent.create({
             data: {
                 organizationId: draft.organizationId,
                 draftId: draft.id,
                 userId: user.id,
                 eventType: 'SIGNED',
+                ipAddress: clientIp,
                 metadata: {
                     signer_email: signerEmail || user.email,
                     signer_name: signerName,
                     action: 'internal_signature_submitted',
                     party: 'party_a',
                     new_state: newWorkflowState,
+                    templateSnapshot: templateSnapshot(draft.templateId || 'professional_mutual_nda_v1'),
+                    parties: partiesSnapshot(currentContent),
+                    authority: authorityConsent(true),
+                    ...(agreementHash ? { agreementHash } : {}),
                 },
             },
         });

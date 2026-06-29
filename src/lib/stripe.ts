@@ -5,4 +5,4 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 })
 
-export { STRIPE_PRICE_IDS } from './stripe-price-ids'
+export { STRIPE_PRICE_IDS, priceIdFor, planFromPriceId, type PaidPlan } from './stripe-price-ids'

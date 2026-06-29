@@ -82,7 +82,7 @@ export default function LimitExceededModal({ isOpen, onClose }: LimitExceededMod
                 <svg className="h-5 w-5 text-teal-700 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Only $19.99/month</span>
+                <span>Only $9/month</span>
               </li>
             </ul>
           </div>

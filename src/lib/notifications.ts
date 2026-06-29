@@ -15,7 +15,7 @@ export async function createNotification(
 }
 
 /**
- * Notify all signers in an org (SIGNER role OR OWNER with the signer toggle enabled).
+ * Notify all signers in an org (SIGNER role OR ADMINISTRATOR with the signer toggle enabled).
  * Pass excludeUserId to skip the user taking the action.
  */
 export async function createNotificationsForOrgSigners(
@@ -33,7 +33,7 @@ export async function createNotificationsForOrgSigners(
             status: 'ACTIVE',
             OR: [
                 { role: 'SIGNER' },
-                { role: 'OWNER', isApprover: true },
+                { role: 'ADMINISTRATOR', isSigner: true },
             ],
         },
         select: { userId: true },

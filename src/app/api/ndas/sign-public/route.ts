@@ -4,13 +4,14 @@ import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
 import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
+import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { signerId, signerName, signerTitle, signatureImage, signatureDate } = body;
+        const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
 
         if (!signerId || !signerName || !signerTitle || !signatureImage) {
             return NextResponse.json(
@@ -18,6 +19,16 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+
+        // Authority-to-sign affirmation is required before any signature is applied.
+        if (authorityConfirmed !== true) {
+            return NextResponse.json(
+                { error: 'You must confirm you are authorized to sign on behalf of your company.' },
+                { status: 400 }
+            );
+        }
+
+        const clientIp = getClientIp(request);
 
         // Get signer with related data
         const signer = await prisma.signer.findUnique({
@@ -157,6 +168,7 @@ export async function POST(request: NextRequest) {
                 status: newStatus,
                 workflowState: newWorkflowState,
                 sentAt: draft.sentAt ?? new Date(),
+                completedAt: newWorkflowState === 'COMPLETE' ? new Date() : undefined,
             },
         });
 
@@ -191,17 +203,15 @@ export async function POST(request: NextRequest) {
             console.error('Failed to link signer to user:', linkError);
         }
 
-        // Send Email Notifications
-        try {
-            const appUrl = getAppUrl();
-            const { timeToSignEmailHtml, congratulationsEmailHtml } = await import('@/lib/email');
+        // Final signed PDF (when fully executed): generate once, fingerprint it for
+        // tamper-evidence, and reuse the same bytes for S3 storage and the email
+        // attachment — so the recorded agreementHash always matches the persisted PDF.
+        // Kept OUT of the email try/catch so an email failure can never drop the hash.
+        let agreementHash: string | null = null;
+        let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
 
-            if (newWorkflowState === 'COMPLETE') {
-                // Both signed - Generate PDF with both signatures and send to both parties
+        if (newWorkflowState === 'COMPLETE') {
                 console.log('📄 Both parties signed - generating final PDF with signatures...');
-
-                // Generate final PDF with both signatures
-                let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
                 try {
                     const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
                     const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
@@ -230,9 +240,11 @@ export async function POST(request: NextRequest) {
                     const html = await renderNdaHtml(templateData, (formData.templateId as string) || 'professional_mutual_nda_v1');
                     const pdfBuffer = await renderHtmlToPdf(html, {
                         pageWidthPx: 900,
-                        baseUrl: appUrl,
+                        baseUrl: getAppUrl(),
                         isA4: true,
                     });
+
+                    agreementHash = sha256Hex(pdfBuffer);
 
                     const pdfBase64 = pdfBuffer.toString('base64');
                     pdfAttachment = [{
@@ -257,17 +269,27 @@ export async function POST(request: NextRequest) {
                         // Continue - S3 storage failure shouldn't block completion
                     }
                 } catch (pdfError) {
-                    console.error('❌ Failed to generate PDF:', pdfError);
-                    // Continue without attachment - still send email with download link
+                    console.error('❌ Failed to generate final signed PDF:', pdfError);
                 }
+        }
 
-                const pdfDownloadLink = `${appUrl}/api/ndas/viewpdf?draftId=${draft.id}`;
+        // Send Email Notifications
+        try {
+            const appUrl = getAppUrl();
+            const { timeToSignEmailHtml, congratulationsEmailHtml } = await import('@/lib/email');
+
+            if (newWorkflowState === 'COMPLETE') {
+                // PDF link uses the signer-id bearer token so counterparties (often not
+                // logged in / not yet a member) can open it; viewpdf authorizes by signer id.
+                // Each recipient gets a link scoped to THEIR OWN signer id so one party's
+                // claimable token (see /api/claim) is never exposed in the other's email.
+                const viewPdfLink = (id: string) => `${appUrl}/api/ndas/viewpdf?signerId=${id}`;
 
                 // Email Current Signer
                 await sendEmail({
                     to: signer.email,
                     subject: `Congratulations! Your NDA is complete`,
-                    html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
+                    html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(signer.id)),
                     attachments: pdfAttachment || undefined
                 });
                 console.log('📧 Congratulations email sent to current signer:', signer.email, pdfAttachment ? 'with PDF attachment' : '');
@@ -278,7 +300,7 @@ export async function POST(request: NextRequest) {
                     await sendEmail({
                         to: otherRecipientEmail,
                         subject: `Congratulations! Your NDA is complete`,
-                        html: congratulationsEmailHtml(draft.title || 'NDA', pdfDownloadLink),
+                        html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(otherSigner?.id ?? signer.id)),
                         attachments: pdfAttachment || undefined
                     });
                     console.log('📧 Congratulations email sent to other signer:', otherRecipientEmail, pdfAttachment ? 'with PDF attachment' : '');
@@ -414,18 +436,24 @@ export async function POST(request: NextRequest) {
             console.error('Failed to create sign notification:', e)
         }
 
-        // Create audit event
+        // Create audit event with signature evidence (IP, template version snapshot, authority
+        // affirmation, and — once fully executed — the agreement hash).
         await prisma.auditEvent.create({
             data: {
                 organizationId: signer.signRequest.organizationId,
                 draftId: draft.id,
                 eventType: 'SIGNED',
+                ipAddress: clientIp,
                 metadata: {
                     signer_email: signer.email,
                     signer_name: signerName,
                     action: 'public_signature_submitted',
                     party: isPartyA ? 'party_a' : 'party_b',
-                    new_state: newWorkflowState
+                    new_state: newWorkflowState,
+                    templateSnapshot: templateSnapshot((formData.templateId as string) || draft.templateId || 'professional_mutual_nda_v1'),
+                    parties: partiesSnapshot(updatedContent as Record<string, unknown>),
+                    authority: authorityConsent(true),
+                    ...(agreementHash ? { agreementHash } : {}),
                 },
             },
         });

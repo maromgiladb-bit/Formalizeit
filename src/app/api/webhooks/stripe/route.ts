@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { stripe } from '@/lib/stripe'
+import { stripe, planFromPriceId } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,14 +95,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
   const periodEnd = getCurrentPeriodEnd(subscription)
+  const priceId = subscription.items.data[0]?.price.id ?? null
 
   await prisma.organization.update({
     where: { id: organizationId },
     data: {
-      billingPlan: 'PRO',
+      billingPlan: planFromPriceId(priceId) ?? 'PRO',
       billingStatus,
       stripeSubscriptionId: subscription.id,
-      stripePriceId: subscription.items.data[0]?.price.id ?? null,
+      stripePriceId: priceId,
       stripeCurrentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
     },
   })
@@ -128,13 +129,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const gracePlanStatuses = new Set(['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'])
   const isActivePlan = gracePlanStatuses.has(subscription.status)
   const periodEnd = getCurrentPeriodEnd(subscription)
+  const priceId = subscription.items.data[0]?.price.id ?? null
 
   await prisma.organization.update({
     where: { id: organization.id },
     data: {
-      billingPlan: isActivePlan ? 'PRO' : 'FREE',
+      billingPlan: isActivePlan ? (planFromPriceId(priceId) ?? 'PRO') : 'FREE',
       billingStatus,
-      stripePriceId: isActivePlan ? (subscription.items.data[0]?.price.id ?? null) : null,
+      stripePriceId: isActivePlan ? priceId : null,
       stripeCurrentPeriodEnd: isActivePlan && periodEnd ? new Date(periodEnd * 1000) : null,
       stripeSubscriptionId: isActivePlan ? undefined : null,
     },

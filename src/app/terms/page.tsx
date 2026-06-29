@@ -145,7 +145,22 @@ export default function TermsPage() {
 						Service after that date constitutes acceptance of the new Terms.
 					</p>
 
-					<h2>15. Contact</h2>
+					<h2>15. Electronic Signatures and Authority to Sign</h2>
+					<p>
+						You consent to sign agreements electronically through the Service. Electronic signatures
+						applied through FormalizeIt are intended to have the same legal effect as a handwritten
+						signature under applicable electronic signature laws. When you apply a signature, we record
+						supporting evidence including the signer&apos;s email, a timestamp, the IP address, the exact
+						version of the document signed, and a cryptographic hash (fingerprint) of the signed PDF.
+					</p>
+					<p>
+						Before signing, you must confirm that you are authorized to sign the agreement on behalf of,
+						and in the name of, the company you represent, and that doing so legally binds that company.
+						Ensuring you have this authority is your and your company&apos;s responsibility — FormalizeIt
+						does not verify signing authority and is not a party to the agreements you create or sign.
+					</p>
+
+					<h2>16. Contact</h2>
 					<p>
 						Questions about these Terms? Contact us at{" "}
 						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.

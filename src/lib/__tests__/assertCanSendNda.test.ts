@@ -51,15 +51,15 @@ describe('assertCanSendNda', () => {
     await expect(assertCanSendNda('org-1')).rejects.toThrow('maximum number of NDAs')
   })
 
-  it('allows send when PRO org is under quarterly limit', async () => {
+  it('allows unlimited sends on PRO (no NDA cap)', async () => {
     mockFindOrg.mockResolvedValue(proOrg as any)
-    mockCountDrafts.mockResolvedValue(24)
+    mockCountDrafts.mockResolvedValue(9999)
     await expect(assertCanSendNda('org-2')).resolves.toBeUndefined()
   })
 
-  it('blocks send when PRO org has hit quarterly limit', async () => {
-    mockFindOrg.mockResolvedValue(proOrg as any)
-    mockCountDrafts.mockResolvedValue(25)
-    await expect(assertCanSendNda('org-2')).rejects.toThrow('maximum number of NDAs')
+  it('allows unlimited sends on TEAM (no NDA cap)', async () => {
+    mockFindOrg.mockResolvedValue({ id: 'org-3', billingPlan: 'TEAM' as const, settings: null } as any)
+    mockCountDrafts.mockResolvedValue(9999)
+    await expect(assertCanSendNda('org-3')).resolves.toBeUndefined()
   })
 })

@@ -84,8 +84,16 @@ export default function PrivacyPage() {
 						7 years as required by law).
 					</p>
 					<p>
-						Signed NDA documents are retained for the duration of your subscription and for 90 days after
-						account deletion, so you have time to download them before they are removed.
+						Signed NDA documents are retained for at least five (5) years from the date of execution,
+						including for free-plan accounts, so both parties have lasting access to their agreement. On
+						paid plans, signed documents are retained for the duration of your subscription. Before any
+						scheduled deletion we send advance notice by email and in-app, giving you time to download
+						or upgrade to keep the document.
+					</p>
+					<p>
+						If you received and signed an NDA without an account, you can access and download your
+						executed copy after creating an account — we link agreements to you when you sign up, so your
+						signed NDAs appear in your dashboard.
 					</p>
 
 					<h2>7. Your Rights</h2>

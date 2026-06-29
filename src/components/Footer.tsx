@@ -27,8 +27,17 @@ const columns = [
 		links: [
 			{ name: "Terms of Service", href: "/terms" },
 			{ name: "Privacy Policy", href: "/privacy" },
+			{ name: "E-Signature Consent", href: "/esignature-consent" },
 			{ name: "Security", href: "/security" },
 			{ name: "Compliance", href: "/compliance" },
+		],
+	},
+	{
+		heading: "The Standard NDA",
+		links: [
+			{ name: "Standard NDA", href: "/standard-nda" },
+			{ name: "Governance Policy", href: "/nda-governance" },
+			{ name: "NDA Changelog", href: "/nda-changelog" },
 		],
 	},
 ];
@@ -39,7 +48,7 @@ export default function Footer() {
 	return (
 		<footer className="bg-gray-50 border-t border-gray-200">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
 					<div className="col-span-2 md:col-span-1">
 						<Link href="/" aria-label="FormalizeIt home" className="inline-block -my-6">
 							<Image

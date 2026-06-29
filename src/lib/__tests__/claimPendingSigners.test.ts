@@ -26,8 +26,8 @@ describe('claimPendingSigners', () => {
     expect(mockUpdateMany).toHaveBeenCalledOnce()
     expect(mockUpdateMany).toHaveBeenCalledWith({
       where: {
-        email: 'party@example.com',
         userId: null,
+        OR: [{ email: { equals: 'party@example.com', mode: 'insensitive' } }],
       },
       data: { userId: 'user-uuid-123' },
     })
@@ -61,10 +61,27 @@ describe('claimPendingSigners', () => {
 
     expect(prisma.signer.updateMany).toHaveBeenCalledWith({
       where: {
-        email: 'party@example.com',
         userId: null,
+        OR: [{ email: { equals: 'party@example.com', mode: 'insensitive' } }],
       },
       data: { userId: 'user-uuid-789' },
+    })
+  })
+
+  it('matches multiple emails when given an array', async () => {
+    vi.mocked(prisma.signer.updateMany).mockResolvedValue({ count: 2 })
+
+    await claimPendingSigners(['Primary@Example.com', 'work@example.com'], 'uid-multi')
+
+    expect(prisma.signer.updateMany).toHaveBeenCalledWith({
+      where: {
+        userId: null,
+        OR: [
+          { email: { equals: 'primary@example.com', mode: 'insensitive' } },
+          { email: { equals: 'work@example.com', mode: 'insensitive' } },
+        ],
+      },
+      data: { userId: 'uid-multi' },
     })
   })
 })

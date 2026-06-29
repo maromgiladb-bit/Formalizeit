@@ -1,16 +1,16 @@
-export type DbMembershipRole = 'OWNER' | 'SIGNER' | 'CONTRIBUTOR'
+export type DbMembershipRole = 'ADMINISTRATOR' | 'SIGNER' | 'CONTRIBUTOR'
 
 // Minimal membership shape needed for permission checks.
-// `isApprover` matches the Prisma field name (DB column: `is_approver`) and represents
-// whether an OWNER has the signer toggle enabled. The field name predates the APPROVER→SIGNER
-// rename and intentionally mirrors the DB to avoid an extra mapping layer at callsites.
-export type MembershipForGuard = { role: DbMembershipRole; isApprover: boolean }
+// `isSigner` matches the Prisma field name (DB column: `is_signer`) and represents
+// whether an ADMINISTRATOR has the signer toggle enabled. It intentionally mirrors the
+// DB to avoid an extra mapping layer at callsites.
+export type MembershipForGuard = { role: DbMembershipRole; isSigner: boolean }
 
 // ─── Role descriptions (used in info tooltips in team settings) ──────────────
 
 export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; description: string }> = {
-  OWNER: {
-    label: 'Owner',
+  ADMINISTRATOR: {
+    label: 'Administrator',
     description:
       'Manages team members, billing, and company settings. Can create, edit, and send NDAs. Can sign NDAs on behalf of the company when the signer toggle is enabled.',
   },
@@ -27,7 +27,7 @@ export const ROLE_DESCRIPTIONS: Record<DbMembershipRole, { label: string; descri
 }
 
 // ─── Role options shown in invite form and member role selector ───────────────
-// OWNER is not assignable via invite — it is the org creator.
+// ADMINISTRATOR is not assignable via invite — it is the org creator.
 
 export const ORGANIZATION_ROLE_OPTIONS: Array<{ value: DbMembershipRole; label: string }> = [
   { value: 'CONTRIBUTOR', label: 'Contributor' },
@@ -41,17 +41,17 @@ export const SIGNER_TOGGLE_OPTIONS: Array<{ value: string; label: string }> = [
 
 // ─── Guard functions ──────────────────────────────────────────────────────────
 
-/** Only the org owner — team management, billing, company profile, delete any draft. */
+/** Only the org administrator — team management, billing, company profile, delete any draft. */
 export function isOrganizationOwner(role: string): boolean {
-  return role === 'OWNER'
+  return role === 'ADMINISTRATOR'
 }
 
 /**
  * Can sign NDAs on behalf of the company and perform finalisation actions.
- * True for: SIGNER role, OR OWNER who has explicitly enabled the signer toggle.
+ * True for: SIGNER role, OR ADMINISTRATOR who has explicitly enabled the signer toggle.
  */
 export function canSignNDA(membership: MembershipForGuard): boolean {
-  return membership.role === 'SIGNER' || (membership.role === 'OWNER' && membership.isApprover)
+  return membership.role === 'SIGNER' || (membership.role === 'ADMINISTRATOR' && membership.isSigner)
 }
 
 /**
@@ -75,7 +75,7 @@ export function getOrganizationRoleLabel(role: DbMembershipRole): string {
 
 export function getOrganizationRoleBadgeClass(role: DbMembershipRole): string {
   switch (role) {
-    case 'OWNER':
+    case 'ADMINISTRATOR':
       return 'bg-teal-800 text-white'
     case 'SIGNER':
       return 'bg-teal-100 text-teal-800'
@@ -93,7 +93,7 @@ export function getOrganizationRoleBadgeClass(role: DbMembershipRole): string {
 export function toDbMembershipRole(input: string | null | undefined): DbMembershipRole | null {
   if (!input) return null
   const normalized = input.toUpperCase() as DbMembershipRole
-  if (normalized === 'OWNER' || normalized === 'SIGNER' || normalized === 'CONTRIBUTOR') {
+  if (normalized === 'ADMINISTRATOR' || normalized === 'SIGNER' || normalized === 'CONTRIBUTOR') {
     return normalized
   }
   return null

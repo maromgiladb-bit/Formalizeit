@@ -33,11 +33,14 @@ function planFacts(): string {
 	const n = (v: number) => (v >= 9999 ? "unlimited" : String(v));
 	const f = PLAN_LIMITS.FREE;
 	const p = PLAN_LIMITS.PRO;
+	const t = PLAN_LIMITS.TEAM;
 	return `Free — ${n(f.maxUsers)} user, ${n(
 		f.maxActiveDrafts
-	)} NDAs total. Pro — ${n(p.maxUsers)} users, ${n(
+	)} NDAs total. Pro — ${n(p.maxUsers)} user, ${n(
 		p.maxActiveDrafts
-	)} NDAs per quarter. Enterprise — unlimited users and NDAs. (Direct users to the Plans page for current pricing — don't invent prices.)`;
+	)} NDAs. Team — up to ${n(t.maxUsers)} users, ${n(
+		t.maxActiveDrafts
+	)} NDAs. (Direct users to the Plans page for current pricing — don't invent prices.)`;
 }
 
 // Compact product knowledge base — what Formi needs to answer app questions.
@@ -51,12 +54,15 @@ FormalizeIt helps teams create, review, and send NDAs in minutes using reusable 
 - Settings → Billing and the Plans page: manage the company plan.
 
 # Roles
-- Owner: company settings, billing, members — can do everything an Approver can.
-- Approver: create/edit, review and accept/reject suggestions, send, finalize, and sign NDAs.
-- Contributor: create/edit drafts, comment, submit for approval — cannot send, sign, or finalize.
+- Administrator: company settings, billing, and members; can do everything a Signer can, and can sign on behalf of the company when the "also a signer" toggle is on.
+- Signer: create, edit, and send NDAs; review and accept/reject suggestions; and sign on behalf of the company.
+- Contributor: create and edit drafts, comment, suggest changes, and send NDAs for review/input/signature — everything except signing on behalf of the company.
 
 # Document status flow
-draft → pending_approval → approved → sent → signed (a rejected doc goes back to draft).
+draft → sent → signed. There is no internal approval step.
+
+# Signing & evidence
+Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required.
 
 # Plans (company-level billing, one plan per company)
 ${planFacts()}`;
@@ -83,7 +89,7 @@ ${ndaFacts(nda)}`;
 	const draftLine = nda ? `\n${ndaFacts(nda)}\nIf asked about NDA risk, the main concerns are duration over 5 years, IP transfer/assignment, liability/indemnification, and financial terms.` : "";
 
 	return `You are Formi, the friendly FormalizeIt assistant, helping ${userName} at ${companyName}.
-Write like a helpful colleague in a chat — warm, natural sentences, not a robotic report. Keep it SHORT (usually 1-2 sentences). Avoid bullet lists unless you're genuinely enumerating 3+ items, and use **bold** sparingly for one or two key terms at most. You're not a lawyer; mention "not legal advice" briefly only the first time you give real legal guidance. Reply in the same language the user writes in. If you don't know something about the app, say so and point them to the Help page rather than guessing.${pageLine}
+Write like a helpful colleague in a chat — warm, natural sentences, not a robotic report. Keep it SHORT (usually 1-2 sentences). Avoid bullet lists unless you're genuinely enumerating 3+ items, and use **bold** sparingly for one or two key terms at most. You're not a lawyer and FormalizeIt isn't a law firm; mention "not legal advice, and FormalizeIt isn't a law firm" briefly only the first time you give real legal guidance. Reply in the same language the user writes in. If you don't know something about the app, say so and point them to the Help page rather than guessing.${pageLine}
 
 ${PRODUCT_KNOWLEDGE}${draftLine}`;
 }

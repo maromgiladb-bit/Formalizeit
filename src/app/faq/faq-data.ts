@@ -72,12 +72,12 @@ export const faqs: Faq[] = [
 	{
 		question: "What is included in the free plan?",
 		answer:
-			"The free plan lets you create up to 3 NDAs total, with 1 team member and access to basic templates. E-signature support and email delivery are included. Documents are stored for 7 days.",
+			"The free plan lets you create up to 3 NDAs total as a single user. You can send, review, and e-sign NDAs, and receiving and signing an NDA is always free with no account needed. Signed documents are stored for 5 years.",
 	},
 	{
 		question: "What happens after I upgrade?",
 		answer:
-			"Your workspace immediately gets access to the features included in your new plan — more NDAs per quarter, more team members, all professional templates, advanced tracking, and longer document storage. Billing is handled by Stripe and you can cancel anytime from Settings → Billing.",
+			"Your workspace immediately gets access to the features included in your new plan — Pro unlocks unlimited NDAs, search, and a full audit trail for a single user; Team adds up to 10 users, a shared workspace, a centralized repository, and role-based permissions. Billing is handled by Stripe and you can cancel anytime from Settings → Billing.",
 	},
 	{
 		question: "Can I cancel later?",

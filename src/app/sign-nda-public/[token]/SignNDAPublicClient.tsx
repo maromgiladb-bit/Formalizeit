@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Great_Vibes } from 'next/font/google';
+import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
+import { AUTHORITY_CONSENT_TEXT } from '@/lib/signatureEvidence';
 
 const greatVibes = Great_Vibes({
     weight: '400',
@@ -44,6 +46,7 @@ export default function SignNDAPublicClient({
     const signatureCardRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [typedSignature, setTypedSignature] = useState('');
+    const [authorityConfirmed, setAuthorityConfirmed] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -258,6 +261,11 @@ export default function SignNDAPublicClient({
             return;
         }
 
+        if (!authorityConfirmed) {
+            setError('Please confirm you are authorized to sign on behalf of your company');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
@@ -271,6 +279,7 @@ export default function SignNDAPublicClient({
                     signerTitle: signature.title,
                     signatureImage,
                     signatureDate: signature.date,
+                    authorityConfirmed,
                 }),
             });
 
@@ -433,14 +442,28 @@ export default function SignNDAPublicClient({
                                 </div>
                             )}
 
+                            {/* Authority-to-sign affirmation */}
+                            <label className="flex items-start gap-3 mb-4 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={authorityConfirmed}
+                                    onChange={(e) => setAuthorityConfirmed(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
+                                    data-testid="authority-checkbox"
+                                />
+                                <span className="text-sm text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
+                            </label>
+
                             {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={loading}
+                                disabled={loading || !authorityConfirmed}
                                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                             >
                                 {loading ? 'Submitting...' : 'Submit Signature'}
                             </button>
+
+                            <LegalDisclaimer className="mt-4" />
                         </div>
                     </div>
                 </div>

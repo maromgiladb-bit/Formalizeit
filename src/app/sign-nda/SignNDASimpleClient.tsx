@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Great_Vibes } from 'next/font/google';
 import PublicToolbar from '@/components/PublicToolbar';
 import { canSignNDA } from '@/lib/organizationRoles';
+import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
+import { AUTHORITY_CONSENT_TEXT } from '@/lib/signatureEvidence';
 
 const greatVibes = Great_Vibes({
   weight: '400',
@@ -38,6 +40,7 @@ export default function SignNDASimpleClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [typedSignature, setTypedSignature] = useState("");
+  const [authorityConfirmed, setAuthorityConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -56,7 +59,7 @@ export default function SignNDASimpleClient() {
         return r.json();
       })
       .then(data => {
-        if (data.role && canSignNDA({ role: data.role, isApprover: data.isApprover ?? false })) {
+        if (data.role && canSignNDA({ role: data.role, isSigner: data.isSigner ?? false })) {
           setSignAllowed('allowed');
         } else {
           setSignAllowed('blocked');
@@ -251,6 +254,11 @@ export default function SignNDASimpleClient() {
       return;
     }
 
+    if (!authorityConfirmed) {
+      setErrorMessage("Please confirm you are authorized to sign on behalf of your company");
+      return;
+    }
+
     setSubmitStatus('submitting');
     setErrorMessage("");
 
@@ -265,6 +273,7 @@ export default function SignNDASimpleClient() {
           signerTitle: partyASignature.title,
           signatureImage: signatureImage,
           signatureDate: partyASignature.date,
+          authorityConfirmed,
         }),
       });
 
@@ -547,6 +556,8 @@ export default function SignNDASimpleClient() {
               <p className="text-gray-600 text-xs">Review and sign your agreement</p>
             </div>
 
+            <LegalDisclaimer className="mb-2" />
+
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col flex-1 min-h-0">
               <h2 className="text-base font-bold text-gray-900 mb-2">Your Signature</h2>
 
@@ -687,8 +698,20 @@ export default function SignNDASimpleClient() {
                 </div>
               )}
 
+              {/* Authority-to-sign affirmation */}
+              <label className="flex items-start gap-2 mt-auto pt-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={authorityConfirmed}
+                  onChange={(e) => setAuthorityConfirmed(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
+                  data-testid="authority-checkbox"
+                />
+                <span className="text-[10px] text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
+              </label>
+
               {/* Action Buttons */}
-              <div className="flex gap-1.5 mt-auto pt-1.5">
+              <div className="flex gap-1.5 pt-1.5">
                 <button
                   onClick={() => router.back()}
                   className="flex-1 px-3 py-1.5 text-xs border-2 border-gray-300 text-gray-700 rounded font-bold hover:bg-gray-50 transition-all"
@@ -705,14 +728,14 @@ export default function SignNDASimpleClient() {
                 )}
                 <button
                   onClick={handleGenerateAndSave}
-                  disabled={submitStatus === 'submitting'}
+                  disabled={submitStatus === 'submitting' || !authorityConfirmed}
                   className="flex-1 px-3 py-1.5 text-xs bg-[var(--teal-600)] text-white rounded font-bold hover:bg-[var(--teal-700)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   {submitStatus === 'submitting' ? 'Generating...' : 'Generate & Save PDF'}
                 </button>
                 <button
                   onClick={() => setShowSendModal(true)}
-                  disabled={submitStatus === 'submitting' || !signatureImage}
+                  disabled={submitStatus === 'submitting' || !signatureImage || !authorityConfirmed}
                   className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Send NDA

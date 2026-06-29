@@ -373,6 +373,11 @@ const NdaAgentAvatar = forwardRef<NdaAgentHandle, NdaAgentAvatarProps>(
 									<Send className="w-4 h-4" />
 								</button>
 							</form>
+
+							{/* Persistent legal disclaimer */}
+							<p className="text-[11px] text-gray-400 text-center px-3 pb-2 bg-white">
+								Formi gives general help, not legal advice — FormalizeIt isn&apos;t a law firm.
+							</p>
 						</motion.div>
 					)}
 				</AnimatePresence>

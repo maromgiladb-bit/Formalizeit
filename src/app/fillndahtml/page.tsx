@@ -5,6 +5,7 @@ import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
 import { useFormi } from "@/components/ai/FormiProvider";
+import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 
 type FormValues = {
 	docName: string;
@@ -1326,6 +1327,9 @@ export default function FillNDAHTML() {
 								)}
 							</div>
 						</div>
+
+						{/* Legal disclaimer */}
+						<LegalDisclaimer className="mb-4" />
 
 						{/* Alerts */}
 						{loading && (

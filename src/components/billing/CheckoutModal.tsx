@@ -13,9 +13,15 @@ interface CheckoutModalProps {
   isOpen: boolean
   onClose: () => void
   billingCycle?: 'monthly' | 'annual'
+  plan?: 'PRO' | 'TEAM'
 }
 
-export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: CheckoutModalProps) {
+const PLAN_PRICING = {
+  PRO: { label: 'Upgrade to Pro', monthly: '$9 / month · billed monthly', annual: '$7.65 / month · billed annually' },
+  TEAM: { label: 'Upgrade to Team', monthly: '$50 / month · billed monthly', annual: '$42.50 / month · billed annually' },
+} as const
+
+export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan = 'PRO' }: CheckoutModalProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +33,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ billingCycle, embedded: false }),
+        body: JSON.stringify({ billingCycle, plan, embedded: false }),
       })
       if (!res.ok) {
         setError('Could not start checkout. Please try again.')
@@ -61,7 +67,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
     fetch('/api/billing/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ billingCycle, embedded: true }),
+      body: JSON.stringify({ billingCycle, plan, embedded: true }),
       signal: controller.signal,
     })
       .then(res => {
@@ -86,7 +92,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
       .finally(() => setLoading(false))
 
     return () => controller.abort()
-  }, [isOpen, billingCycle])
+  }, [isOpen, billingCycle, plan])
 
   return (
     <AnimatePresence>
@@ -111,9 +117,9 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly' }: Che
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <div>
-                <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">Upgrade to Pro</p>
+                <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">{PLAN_PRICING[plan].label}</p>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {billingCycle === 'annual' ? '$15.99 / month · billed annually' : '$19.99 / month · billed monthly'}
+                  {billingCycle === 'annual' ? PLAN_PRICING[plan].annual : PLAN_PRICING[plan].monthly}
                 </p>
               </div>
               <div className="flex items-center gap-1">

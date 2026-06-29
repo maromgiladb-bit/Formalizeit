@@ -19,7 +19,39 @@ export async function getActiveOrganization() {
         }
     })
 
-    if (!user || user.memberships.length === 0) return null
+    if (!user) return null
+
+    // Auto-provision a personal org for users who existed before the ensureDbUser fix
+    if (user.memberships.length === 0) {
+        const slugBase = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+        const slug = `${slugBase}-${Math.random().toString(36).slice(2, 7)}`
+        const membership = await prisma.$transaction(async (tx) => {
+            const org = await tx.organization.create({
+                data: {
+                    name: user.name ?? user.email.split('@')[0],
+                    slug,
+                    ownerUserId: user.id,
+                },
+            })
+            return tx.membership.create({
+                data: {
+                    userId: user.id,
+                    organizationId: org.id,
+                    role: 'ADMINISTRATOR',
+                    status: 'ACTIVE',
+                    isSigner: true,
+                },
+                include: { organization: true },
+            })
+        })
+        try {
+            cookieStore.set('active-org-id', membership.organizationId, {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365,
+            })
+        } catch { /* webhook / non-cookie context */ }
+        return membership
+    }
 
     // 1. Try to match the cookie ID
     if (activeOrgId) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -23,13 +23,24 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
+        // Match by linked userId or any of the user's verified emails (the NDA may
+        // have been sent to a secondary address). Case-insensitive — signer emails
+        // are stored as entered by the sender.
+        const clerkUser = await currentUser()
+        const verifiedEmails = (clerkUser?.emailAddresses ?? [])
+            .filter(e => e.verification?.status === 'verified')
+            .map(e => e.emailAddress)
+        const emailMatches = Array.from(new Set([dbUser.email, ...verifiedEmails]))
+            .filter(Boolean)
+            .map(email => ({ email: { equals: email, mode: 'insensitive' as const } }))
+
         // Include ALL signer roles: SIGNER (received as Party B) and
         // SENDER (received sign-back from Party B, waiting for Party A to countersign)
         const signers = await prisma.signer.findMany({
             where: {
                 OR: [
                     { userId: dbUser.id },
-                    { email: dbUser.email }
+                    ...emailMatches,
                 ],
             },
             include: {

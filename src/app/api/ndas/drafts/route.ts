@@ -60,7 +60,7 @@ export async function POST(req: Request) {
           memberships: {
             create: {
               userId: dbUser.id,
-              role: 'OWNER'
+              role: 'ADMINISTRATOR'
             }
           }
         }

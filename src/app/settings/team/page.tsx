@@ -5,7 +5,7 @@ import InviteMemberForm from '@/app/team/InviteMemberForm'
 import CreateOrganizationForm from '@/app/team/CreateOrganizationForm'
 import MemberRoleDropdown from '@/app/team/MemberRoleDropdown'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { updateMemberApprover } from '@/actions/team'
+import { updateMemberSigner } from '@/actions/team'
 import RemoveMemberButton from '@/app/team/RemoveMemberButton'
 import LeaveTeamButton from '@/app/team/LeaveTeamButton'
 import InviteActions from '@/app/team/InviteActions'
@@ -93,7 +93,7 @@ export default async function TeamSettingsPage() {
     const isOwner = isOrganizationOwner(membership.role)
 
     const signerCount = members.filter(
-        m => m.role === 'SIGNER' || (m.role === 'OWNER' && m.isApprover)
+        m => m.role === 'SIGNER' || (m.role === 'ADMINISTRATOR' && m.isSigner)
     ).length
 
     return (
@@ -134,7 +134,7 @@ export default async function TeamSettingsPage() {
                     <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
                         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Role Guide</p>
                         <ul className="space-y-2">
-                            {(['OWNER', 'SIGNER', 'CONTRIBUTOR'] as const).map(r => (
+                            {(['ADMINISTRATOR', 'SIGNER', 'CONTRIBUTOR'] as const).map(r => (
                                 <li key={r} className="flex items-start gap-3">
                                     <span className={`mt-0.5 shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${getOrganizationRoleBadgeClass(r)}`}>
                                         {ROLE_DESCRIPTIONS[r].label}
@@ -149,8 +149,8 @@ export default async function TeamSettingsPage() {
                 {/* Member list */}
                 <ul role="list" className="divide-y divide-gray-100 mt-4">
                     {members.map((member) => {
-                        const memberForGuard = { role: member.role, isApprover: member.isApprover }
-                        const isThisOwner = member.role === 'OWNER'
+                        const memberForGuard = { role: member.role, isSigner: member.isSigner }
+                        const isThisOwner = member.role === 'ADMINISTRATOR'
                         const canSign = canSignNDA(memberForGuard)
                         const isPending = member.status === 'PENDING_INVITE'
 
@@ -200,10 +200,10 @@ export default async function TeamSettingsPage() {
                                         {isOwner && isThisOwner && (
                                             <MemberRoleDropdown
                                                 membershipId={member.id}
-                                                currentRole={member.isApprover ? 'true' : 'false'}
+                                                currentRole={member.isSigner ? 'true' : 'false'}
                                                 options={SIGNER_TOGGLE_OPTIONS}
-                                                serverAction={updateMemberApprover}
-                                                fieldName="isApprover"
+                                                serverAction={updateMemberSigner}
+                                                fieldName="isSigner"
                                             />
                                         )}
 
