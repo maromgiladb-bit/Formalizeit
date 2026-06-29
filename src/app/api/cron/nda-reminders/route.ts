@@ -19,7 +19,9 @@ export const runtime = 'nodejs'
 export async function GET(req: Request) {
     const authHeader = req.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // Fail closed: a missing CRON_SECRET must block everyone (this endpoint emails
+    // counterparties), not disable the only auth. Vercel cron sends Authorization: Bearer <secret>.
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

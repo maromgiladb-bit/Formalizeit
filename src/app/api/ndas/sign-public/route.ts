@@ -203,20 +203,15 @@ export async function POST(request: NextRequest) {
             console.error('Failed to link signer to user:', linkError);
         }
 
-        // SHA-256 fingerprint of the final signed PDF, set when the document is fully executed.
+        // Final signed PDF (when fully executed): generate once, fingerprint it for
+        // tamper-evidence, and reuse the same bytes for S3 storage and the email
+        // attachment — so the recorded agreementHash always matches the persisted PDF.
+        // Kept OUT of the email try/catch so an email failure can never drop the hash.
         let agreementHash: string | null = null;
+        let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
 
-        // Send Email Notifications
-        try {
-            const appUrl = getAppUrl();
-            const { timeToSignEmailHtml, congratulationsEmailHtml } = await import('@/lib/email');
-
-            if (newWorkflowState === 'COMPLETE') {
-                // Both signed - Generate PDF with both signatures and send to both parties
+        if (newWorkflowState === 'COMPLETE') {
                 console.log('📄 Both parties signed - generating final PDF with signatures...');
-
-                // Generate final PDF with both signatures
-                let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
                 try {
                     const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
                     const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
@@ -245,7 +240,7 @@ export async function POST(request: NextRequest) {
                     const html = await renderNdaHtml(templateData, (formData.templateId as string) || 'professional_mutual_nda_v1');
                     const pdfBuffer = await renderHtmlToPdf(html, {
                         pageWidthPx: 900,
-                        baseUrl: appUrl,
+                        baseUrl: getAppUrl(),
                         isA4: true,
                     });
 
@@ -274,11 +269,19 @@ export async function POST(request: NextRequest) {
                         // Continue - S3 storage failure shouldn't block completion
                     }
                 } catch (pdfError) {
-                    console.error('❌ Failed to generate PDF:', pdfError);
-                    // Continue without attachment - still send email with download link
+                    console.error('❌ Failed to generate final signed PDF:', pdfError);
                 }
+        }
 
-                const pdfDownloadLink = `${appUrl}/api/ndas/viewpdf?draftId=${draft.id}`;
+        // Send Email Notifications
+        try {
+            const appUrl = getAppUrl();
+            const { timeToSignEmailHtml, congratulationsEmailHtml } = await import('@/lib/email');
+
+            if (newWorkflowState === 'COMPLETE') {
+                // PDF link uses the signer-id bearer token so counterparties (often not
+                // logged in / not yet a member) can open it; viewpdf authorizes by signer id.
+                const pdfDownloadLink = `${appUrl}/api/ndas/viewpdf?signerId=${signer.id}`;
 
                 // Email Current Signer
                 await sendEmail({

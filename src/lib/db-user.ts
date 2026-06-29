@@ -173,7 +173,15 @@ export async function ensureDbUser(clerkUserId: string) {
  * signup email differs from the address the NDA was sent to.
  */
 async function claimSignerByCookie(userId: string): Promise<void> {
-  const cookieStore = await cookies()
+  // cookies() throws outside a request scope (e.g. Stripe webhooks, scripts). Since
+  // ensureDbUser now runs this on every auth, treat an unavailable cookie store as
+  // "nothing to claim" rather than letting it break user resolution.
+  let cookieStore: Awaited<ReturnType<typeof cookies>>
+  try {
+    cookieStore = await cookies()
+  } catch {
+    return
+  }
   const signerId = cookieStore.get('pending-claim-signer')?.value
   if (!signerId) return
   try {

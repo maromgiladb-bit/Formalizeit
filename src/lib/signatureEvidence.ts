@@ -21,15 +21,31 @@ import { getTemplateById } from './templateManager';
 export const AUTHORITY_CONSENT_TEXT =
 	'I confirm that I am authorized to sign this agreement on behalf of, and in the name of, the company I represent, and that doing so legally binds that company.';
 
-/** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */
+/**
+ * Trusted client IP for signing evidence. Prefer platform-set headers (x-real-ip /
+ * x-vercel-forwarded-for) which the edge overwrites with the real peer IP and the
+ * client cannot forge. The leftmost x-forwarded-for entry is client-controllable, so
+ * it is only a last-resort fallback (and even then we take the RIGHTMOST hop, which the
+ * trusted proxy appended, not the leftmost the client supplied).
+ */
 export function getClientIp(request: Request): string | null {
+	const realIp = request.headers.get('x-real-ip')?.trim();
+	if (realIp) return realIp;
+
+	const vercelForwarded = request.headers.get('x-vercel-forwarded-for')?.trim();
+	if (vercelForwarded) {
+		const parts = vercelForwarded.split(',').map((p) => p.trim()).filter(Boolean);
+		if (parts.length) return parts[parts.length - 1];
+	}
+
 	const forwarded = request.headers.get('x-forwarded-for');
 	if (forwarded) {
-		const first = forwarded.split(',')[0]?.trim();
-		if (first) return first;
+		// Take the rightmost entry — appended by the trusted proxy — not the spoofable left.
+		const parts = forwarded.split(',').map((p) => p.trim()).filter(Boolean);
+		if (parts.length) return parts[parts.length - 1];
 	}
-	const realIp = request.headers.get('x-real-ip');
-	return realIp?.trim() || null;
+
+	return null;
 }
 
 /** SHA-256 fingerprint (hex) of the rendered PDF bytes. */

@@ -137,61 +137,61 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // SHA-256 fingerprint of the final signed PDF, set when the document is fully executed.
+        // Final signed PDF (when fully executed): generate once, fingerprint it for
+        // tamper-evidence, and reuse the same bytes for S3 storage and the email
+        // attachment — so the recorded agreementHash always matches the persisted PDF.
+        // Kept OUT of the email try/catch so an email failure can never drop the hash.
         let agreementHash: string | null = null;
+        let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
+
+        if (newWorkflowState === 'COMPLETE') {
+            try {
+                const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
+                const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
+
+                console.log('📄 Generating final PDF with both signatures...');
+
+                const html = await renderNdaHtml(updatedContent, draft.templateId || 'professional_mutual_nda_v1');
+                const pdfBuffer = await renderHtmlToPdf(html, {
+                    pageWidthPx: 900,
+                    baseUrl: getAppUrl(),
+                    isA4: true,
+                });
+
+                agreementHash = sha256Hex(pdfBuffer);
+
+                pdfAttachment = [{
+                    filename: `${draft.title || 'NDA'}_Signed.pdf`,
+                    content: pdfBuffer.toString('base64'),
+                    contentType: 'application/pdf'
+                }];
+
+                console.log('✅ Final PDF generated with both signatures');
+
+                // Store the SAME bytes to S3 (failure here must not drop the hash or block completion)
+                if (signRequest) {
+                    try {
+                        const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                        await storeNdaPdf({
+                            signRequestId: signRequest.id,
+                            kind: 'SIGNED',
+                            pdfBuffer: pdfBuffer,
+                        });
+                        console.log('✅ SIGNED PDF stored in S3');
+                    } catch (s3Error) {
+                        console.error('❌ Failed to store PDF to S3:', s3Error);
+                    }
+                }
+            } catch (pdfError) {
+                console.error('❌ Failed to generate final signed PDF:', pdfError);
+            }
+        }
 
         // Send Email Notifications
         try {
             const appUrl = getAppUrl();
 
             if (newWorkflowState === 'COMPLETE') {
-                // Both signed - Generate final PDF with both signatures
-                let pdfAttachment: { filename: string; content: string; contentType: string }[] | undefined;
-
-                try {
-                    const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
-                    const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
-
-                    console.log('📄 Generating final PDF with both signatures...');
-
-                    const html = await renderNdaHtml(updatedContent, draft.templateId || 'professional_mutual_nda_v1');
-                    const pdfBuffer = await renderHtmlToPdf(html, {
-                        pageWidthPx: 900,
-                        baseUrl: appUrl,
-                        isA4: true,
-                    });
-
-                    agreementHash = sha256Hex(pdfBuffer);
-
-                    const pdfBase64 = pdfBuffer.toString('base64');
-                    pdfAttachment = [{
-                        filename: `${draft.title || 'NDA'}_Signed.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf'
-                    }];
-
-                    console.log('✅ Final PDF generated with both signatures');
-
-                    // Store SIGNED PDF to S3
-                    if (signRequest) {
-                        try {
-                            const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
-                            await storeNdaPdf({
-                                signRequestId: signRequest.id,
-                                kind: 'SIGNED',
-                                pdfBuffer: pdfBuffer,
-                            });
-                            console.log('✅ SIGNED PDF stored in S3');
-                        } catch (s3Error) {
-                            console.error('❌ Failed to store PDF to S3:', s3Error);
-                            // Continue - S3 storage failure shouldn't block completion
-                        }
-                    }
-                } catch (pdfError) {
-                    console.error('❌ Failed to generate PDF:', pdfError);
-                    // Continue without attachment
-                }
-
                 // Send Congratulations to BOTH parties
                 const dashboardLink = `${appUrl}/dashboard`;
 

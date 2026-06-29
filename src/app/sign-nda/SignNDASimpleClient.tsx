@@ -704,7 +704,7 @@ export default function SignNDASimpleClient() {
                   type="checkbox"
                   checked={authorityConfirmed}
                   onChange={(e) => setAuthorityConfirmed(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 text-[var(--teal-600)] focus:ring-[var(--teal-600)] cursor-pointer"
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
                   data-testid="authority-checkbox"
                 />
                 <span className="text-[10px] text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
