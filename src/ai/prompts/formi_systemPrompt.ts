@@ -48,24 +48,34 @@ const PRODUCT_KNOWLEDGE = `# About FormalizeIt
 FormalizeIt helps teams create, review, and send NDAs in minutes using reusable templates. Documents belong to a Company; teammates collaborate by role. The recipient needs no account — they get a secure link.
 
 # Where things are
-- Dashboard / "My NDAs": your drafts and sent NDAs with their status; continue, manage, or track them here.
-- New NDA / Fill NDA: create an NDA from a template — fill the parties, term, confidentiality period, and clauses, then send a secure link.
-- Settings → Team: invite members by email and assign roles.
-- Settings → Billing and the Plans page: manage the company plan.
+- Dashboard / "My NDAs": your drafts and sent NDAs with their status; continue, manage, or track them here. If a signing link has expired, the sender sees a "Resend NDA" button here to issue a fresh link.
+- New NDA / Fill NDA: create an NDA from a template — fill the parties, term, confidentiality period, and clauses, then send. FormalizeIt emails the recipient a secure link automatically, and you can also share the same link yourself (Gmail, Outlook, copy link, etc.).
+- Settings → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
+- Settings → Subscription and the Plans page: manage the company plan.
+- NDA Changelog page: a plain-language history of changes to the standard NDA.
 
 # Roles
 - Administrator: company settings, billing, and members; can do everything a Signer can, and can sign on behalf of the company when the "also a signer" toggle is on.
 - Signer: create, edit, and send NDAs; review and accept/reject suggestions; and sign on behalf of the company.
-- Contributor: create and edit drafts, comment, suggest changes, and send NDAs for review/input/signature — everything except signing on behalf of the company.
+- Contributor: create and edit drafts, comment, suggest changes, and send NDAs for review/input/signature — everything except signing on behalf of the company. When a Contributor can't sign, the dashboard shows an "Ask a teammate to sign" button that notifies the company's signers (by app notification and email) to apply the signature.
+
+When the recipient replies to or returns an NDA, updates go back to the person who actually sent it (email replies reach the sender directly), not just an admin.
 
 # Document status flow
 draft → sent → signed. There is no internal approval step.
 
+# Managing NDAs on the dashboard
+There is no "cancel". An in-progress NDA simply runs until its signing link lapses (2 weeks of inactivity). Once a link has expired, the sender can either resend a fresh link or delete the NDA from the dashboard — deleting removes it permanently, including its audit trail. Finalized (signed) NDAs are always kept: they can't be deleted, but they can be archived into an "Archived" list on the dashboard and unarchived back at any time. Drafts (never sent) can be deleted at any time.
+
 # Signing & evidence
-Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required.
+Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required. Signing links expire after 2 weeks of inactivity — any activity (opening the link, filling it in, requesting or approving changes, sending or signing) resets the clock, so a link stays open as long as someone's acting on it. There's no "cancel" — the sender just resends to issue a fresh link.
+
+# Standard NDA updates
+The standard NDA's legal text isn't user-editable. When it's updated to a new version, users see a popup on their next sign-in summarizing what changed, and confirm they've reviewed it. Already-signed NDAs are unaffected (each keeps a snapshot of the version it was signed under).
 
 # Plans (company-level billing, one plan per company)
-${planFacts()}`;
+${planFacts()}
+Administrators can cancel or downgrade from Settings → Subscription. Cancelling keeps access until the end of the paid period, then the plan drops to Free — your NDAs stay saved per the retention policy, and you can resubscribe anytime to regain full access.`;
 
 export function buildFormiSystemPrompt(
 	nda: NdaContext | null,
