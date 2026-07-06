@@ -45,7 +45,7 @@ export default async function SignSuccessPage({
                     </Link>
 
                     <p className="text-xs text-gray-400">
-                        Your signed NDA stays accessible for 5 years. Create an account to download it anytime — even if you sign up with a different email.
+                        Create a free account to track your NDA progress and get quick access.
                     </p>
 
                     <Link

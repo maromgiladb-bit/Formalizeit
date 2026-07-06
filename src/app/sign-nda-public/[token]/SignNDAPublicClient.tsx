@@ -286,6 +286,13 @@ export default function SignNDAPublicClient({
             const result = await response.json();
 
             if (!response.ok) {
+                // Company-side signing requires an authenticated signer — send them to
+                // sign in and return here to complete signing.
+                if (response.status === 401 && result.code === 'AUTH_REQUIRED') {
+                    const returnUrl = encodeURIComponent(window.location.pathname);
+                    router.push(`/sign-in?redirect_url=${returnUrl}`);
+                    return;
+                }
                 throw new Error(result.error || 'Failed to submit signature');
             }
 

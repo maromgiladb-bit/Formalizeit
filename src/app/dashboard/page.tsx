@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import DashboardClient from '@/components/dashboard/DashboardClient';
 import { getActiveOrganization } from '@/lib/db-organization';
+import { getChangelogSince, getCurrentStandardNdaVersion } from '@/lib/ndaChangelog';
+import { isDraftExpired } from '@/lib/signLink';
 
 export default async function DashboardPage({
   searchParams,
@@ -17,7 +19,7 @@ export default async function DashboardPage({
     redirect('/');
   }
 
-  let user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { externalId: userId },
     include: {
       signers: {
@@ -74,6 +76,11 @@ export default async function DashboardPage({
     where: { organizationId: membership.organizationId },
     include: {
       signRequests: {
+        // Only the latest send-out drives the dashboard row (expired flag,
+        // Party A sign token, sent PDF); match the DELETE guard's ordering so
+        // the two never disagree.
+        orderBy: { createdAt: 'desc' },
+        take: 1,
         include: {
           ndaPdfs: true,
           signers: true,
@@ -93,6 +100,9 @@ export default async function DashboardPage({
     // Find Party A signer (SENDER role) for sign link
     const partyASigner = latestSignRequest?.signers?.find((s: { role: string }) => s.role === 'SENDER');
 
+    // A sent NDA whose signing link has lapsed — the sender can resend or delete it.
+    const expired = isDraftExpired(latestSignRequest?.signers);
+
     return {
       id: draft.id,
       partyName: draft.title || 'Untitled NDA',
@@ -106,6 +116,8 @@ export default async function DashboardPage({
       type: 'created' as const,
       pdfId: sentPdf?.id || null,
       partyASignerId: (partyASigner as { id: string } | undefined)?.id || null,
+      expired,
+      archivedAt: draft.archivedAt ?? null,
     };
   });
 
@@ -158,5 +170,30 @@ export default async function DashboardPage({
   });
   const hasCompanyProfile = !!(companyProfile?.companyName);
 
-  return <DashboardClient ndas={allNdas} checkoutSuccess={checkoutSuccess} hasCompanyProfile={hasCompanyProfile} />;
+  // Surface any pending team invites so they aren't missed after sign-in.
+  const pendingInviteRows = await prisma.membership.findMany({
+    where: { userId: user.id, status: 'PENDING_INVITE' },
+    include: { organization: { select: { name: true } } },
+    orderBy: { createdAt: 'asc' },
+  });
+  const pendingInvites = pendingInviteRows.map((m) => ({
+    membershipId: m.id,
+    organizationName: m.organization?.name || 'a company',
+    role: m.role as string,
+  }));
+
+  // Standard NDA review popup: show when the current standard-NDA version is
+  // newer than what this user last acknowledged.
+  const currentNdaVersion = getCurrentStandardNdaVersion();
+  const ndaChanges = getChangelogSince(user.acknowledgedNdaVersion);
+
+  return (
+    <DashboardClient
+      ndas={allNdas}
+      checkoutSuccess={checkoutSuccess}
+      hasCompanyProfile={hasCompanyProfile}
+      pendingInvites={pendingInvites}
+      ndaUpdate={ndaChanges.length > 0 ? { version: currentNdaVersion, entries: ndaChanges } : undefined}
+    />
+  );
 }

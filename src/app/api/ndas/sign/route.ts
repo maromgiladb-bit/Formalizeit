@@ -6,6 +6,7 @@ import { createNotificationsForAllOrgMembers, createNotification } from '@/lib/n
 import { getActiveOrganization } from '@/lib/db-organization';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+import { refreshSignLinkExpiryForDraft } from '@/lib/signLink';
 
 export const runtime = 'nodejs'; // Required for Puppeteer (final PDF generation)
 
@@ -113,7 +114,15 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Activity: if Party A signed first, keep Party B's link alive (reset inactivity clock).
+        if (newWorkflowState !== 'COMPLETE') {
+            try { await refreshSignLinkExpiryForDraft(draftId) } catch (e) { console.error('refresh expiry failed:', e) }
+        }
+
         if (signRequest) {
+            // Stamp the AUTHENTICATED signer's identity onto the record so the person
+            // who actually signs is the recorded signatory — never trust a client-supplied
+            // signerEmail for identity. (signerName is display text for the signature only.)
             const partyASigner = signRequest.signers.find(s => s.role === 'SENDER');
             if (partyASigner) {
                 await prisma.signer.update({
@@ -121,6 +130,8 @@ export async function POST(request: NextRequest) {
                     data: {
                         status: 'SIGNED',
                         name: signerName,
+                        email: user.email,
+                        userId: user.id,
                     },
                 });
             } else {
@@ -128,10 +139,11 @@ export async function POST(request: NextRequest) {
                 await prisma.signer.create({
                     data: {
                         signRequestId: signRequest.id,
-                        email: signerEmail || user.email,
+                        email: user.email,
                         name: signerName,
                         role: 'SENDER',
                         status: 'SIGNED',
+                        userId: user.id,
                     },
                 });
             }
@@ -249,7 +261,8 @@ export async function POST(request: NextRequest) {
                 eventType: 'SIGNED',
                 ipAddress: clientIp,
                 metadata: {
-                    signer_email: signerEmail || user.email,
+                    // Authoritative signer identity is the authenticated user, not client input.
+                    signer_email: user.email,
                     signer_name: signerName,
                     action: 'internal_signature_submitted',
                     party: 'party_a',

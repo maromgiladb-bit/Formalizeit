@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, partyARequestChangesEmailHtml } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSignNDA } from '@/lib/organizationRoles'
+import { refreshSignLinkExpiryForDraft } from '@/lib/signLink'
 
 /**
  * Request changes from Party B
@@ -78,6 +79,9 @@ export async function POST(request: NextRequest) {
                 lastEditedBy: 'party_a' // Party A is requesting changes
             }
         })
+
+        // Activity: keep the signing links alive (reset the 2-week inactivity clock).
+        try { await refreshSignLinkExpiryForDraft(draftId) } catch (e) { console.error('refresh expiry failed:', e) }
 
         // Create audit event
         await prisma.auditEvent.create({

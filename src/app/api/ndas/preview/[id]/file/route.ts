@@ -7,9 +7,10 @@ import { getActiveOrganization } from '@/lib/db-organization'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -31,7 +32,7 @@ export async function GET(
 
     const draft = await prisma.ndaDraft.findFirst({
       where: {
-        id: params.id,
+        id,
         organizationId: activeMembership.organizationId
       }
     })
@@ -42,7 +43,7 @@ export async function GET(
 
     // Read PDF file from tmp folder
     const tmpDir = path.join(process.cwd(), 'tmp')
-    const filename = `nda-preview-${params.id}.pdf`
+    const filename = `nda-preview-${id}.pdf`
     const filepath = path.join(tmpDir, filename)
 
     if (!fs.existsSync(filepath)) {

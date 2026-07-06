@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Clock, Info } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
+import { refreshSignLinkExpiryForRequest } from '@/lib/signLink';
 import FillNDAPublicClient from './FillNDAPublicClient';
 
 type FieldState = "readonly" | "editable" | "pending_suggestion";
@@ -78,6 +79,9 @@ export default async function FillNDAPublicPage({
     if (signer.status === 'SIGNED') {
         redirect(`/sign-nda-public/${signer.id}/success`);
     }
+
+    // Activity: opening a valid link counts as progress — reset the inactivity clock.
+    try { await refreshSignLinkExpiryForRequest(signer.signRequestId); } catch (e) { console.error('refresh expiry failed:', e); }
 
     const draft = signer.signRequest.draft;
 

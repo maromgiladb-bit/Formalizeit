@@ -15,6 +15,25 @@ This file tracks all changes made to NDA templates.
 - Bug fixes or corrections
 ```
 
+> **Note:** The plain-language changelog shown to users lives in
+> `src/lib/ndaChangelog.ts` (`NDA_CHANGELOG`) and powers both the public
+> `/nda-changelog` page and the in-app "review the updated NDA" popup. Keep that
+> file, `templates/template-config.json` (the shipped version), and this file in
+> sync whenever the standard NDA changes.
+
+---
+
+## [professional_mutual_nda_v1] Version 1.0 - 2025-11-10
+
+The current shipped standard NDA (see `templates/template-config.json`).
+
+### Added
+- Mutual confidentiality obligations for both parties
+- Definition of and exclusions from confidential information
+- Term, return-of-materials, and post-termination survival clauses
+- Governing law, notices, and dual signature blocks
+- Professional design: bold underlined headings, numbered section badges, modern typography
+
 ---
 
 ## [mutual-nda-v1] Version 1.0 - 2025-10-25

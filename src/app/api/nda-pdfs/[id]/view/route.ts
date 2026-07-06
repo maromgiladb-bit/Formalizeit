@@ -63,8 +63,9 @@ export async function GET(
             );
         }
 
-        // Generate signed URL (expires in 5 minutes)
-        const signedUrl = await getSignedS3Url(ndaPdf.s3Key, 300);
+        // Generate signed URL (expires in 5 minutes). Force inline so the PDF
+        // renders in the new tab instead of downloading.
+        const signedUrl = await getSignedS3Url(ndaPdf.s3Key, 300, { inline: true });
 
         // Redirect to the signed URL
         return NextResponse.redirect(signedUrl);

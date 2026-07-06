@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts, canSignNDA, isOrganizationOwner } from '@/lib/organizationRoles'
+import { isDraftExpired } from '@/lib/signLink'
+import { canHardDeleteNda } from '@/lib/ndaLifecycle'
 
 export async function GET(
   request: NextRequest,
@@ -153,7 +155,14 @@ export async function DELETE(
       where: {
         id,
         organizationId: activeMembership.organizationId
-      }
+      },
+      include: {
+        signRequests: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { signers: true },
+        },
+      },
     })
 
     if (!existingDraft) {
@@ -169,11 +178,27 @@ export async function DELETE(
       return NextResponse.json({ error: 'You do not have permission to delete this draft' }, { status: 403 })
     }
 
-    await prisma.ndaDraft.delete({
-      where: {
-        id
-      }
-    })
+    const expired = isDraftExpired(existingDraft.signRequests[0]?.signers)
+    if (!canHardDeleteNda({
+      status: existingDraft.status,
+      workflowState: existingDraft.workflowState,
+      expired,
+    })) {
+      return NextResponse.json(
+        { error: 'Only draft, expired, or cancelled NDAs can be deleted. Finalized NDAs are kept.' },
+        { status: 409 },
+      )
+    }
+
+    await prisma.$transaction([
+      // Remove the draft's audit trail rather than orphan it (AuditEvent.draftId defaults to SetNull).
+      prisma.auditEvent.deleteMany({ where: { draftId: id } }),
+      // SignRequest.draftId has no onDelete (defaults to Restrict), so it must be removed
+      // explicitly before the draft — this cascades Signer + NdaPdf rows.
+      prisma.signRequest.deleteMany({ where: { draftId: id } }),
+      // Cascades NdaRevision; nulls Notification.draftId.
+      prisma.ndaDraft.delete({ where: { id } }),
+    ])
 
     return NextResponse.json({ success: true })
   } catch (error) {

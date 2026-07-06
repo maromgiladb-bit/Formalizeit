@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { stripe, planFromPriceId } from '@/lib/stripe'
+import { sendEmail, subscriptionCancelledEmailHtml, getAppUrl } from '@/lib/email'
+import {
+  SUBSCRIPTION_STATUS_MAP,
+  getCurrentPeriodEnd,
+  subscriptionToOrgData,
+  type DbBillingStatus,
+} from '@/billing/reconcileSubscription'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,26 +59,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
-type DbBillingStatus = 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
-
-// As of the 2026-04-22.dahlia API, current_period_end is no longer on the
-// Subscription object — it lives on each subscription item. For our single-item
-// plans the first item's value is the subscription's period end.
-function getCurrentPeriodEnd(subscription: Stripe.Subscription): number | null {
-  return subscription.items.data[0]?.current_period_end ?? null
-}
-
-const SUBSCRIPTION_STATUS_MAP: Record<string, DbBillingStatus> = {
-  active: 'ACTIVE',
-  trialing: 'TRIALING',
-  past_due: 'PAST_DUE',
-  canceled: 'CANCELLED',
-  unpaid: 'PAST_DUE',
-  incomplete: 'PAST_DUE',
-  incomplete_expired: 'CANCELLED',
-  paused: 'PAST_DUE',
-}
-
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const organizationId = session.metadata?.organizationId
   if (!organizationId) {
@@ -105,6 +92,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripeSubscriptionId: subscription.id,
       stripePriceId: priceId,
       stripeCurrentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
     },
   })
 }
@@ -121,25 +109,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return
   }
 
-  const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
-
-  // Keep PRO access while Stripe is retrying (past_due, unpaid, incomplete, paused).
-  // Downgrade to FREE only when the subscription reaches a terminal state (canceled/incomplete_expired),
-  // which is handled here or via handleSubscriptionDeleted.
-  const gracePlanStatuses = new Set(['active', 'trialing', 'past_due', 'unpaid', 'incomplete', 'paused'])
-  const isActivePlan = gracePlanStatuses.has(subscription.status)
-  const periodEnd = getCurrentPeriodEnd(subscription)
-  const priceId = subscription.items.data[0]?.price.id ?? null
-
+  // Shared with the on-load reconcile route so cancel/resume/plan changes map
+  // to the same columns whether they arrive via webhook or on-demand sync.
   await prisma.organization.update({
     where: { id: organization.id },
-    data: {
-      billingPlan: isActivePlan ? (planFromPriceId(priceId) ?? 'PRO') : 'FREE',
-      billingStatus,
-      stripePriceId: isActivePlan ? priceId : null,
-      stripeCurrentPeriodEnd: isActivePlan && periodEnd ? new Date(periodEnd * 1000) : null,
-      stripeSubscriptionId: isActivePlan ? undefined : null,
-    },
+    data: subscriptionToOrgData(subscription),
   })
 }
 
@@ -164,9 +138,27 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       stripeSubscriptionId: null,
       stripePriceId: null,
       stripeCurrentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
       // stripeCustomerId is kept — reused if user re-subscribes
     },
   })
+
+  // "Sad to see you go" — best-effort email to the administrator on final cancellation.
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: organization.ownerUserId },
+      select: { email: true },
+    })
+    if (owner?.email) {
+      await sendEmail({
+        to: owner.email,
+        subject: 'Your Formalize It subscription has ended',
+        html: subscriptionCancelledEmailHtml(organization.name, `${getAppUrl()}/settings/billing`),
+      })
+    }
+  } catch (emailError) {
+    console.error('Failed to send subscription-cancelled email:', emailError)
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

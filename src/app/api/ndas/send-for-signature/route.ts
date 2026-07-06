@@ -6,6 +6,7 @@ import { getActiveOrganization } from '@/lib/db-organization';
 import { canSendNDA } from '@/lib/organizationRoles';
 import { assertCanSendNda } from '@/organizations/limits';
 import { createNotification } from '@/lib/notifications';
+import { newSignLinkExpiry } from '@/lib/signLink';
 
 export async function POST(request: NextRequest) {
     try {
@@ -104,11 +105,13 @@ export async function POST(request: NextRequest) {
         } else {
             signRequest = await prisma.signRequest.update({
                 where: { id: signRequest.id },
-                data: { status: 'SENT' },
+                // Record who is sending this time so receiver replies/notifications
+                // route back to the actual sender, not the original creator.
+                data: { status: 'SENT', createdByUserId: user.id },
             });
         }
 
-        const linkExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const linkExpiresAt = newSignLinkExpiry();
 
         // Create or update signer record with token
         const existingSigner = await prisma.signer.findFirst({
@@ -189,7 +192,8 @@ export async function POST(request: NextRequest) {
                 html: recipientSignRequestEmailHtml(
                     draft.title || 'Untitled NDA',
                     signLink
-                )
+                ),
+                replyTo: (formData.party_a_email as string) || user.email,
             });
             console.log('✅ Email sent successfully to:', partyBEmail);
         } catch (emailError) {

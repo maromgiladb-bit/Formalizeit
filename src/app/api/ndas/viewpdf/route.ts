@@ -140,8 +140,9 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Generate a presigned URL (valid for 5 minutes)
-        const presignedUrl = await getSignedS3Url(pdf.s3Key, 300)
+        // Generate a presigned URL (valid for 5 minutes). Force inline so the
+        // signed NDA renders in the new tab instead of downloading.
+        const presignedUrl = await getSignedS3Url(pdf.s3Key, 300, { inline: true })
 
         // Redirect to the presigned URL so the browser opens the PDF
         return NextResponse.redirect(presignedUrl)

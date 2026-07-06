@@ -2,10 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, X, Search } from 'lucide-react';
+import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, Search, RotateCw, Archive, ArchiveRestore } from 'lucide-react';
 import Link from 'next/link';
 import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
+import { canSignNDA } from '@/lib/organizationRoles';
+import { canArchiveNda } from '@/lib/ndaLifecycle';
 import ProfilePrompt from './ProfilePrompt';
+import InvitePrompt, { type PendingInvite } from './InvitePrompt';
+import NdaUpdatePrompt from './NdaUpdatePrompt';
+import { NotifySignerModal } from './NotifySignerModal';
+import type { NdaChangelogEntry } from '@/lib/ndaChangelog';
 
 interface NDA {
   id: string;
@@ -24,16 +30,26 @@ interface NDA {
   senderName?: string;
   senderEmail?: string;
   senderOrganizationName?: string;
+  expired?: boolean;
+  archivedAt?: Date | string | null;
 }
 
 interface DashboardClientProps {
   ndas: NDA[];
   checkoutSuccess?: boolean;
   hasCompanyProfile?: boolean;
+  pendingInvites?: PendingInvite[];
+  ndaUpdate?: { version: string; entries: NdaChangelogEntry[] };
 }
 
 function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
   const workflowState = nda.workflowState;
+
+  // A lapsed signing link needs the sender's attention (resend).
+  const isComplete = workflowState === 'COMPLETE' || workflowState === 'SIGNING_COMPLETE' || nda.status === 'signed';
+  if (nda.expired && !isComplete && nda.status !== 'cancelled') {
+    return { label: 'Link expired', tone: 'action' };
+  }
 
   switch (workflowState) {
     case 'AWAITING_INPUT':
@@ -72,12 +88,17 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
   }
 }
 
-export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfile }: DashboardClientProps) {
-  const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action'>('all');
+export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfile, pendingInvites, ndaUpdate }: DashboardClientProps) {
+  const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action' | 'archived'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  // Draft whose "Ask a teammate to sign" picker is open (null = closed).
+  const [notifyModalDraftId, setNotifyModalDraftId] = useState<string | null>(null);
+  // Whether the current user can apply the company signature. null = still loading.
+  const [canSign, setCanSign] = useState<boolean | null>(null);
   const [localNdas, setLocalNdas] = useState(ndas);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -118,8 +139,45 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     };
   }, []);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) return;
+  // Resolve whether this user can sign on behalf of the company, to decide between
+  // "Sign Now" and "Ask a teammate to sign".
+  useEffect(() => {
+    let active = true;
+    fetch('/api/user/role')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (!active) return;
+        setCanSign(data?.role ? canSignNDA({ role: data.role, isSigner: data.isSigner ?? false }) : false);
+      })
+      .catch(() => active && setCanSign(false));
+    return () => { active = false; };
+  }, []);
+
+  // Notify the signers chosen in the picker. Throws on failure so the modal can show an
+  // inline error; sets the success banner on the dashboard when it succeeds.
+  const notifySigners = async (id: string, selectedIds: string[]) => {
+    setMessage(null);
+
+    const res = await fetch('/api/ndas/notify-signer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draftId: id, recipientUserIds: selectedIds }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to notify a signer');
+    }
+
+    setMessage({ type: 'success', text: `We notified ${data.notifiedCount} teammate${data.notifiedCount === 1 ? '' : 's'} who can sign` });
+    setTimeout(() => setMessage(null), 4000);
+  };
+
+  const handleDelete = async (id: string, name: string, hardDelete: boolean) => {
+    const confirmMsg = hardDelete
+      ? `Permanently delete "${name}"?\n\nThis removes the NDA and its audit trail from the database. This cannot be undone.`
+      : `Are you sure you want to delete "${name}"? This action cannot be undone.`;
+    if (!confirm(confirmMsg)) return;
 
     setDeletingId(id);
     setMessage(null);
@@ -146,40 +204,65 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     }
   };
 
-  const handleCancel = async (id: string, name: string) => {
-    if (!confirm(`Cancel "${name}"? The recipient will no longer be able to act on it.`)) return;
-
-    setCancellingId(id);
+  const handleArchive = async (id: string, archived: boolean) => {
+    setArchivingId(id);
     setMessage(null);
 
     try {
-      const res = await fetch(`/api/ndas/${id}/cancel`, { method: 'POST' });
+      const res = await fetch(`/api/ndas/${id}/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived }),
+      });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to cancel NDA');
+        throw new Error(data.error || 'Failed to update archive');
       }
 
-      setLocalNdas(prev => prev.map(nda => (nda.id === id ? { ...nda, status: 'cancelled' } : nda)));
-      setMessage({ type: 'success', text: 'NDA cancelled' });
+      setLocalNdas(prev => prev.map(nda => (nda.id === id ? { ...nda, archivedAt: archived ? new Date().toISOString() : null } : nda)));
+      setMessage({ type: 'success', text: archived ? 'NDA archived' : 'NDA moved back to your list' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error('Cancel error:', error);
+      console.error('Archive error:', error);
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to cancel NDA',
+        text: error instanceof Error ? error.message : 'Failed to update archive',
       });
     } finally {
-      setCancellingId(null);
+      setArchivingId(null);
     }
   };
 
-  const isCancellable = (nda: NDA) =>
-    nda.type === 'created' &&
-    !['draft', 'signed', 'cancelled'].includes(nda.status) &&
-    nda.workflowState !== 'COMPLETE' &&
-    nda.workflowState !== 'SIGNING_COMPLETE' &&
-    (nda.status === 'sent' || nda.status === 'pending' || (nda.workflowState?.startsWith('AWAITING') ?? false));
+  const handleResend = async (id: string) => {
+    setResendingId(id);
+    setMessage(null);
+
+    try {
+      const res = await fetch('/api/ndas/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftId: id }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to resend NDA');
+      }
+
+      setLocalNdas(prev => prev.map(nda => (nda.id === id ? { ...nda, expired: false } : nda)));
+      setMessage({ type: 'success', text: `A fresh signing link was sent to ${data.recipientEmail}` });
+      setTimeout(() => setMessage(null), 4000);
+    } catch (error) {
+      console.error('Resend error:', error);
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to resend NDA',
+      });
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   const filteredNdas = localNdas
     .filter((nda) => {
@@ -190,6 +273,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           : (nda.partyBName || nda.partyBEmail || nda.recipientEmail || '');
         if (!nda.partyName.toLowerCase().includes(q) && !recipient.toLowerCase().includes(q)) return false;
       }
+      const isArchived = nda.archivedAt != null;
+      if (filter === 'archived') return isArchived;
+      if (isArchived) return false; // archived rows are hidden from every other view
       if (filter === 'all') return true;
       const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
         (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
@@ -212,13 +298,15 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     (n.type === 'received' && n.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
   const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
 
+  const active = localNdas.filter((n) => n.archivedAt == null);
   const stats = {
-    total: localNdas.length,
-    draft: localNdas.filter((n) => n.status === 'draft' && n.type === 'created' && !actionRequired(n) && !isSigned(n)).length,
-    sent: localNdas.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending') && !actionRequired(n) && !isSigned(n)).length,
-    received: localNdas.filter((n) => n.type === 'received').length,
-    signed: localNdas.filter((n) => isSigned(n) && !actionRequired(n)).length,
-    action: localNdas.filter((n) => actionRequired(n)).length,
+    total: active.length,
+    draft: active.filter((n) => n.status === 'draft' && n.type === 'created' && !actionRequired(n) && !isSigned(n)).length,
+    sent: active.filter((n) => n.type === 'created' && (n.status === 'sent' || n.status === 'pending') && !actionRequired(n) && !isSigned(n)).length,
+    received: active.filter((n) => n.type === 'received').length,
+    signed: active.filter((n) => isSigned(n) && !actionRequired(n)).length,
+    action: active.filter((n) => actionRequired(n)).length,
+    archived: localNdas.filter((n) => n.archivedAt != null).length,
   };
 
   const statCards: {
@@ -235,6 +323,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     { key: 'received', label: 'Received', count: stats.received, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
     { key: 'action', label: 'Action Required', count: stats.action, iconColor: 'text-amber-600 bg-amber-50', countColor: stats.action > 0 ? 'text-amber-600' : 'text-ink', urgent: true },
     { key: 'signed', label: 'Signed', count: stats.signed, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
+    { key: 'archived', label: 'Archived', count: stats.archived, iconColor: 'text-gray-500 bg-gray-100', countColor: 'text-ink' },
   ];
 
   const statIcons: Record<string, React.ReactNode> = {
@@ -260,6 +349,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
+    archived: <Archive className="w-5 h-5" />,
   };
 
   const getRecipient = (nda: NDA) => {
@@ -287,24 +377,41 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             </button>
           </Link>
           <button
-            onClick={() => handleDelete(nda.id, nda.partyName)}
+            onClick={() => handleDelete(nda.id, nda.partyName, false)}
             disabled={deletingId === nda.id}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            {deletingId === nda.id ? 'Deleting...' : 'Delete'}
+            {deletingId === nda.id ? 'Deleting…' : 'Delete'}
           </button>
         </>
       )}
 
-      {/* AWAITING_PARTY_A_SIGNATURE: Sign Now */}
+      {/* AWAITING_PARTY_A_SIGNATURE: Sign Now (signers only) or ask a teammate (everyone else).
+          "Sign Now" renders only once we've confirmed the user can sign — while the role is
+          still loading (canSign === null) we show the non-signer path, so a contributor never
+          sees a clickable Sign Now during the fetch. */}
       {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
-        <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
-            <Edit className="w-3.5 h-3.5" />
-            Sign Now
-          </button>
-        </Link>
+        canSign === true ? (
+          <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
+              <Edit className="w-3.5 h-3.5" />
+              Sign Now
+            </button>
+          </Link>
+        ) : (
+          <div className="flex flex-col items-start gap-1">
+            <button
+              onClick={() => setNotifyModalDraftId(nda.id)}
+              disabled={canSign === null}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              Ask a teammate to sign
+            </button>
+            <span className="text-xs text-gray-500">Only approved signers can sign this NDA.</span>
+          </div>
+        )
       )}
 
       {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
@@ -369,16 +476,51 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
         return null;
       })()}
 
-      {/* In-flight: Cancel */}
-      {isCancellable(nda) && (
+      {/* Expired link: Resend a fresh 14-day signing link */}
+      {nda.type === 'created' && nda.expired && (
         <button
-          onClick={() => handleCancel(nda.id, nda.partyName)}
-          disabled={cancellingId === nda.id}
+          onClick={() => handleResend(nda.id)}
+          disabled={resendingId === nda.id}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RotateCw className="w-3.5 h-3.5" />
+          {resendingId === nda.id ? 'Resending…' : 'Resend NDA'}
+        </button>
+      )}
+
+      {/* Expired or legacy-cancelled created NDA: hard delete (dashboard + DB) */}
+      {nda.type === 'created' && (nda.expired || nda.status === 'cancelled') && (
+        <button
+          onClick={() => handleDelete(nda.id, nda.partyName, true)}
+          disabled={deletingId === nda.id}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <X className="w-3.5 h-3.5" />
-          {cancellingId === nda.id ? 'Cancelling...' : 'Cancel'}
+          <Trash2 className="w-3.5 h-3.5" />
+          {deletingId === nda.id ? 'Deleting…' : 'Delete'}
         </button>
+      )}
+
+      {/* Finalized created NDA: archive / unarchive */}
+      {nda.type === 'created' && canArchiveNda({ status: nda.status, workflowState: nda.workflowState }) && (
+        nda.archivedAt ? (
+          <button
+            onClick={() => handleArchive(nda.id, false)}
+            disabled={archivingId === nda.id}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArchiveRestore className="w-3.5 h-3.5" />
+            {archivingId === nda.id ? 'Restoring…' : 'Unarchive'}
+          </button>
+        ) : (
+          <button
+            onClick={() => handleArchive(nda.id, true)}
+            disabled={archivingId === nda.id}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Archive className="w-3.5 h-3.5" />
+            {archivingId === nda.id ? 'Archiving…' : 'Archive'}
+          </button>
+        )
       )}
     </>
   );
@@ -422,7 +564,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 py-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 py-6">
           {statCards.map((card) => {
             const isActive = filter === card.key;
             return (
@@ -561,6 +703,21 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           )}
         </div>
       </div>
+
+      {/* Pending team invite popup — takes precedence over other prompts */}
+      {pendingInvites && pendingInvites.length > 0 ? (
+        <InvitePrompt pendingInvites={pendingInvites} />
+      ) : (
+        /* Standard NDA update review popup — only when there's no invite to handle */
+        ndaUpdate && <NdaUpdatePrompt version={ndaUpdate.version} entries={ndaUpdate.entries} />
+      )}
+
+      {/* Signer picker — choose which authorized signer(s) to notify */}
+      <NotifySignerModal
+        isOpen={notifyModalDraftId !== null}
+        onClose={() => setNotifyModalDraftId(null)}
+        onConfirm={(selectedIds) => notifySigners(notifyModalDraftId as string, selectedIds)}
+      />
 
       {/* Profile setup prompt — bottom-right, shown when profile is incomplete */}
       {!hasCompanyProfile && <ProfilePrompt />}

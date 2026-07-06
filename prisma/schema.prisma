@@ -75,6 +75,7 @@ enum SignerStatus {
   VIEWED
   SIGNED
   DECLINED
+  EXPIRED
 
   @@map("signer_status")
 }
@@ -99,6 +100,7 @@ enum NdaEventType {
   CHANGES_REQUESTED  // Party A sent changes back to Party B
   PDF_EXPORTED       // PDF was generated/exported
   RETENTION_DELETED  // Document content/PDFs purged after the retention window (audit stub kept)
+  NDA_VERSION_ACKNOWLEDGED // User confirmed they reviewed an updated standard-NDA version
 
   @@map("nda_event_type")
 }
@@ -138,6 +140,11 @@ model User {
   deletedAt     DateTime? @map("deleted_at")   // Set on Clerk user.deleted webhook
   status        String    @default("active") @map("status") // "active" | "pending_deletion" | "deleted"
 
+  // Standard-NDA version the user has last reviewed & acknowledged. Drives the
+  // "review the updated NDA" popup shown on first sign-in after a version bump.
+  acknowledgedNdaVersion   String?   @map("acknowledged_nda_version")
+  acknowledgedNdaVersionAt DateTime? @map("acknowledged_nda_version_at")
+
   // Relations
   memberships         Membership[]
   ownedOrganizations  Organization[] @relation("OwnedOrganizations")
@@ -162,6 +169,7 @@ model Organization {
   stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
   stripePriceId          String?       @map("stripe_price_id")
   stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end")
+  cancelAtPeriodEnd      Boolean       @default(false) @map("cancel_at_period_end")
   settings               Json?         @default("{}")
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -267,6 +275,7 @@ model NdaDraft {
   reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
+  archivedAt      DateTime? @map("archived_at") // Finalized NDA moved to the dashboard Archived list
 
   // Relations
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)

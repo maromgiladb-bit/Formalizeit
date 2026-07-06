@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, ownerReviewEmailHtml, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml } from '@/lib/email'
 import { createNotificationsForOrgSigners } from '@/lib/notifications'
+import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -161,6 +162,9 @@ export async function POST(request: NextRequest) {
             data: { status: 'VIEWED' }
         })
 
+        // Activity: Party B submitted — keep all open links alive (reset inactivity clock).
+        try { await refreshSignLinkExpiryForRequest(signer.signRequestId) } catch (e) { console.error('refresh expiry failed:', e) }
+
         // Link revision to sign request
         await prisma.signRequest.update({
             where: { id: signer.signRequestId },
@@ -217,7 +221,7 @@ export async function POST(request: NextRequest) {
                         name: owner.name || 'Party A',
                         role: 'SENDER',
                         status: 'PENDING',
-                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                        expiresAt: newSignLinkExpiry(),
                     }
                 })
             }
@@ -251,7 +255,9 @@ export async function POST(request: NextRequest) {
                         1,
                         reviewLink,
                         [] // TODO: generate diff
-                    )
+                    ),
+                    // Party A countered — let Party B reply back to the sender.
+                    replyTo: owner.email,
                 })
             }
         } else if (!isPartyA && !hasSuggestions) {
@@ -277,7 +283,9 @@ export async function POST(request: NextRequest) {
                             (suggestedChanges as Record<string, string>) || {},
                             reviewLink
                         )
-                        : recipientInputSubmittedEmailHtml(draft.title || 'Untitled NDA', signer.name || signer.email, reviewLink)
+                        : recipientInputSubmittedEmailHtml(draft.title || 'Untitled NDA', signer.name || signer.email, reviewLink),
+                    // Route the sender's reply straight back to the receiver who submitted.
+                    replyTo: signer.email,
                 })
                 console.log('✅ Owner notification email sent')
             } catch (emailError) {

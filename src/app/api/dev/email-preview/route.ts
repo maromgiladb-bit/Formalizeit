@@ -14,6 +14,7 @@ import {
     approvalApprovedEmailHtml,
     approvalRejectedEmailHtml,
     inputRequestEmailHtml,
+    subscriptionCancelledEmailHtml,
 } from '@/lib/email';
 
 // Sample data for previews
@@ -277,6 +278,18 @@ export async function POST(request: NextRequest) {
                         sampleData.approverName,
                         'The non-compete clause is too broad. Please narrow the scope to only direct competitors in the SaaS space.',
                         sampleData.draftLink
+                    ),
+                };
+                break;
+
+            case 'subscriptionCancelled':
+                result = {
+                    subject: `Your Formalize It subscription has ended`,
+                    from: `Formalize It <noreply@formalizeit.app>`,
+                    to: `${sampleData.senderName} (Administrator) <admin@example.com>`,
+                    html: subscriptionCancelledEmailHtml(
+                        sampleData.orgName,
+                        'http://localhost:3000/settings/billing'
                     ),
                 };
                 break;

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
 import { sendEmail, getAppUrl } from '@/lib/email';
 import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
+import { canSignNDA } from '@/lib/organizationRoles';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
 import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -59,8 +62,57 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Reject expired links (2-week inactivity lifetime). The sender can resend
+        // to issue a fresh link.
+        if (signer.expiresAt && signer.expiresAt < new Date()) {
+            return NextResponse.json(
+                {
+                    error: 'This NDA link has expired. Please contact the sender to have it resent.',
+                    status: 'EXPIRED',
+                },
+                { status: 410 }
+            );
+        }
+
+        // Activity: signing in progress — keep the counterparty's link alive too.
+        try { await refreshSignLinkExpiryForRequest(signer.signRequestId) } catch (e) { console.error('refresh expiry failed:', e) }
+
         // Check if signer role is Party A (SENDER) or Party B (SIGNER)
         const isPartyA = signer.role === 'SENDER';
+
+        // The COMPANY signature (Party A / SENDER) must be applied by an authenticated
+        // member with signing authority, so the person who actually signs is recorded as
+        // the signatory. The counterparty (Party B / SIGNER) keeps public bearer-token
+        // signing since they are usually not app users.
+        let authSigner: { id: string; email: string } | null = null;
+        if (isPartyA) {
+            const { userId } = await auth();
+            if (!userId) {
+                return NextResponse.json(
+                    { error: 'Please sign in to sign on behalf of your company.', code: 'AUTH_REQUIRED' },
+                    { status: 401 }
+                );
+            }
+            const authUser = await prisma.user.findUnique({ where: { externalId: userId } });
+            if (!authUser) {
+                return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            }
+            const membership = await prisma.membership.findFirst({
+                where: {
+                    userId: authUser.id,
+                    organizationId: signer.signRequest.organizationId,
+                    status: 'ACTIVE',
+                },
+                select: { role: true, isSigner: true },
+            });
+            if (!membership || !canSignNDA(membership)) {
+                return NextResponse.json(
+                    { error: 'Only signers and administrators with signing enabled can sign on behalf of the company.' },
+                    { status: 403 }
+                );
+            }
+            authSigner = { id: authUser.id, email: authUser.email };
+        }
 
         // Extract form data from draft
         const draft = signer.signRequest.draft;
@@ -180,27 +232,33 @@ export async function POST(request: NextRequest) {
             data: { status: newSignRequestStatus },
         });
 
-        // Update current signer status
+        // Update current signer status. For the company side, stamp the AUTHENTICATED
+        // user's identity so the record shows who actually signed (never trust the
+        // pre-existing SENDER record's email).
         await prisma.signer.update({
             where: { id: signerId },
             data: {
                 status: 'SIGNED',
                 name: signerName,
+                ...(authSigner ? { email: authSigner.email, userId: authSigner.id } : {}),
             },
         });
 
-        // Link signer to user account if one exists with this email
-        // This handles the case where a registered user signs via public link
-        let matchedUserId: string | null = null
-        try {
-            const { linked, userId } = await linkSignerToUser(signerId, signer.email);
-            matchedUserId = userId;
-            if (linked && process.env.NODE_ENV === 'development') {
-                console.log('🔗 Linked signer to user account:', userId);
+        // Link signer to user account. Party A's identity is already stamped above from
+        // the authenticated session; for the counterparty, link by email if a matching
+        // account exists (registered user signed via public link).
+        let matchedUserId: string | null = authSigner?.id ?? null
+        if (!authSigner) {
+            try {
+                const { linked, userId } = await linkSignerToUser(signerId, signer.email);
+                matchedUserId = userId;
+                if (linked && process.env.NODE_ENV === 'development') {
+                    console.log('🔗 Linked signer to user account:', userId);
+                }
+            } catch (linkError) {
+                // Non-critical: failure here doesn't break signing
+                console.error('Failed to link signer to user:', linkError);
             }
-        } catch (linkError) {
-            // Non-critical: failure here doesn't break signing
-            console.error('Failed to link signer to user:', linkError);
         }
 
         // Final signed PDF (when fully executed): generate once, fingerprint it for
@@ -326,7 +384,7 @@ export async function POST(request: NextRequest) {
                             name: recipientName || 'Party A',
                             role: 'SENDER',
                             status: 'PENDING',
-                            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                            expiresAt: newSignLinkExpiry(),
                         }
                     });
                     recipientSignerId = newSignerRecord.id;
@@ -445,7 +503,8 @@ export async function POST(request: NextRequest) {
                 eventType: 'SIGNED',
                 ipAddress: clientIp,
                 metadata: {
-                    signer_email: signer.email,
+                    // For the company side, the authenticated user is the authoritative signatory.
+                    signer_email: authSigner?.email ?? signer.email,
                     signer_name: signerName,
                     action: 'public_signature_submitted',
                     party: isPartyA ? 'party_a' : 'party_b',
