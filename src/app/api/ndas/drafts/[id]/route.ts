@@ -190,11 +190,15 @@ export async function DELETE(
       )
     }
 
-    await prisma.ndaDraft.delete({
-      where: {
-        id
-      }
-    })
+    await prisma.$transaction([
+      // Remove the draft's audit trail rather than orphan it (AuditEvent.draftId defaults to SetNull).
+      prisma.auditEvent.deleteMany({ where: { draftId: id } }),
+      // SignRequest.draftId has no onDelete (defaults to Restrict), so it must be removed
+      // explicitly before the draft — this cascades Signer + NdaPdf rows.
+      prisma.signRequest.deleteMany({ where: { draftId: id } }),
+      // Cascades NdaRevision; nulls Notification.draftId.
+      prisma.ndaDraft.delete({ where: { id } }),
+    ])
 
     return NextResponse.json({ success: true })
   } catch (error) {
