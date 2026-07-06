@@ -139,6 +139,8 @@ export default function FillNDAHTML() {
 	const [suggestedEmailSubject, setSuggestedEmailSubject] = useState("");
 	const [suggestedEmailBody, setSuggestedEmailBody] = useState("");
 	const [emailSent, setEmailSent] = useState(false);
+	// True when the server auto-sent the email via Resend (vs. only generating a link).
+	const [autoEmailed, setAutoEmailed] = useState(false);
 	const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
@@ -1196,6 +1198,7 @@ export default function FillNDAHTML() {
 			if (link) setGeneratedShareLink(link);
 			if (result.suggestedSubject) setSuggestedEmailSubject(result.suggestedSubject);
 			if (result.suggestedBody) setSuggestedEmailBody(result.suggestedBody);
+			setAutoEmailed(!!result.emailSent);
 			setEmailSent(true);
 
 		} catch (e) {
@@ -2442,8 +2445,10 @@ export default function FillNDAHTML() {
 								/>
 								<p className="text-xs text-gray-400 mt-2 leading-relaxed">
 									{emailSent
-										? 'Secure link ready — choose Gmail, Outlook, or any option below to send it.'
-										: "Enter the recipient's email, then generate a secure link to share."}
+										? (autoEmailed
+											? `We emailed the NDA to ${verifyRecipientEmail.trim()}. Want to send it another way too? Use any option below.`
+											: 'Secure link ready — choose Gmail, Outlook, or any option below to send it.')
+										: "Enter the recipient's email — we'll email it for you and give you a shareable link."}
 								</p>
 
 								<button
@@ -2461,7 +2466,7 @@ export default function FillNDAHTML() {
 											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 											</svg>
-											Link Ready — Choose How to Send
+											{autoEmailed ? 'Email Sent' : 'Link Ready — Choose How to Send'}
 										</>
 									) : (
 										<>

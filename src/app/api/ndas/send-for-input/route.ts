@@ -6,6 +6,7 @@ import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
 import { assertCanSendNda } from '@/organizations/limits'
+import { newSignLinkExpiry } from '@/lib/signLink'
 
 /**
  * Send NDA for Party B input (not signature)
@@ -101,7 +102,8 @@ export async function POST(request: NextRequest) {
                 email: recipientEmail,
                 name: recipientName || null,
                 role: 'SIGNER',
-                status: 'PENDING'
+                status: 'PENDING',
+                expiresAt: newSignLinkExpiry(),
             }
         })
 
@@ -146,7 +148,8 @@ export async function POST(request: NextRequest) {
                     inputLink,
                     pendingInputFields.length,
                     message || 'Please fill in the requested information to complete this NDA.'
-                )
+                ),
+                replyTo: (content.party_a_email as string) || user.email,
             })
             console.log('✅ Input request email sent')
         } catch (emailError) {

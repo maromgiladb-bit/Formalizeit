@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { getAppUrl } from '@/lib/email'
+import { getAppUrl, sendEmail, recipientEditEmailHtml } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
 import { assertCanSendNda } from '@/organizations/limits'
+import { newSignLinkExpiry } from '@/lib/signLink'
 
 /**
  * Send NDA for Party B review
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json()
         const { draftId, recipientEmail, recipientName, message } = body
-        const linkExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        const linkExpiresAt = newSignLinkExpiry()
 
         if (!draftId || !recipientEmail) {
             return NextResponse.json({ error: 'Missing required fields: draftId, recipientEmail' }, { status: 400 })
@@ -96,10 +97,11 @@ export async function POST(request: NextRequest) {
                 })
             }
 
-            // Update sign request status
+            // Update sign request status and record who is sending this time so
+            // receiver replies/notifications route back to the actual sender.
             await prisma.signRequest.update({
                 where: { id: signRequest.id },
-                data: { status: 'SENT' }
+                data: { status: 'SENT', createdByUserId: user.id }
             })
         } else {
             // Create new SignRequest and Signers for BOTH parties
@@ -194,6 +196,23 @@ export async function POST(request: NextRequest) {
         const messageBlock = message ? `\n\nNote from ${senderName}:\n${message}` : ''
         const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link is valid for 30 days. No account is needed.\n\nBest regards,\n${senderName}`
 
+        // Auto-send the review email via Resend, with reply-to set to the real sender so
+        // the receiver's replies reach them. Don't fail the request if the email errors —
+        // the returned link/suggested body remain as a manual-share fallback.
+        const senderReplyTo = (updatedContent.party_a_email as string) || user.email
+        let emailSent = false
+        try {
+            await sendEmail({
+                to: recipientEmail,
+                subject: suggestedSubject,
+                html: recipientEditEmailHtml(ndaTitle, reviewLink, message, senderName),
+                replyTo: senderReplyTo,
+            })
+            emailSent = true
+        } catch (e) {
+            console.error('Failed to auto-send review email (manual link still available):', e)
+        }
+
         // Notify the draft creator if they are different from the sender
         if (draft.createdByUserId !== user.id) {
             try {
@@ -235,7 +254,10 @@ export async function POST(request: NextRequest) {
             reviewLink,
             suggestedSubject,
             suggestedBody,
-            message: `NDA link generated for ${recipientEmail}`
+            emailSent,
+            message: emailSent
+                ? `NDA emailed to ${recipientEmail}`
+                : `NDA link generated for ${recipientEmail}`
         })
     } catch (error) {
         console.error('Send for review error:', error)
