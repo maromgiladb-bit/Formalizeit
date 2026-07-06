@@ -267,6 +267,7 @@ model NdaDraft {
   reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
+  archivedAt      DateTime? @map("archived_at") // Finalized NDA moved to the dashboard Archived list
 
   // Relations
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
