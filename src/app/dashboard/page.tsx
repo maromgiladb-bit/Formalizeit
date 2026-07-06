@@ -76,6 +76,11 @@ export default async function DashboardPage({
     where: { organizationId: membership.organizationId },
     include: {
       signRequests: {
+        // Only the latest send-out drives the dashboard row (expired flag,
+        // Party A sign token, sent PDF); match the DELETE guard's ordering so
+        // the two never disagree.
+        orderBy: { createdAt: 'desc' },
+        take: 1,
         include: {
           ndaPdfs: true,
           signers: true,
