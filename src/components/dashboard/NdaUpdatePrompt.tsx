@@ -45,7 +45,7 @@ export default function NdaUpdatePrompt({
       <div className="fixed inset-0 bg-black/50 transition-opacity" />
 
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-float max-w-lg w-full p-6">
+        <div role="dialog" aria-modal="true" aria-label="Standard NDA updated" className="relative bg-white rounded-2xl shadow-float max-w-lg w-full p-6">
           {/* Icon */}
           <div className="mb-4 flex justify-center">
             <div className="flex items-center justify-center h-12 w-12 rounded-full bg-black">
@@ -99,7 +99,7 @@ export default function NdaUpdatePrompt({
             <span className="text-sm text-ink">I&apos;ve reviewed the updates to the standard NDA</span>
           </label>
 
-          {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-600 mt-3">{error}</p>}
 
           <div className="mt-5">
             <Button className="w-full" onClick={handleConfirm} disabled={!reviewed || busy}>

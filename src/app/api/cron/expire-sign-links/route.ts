@@ -37,17 +37,15 @@ export async function GET(req: Request) {
     select: { id: true, signRequestId: true },
   })
 
-  let signersExpired = 0
-  const affectedRequestIds = new Set<string>()
-  for (const s of staleSigners) {
-    try {
-      await prisma.signer.update({ where: { id: s.id }, data: { status: 'EXPIRED' } })
-      affectedRequestIds.add(s.signRequestId)
-      signersExpired++
-    } catch (e) {
-      console.error(`[expire-sign-links] failed to expire signer ${s.id}:`, e)
-    }
-  }
+  // Expire every stale signer in one statement, then derive the affected
+  // SignRequests from the rows we already fetched (avoids an N+1 update loop).
+  const affectedRequestIds = new Set(staleSigners.map((s) => s.signRequestId))
+  const { count: signersExpired } = staleSigners.length
+    ? await prisma.signer.updateMany({
+        where: { id: { in: staleSigners.map((s) => s.id) } },
+        data: { status: 'EXPIRED' },
+      })
+    : { count: 0 }
 
   // Mark a SignRequest EXPIRED when all its signers are terminal and none remain open.
   let requestsExpired = 0

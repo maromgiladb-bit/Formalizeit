@@ -382,7 +382,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            {deletingId === nda.id ? 'Deleting...' : 'Delete'}
+            {deletingId === nda.id ? 'Deleting…' : 'Delete'}
           </button>
         </>
       )}
@@ -484,7 +484,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RotateCw className="w-3.5 h-3.5" />
-          {resendingId === nda.id ? 'Resending...' : 'Resend NDA'}
+          {resendingId === nda.id ? 'Resending…' : 'Resend NDA'}
         </button>
       )}
 
@@ -496,7 +496,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Trash2 className="w-3.5 h-3.5" />
-          {deletingId === nda.id ? 'Deleting...' : 'Delete'}
+          {deletingId === nda.id ? 'Deleting…' : 'Delete'}
         </button>
       )}
 
@@ -509,7 +509,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArchiveRestore className="w-3.5 h-3.5" />
-            {archivingId === nda.id ? 'Restoring...' : 'Unarchive'}
+            {archivingId === nda.id ? 'Restoring…' : 'Unarchive'}
           </button>
         ) : (
           <button
@@ -518,7 +518,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Archive className="w-3.5 h-3.5" />
-            {archivingId === nda.id ? 'Archiving...' : 'Archive'}
+            {archivingId === nda.id ? 'Archiving…' : 'Archive'}
           </button>
         )
       )}

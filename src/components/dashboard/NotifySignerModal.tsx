@@ -99,7 +99,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
                 onClick={busy ? undefined : onClose}
                 aria-label="Close"
                 disabled={busy}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -143,7 +143,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
                 </div>
               )}
 
-              {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+              {error && <p role="alert" className="text-sm text-red-600 mb-4">{error}</p>}
 
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={onClose} disabled={busy}>
