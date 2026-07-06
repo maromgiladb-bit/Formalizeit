@@ -2,13 +2,14 @@
 
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   CreditCard, ArrowRight, AlertTriangle,
   Check, Download, ExternalLink, FileText, Zap,
 } from 'lucide-react'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
+import { CancelSubscriptionModal } from '@/components/billing/CancelSubscriptionModal'
 import { Button } from '@/components/ui/button'
 
 interface SubscriptionInfo {
@@ -19,6 +20,7 @@ interface SubscriptionInfo {
   draftLimitPeriod: 'total' | 'quarter'
   billingStatus: 'ACTIVE' | 'TRIALING' | 'PAST_DUE' | 'CANCELLED'
   stripeCurrentPeriodEnd: string | null
+  cancelAtPeriodEnd: boolean
   hasStripeSubscription: boolean
   billingCycle: 'monthly' | 'annual' | null
 }
@@ -96,30 +98,49 @@ export default function BillingSettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [checkoutPlan, setCheckoutPlan] = useState<'PRO' | 'TEAM'>('PRO')
+  const [cancelOpen, setCancelOpen] = useState(false)
+
+  const loadBilling = useCallback(async () => {
+    try {
+      // Reconcile with Stripe first so a missed subscription webhook can't leave
+      // the UI stale (e.g. a cancel/resubscribe that didn't sync). Best-effort.
+      await fetch('/api/billing/sync', { method: 'POST' }).catch(() => {})
+      const [subRes, invRes] = await Promise.all([
+        fetch('/api/user/check-limit'),
+        fetch('/api/billing/invoices'),
+      ])
+      if (subRes.ok) setSubscription(await subRes.json())
+      if (invRes.status === 403 || invRes.status === 401) {
+        setIsOwner(false)
+      } else if (invRes.ok) {
+        const data = await invRes.json()
+        setInvoices(data.invoices ?? [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch billing data:', error)
+    }
+  }, [])
 
   useEffect(() => {
     if (!userId) return
-    async function fetchData() {
-      try {
-        const [subRes, invRes] = await Promise.all([
-          fetch('/api/user/check-limit'),
-          fetch('/api/billing/invoices'),
-        ])
-        if (subRes.ok) setSubscription(await subRes.json())
-        if (invRes.status === 403 || invRes.status === 401) {
-          setIsOwner(false)
-        } else if (invRes.ok) {
-          const data = await invRes.json()
-          setInvoices(data.invoices ?? [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch billing data:', error)
-      } finally {
-        setLoading(false)
-      }
+    setLoading(true)
+    loadBilling().finally(() => setLoading(false))
+  }, [userId, loadBilling])
+
+  // Refresh when the tab regains focus — e.g. after managing the subscription
+  // in the Stripe portal (which now opens in a separate tab).
+  useEffect(() => {
+    if (!userId) return
+    function refreshOnReturn() {
+      if (document.visibilityState === 'visible') loadBilling()
     }
-    fetchData()
-  }, [userId])
+    document.addEventListener('visibilitychange', refreshOnReturn)
+    window.addEventListener('focus', refreshOnReturn)
+    return () => {
+      document.removeEventListener('visibilitychange', refreshOnReturn)
+      window.removeEventListener('focus', refreshOnReturn)
+    }
+  }, [userId, loadBilling])
 
   useEffect(() => {
     if (isLoaded && !userId) router.replace('/sign-in')
@@ -130,19 +151,42 @@ export default function BillingSettingsPage() {
     setCheckoutOpen(true)
   }
 
+  function handleCancelled() {
+    // Optimistically reflect the pending cancellation; webhook confirms it.
+    setSubscription(prev => (prev ? { ...prev, cancelAtPeriodEnd: true } : prev))
+  }
+
   async function handleManageSubscription() {
     setPortalError(null)
     setPortalLoading(true)
+    // Open the tab synchronously so the browser keeps the user-gesture context;
+    // opening after the await would be blocked by popup blockers. Note: passing
+    // "noopener" makes window.open return null, so we open normally and sever
+    // window.opener ourselves once the tab exists.
+    const portalTab = window.open('', '_blank')
+    if (portalTab) portalTab.opener = null
     try {
       const res = await fetch('/api/billing/portal', { method: 'POST' })
       if (!res.ok) {
+        portalTab?.close()
         setPortalError('Failed to open billing portal. Please try again.')
         return
       }
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        if (portalTab) {
+          portalTab.location.href = data.url
+        } else {
+          // Popup was blocked — fall back to same-tab navigation.
+          window.location.href = data.url
+        }
+      } else {
+        portalTab?.close()
+        setPortalError('Failed to open billing portal. Please try again.')
+      }
     } catch (err) {
       console.error('Portal error:', err)
+      portalTab?.close()
       setPortalError('Failed to open billing portal. Please try again.')
     } finally {
       setPortalLoading(false)
@@ -191,6 +235,17 @@ export default function BillingSettingsPage() {
 
   const features = PLAN_FEATURES[subscription.plan] ?? []
 
+  const pendingCancel =
+    subscription.cancelAtPeriodEnd &&
+    subscription.billingStatus !== 'CANCELLED' &&
+    !!subscription.stripeCurrentPeriodEnd
+
+  const periodEndLabel = subscription.stripeCurrentPeriodEnd
+    ? new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      })
+    : null
+
   return (
     <div className="space-y-6">
 
@@ -211,6 +266,31 @@ export default function BillingSettingsPage() {
         </div>
       )}
 
+      {/* Pending cancellation notice */}
+      {subscription.cancelAtPeriodEnd && subscription.billingStatus !== 'CANCELLED' && (
+        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="flex items-center gap-2.5 text-sm text-amber-700 font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              Your plan is set to cancel
+              {subscription.stripeCurrentPeriodEnd
+                ? ` on ${formatDate(Math.floor(new Date(subscription.stripeCurrentPeriodEnd).getTime() / 1000))}`
+                : ' at the end of this period'}
+              . Resubscribe anytime to keep full access.
+            </span>
+          </div>
+          {isOwner && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+              className="text-sm font-semibold text-ink underline underline-offset-2 shrink-0 cursor-pointer"
+            >
+              Manage
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Current Plan */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
 
@@ -228,13 +308,16 @@ export default function BillingSettingsPage() {
                     ? 'bg-red-50 text-red-700'
                     : subscription.billingStatus === 'CANCELLED'
                     ? 'bg-gray-100 text-gray-500'
+                    : pendingCancel
+                    ? 'bg-amber-50 text-amber-700'
                     : subscription.billingStatus === 'TRIALING'
                     ? 'bg-amber-50 text-amber-700'
                     : 'bg-teal-50 text-teal-800'
                 }`}>
-                  {subscription.billingStatus === 'TRIALING' ? 'Trial'
-                    : subscription.billingStatus === 'PAST_DUE' ? 'Past Due'
+                  {subscription.billingStatus === 'PAST_DUE' ? 'Past Due'
                     : subscription.billingStatus === 'CANCELLED' ? 'Cancelled'
+                    : pendingCancel && periodEndLabel ? `Active until ${periodEndLabel}`
+                    : subscription.billingStatus === 'TRIALING' ? 'Trial'
                     : 'Active'}
                 </span>
               </div>
@@ -320,13 +403,31 @@ export default function BillingSettingsPage() {
               <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
                 Upgrade to Team
               </Link>
+              {!subscription.cancelAtPeriodEnd && (
+                <button
+                  onClick={() => setCancelOpen(true)}
+                  className="text-xs text-gray-400 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
+                >
+                  Cancel subscription
+                </button>
+              )}
             </div>
           ) : subscription.hasStripeSubscription && isOwner ? (
-            <div className="flex flex-col gap-1.5">
-              <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
-                {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
-              </Button>
-              {portalError && <p className="text-xs text-red-600">{portalError}</p>}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex flex-col gap-1.5">
+                <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                  {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
+                </Button>
+                {portalError && <p className="text-xs text-red-600">{portalError}</p>}
+              </div>
+              {!subscription.cancelAtPeriodEnd && (
+                <button
+                  onClick={() => setCancelOpen(true)}
+                  className="text-xs text-gray-400 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
+                >
+                  Cancel subscription
+                </button>
+              )}
             </div>
           ) : (
             <Button variant="outline" disabled>
@@ -381,6 +482,8 @@ export default function BillingSettingsPage() {
             <dd className="text-sm col-span-2">
               {subscription.billingStatus === 'PAST_DUE' ? (
                 <span className="text-red-600 font-medium">Past Due</span>
+              ) : pendingCancel && periodEndLabel ? (
+                <span className="text-amber-700 font-medium">Active until {periodEndLabel}</span>
               ) : (
                 <span className="text-ink capitalize">{subscription.billingStatus.toLowerCase()}</span>
               )}
@@ -474,6 +577,17 @@ export default function BillingSettingsPage() {
         onClose={() => setCheckoutOpen(false)}
         plan={checkoutPlan}
       />
+
+      {/* Cancel Subscription Modal */}
+      {(subscription.plan === 'PRO' || subscription.plan === 'TEAM') && (
+        <CancelSubscriptionModal
+          isOpen={cancelOpen}
+          onClose={() => setCancelOpen(false)}
+          plan={subscription.plan}
+          currentPeriodEnd={subscription.stripeCurrentPeriodEnd}
+          onCancelled={handleCancelled}
+        />
+      )}
     </div>
   )
 }

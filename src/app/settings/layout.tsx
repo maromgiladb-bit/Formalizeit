@@ -9,7 +9,7 @@ const navigation = [
     { name: 'Sign-in & Security', href: '/settings/account-security', icon: ShieldCheck },
     { name: 'Team', href: '/settings/team', icon: Users },
     { name: 'Company Profile', href: '/settings/company-profile', icon: Building2 },
-    { name: 'Billing', href: '/settings/billing', icon: CreditCard },
+    { name: 'Subscription', href: '/settings/billing', icon: CreditCard },
 ]
 
 export default function SettingsLayout({

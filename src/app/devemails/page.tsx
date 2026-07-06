@@ -112,6 +112,12 @@ const emailTemplates: EmailTemplate[] = [
         description: 'Invite to join organization as Contributor',
         category: 'Internal',
     },
+    {
+        id: 'subscriptionCancelled',
+        name: 'Subscription Cancelled',
+        description: '"Sad to see you go" — sent to the administrator on final cancellation',
+        category: 'Internal',
+    },
 ];
 
 const categories = ['Party B receives', 'Party A receives', 'Signing', 'Internal'];

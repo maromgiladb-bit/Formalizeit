@@ -50,6 +50,7 @@ export async function GET() {
       draftLimitPeriod: limits.draftLimitPeriod,
       billingStatus: organization.billingStatus,
       stripeCurrentPeriodEnd: organization.stripeCurrentPeriodEnd?.toISOString() ?? null,
+      cancelAtPeriodEnd: organization.cancelAtPeriodEnd,
       hasStripeSubscription: !!organization.stripeSubscriptionId,
       billingCycle:
         organization.stripePriceId === STRIPE_PRICE_IDS.PRO_ANNUAL ||
