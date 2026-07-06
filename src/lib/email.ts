@@ -16,9 +16,11 @@ export interface SendEmailParams {
   subject: string
   html: string
   attachments?: EmailAttachment[]
+  /** Overrides the default no-reply address so recipients' replies reach a real person. */
+  replyTo?: string
 }
 
-export async function sendEmail({ to, subject, html, attachments }: SendEmailParams): Promise<void> {
+export async function sendEmail({ to, subject, html, attachments, replyTo }: SendEmailParams): Promise<void> {
   console.log('📧 sendEmail called with:', { to, subject, hasHtml: !!html, attachmentCount: attachments?.length || 0 })
   console.log('📧 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
   console.log('📧 MAIL_FROM:', MAIL_FROM)
@@ -44,7 +46,7 @@ export async function sendEmail({ to, subject, html, attachments }: SendEmailPar
       to,
       subject,
       html,
-      replyTo: MAIL_FROM,
+      replyTo: replyTo || MAIL_FROM,
       attachments: resendAttachments
     })
 
@@ -352,6 +354,32 @@ export function timeToSignEmailHtml(
   return getBaseEmailHtml('Your Turn to Sign', content)
 }
 
+/**
+ * Sent to a company signer when a teammate who cannot sign asks them to apply the
+ * company signature. Links to the in-app document so the signer signs authenticated
+ * (their identity is recorded as the signatory) — never a public bearer token.
+ */
+export function needsYourSignatureEmailHtml(
+  draftTitle: string,
+  signLink: string,
+  requesterName: string
+): string {
+  const safeDraftTitle = sanitizeForHtml(draftTitle)
+  const safeRequesterName = sanitizeForHtml(requesterName)
+  const fromLine = safeRequesterName
+    ? `${safeRequesterName} has asked you to sign this NDA on behalf of your company.`
+    : 'A teammate has asked you to sign this NDA on behalf of your company.'
+  const content = `
+    ${emailAccentLabel('Signature needed')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your signature is needed to finalize this NDA</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} Open it in your dashboard, review, and add the company signature.</p>
+    ${emailDocTitle(safeDraftTitle)}
+    ${emailButton('Open and Sign', signLink)}
+    ${emailSubtext('You will be asked to sign in to apply the company signature.')}
+  `
+  return getBaseEmailHtml('Your signature is needed', content)
+}
+
 export function congratulationsEmailHtml(
   draftTitle: string,
   downloadLink: string
@@ -488,6 +516,25 @@ export function inviteEmailHtml(
     ${emailButton('Accept Invitation', signUpLink)}
   `
   return getBaseEmailHtml(`Join ${safeOrgName} on Formalize It`, content)
+}
+
+export function subscriptionCancelledEmailHtml(
+  orgName: string,
+  resubscribeLink: string
+): string {
+  const safeOrgName = sanitizeForHtml(orgName)
+  const content = `
+    ${emailAccentLabel('Subscription cancelled')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Sorry to see you go</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Your ${safeOrgName} subscription has ended and the plan has moved to Free. We'd love to have you back whenever you're ready.</p>
+    ${emailInfoBox(`
+      <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em;">Your NDAs are safe</p>
+      <p style="margin: 0; font-size: 13px; color: #115e59; line-height: 1.5;">Signed NDAs stay stored under our retention policy, and your account and history remain intact. Resubscribing restores full access right away.</p>
+    `)}
+    <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280; line-height: 1.5;">Changed your mind? You can pick up right where you left off.</p>
+    ${emailButton('Resubscribe', resubscribeLink)}
+  `
+  return getBaseEmailHtml(`Your Formalize It subscription has ended`, content)
 }
 
 export function approvalRequestEmailHtml(

@@ -1,8 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
+import Link from 'next/link';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { Info } from 'lucide-react';
 import SignNDAPublicClient from './SignNDAPublicClient';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
+import { refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import { canSignNDA } from '@/lib/organizationRoles';
 
 const DEV_TEST_TOKEN = '00000000-0000-0000-0000-000000000001';
 
@@ -86,12 +90,75 @@ export default async function SignNDAPublicPage({
         redirect(`/sign-nda-public/${signer.id}/success`);
     }
 
+    // Signing links expire after 2 weeks of inactivity. The sender can resend to
+    // issue a fresh link — we don't offer a cancel button.
+    if (signer.expiresAt && signer.expiresAt < new Date()) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
+                    <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-6 h-6 text-teal-700" />
+                    </div>
+                    <h1 className="text-xl font-extrabold text-gray-900 mb-2">This NDA link has expired</h1>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                        For security, signing links expire after two weeks of inactivity. Please contact the sender to have the NDA resent.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // Activity: opening a valid link counts as progress — reset the inactivity clock.
+    try { await refreshSignLinkExpiryForRequest(signer.signRequestId); } catch (e) { console.error('refresh expiry failed:', e); }
+
     // Check workflow state - Party B can sign when reviewing or when explicitly awaiting signature
     const draft = signer.signRequest.draft;
     const workflowState = (draft as typeof draft & { workflowState?: string }).workflowState || 'DRAFT';
 
     // Determine if this is Party A (SENDER) or Party B (SIGNER)
     const isPartyA = signer.role === 'SENDER';
+
+    // Guard: applying the company signature (Party A) is limited to authorized signers.
+    // If a logged-in member of this NDA's organization cannot sign, block them here so a
+    // contributor can't sign as the company via a direct link. Anonymous visitors and
+    // members who can sign are unaffected.
+    if (isPartyA) {
+        const { userId } = await auth();
+        if (userId) {
+            const viewer = await prisma.user.findUnique({ where: { externalId: userId } });
+            if (viewer) {
+                const membership = await prisma.membership.findFirst({
+                    where: {
+                        userId: viewer.id,
+                        organizationId: signer.signRequest.organizationId,
+                        status: 'ACTIVE',
+                    },
+                });
+                if (membership && !canSignNDA({ role: membership.role, isSigner: membership.isSigner })) {
+                    return (
+                        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                            <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
+                                <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                    <Info className="w-6 h-6 text-teal-700" />
+                                </div>
+                                <h1 className="text-xl font-extrabold text-gray-900 mb-2">Only approved signers can sign this NDA</h1>
+                                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                                    Signing on behalf of your company is limited to approved signers. From your dashboard you
+                                    can ask a teammate who can sign to finish this NDA.
+                                </p>
+                                <Link
+                                    href="/dashboard"
+                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors"
+                                >
+                                    Back to dashboard
+                                </Link>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+        }
+    }
 
     // Allow signing logic
     let canSign = false;
