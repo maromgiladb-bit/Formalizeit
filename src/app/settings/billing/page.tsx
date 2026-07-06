@@ -2,7 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   CreditCard, ArrowRight, AlertTriangle,
@@ -99,6 +99,10 @@ export default function BillingSettingsPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [checkoutPlan, setCheckoutPlan] = useState<'PRO' | 'TEAM'>('PRO')
   const [cancelOpen, setCancelOpen] = useState(false)
+  // Set when we hand the user off to the Stripe portal (a separate tab), so we
+  // only reconcile with Stripe when they actually return from it — not on every
+  // incidental tab focus.
+  const pendingPortalReturn = useRef(false)
 
   const loadBilling = useCallback(async () => {
     try {
@@ -127,12 +131,15 @@ export default function BillingSettingsPage() {
     loadBilling().finally(() => setLoading(false))
   }, [userId, loadBilling])
 
-  // Refresh when the tab regains focus — e.g. after managing the subscription
-  // in the Stripe portal (which now opens in a separate tab).
+  // Reconcile with Stripe only when the user returns from the billing portal
+  // (opened in a separate tab), not on every incidental focus/visibility change.
   useEffect(() => {
     if (!userId) return
     function refreshOnReturn() {
-      if (document.visibilityState === 'visible') loadBilling()
+      if (document.visibilityState !== 'visible') return
+      if (!pendingPortalReturn.current) return
+      pendingPortalReturn.current = false
+      loadBilling()
     }
     document.addEventListener('visibilitychange', refreshOnReturn)
     window.addEventListener('focus', refreshOnReturn)
@@ -174,6 +181,8 @@ export default function BillingSettingsPage() {
       }
       const data = await res.json()
       if (data.url) {
+        // Arm the return-refresh so we reconcile with Stripe when they come back.
+        pendingPortalReturn.current = true
         if (portalTab) {
           portalTab.location.href = data.url
         } else {
