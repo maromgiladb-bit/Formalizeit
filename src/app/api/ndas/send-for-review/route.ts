@@ -188,13 +188,14 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // Generate the review link — sending is handled client-side via Gmail/Outlook/mailto
+        // Generate the review link. The email is auto-sent below via Resend; the
+        // suggested subject/body are returned only as a manual-share fallback.
         const reviewLink = `${getAppUrl()}/fillndahtml-public/${signer.id}`
         const senderName = (updatedContent.party_a_name as string) || user.name || user.email || 'Sender'
         const ndaTitle = draft.title || 'Untitled NDA'
         const suggestedSubject = `${senderName} sent you an NDA to review — ${ndaTitle}`
         const messageBlock = message ? `\n\nNote from ${senderName}:\n${message}` : ''
-        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link is valid for 30 days. No account is needed.\n\nBest regards,\n${senderName}`
+        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link stays active while the NDA is in progress and expires after 2 weeks of inactivity. No account is needed.\n\nBest regards,\n${senderName}`
 
         // Auto-send the review email via Resend, with reply-to set to the real sender so
         // the receiver's replies reach them. Don't fail the request if the email errors —

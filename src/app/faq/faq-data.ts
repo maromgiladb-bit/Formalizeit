@@ -22,7 +22,7 @@ export const faqs: Faq[] = [
 	{
 		question: "How long is the review link valid?",
 		answer:
-			"Review and signature links are valid for 30 days from the time they are generated. If the link expires before the recipient signs, you can resend from your dashboard.",
+			"Review and signature links stay active while the NDA is in progress and expire after 2 weeks of inactivity — any action (opening, filling, signing) resets the clock. If a link lapses before the recipient signs, you can resend from your dashboard.",
 	},
 	{
 		question: "What happens after both parties sign?",

@@ -49,6 +49,22 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
     }
   }, [isOpen])
 
+  // While open, lock background scroll and let Escape dismiss (unless a request
+  // is in flight, matching the backdrop click behavior).
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !busy) onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [isOpen, busy, onClose])
+
   function toggle(id: string) {
     setSelected(prev => {
       const next = new Set(prev)

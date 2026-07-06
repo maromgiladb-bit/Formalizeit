@@ -216,7 +216,7 @@ export function recipientEditEmailHtml(
       { title: 'Submit your response', desc: 'Once you are happy with the terms, submit or sign directly.' },
     ])}
     ${emailButton('Review Document', editLink)}
-    ${emailSubtext('This secure link expires in 30 days. No account needed.')}
+    ${emailSubtext('This secure link expires after 2 weeks of inactivity. No account needed.')}
   `
   return getBaseEmailHtml('New NDA for Your Review', content)
 }
@@ -303,7 +303,7 @@ export function recipientSignRequestEmailHtml(
       { title: 'Done — you will get a copy', desc: 'Once all parties sign, everyone receives the fully executed NDA by email.' },
     ])}
     ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires in 30 days')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
   `
   return getBaseEmailHtml('Signature Request', content)
 }
@@ -328,7 +328,7 @@ export function signReminderEmailHtml(
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} ${lead}</p>
     ${emailDocTitle(safeDraftTitle)}
     ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires in 30 days')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
   `
   return getBaseEmailHtml('Reminder: NDA awaiting your signature', content)
 }
@@ -604,7 +604,7 @@ export function inputRequestEmailHtml(
       { title: 'Submit and move forward', desc: 'Once you submit, the NDA proceeds to the signing stage.' },
     ])}
     ${emailButton('Complete My Part', inputLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires in 30 days')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
   `
   return getBaseEmailHtml('Input Needed on NDA', content)
 }

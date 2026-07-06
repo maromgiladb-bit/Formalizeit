@@ -110,7 +110,7 @@ const sections: Section[] = [
 					"WhatsApp or Telegram — sends the link as a message",
 					"Copy Link — copies the link so you can paste it anywhere",
 				],
-				listNote: "The link is valid for 30 days. The recipient does not need an account to open it.",
+				listNote: "The link stays active while the NDA is in progress and expires after 2 weeks of inactivity. The recipient does not need an account to open it.",
 			},
 		],
 	},
