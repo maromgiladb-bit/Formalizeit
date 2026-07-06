@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts, canSignNDA, isOrganizationOwner } from '@/lib/organizationRoles'
+import { isDraftExpired } from '@/lib/signLink'
+import { canHardDeleteNda } from '@/lib/ndaLifecycle'
 
 export async function GET(
   request: NextRequest,
@@ -153,7 +155,14 @@ export async function DELETE(
       where: {
         id,
         organizationId: activeMembership.organizationId
-      }
+      },
+      include: {
+        signRequests: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { signers: true },
+        },
+      },
     })
 
     if (!existingDraft) {
@@ -167,6 +176,18 @@ export async function DELETE(
 
     if (!canDelete) {
       return NextResponse.json({ error: 'You do not have permission to delete this draft' }, { status: 403 })
+    }
+
+    const expired = isDraftExpired(existingDraft.signRequests[0]?.signers)
+    if (!canHardDeleteNda({
+      status: existingDraft.status,
+      workflowState: existingDraft.workflowState,
+      expired,
+    })) {
+      return NextResponse.json(
+        { error: 'Only draft, expired, or cancelled NDAs can be deleted. Finalized NDAs are kept.' },
+        { status: 409 },
+      )
     }
 
     await prisma.ndaDraft.delete({
