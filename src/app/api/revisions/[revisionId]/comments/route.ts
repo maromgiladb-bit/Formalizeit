@@ -10,11 +10,11 @@ interface RequestBody {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { revisionId: string } }
+  { params }: { params: Promise<{ revisionId: string }> }
 ): Promise<NextResponse> {
   try {
     const { userId } = await auth()
-    const revisionId = params.revisionId
+    const revisionId = (await params).revisionId
 
     // Parse request body
     const body = await request.json() as RequestBody
@@ -96,10 +96,10 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { revisionId: string } }
+  { params }: { params: Promise<{ revisionId: string }> }
 ): Promise<NextResponse> {
   try {
-    const revisionId = params.revisionId
+    const revisionId = (await params).revisionId
     const url = new URL(request.url)
     const path = url.searchParams.get('path')
 

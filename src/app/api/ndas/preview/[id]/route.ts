@@ -11,15 +11,16 @@ export const runtime = 'nodejs' // Required for Puppeteer
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('📄 Preview request for draft:', params.id)
+    console.log('📄 Preview request for draft:', id)
 
     // Get user from database
     const user = await prisma.user.findUnique({
@@ -38,7 +39,7 @@ export async function GET(
     // Load draft from database
     const draft = await prisma.ndaDraft.findFirst({
       where: {
-        id: params.id,
+        id: id,
         organizationId: activeMembership.organizationId
       }
     })
@@ -85,7 +86,7 @@ export async function GET(
     }
 
     // Generate filename with draft ID
-    const filename = `nda-preview-${params.id}.pdf`
+    const filename = `nda-preview-${id}.pdf`
     const filepath = path.join(tmpDir, filename)
 
     // Write PDF to file
@@ -96,7 +97,7 @@ export async function GET(
     // For local development, we'll serve via a separate API route
     return NextResponse.json({
       success: true,
-      path: `/api/ndas/preview/${params.id}/file`,
+      path: `/api/ndas/preview/${id}/file`,
       filename: filename,
       size: pdfBuffer.length
     })
