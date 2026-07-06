@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSignNDA } from '@/lib/organizationRoles'
+import { refreshSignLinkExpiryForDraft } from '@/lib/signLink'
 
 /**
  * Approve changes submitted by Party B
@@ -63,6 +64,9 @@ export async function POST(request: NextRequest) {
                 lastEditedBy: 'party_a' // Party A approved
             }
         })
+
+        // Activity: keep the signing links alive (reset the 2-week inactivity clock).
+        try { await refreshSignLinkExpiryForDraft(draftId) } catch (e) { console.error('refresh expiry failed:', e) }
 
         // Create audit event
         await prisma.auditEvent.create({
