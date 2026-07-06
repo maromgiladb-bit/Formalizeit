@@ -19,7 +19,7 @@ export default async function DashboardPage({
     redirect('/');
   }
 
-  let user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { externalId: userId },
     include: {
       signers: {
