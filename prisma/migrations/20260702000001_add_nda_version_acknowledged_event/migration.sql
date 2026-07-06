@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "nda_event_type" ADD VALUE 'NDA_VERSION_ACKNOWLEDGED';
