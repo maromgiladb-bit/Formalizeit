@@ -142,8 +142,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   </Link>
                 ))}
 
-                {/* More dropdown — folds away in the floating pill */}
-                <div className={`relative ${scrolled ? 'hidden' : ''}`} ref={moreMenuRef}>
+                {/* More dropdown — stays available in the floating pill */}
+                <div className="relative" ref={moreMenuRef}>
                   <button
                     onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
                     className={`inline-flex items-center px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
