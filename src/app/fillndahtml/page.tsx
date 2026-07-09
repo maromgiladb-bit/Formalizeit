@@ -6,6 +6,8 @@ import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
 import { useFormi } from "@/components/ai/FormiProvider";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Send, Save, Trash2 } from "lucide-react";
 
 type FormValues = {
 	docName: string;
@@ -1310,7 +1312,7 @@ export default function FillNDAHTML() {
 							<div className="flex items-center gap-2">
 								<button
 									onClick={() => setShowLivePreview(!showLivePreview)}
-									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors flex items-center gap-1.5"
 								>
 									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -1909,37 +1911,27 @@ export default function FillNDAHTML() {
 							</div>
 
 							{/* Navigation Buttons */}
-							<div className="mt-6 mb-2 flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
-								<div className="flex gap-2">
-									<button
+							<div className="mt-6 mb-2 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-200">
+								<div className="flex flex-wrap items-center gap-2">
+									<Button
+										variant="secondary"
 										onClick={goBack}
 										disabled={step === 0}
-										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${step === 0
-											? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-											}`}
 									>
-										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-										</svg>
+										<ChevronLeft />
 										Back
-									</button>
+									</Button>
 									{step < steps.length - 1 && (
-										<button
-											onClick={goNext}
-											className="px-5 py-2.5 bg-teal-800 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-all duration-200 flex items-center gap-2"
-										>
-											Next Step: {steps[step + 1]}
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-											</svg>
-										</button>
+										<Button onClick={goNext}>
+											Next<span className="hidden sm:inline"> · {steps[step + 1]}</span>
+											<ChevronRight />
+										</Button>
 									)}
 								</div>
-								<div className="flex gap-2">
+								<div className="flex flex-wrap items-center gap-2">
 									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
 									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
-										<span className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-teal-50 text-teal-700 border border-teal-200">
+										<span className="h-10 inline-flex items-center px-4 rounded-xl font-semibold text-sm bg-teal-50 text-teal-700 border border-teal-200">
 											Awaiting Party B
 										</span>
 									)}
@@ -1947,44 +1939,35 @@ export default function FillNDAHTML() {
 									{/* Party A Review Buttons — shown when Party B has submitted changes */}
 									{workflowState === 'AWAITING_PARTY_A_REVIEW' && (
 										<>
-											<button
-												onClick={approveChanges}
-												disabled={processingChanges}
-												className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${processingChanges ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'}`}
-											>
+											<Button onClick={approveChanges} disabled={processingChanges}>
 												{processingChanges ? 'Processing...' : 'Accept Changes'}
-											</button>
-											<button
+											</Button>
+											<Button
 												onClick={() => setShowRequestChangesModal(true)}
 												disabled={processingChanges}
-												className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+												className="bg-amber-500 text-white hover:bg-amber-600"
 											>
 												Request Changes
-											</button>
+											</Button>
 										</>
 									)}
 
 									{/* Delete button — shown only for saved DRAFT state */}
 									{workflowState === 'DRAFT' && draftId && (
-										<button
+										<Button
+											variant="outline"
 											onClick={deleteDraft}
 											disabled={deleting}
-											className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 border border-red-200 text-red-600 bg-white hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+											className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
 										>
+											<Trash2 />
 											{deleting ? 'Deleting...' : 'Delete Draft'}
-										</button>
+										</Button>
 									)}
 
 									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
-										<button
-											onClick={sendForReview}
-											disabled={sendingForSignature}
-											className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
-												? 'bg-gray-400 text-white cursor-not-allowed'
-												: 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'
-												}`}
-										>
+										<Button onClick={sendForReview} disabled={sendingForSignature}>
 											{sendingForSignature ? (
 												<>
 													<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1995,27 +1978,16 @@ export default function FillNDAHTML() {
 												</>
 											) : (
 												<>
-													<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-													</svg>
-													Send for Review
+													<Send />
+													Send NDA
 												</>
 											)}
-										</button>
+										</Button>
 									)}
-									<button
-										onClick={saveDraft}
-										disabled={saving}
-										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${saving
-											? 'bg-gray-400 text-white cursor-not-allowed'
-											: 'bg-teal-800 text-white hover:bg-teal-700'
-											}`}
-									>
-										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-										</svg>
+									<Button variant="outline" onClick={saveDraft} disabled={saving}>
+										<Save />
 										{saving ? "Saving..." : "Save"}
-									</button>
+									</Button>
 								</div>
 							</div>
 						</div>

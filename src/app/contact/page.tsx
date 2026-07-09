@@ -39,7 +39,7 @@ const contactCards = [
   },
 ];
 
-const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "" };
+const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "", company: "" };
 
 export default function Contact() {
   const [form, setForm] = useState(emptyForm);
@@ -156,6 +156,17 @@ export default function Contact() {
                   </div>
                 ) : (
                 <form className="space-y-5" onSubmit={handleSubmit}>
+                  {/* Honeypot — hidden from real users; bots that fill it are dropped server-side. */}
+                  <input
+                    type="text"
+                    name="company"
+                    value={form.company}
+                    onChange={update("company")}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="hidden"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>

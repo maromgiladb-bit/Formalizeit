@@ -45,7 +45,7 @@ function planFacts(): string {
 
 // Compact product knowledge base — what Formi needs to answer app questions.
 const PRODUCT_KNOWLEDGE = `# About FormalizeIt
-FormalizeIt helps teams create, review, and send NDAs in minutes using reusable templates. Documents belong to a Company; teammates collaborate by role. The recipient needs no account — they get a secure link.
+FormalizeIt helps teams send a legally-ready NDA in minutes using a single standard mutual NDA — the legal text is fixed and stays the same across every agreement, so you only fill in the deal-specific details (parties, dates, term, purpose, governing law) plus one optional clause. Documents belong to a Company; teammates collaborate by role. The recipient needs no account — they get a secure link.
 
 # Where things are
 - Dashboard / "My NDAs": your drafts and sent NDAs with their status; continue, manage, or track them here. If a signing link has expired, the sender sees a "Resend NDA" button here to issue a fresh link.

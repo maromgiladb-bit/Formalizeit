@@ -3,7 +3,6 @@
 import { useRef } from 'react'
 import { SignUpButton } from '@clerk/nextjs'
 import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import TestimonialsSection from '@/components/ui/testimonials'
 import { FeatureSteps } from '@/components/ui/feature-section'
 import {
   FileText,
@@ -194,7 +193,7 @@ const TIMELINE_STEPS = [
     number: '04',
     title: 'Send & Sign',
     description:
-      'Route for internal approval, send to the counterparty, and collect legally binding signatures — all in one place, with full audit trail.',
+      'Send to the counterparty and collect a legally binding signature — signers apply it on behalf of the company, with a full audit trail on every document.',
     icon: Send,
     mockupKey: 'sign',
   },
@@ -322,14 +321,41 @@ export default function About() {
           className="text-center max-w-2xl mx-auto"
         >
           <h1 className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
-            Send an NDA in minutes.
+            NDA in minutes.
           </h1>
           <p className="text-base text-gray-500 leading-relaxed">
-            No blank page, no email ping-pong, no formatting drama.
-            Pick a trusted template, fill in what&apos;s different, and send —
-            done before the meeting ends.
+            Pick a template, fill in what&apos;s different, send — in minutes.
+            No lawyer required, no email ping-pong, no formatting drama.
           </p>
         </motion.div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          MISSION
+      ══════════════════════════════════════════════ */}
+      <section className="border-t border-gray-100 py-12 lg:py-16 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              Why FormalizeIt
+            </p>
+            <h2 className="text-3xl font-extrabold text-ink tracking-tight mb-4">
+              Every team deserves a signed NDA before the moment passes
+            </h2>
+            <p className="text-base text-gray-500 leading-relaxed">
+              NDAs shouldn&apos;t be the reason a deal stalls. FormalizeIt gives your whole
+              company one trusted template, so the only thing left to review is what
+              actually changed. Teammates can draft, comment, and send without waiting on
+              a single approver — and it&apos;s all stored securely with a clear audit trail
+              and e-signature, so trust never has to slow you down.
+            </p>
+          </motion.div>
+        </div>
       </section>
 
       {/* ══════════════════════════════════════════════
@@ -383,39 +409,32 @@ export default function About() {
           features={[
             {
               step: 'Step 1',
-              title: 'Save Time',
+              title: 'One Company, One Template',
               content:
-                'Create professional NDAs in minutes, not hours. Auto-fill company details, use proven templates, and skip the repetitive formatting work.',
+                'NDAs belong to your company, not a single inbox. Everyone works from the same trusted template, so every NDA that goes out looks and reads the same way.',
               image:
                 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop',
             },
             {
               step: 'Step 2',
-              title: 'Live Preview',
+              title: 'Collaborate Without Bottlenecks',
               content:
-                'See exactly what your NDA looks like as you fill it out. No surprises — what you see is what you get in the final PDF.',
+                'Any teammate can draft, comment, and send an NDA for review or signature — no waiting on one gatekeeper. Only signers apply the company’s signature.',
               image:
                 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
             },
             {
               step: 'Step 3',
-              title: 'Easy Communication',
+              title: 'Send, Sign, Done',
               content:
-                'Share a secure link with the other party. They can review, suggest changes, and sign — all without creating an account or email ping-pong.',
+                'Share a secure link with the counterparty. They can review, suggest changes, and sign — no account required, no email ping-pong.',
               image:
                 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop',
             },
           ]}
-          title="Making NDAs Simple"
+          title="Built for teams, not just one signer"
           autoPlayInterval={5000}
         />
-      </section>
-
-      {/* ══════════════════════════════════════════════
-          TESTIMONIALS
-      ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100">
-        <TestimonialsSection />
       </section>
 
 {/* ══════════════════════════════════════════════
@@ -426,7 +445,7 @@ export default function About() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div>
               <h2 className="text-2xl font-extrabold text-ink mb-2">
-                Send your first NDA in minutes.
+                Get your whole team sending NDAs in minutes.
               </h2>
               <p className="text-sm text-gray-500">
                 No setup friction. Start from a trusted template and go.
