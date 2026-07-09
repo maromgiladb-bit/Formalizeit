@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { stripe } from '@/lib/stripe'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
+import { getAppUrl } from '@/lib/email'
 
 export async function POST() {
   try {
@@ -33,16 +34,7 @@ export async function POST() {
       return NextResponse.json({ error: 'No Stripe customer found' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!appUrl) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json(
-          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set' },
-          { status: 500 }
-        )
-      }
-    }
-    const resolvedAppUrl = appUrl ?? 'http://localhost:3000'
+    const resolvedAppUrl = getAppUrl()
 
     const session = await stripe.billingPortal.sessions.create({
       customer: organization.stripeCustomerId,

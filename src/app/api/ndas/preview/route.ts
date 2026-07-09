@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
     console.log('📄 Converting HTML to PDF with 1:1 rendering...')
     const pdfBuffer = await renderHtmlToPdf(html, {
       pageWidthPx: 900,  // Match preview container width
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
       isA4: true,
       debugScreenshot: false,  // Set to true to save debug screenshot
     })

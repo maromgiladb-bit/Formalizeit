@@ -2,7 +2,12 @@ import { Resend } from 'resend'
 import { sanitizeForHtml } from '@/lib/sanitize'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000'
+// Preview deployments don't get a fixed URL, so fall back to Vercel's
+// per-deployment VERCEL_URL before localhost.
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 const MAIL_FROM = process.env.MAIL_FROM || 'noreply@formalizeit.app'
 
 export interface EmailAttachment {

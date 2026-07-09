@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { stripe, priceIdFor, type PaidPlan } from '@/lib/stripe'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
+import { getAppUrl } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,17 +71,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!appUrl) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json(
-          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set' },
-          { status: 500 }
-        )
-      }
-      // development only — safe to fall back
-    }
-    const resolvedAppUrl = appUrl ?? 'http://localhost:3000'
+    const resolvedAppUrl = getAppUrl()
     const embedded = body.embedded === true
 
     const commonParams = {

@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
     console.log('📄 Converting HTML to PDF...');
     const pdfBuffer = await renderHtmlToPdf(htmlContent, {
       pageWidthPx: 900,
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
       isA4: true,
     });
 

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { stripe, priceIdFor } from '@/lib/stripe'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
+import { getAppUrl } from '@/lib/email'
 
 // Creates a Stripe billing portal session with subscription_update_confirm flow.
 // This upgrades PRO → TEAM in-place (proration), keeps PRO access until payment
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     const item = subscription.items.data[0]
     if (!item) return NextResponse.json({ error: 'No subscription item found' }, { status: 400 })
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const appUrl = getAppUrl()
 
     const session = await stripe.billingPortal.sessions.create({
       customer: organization.stripeCustomerId,
