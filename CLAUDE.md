@@ -189,9 +189,15 @@ changes). All seven routes are now scaffolded and linked in nav: Terms (`src/app
 Privacy (`src/app/privacy`), Compliance (`src/app/compliance`), Standard NDA
 (`src/app/standard-nda`), NDA Governance Policy (`src/app/nda-governance`), E-Signature Consent
 (`src/app/esignature-consent`), NDA Changelog (`src/app/nda-changelog`). The Changelog is
-content-complete (driven by `src/lib/ndaChangelog.ts`); Standard NDA, Governance Policy, and
-E-Signature Consent are placeholders awaiting final legal text/counsel. All documents should be
-reviewed by qualified legal counsel before launch.
+content-complete (driven by `src/lib/ndaChangelog.ts`). Standard NDA, Governance Policy, and
+E-Signature Consent are now **content-complete with founder-drafted text** (launched with a
+prominent "not legal advice" disclaimer; Standard NDA mirrors `templates/professional_mutual_nda_v1.hbs`
+v1.0, E-Signature Consent mirrors `src/lib/signatureEvidence.ts`).
+
+**LEGAL READINESS (standing obligation):** all seven legal docs launch with founder-drafted text
+and a prominent disclaimer. They **must still be reviewed by qualified legal counsel** — do this
+in parallel with launch and before scaling / removing any beta framing. Keep each page in sync
+with the behavior it describes when the underlying code changes.
 
 ---
 

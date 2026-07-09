@@ -53,6 +53,10 @@ FormalizeIt helps teams send a legally-ready NDA in minutes using a single stand
 - Settings → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
 - Settings → Subscription and the Plans page: manage the company plan.
 - NDA Changelog page: a plain-language history of changes to the standard NDA.
+- Standard NDA page: a read-only view of the full standard mutual NDA text, so anyone can review the fixed legal language before accepting or signing.
+- NDA Governance Policy page: how the standard NDA is versioned and maintained, and why already-signed agreements are never changed.
+- Electronic Signature Consent page: what consent you give by signing electronically and exactly what evidence is recorded at signing (email, timestamp, IP, document version, and an agreement hash).
+- FormalizeIt is not a law firm and does not provide legal advice — point users to these pages to read the actual text, and suggest a qualified attorney for legally sensitive agreements.
 
 # Roles
 - Administrator: company settings, billing, and members; can do everything a Signer can, and can sign on behalf of the company when the "also a signer" toggle is on.
