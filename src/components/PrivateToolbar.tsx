@@ -53,12 +53,9 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const devLinks = [
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
     { name: '🎨 Fill NDA (Design)', href: '/fillndahtml?templateId=design_mutual_nda_v1' },
-    { name: '📥 Fill NDA Public (Party B)', href: '/fillndahtml-public/dev' },
     { name: '📄 Sign PDF', href: '/sign-nda' },
     { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
     { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
-    { name: '📧 Email Templates', href: '/devemails' },
-    { name: '📋 NDA Templates', href: '/devtemplates' },
     { name: '🏠 Homepage', href: '/' },
   ]
 
