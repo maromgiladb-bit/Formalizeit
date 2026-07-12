@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { sanitizeForHtml } from '@/lib/sanitize'
+import type { NegotiationSummary } from '@/lib/negotiation'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 // Preview deployments don't get a fixed URL, so fall back to Vercel's
@@ -221,9 +222,52 @@ export function recipientEditEmailHtml(
       { title: 'Submit your response', desc: 'Once you are happy with the terms, submit or sign directly.' },
     ])}
     ${emailButton('Review Document', editLink)}
-    ${emailSubtext('This secure link expires after 2 weeks of inactivity. No account needed.')}
+    ${emailSubtext('This secure link expires after 14 days of inactivity. No account needed.')}
   `
   return getBaseEmailHtml('New NDA for Your Review', content)
+}
+
+/**
+ * Sent when a party finishes reviewing the other side's proposed changes and
+ * sends the NDA back — spelling out what was accepted, rejected, and countered,
+ * with a link to review and respond in the next round.
+ */
+export function negotiationReviewEmailHtml(
+  draftTitle: string,
+  actorName: string | undefined,
+  summary: NegotiationSummary,
+  reviewLink: string,
+): string {
+  const safeTitle = sanitizeForHtml(draftTitle)
+  const safeActor = sanitizeForHtml(actorName) || 'The other party'
+
+  const line = (label: string, color: string, items: string[]): string => {
+    if (!items.length) return ''
+    const chips = items.map((i) => sanitizeForHtml(i)).join(', ')
+    return `<tr><td style="padding: 6px 0; font-size: 14px; color: #374151; line-height: 1.5;">
+      <span style="display: inline-block; min-width: 84px; font-weight: 700; color: ${color};">${label}</span>${chips}
+    </td></tr>`
+  }
+
+  const anyChanges = summary.accepted.length || summary.rejected.length || summary.countered.length
+  const summaryTable = anyChanges
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0; border-top: 1px solid #f3f4f6;">
+        ${line('Accepted', '#0f766e', summary.accepted)}
+        ${line('Rejected', '#b91c1c', summary.rejected)}
+        ${line('Countered', '#92400e', summary.countered)}
+      </table>`
+    : ''
+
+  const content = `
+    ${emailAccentLabel('Changes reviewed')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeActor} reviewed your proposed changes</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Here's how they responded. Open the document to review their response and reply.</p>
+    ${emailDocTitle(safeTitle)}
+    ${summaryTable}
+    ${emailButton('Review & respond', reviewLink)}
+    ${emailSubtext('This secure link expires after 14 days of inactivity. No account needed.')}
+  `
+  return getBaseEmailHtml('NDA changes reviewed', content)
 }
 
 export function ownerReviewEmailHtml(
@@ -308,7 +352,7 @@ export function recipientSignRequestEmailHtml(
       { title: 'Done — you will get a copy', desc: 'Once all parties sign, everyone receives the fully executed NDA by email.' },
     ])}
     ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
   return getBaseEmailHtml('Signature Request', content)
 }
@@ -333,7 +377,7 @@ export function signReminderEmailHtml(
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} ${lead}</p>
     ${emailDocTitle(safeDraftTitle)}
     ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
   return getBaseEmailHtml('Reminder: NDA awaiting your signature', content)
 }
@@ -609,7 +653,7 @@ export function inputRequestEmailHtml(
       { title: 'Submit and move forward', desc: 'Once you submit, the NDA proceeds to the signing stage.' },
     ])}
     ${emailButton('Complete My Part', inputLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
   return getBaseEmailHtml('Input Needed on NDA', content)
 }

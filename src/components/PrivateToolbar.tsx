@@ -30,17 +30,11 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
-    { name: 'Fill NDA', href: '/templates', current: pathname === '/fillndahtml' || pathname === '/templates' },
+    { name: 'My account', href: '/settings', current: pathname.startsWith('/settings') },
     { name: 'Plans', href: '/#pricing', current: pathname === '/plans' },
   ]
 
   const router = useRouter()
-
-  const primaryLinks = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Settings', href: '/settings' },
-    { name: 'Pricing', href: '/#pricing' },
-  ]
 
   const secondaryLinks = [
     { name: 'About', href: '/about' },
@@ -156,17 +150,6 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   {isMoreMenuOpen && (
                     <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-float z-50 overflow-hidden">
                       <div className="py-1.5">
-                        {primaryLinks.map((link) => (
-                          <Link
-                            key={link.name}
-                            href={link.href}
-                            className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-ink transition-colors"
-                            onClick={() => setIsMoreMenuOpen(false)}
-                          >
-                            {link.name}
-                          </Link>
-                        ))}
-                        <div className="border-t border-gray-100 my-1.5"></div>
                         {secondaryLinks.map((link) => (
                           <Link
                             key={link.name}
@@ -292,7 +275,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   </Link>
                 ))}
                 <div className="border-t border-gray-100 my-2"></div>
-                {[...primaryLinks, ...secondaryLinks].map((link) => (
+                {secondaryLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}

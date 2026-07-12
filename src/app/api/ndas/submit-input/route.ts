@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendEmail, ownerReviewEmailHtml, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml } from '@/lib/email'
+import { sendEmail, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml, negotiationReviewEmailHtml } from '@/lib/email'
 import { createNotificationsForOrgSigners } from '@/lib/notifications'
 import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink'
+import { summarizeResponses, isFullyAccepted, type SuggestionResponses } from '@/lib/negotiation'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -80,45 +81,37 @@ export async function POST(request: NextRequest) {
         // so `filledFields` might already contain the new values. 
         // But let's ensure we track the resolution in the revision metadata if needed.
 
-        // Determine workflow state
+        // Determine workflow state.
+        // A party may proceed to signature ONLY when they fully agreed: no fresh
+        // suggestions AND every response to the other side's proposals was an
+        // acceptance. Any rejection or counter sends the NDA back for another round —
+        // a rejection is a disagreement, not an endpoint (you can't unilaterally sign
+        // a version the other party hasn't agreed to).
         let newWorkflowState = draft.workflowState;
-        const hasSuggestions = suggestedChanges &&
-            Object.values(suggestedChanges).some(v => v && (v as string).trim())
+        const hasSuggestions = !!(suggestedChanges &&
+            Object.values(suggestedChanges).some(v => v && (v as string).trim()))
+        const responses = (suggestionResponses || {}) as SuggestionResponses;
+        const fullyAccepted = isFullyAccepted(responses, hasSuggestions);
 
         let redirectUrl: string | undefined;
 
         if (isPartyA) {
-            // Party A Submission
-            if (hasSuggestions) {
-                // Party A countered -> Back to Party B
-                newWorkflowState = 'AWAITING_PARTY_B_REVIEW';
-            } else {
-                // Party A approved (accepted/rejected all, no counters) -> Proceed to Signature
-                // Party A signs first in this flow? Or B?
-                // "proceed to sign from party a after aproving changes" implies A signs now.
+            if (fullyAccepted) {
+                // Party A accepted everything -> Party A signs.
                 newWorkflowState = 'AWAITING_PARTY_A_SIGNATURE';
-
-                // If Party A is also the owner/user, they might want to sign immediately.
-                // We should return a redirect URL to the signing page.
-                // For Party A (owner), signing is usually done via /sign-nda/[id] or similar?
-                // Or maybe via the same public interface if they are using a token?
-                // Using fillndahtml-public as the unified interface, so redirect to same token?
-                // But the UI needs to switch to "Sign Mode". 
-                // Currently fillndahtml-public handles signing if state is AWAITING_SIGNATURE.
-
-                // If we stay on fillndahtml-public, we can just reload or redirect to same URL.
-                // Client side will see new state and show sign UI.
                 redirectUrl = `${getAppUrl()}/sign-nda-public/${signer.id}`;
+            } else {
+                // Party A rejected and/or countered -> back to Party B for another round.
+                newWorkflowState = 'AWAITING_PARTY_B_REVIEW';
             }
         } else {
-            // Party B Submission
-            if (hasSuggestions) {
-                // Party B suggests -> Party A review
-                newWorkflowState = 'AWAITING_PARTY_A_REVIEW';
-            } else {
-                // Party B fills/approves -> Party B signs
+            if (fullyAccepted) {
+                // Party B filled/accepted with nothing outstanding -> Party B signs.
                 newWorkflowState = 'AWAITING_PARTY_B_SIGNATURE';
                 redirectUrl = `${getAppUrl()}/sign-nda-public/${signer.id}`;
+            } else {
+                // Party B suggested, rejected, or countered -> back to Party A for review.
+                newWorkflowState = 'AWAITING_PARTY_A_REVIEW';
             }
         }
 
@@ -190,15 +183,14 @@ export async function POST(request: NextRequest) {
 
         // Email notifications logic
         const owner = signer.signRequest.createdBy
+        const summary = summarizeResponses(responses)
 
         // Create review link - always use fillndahtml-public
         let reviewLink: string | undefined
 
-        if (!isPartyA && hasSuggestions) {
-            // Party B suggests -> Create Party A reviewer token if not exists (or reuse)
-            // We can create a new one or find existing.
-            // Simplified: create new for each round or update status.
-            // Upsert Party A Approver - Reuse existing if possible to avoid duplicates
+        if (!isPartyA && !fullyAccepted) {
+            // Party B suggested / rejected / countered -> back to Party A for review.
+            // Reuse the Party A reviewer token if it exists, otherwise create one.
             let partyAReviewer = await prisma.signer.findFirst({
                 where: {
                     signRequestId: signer.signRequestId,
@@ -226,10 +218,8 @@ export async function POST(request: NextRequest) {
                 })
             }
             reviewLink = `${getAppUrl()}/fillndahtml-public/${partyAReviewer.id}`
-        } else if (isPartyA && hasSuggestions) {
-            // Party A counters -> Email Party B
-            // Need to find Party B's signer token. 
-            // We have signerId of Party A. We need the OTHER signer.
+        } else if (isPartyA && !fullyAccepted) {
+            // Party A rejected and/or countered -> email Party B a summary and send back.
             const partyBSigner = await prisma.signer.findFirst({
                 where: {
                     signRequestId: signer.signRequestId,
@@ -239,50 +229,61 @@ export async function POST(request: NextRequest) {
             })
 
             if (partyBSigner) {
-                // Reset Party B status to PENDING as they need to review counter-offer
+                // Reset Party B status to PENDING as they need to review the response.
                 await prisma.signer.update({
                     where: { id: partyBSigner.id },
                     data: { status: 'PENDING' }
                 })
 
                 reviewLink = `${getAppUrl()}/fillndahtml-public/${partyBSigner.id}`
-                // Send email to Party B
+                const actorName = (currentContent.party_a_name as string) || owner.name || owner.email
                 await sendEmail({
                     to: partyBSigner.email,
-                    subject: `Review requested – ${owner.name || owner.email} from ${(currentContent.party_a_name as string) || 'their company'} sent a counter-proposal`,
-                    html: ownerReviewEmailHtml( // Reusing template for now, ideal to have specific one
+                    subject: `${actorName} reviewed your changes – ${draft.title || 'NDA'}`,
+                    html: negotiationReviewEmailHtml(
                         draft.title || 'Untitled NDA',
-                        1,
+                        actorName,
+                        summary,
                         reviewLink,
-                        [] // TODO: generate diff
                     ),
-                    // Party A countered — let Party B reply back to the sender.
+                    // Party A responded — let Party B reply back to the sender.
                     replyTo: owner.email,
                 })
             }
-        } else if (!isPartyA && !hasSuggestions) {
+        } else if (!isPartyA && fullyAccepted) {
             // Party B ready to sign -> Link to Party B
             reviewLink = `${getAppUrl()}/fillndahtml-public/${signer.id}`
         }
 
 
-        // Only send owner email if we have a reviewLink valid for the owner, AND it's not Party A acting
-        // If Party A is acting (isPartyA), we handled email to Party B above if needed.
+        // Notify the owner (Party A) when Party B acts. When Party A is acting we
+        // already emailed Party B above.
         if (reviewLink && !isPartyA) {
             try {
+                const partyBLabel = `${signer.name || signer.email}${(currentContent.party_b_name as string) ? ` from ${currentContent.party_b_name as string}` : ''}`
+                // Distinguish fresh suggestions (use the suggestions template) from
+                // responses to Party A's proposals (use the accept/reject/counter summary).
+                const changesHtml = hasSuggestions
+                    ? partyBSuggestionsEmailHtml(
+                        draft.title || 'Untitled NDA',
+                        signer.name || signer.email,
+                        signer.email,
+                        (suggestedChanges as Record<string, string>) || {},
+                        reviewLink
+                    )
+                    : negotiationReviewEmailHtml(
+                        draft.title || 'Untitled NDA',
+                        signer.name || signer.email,
+                        summary,
+                        reviewLink,
+                    )
                 await sendEmail({
                     to: owner.email,
-                    subject: hasSuggestions
-                        ? `Review requested – ${signer.name || signer.email}${(currentContent.party_b_name as string) ? ` from ${currentContent.party_b_name as string}` : ''} made changes to the NDA`
+                    subject: !fullyAccepted
+                        ? `Review requested – ${partyBLabel} responded to the NDA`
                         : `${signer.name || signer.email} filled in their details – "${draft.title || 'NDA'}" is ready`,
-                    html: hasSuggestions
-                        ? partyBSuggestionsEmailHtml(
-                            draft.title || 'Untitled NDA',
-                            signer.name || signer.email,
-                            signer.email,
-                            (suggestedChanges as Record<string, string>) || {},
-                            reviewLink
-                        )
+                    html: !fullyAccepted
+                        ? changesHtml
                         : recipientInputSubmittedEmailHtml(draft.title || 'Untitled NDA', signer.name || signer.email, reviewLink),
                     // Route the sender's reply straight back to the receiver who submitted.
                     replyTo: signer.email,
@@ -293,16 +294,16 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // In-app notification: Party B submitted suggestions → notify org approvers
-        if (!isPartyA && hasSuggestions) {
+        // In-app notification: Party B responded (suggested / rejected / countered) → notify org signers
+        if (!isPartyA && !fullyAccepted) {
             try {
                 const partyBName = signer.name || signer.email
                 await createNotificationsForOrgSigners(
                     draft.organizationId,
                     null,
                     'NDA_CHANGES_REQUESTED',
-                    'Party B made changes',
-                    `${partyBName} submitted edits to "${draft.title || 'Untitled NDA'}" — review before signing`,
+                    'Party B responded to the NDA',
+                    `${partyBName} responded to "${draft.title || 'Untitled NDA'}" — review before signing`,
                     `/dashboard#nda-${draft.id}`,
                     draft.id
                 )

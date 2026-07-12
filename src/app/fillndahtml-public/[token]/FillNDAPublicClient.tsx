@@ -1171,7 +1171,7 @@ export default function FillNDAPublicClient({
                                                             onClick={handleProceedToSign}
                                                             disabled={!canProceedToSign}
                                                             className={`w-full px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 flex items-center justify-center gap-2 ${canProceedToSign
-                                                                ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
+                                                                ? "bg-teal-800 text-white hover:bg-teal-700 shadow-md hover:shadow-lg"
                                                                 : "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70"
                                                                 }`}
                                                             suppressHydrationWarning
@@ -1252,8 +1252,8 @@ export default function FillNDAPublicClient({
                                         </div>
 
                                         <p className="text-xs text-gray-500 text-center">
-                                            <strong>Proceed to Sign:</strong> All fields required. All changes must be accepted.<br />
-                                            <strong>Send Back with Changes:</strong> Only available if you suggest changes or reject/counter proposals.
+                                            <strong>Proceed to Sign:</strong> available once you&apos;ve accepted all changes — signing means you agree to the current terms.<br />
+                                            <strong>Send Back with Changes:</strong> use this to reject, counter, or suggest edits and return the NDA to the other party.
                                         </p>
                                     </div>
                                 )}

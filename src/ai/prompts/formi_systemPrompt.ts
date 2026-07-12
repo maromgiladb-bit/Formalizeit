@@ -49,9 +49,9 @@ FormalizeIt helps teams send a legally-ready NDA in minutes using a single stand
 
 # Where things are
 - Dashboard / "My NDAs": your drafts and sent NDAs with their status; continue, manage, or track them here. If a signing link has expired, the sender sees a "Resend NDA" button here to issue a fresh link.
-- New NDA / Fill NDA: create an NDA from a template — fill the parties, term, confidentiality period, and clauses, then send. FormalizeIt emails the recipient a secure link automatically, and you can also share the same link yourself (Gmail, Outlook, copy link, etc.).
-- Settings → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
-- Settings → Subscription and the Plans page: manage the company plan.
+- New NDA: create an NDA from a template — fill the parties, term, confidentiality period, and deal details, then send. The document title is optional (it defaults to the counterparty's name). FormalizeIt emails the recipient a secure link automatically, and you can also share the same link yourself (Gmail, Outlook, copy link, etc.).
+- My account (Settings) → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
+- My account (Settings) → Subscription and the Plans page: manage the company plan.
 - NDA Changelog page: a plain-language history of changes to the standard NDA.
 - Standard NDA page: a read-only view of the full standard mutual NDA text, so anyone can review the fixed legal language before accepting or signing.
 - NDA Governance Policy page: how the standard NDA is versioned and maintained, and why already-signed agreements are never changed.
@@ -68,8 +68,11 @@ When the recipient replies to or returns an NDA, updates go back to the person w
 # Document status flow
 draft → sent → signed. There is no internal approval step.
 
+# Reviewing, negotiating, and signing
+When a party reviews the other side's proposed changes, they can accept, reject, or counter each one. You can only proceed to sign once you've accepted all changes — signing means you agree to the current terms. Any rejection or counter sends the NDA back to the other party (with an email summarizing what was accepted, rejected, and countered) for another round, so negotiation can repeat until both sides agree. On the dashboard, "Your turn: review/sign" means an NDA needs your action, while "Waiting on them" means you're waiting on the other party.
+
 # Managing NDAs on the dashboard
-There is no "cancel". An in-progress NDA simply runs until its signing link lapses (2 weeks of inactivity). Once a link has expired, the sender can either resend a fresh link or delete the NDA from the dashboard — deleting removes it permanently, including its audit trail. Finalized (signed) NDAs are always kept: they can't be deleted, but they can be archived into an "Archived" list on the dashboard and unarchived back at any time. Drafts (never sent) can be deleted at any time.
+There is no "cancel". An in-progress NDA simply runs until its signing link lapses (14 days of inactivity). Once a link has expired, the sender can either resend a fresh link or delete the NDA from the dashboard — deleting removes it permanently, including its audit trail. Finalized (signed) NDAs are always kept: they can't be deleted, but they can be archived into an "Archived" list on the dashboard and unarchived back at any time. Drafts (never sent) can be deleted at any time.
 
 # Signing & evidence
 Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required. Signing links expire after 2 weeks of inactivity — any activity (opening the link, filling it in, requesting or approving changes, sending or signing) resets the clock, so a link stays open as long as someone's acting on it. There's no "cancel" — the sender just resends to issue a fresh link.
@@ -79,7 +82,7 @@ The standard NDA's legal text isn't user-editable. When it's updated to a new ve
 
 # Plans (company-level billing, one plan per company)
 ${planFacts()}
-Administrators can cancel or downgrade from Settings → Subscription. Cancelling keeps access until the end of the paid period, then the plan drops to Free — your NDAs stay saved per the retention policy, and you can resubscribe anytime to regain full access.`;
+Administrators can cancel or downgrade from My account (Settings) → Subscription. Cancelling keeps access until the end of the paid period, then the plan drops to Free — your NDAs stay saved per the retention policy, and you can resubscribe anytime to regain full access.`;
 
 export function buildFormiSystemPrompt(
 	nda: NdaContext | null,

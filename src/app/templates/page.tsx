@@ -74,7 +74,7 @@ export default function TemplateSelectionPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Step 1 of 2</p>
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Get started</p>
           <h1 className="text-4xl font-extrabold tracking-tight text-ink mb-4">
             Choose Your NDA Template {mode === "html" && <span className="text-teal-700">(HTML Editor)</span>}
           </h1>

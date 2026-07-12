@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, Search, RotateCw, Archive, ArchiveRestore } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { canArchiveNda } from '@/lib/ndaLifecycle';
@@ -64,16 +65,20 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
     case 'COMPLETE':
       return { label: 'Complete', tone: 'done' };
     case 'AWAITING_PARTY_A_REVIEW':
-      return { label: 'Changes to review', tone: 'action' };
+      return { label: 'Your turn: review', tone: 'action' };
     case 'AWAITING_PARTY_B_REVIEW':
-      return { label: 'Waiting review', tone: 'progress' };
+      // Party B's turn to review. If we ARE Party B (received), it's our action;
+      // if we sent it (created), we're waiting on the other party.
+      return nda.type === 'received'
+        ? { label: 'Your turn: review', tone: 'action' }
+        : { label: 'Waiting on them', tone: 'progress' };
     case 'AWAITING_PARTY_A_SIGNATURE':
-      return { label: 'Sign now', tone: 'action' };
+      return { label: 'Your turn: sign', tone: 'action' };
     case 'AWAITING_PARTY_B_SIGNATURE':
       if (nda.type === 'received') {
-        return { label: 'Sign now', tone: 'action' };
+        return { label: 'Your turn: sign', tone: 'action' };
       }
-      return { label: 'Waiting signature', tone: 'progress' };
+      return { label: 'Waiting on them', tone: 'progress' };
     case 'FILLING':
     default:
       if (nda.status === 'cancelled') {
@@ -89,6 +94,7 @@ function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
 }
 
 export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfile, pendingInvites, ndaUpdate }: DashboardClientProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action' | 'archived'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
@@ -193,6 +199,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       setLocalNdas(prev => prev.filter(nda => nda.id !== id));
       setMessage({ type: 'success', text: 'Draft deleted successfully' });
       setTimeout(() => setMessage(null), 3000);
+      // Drop the row from the server component cache too, so a refresh/return
+      // never resurrects the deleted draft (fixes the "Draft not found" reopen).
+      router.refresh();
     } catch (error) {
       console.error('Delete error:', error);
       setMessage({
@@ -278,7 +287,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       if (isArchived) return false; // archived rows are hidden from every other view
       if (filter === 'all') return true;
       const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
-        (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
+        (nda.type === 'received' && ['AWAITING_PARTY_B_SIGNATURE', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || ''));
       const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
       if (filter === 'action') return isActionRequired;
       if (filter === 'signed') return isSigned && !isActionRequired;
@@ -295,7 +304,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
   const actionRequired = (n: NDA) =>
     ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '') ||
-    (n.type === 'received' && n.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
+    (n.type === 'received' && ['AWAITING_PARTY_B_SIGNATURE', 'AWAITING_PARTY_B_REVIEW'].includes(n.workflowState || ''));
   const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
 
   const active = localNdas.filter((n) => n.archivedAt == null);
@@ -317,7 +326,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     countColor: string;
     urgent?: boolean;
   }[] = [
-    { key: 'all', label: 'Total NDAs', count: stats.total, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
+    { key: 'all', label: 'All my NDAs', count: stats.total, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
     { key: 'draft', label: 'Drafts', count: stats.draft, iconColor: 'text-gray-500 bg-gray-100', countColor: 'text-ink' },
     { key: 'sent', label: 'Sent', count: stats.sent, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
     { key: 'received', label: 'Received', count: stats.received, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
@@ -530,16 +539,10 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Compact header */}
-        <div className="flex items-center justify-between pt-8 pb-6 border-b border-gray-100">
-          <div>
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Dashboard</p>
-            <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Manage and track your non-disclosure agreements</p>
-          </div>
-          <Link href="/templates" className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-teal-800 text-white rounded-xl font-semibold shadow-card hover:bg-teal-700 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-700 text-sm">
-            <Plus className="w-4 h-4" />
-            New NDA
-          </Link>
+        <div className="pt-8 pb-6 border-b border-gray-100">
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Dashboard</p>
+          <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage and track your Non-Disclosure Agreements</p>
         </div>
 
 
@@ -571,6 +574,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               <button
                 key={card.key}
                 onClick={() => setFilter(card.key)}
+                title={card.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
                 className={`relative text-left p-4 rounded-2xl border transition-all duration-200 focus:outline-none cursor-pointer ${
                   isActive
                     ? 'bg-white border-transparent ring-2 ring-teal-600 shadow-card'

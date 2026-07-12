@@ -27,17 +27,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'FormalizeIt — Send an NDA in Minutes',
-  description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
+  description: 'Send an NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
   openGraph: {
     title: 'FormalizeIt — Send an NDA in Minutes',
-    description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
+    description: 'Send an NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
     siteName: 'FormalizeIt',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'FormalizeIt — Send an NDA in Minutes',
-    description: 'Send a legally binding NDA in minutes. Pick a template, fill in the details, and send a secure link.',
+    description: 'Send an NDA in minutes. Pick a template, fill in the details, and send a secure link.',
   },
 }
 

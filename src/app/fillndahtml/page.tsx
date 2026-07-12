@@ -4,10 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
+import { filterPhoneChars } from "@/lib/phone";
+import { deriveNdaTitle, confidentialityBelowTerm } from "@/lib/ndaTerms";
 import { useFormi } from "@/components/ai/FormiProvider";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
+import { FieldTooltip } from "@/components/ui/field-tooltip";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Send, Save, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, Save } from "lucide-react";
 
 type FormValues = {
 	docName: string;
@@ -80,7 +83,6 @@ export default function FillNDAHTML() {
 	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
-	const [deleting, setDeleting] = useState(false);
 	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
@@ -100,6 +102,10 @@ export default function FillNDAHTML() {
 	const [showShareLinkModal, setShowShareLinkModal] = useState(false);
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
+	// "Signatory is the same as the party name" toggles (opt-in — we never prefill,
+	// since the party may be a company).
+	const [partyASignatorySame, setPartyASignatorySame] = useState(false);
+	const [partyBSignatorySame, setPartyBSignatorySame] = useState(false);
 	// Send for input modal state
 	const [showSendForInputModal, setShowSendForInputModal] = useState(false);
 	const [inputRecipientEmail, setInputRecipientEmail] = useState("");
@@ -641,6 +647,60 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// Keep the signatory name mirrored to the party name while "same as party name"
+	// is checked, so editing the party name updates the signatory too.
+	useEffect(() => {
+		if (partyASignatorySame && values.party_a_signatory_name !== values.party_a_name) {
+			setField("party_a_signatory_name", values.party_a_name);
+		}
+	}, [partyASignatorySame, values.party_a_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if (partyBSignatorySame && values.party_b_signatory_name !== values.party_b_name) {
+			setField("party_b_signatory_name", values.party_b_name);
+		}
+	}, [partyBSignatorySame, values.party_b_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// --- Live-preview ↔ form field sync (C2) ------------------------------------
+	// The rendered NDA already wraps every deal variable in <span data-field="…">,
+	// so we can highlight/scroll the matching token when a field is focused, and
+	// jump back to the form field when a preview token is clicked. Preview-only —
+	// no change to the document content or the signed PDF.
+	const PREVIEW_FIELD_STEP: Record<string, number> = {
+		effective_date: 0, term_months: 0,
+		party_a_name: 1, party_a_address: 1,
+		party_b_name: 2, party_b_address: 2,
+		governing_law: 3, purpose: 3, additional_terms: 3,
+	};
+
+	const highlightPreviewField = (field: string) => {
+		const doc = iframeRef.current?.contentDocument;
+		if (!doc) return;
+		doc.querySelectorAll('.nda-focus-highlight').forEach((el) => el.classList.remove('nda-focus-highlight'));
+		const el = doc.querySelector<HTMLElement>(`[data-field="${field}"]`);
+		if (el) {
+			el.classList.add('nda-focus-highlight');
+			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	};
+
+	const clearPreviewHighlight = () => {
+		iframeRef.current?.contentDocument
+			?.querySelectorAll('.nda-focus-highlight')
+			.forEach((el) => el.classList.remove('nda-focus-highlight'));
+	};
+
+	// Clicking a token in the preview jumps to (and focuses) its form field.
+	const jumpToFormField = (field: string) => {
+		const targetStep = PREVIEW_FIELD_STEP[field];
+		if (targetStep !== undefined) setStep(targetStep);
+		setTimeout(() => {
+			const input = document.querySelector<HTMLElement>(`[data-preview-field="${field}"]`);
+			input?.focus();
+			input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}, 80);
+	};
+
 	const getFieldClass = (fieldName: string, baseClass: string = "p-2.5 border") => {
 		const hasError = validationErrors.has(fieldName);
 		const hasSuggestion = incomingSuggestions[fieldName] && !suggestionResponses[fieldName];
@@ -808,8 +868,8 @@ export default function FillNDAHTML() {
 
 	const validate = (): { isValid: boolean; errors: Set<string>; message: string | null } => {
 		const errors = new Set<string>();
+		// docName is optional — a title is derived from the counterparty when blank.
 		const mandatoryFields = [
-			"docName",
 			"effective_date",
 			"term_months",
 			"confidentiality_period_months",
@@ -867,7 +927,7 @@ export default function FillNDAHTML() {
 		const stepFields: string[] = [];
 		switch (s) {
 			case 0:
-				stepFields.push("docName", "term_months", "confidentiality_period_months");
+				stepFields.push("term_months", "confidentiality_period_months");
 				break;
 			case 1:
 				// Party A fields only required if not asking receiver to fill
@@ -904,7 +964,6 @@ export default function FillNDAHTML() {
 			case 4:
 				// review - all mandatory fields based on ask_receiver_fill flags
 				stepFields.push(
-					"docName",
 					"effective_date",
 					"term_months",
 					"confidentiality_period_months",
@@ -931,7 +990,6 @@ export default function FillNDAHTML() {
 	// D) Fix computeCompletionPercent - respect "ask receiver to fill" like validate() does
 	const computeCompletionPercent = () => {
 		const requiredFields = [
-			"docName",
 			"effective_date",
 			"term_months",
 			"confidentiality_period_months",
@@ -992,30 +1050,11 @@ export default function FillNDAHTML() {
 		await performSave();
 	};
 
-	const deleteDraft = async () => {
-		if (!draftId) return;
-		if (!window.confirm('Delete this draft? This cannot be undone.')) return;
-		setDeleting(true);
-		try {
-			const res = await fetch(`/api/ndas/drafts/${draftId}`, { method: 'DELETE' });
-			if (!res.ok) {
-				const data = await res.json();
-				setWarning(data.error || 'Failed to delete draft');
-				return;
-			}
-			router.push('/dashboard');
-		} catch {
-			setWarning('Failed to delete draft');
-		} finally {
-			setDeleting(false);
-		}
-	};
-
 	const performSave = async () => {
 		setSaving(true);
 		setWarning("");
 		try {
-			const payload = { draftId, title: values.docName, data: { ...values, templateId } };
+			const payload = { draftId, title: deriveNdaTitle(values.docName, values.party_b_name), data: { ...values, templateId } };
 			const res = await fetch("/api/ndas/drafts", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -1061,11 +1100,33 @@ export default function FillNDAHTML() {
 		return partyBFields.some(field => !field.value.trim() && field.askReceiver);
 	};
 
+	// Ordered required fields → their wizard step, used to jump to the first
+	// missing field when a send is blocked (instead of only showing a count).
+	const FIELD_STEP: Record<string, number> = {
+		effective_date: 0, term_months: 0, confidentiality_period_months: 0,
+		party_a_name: 1, party_a_address: 1, party_a_signatory_name: 1, party_a_title: 1,
+		party_b_name: 2, party_b_address: 2, party_b_signatory_name: 2, party_b_title: 2,
+		governing_law: 3, ip_ownership: 3, non_solicit: 3, exclusivity: 3,
+	};
+
+	const focusFirstMissing = (errors: Set<string>) => {
+		const first = Object.keys(FIELD_STEP).find((f) => errors.has(f));
+		if (!first) return;
+		setStep(FIELD_STEP[first]);
+		// Let the step render, then bring the first flagged field into view + focus.
+		setTimeout(() => {
+			const el = document.querySelector<HTMLElement>('.border-red-500');
+			el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			el?.focus?.();
+		}, 80);
+	};
+
 	const sendForReview = async () => {
 		const validation = validate();
 		if (!validation.isValid) {
 			setValidationErrors(validation.errors);
 			setWarning(validation.message || "Please fill in all required fields");
+			focusFirstMissing(validation.errors);
 			return;
 		}
 
@@ -1091,7 +1152,7 @@ export default function FillNDAHTML() {
 		let currentDraftId = draftId;
 		if (!currentDraftId) {
 			try {
-				const payload = { draftId: draftId, title: values.docName, data: { ...values, templateId } };
+				const payload = { draftId: draftId, title: deriveNdaTitle(values.docName, values.party_b_name), data: { ...values, templateId } };
 				const res = await fetch("/api/ndas/drafts", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -1295,7 +1356,14 @@ export default function FillNDAHTML() {
 			<div className="flex h-[calc(100vh-64px)]">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
 				<div className={`transition-all duration-300 ${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
-					<div className="max-w-4xl mx-auto p-6">
+					<div
+						className="max-w-4xl mx-auto p-6"
+						onFocusCapture={(e) => {
+							const f = (e.target as HTMLElement).getAttribute?.('data-preview-field');
+							if (f && showLivePreview) highlightPreviewField(f);
+						}}
+						onBlurCapture={() => { if (showLivePreview) clearPreviewHighlight(); }}
+					>
 						{/* Header */}
 						<div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
 							<div className="flex items-center gap-3">
@@ -1305,8 +1373,8 @@ export default function FillNDAHTML() {
 									</svg>
 								</div>
 								<div>
-									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA Draft" : "Create New NDA"}</h1>
-									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Fill out the form to generate your agreement"}</p>
+									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA draft" : "Fill out the form to generate your agreement"}</h1>
+									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Add the deal-specific details below"}</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-2">
@@ -1428,7 +1496,14 @@ export default function FillNDAHTML() {
 
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 											<div className="md:col-span-2">
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Document Title *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Document Title
+													<span className="text-xs font-normal text-gray-400">(optional)</span>
+													<FieldTooltip
+														text="A name to help you find this NDA on your dashboard. Leave blank and we'll name it after the other party."
+														onAskFormi={() => openFormiNudge("What should I put as the document title for my NDA?")}
+													/>
+												</label>
 												<input
 													className={`${getFieldClass("docName")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.docName}
@@ -1442,23 +1517,35 @@ export default function FillNDAHTML() {
 													type="date"
 													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors")}`}
 													value={values.effective_date}
-													onChange={(e) => setField("effective_date", e.target.value)}
+													data-preview-field="effective_date" onChange={(e) => setField("effective_date", e.target.value)}
 													required
 												/>
 												<div className="text-xs text-gray-500 mt-1">DD/MM/YYYY</div>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Term (months) *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Term (months) *
+													<FieldTooltip
+														text="The period during which confidential materials can be shared under this NDA."
+														onAskFormi={() => openFormiNudge("Explain the 'Term (months)' field in this NDA and how to choose it.")}
+													/>
+												</label>
 												<input
 													type="number"
 													className={`${getFieldClass("term_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.term_months}
-													onChange={(e) => setField("term_months", e.target.value)}
+													data-preview-field="term_months" onChange={(e) => setField("term_months", e.target.value)}
 													placeholder="e.g., 12"
 												/>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Confidentiality Period (months) *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Confidentiality Period (months) *
+													<FieldTooltip
+														text="How long confidentiality obligations must be kept. This can be longer than the agreement term."
+														onAskFormi={() => openFormiNudge("Explain the 'Confidentiality Period' field in this NDA and how it differs from the term.")}
+													/>
+												</label>
 												<input
 													type="number"
 													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
@@ -1466,14 +1553,20 @@ export default function FillNDAHTML() {
 													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
 													placeholder="e.g., 24"
 												/>
+												{confidentialityBelowTerm(values.term_months, values.confidentiality_period_months) && (
+													<p className="mt-1.5 text-xs text-amber-700 flex items-start gap-1">
+														<span aria-hidden="true">⚠</span>
+														<span>The confidentiality period is shorter than the term. Confidentiality obligations usually last at least as long as the agreement.</span>
+													</p>
+												)}
 											</div>
 										</div>
 									</div>
 								)}
 
 								{step === 1 && (
-									<div className="space-y-6">
-										<div className="flex items-center gap-3 mb-6">
+									<div className="space-y-4">
+										<div className="flex items-center gap-3 mb-3">
 											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
 												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1506,18 +1599,16 @@ export default function FillNDAHTML() {
 										</div>
 
 										{/* Info box about company profile */}
-										<div className="bg-teal-50 rounded-lg p-4 border border-teal-200 mb-4">
-											<div className="flex gap-3">
-												<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<div className="bg-teal-50 rounded-lg px-3 py-2 border border-teal-200">
+											<p className="text-xs text-teal-800 flex items-start gap-2">
+												<svg className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
-												<div>
-													<p className="text-sm text-teal-800">
-														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
-														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
-													</p>
-												</div>
-											</div>
+												<span>
+													<strong>Tip:</strong> Use &quot;Auto-fill from Profile&quot; to fill Party A from your saved{' '}
+													<a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
+												</span>
+											</p>
 										</div>
 
 										<div className="space-y-4">
@@ -1526,7 +1617,7 @@ export default function FillNDAHTML() {
 												<input
 													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_name}
-													onChange={(e) => setField("party_a_name", e.target.value)}
+													data-preview-field="party_a_name" onChange={(e) => setField("party_a_name", e.target.value)}
 													placeholder="Enter party name"
 												/>
 												{renderSuggestionBox('party_a_name', 'Party A Name')}
@@ -1537,30 +1628,45 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.party_a_address}
-													onChange={(e) => setField("party_a_address", e.target.value)}
+													data-preview-field="party_a_address" onChange={(e) => setField("party_a_address", e.target.value)}
 													placeholder="Enter full address"
 												/>
 												{renderSuggestionBox('party_a_address', 'Party A Address')}
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-xs font-normal text-gray-400">(optional)</span></label>
 												<input
 													type="tel"
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.party_a_phone}
-													onChange={(e) => setField("party_a_phone", e.target.value)}
+													onChange={(e) => setField("party_a_phone", filterPhoneChars(e.target.value))}
 													placeholder="e.g., +1 (555) 123-4567"
 												/>
 												{renderSuggestionBox('party_a_phone', 'Party A Phone')}
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
-													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
+													<div className="flex items-center justify-between mb-2">
+														<label className="block text-sm font-semibold text-gray-700">Signatory Name <span className="text-xs font-normal text-gray-400">(if different from party name)</span></label>
+														<label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+															<input
+																type="checkbox"
+																className="rounded border-gray-300 text-teal-700 focus:ring-teal-700/30"
+																checked={partyASignatorySame}
+																onChange={(e) => {
+																	setPartyASignatorySame(e.target.checked);
+																	if (e.target.checked) setField("party_a_signatory_name", values.party_a_name);
+																}}
+															/>
+															Same as party name
+														</label>
+													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_a_signatory_name}
 														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
 														placeholder="Full name"
+														disabled={partyASignatorySame}
 													/>
 													{renderSuggestionBox('party_a_signatory_name', 'Signatory Name')}
 												</div>
@@ -1622,7 +1728,7 @@ export default function FillNDAHTML() {
 												<input
 													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_name}
-													onChange={(e) => setField("party_b_name", e.target.value)}
+													data-preview-field="party_b_name" onChange={(e) => setField("party_b_name", e.target.value)}
 													placeholder="Enter party name"
 													disabled={values.party_b_name_ask_receiver}
 												/>
@@ -1645,7 +1751,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													rows={3}
 													value={values.party_b_address}
-													onChange={(e) => setField("party_b_address", e.target.value)}
+													data-preview-field="party_b_address" onChange={(e) => setField("party_b_address", e.target.value)}
 													placeholder="Enter full address"
 													disabled={values.party_b_address_ask_receiver}
 												/>
@@ -1668,7 +1774,7 @@ export default function FillNDAHTML() {
 													type="tel"
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													value={values.party_b_phone}
-													onChange={(e) => setField("party_b_phone", e.target.value)}
+													onChange={(e) => setField("party_b_phone", filterPhoneChars(e.target.value))}
 													placeholder="e.g., +1 (555) 123-4567"
 													disabled={values.party_b_phone_ask_receiver}
 												/>
@@ -1678,22 +1784,38 @@ export default function FillNDAHTML() {
 												<div>
 													<div className="flex items-center justify-between mb-2">
 														<label className="block text-sm font-semibold text-gray-700">Signatory Name</label>
-														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
-															<input
-																type="checkbox"
-																checked={values.party_b_signatory_name_ask_receiver}
-																onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)}
-																className="form-checkbox h-3 w-3 text-teal-700 rounded focus:ring-2 focus:ring-teal-500"
-															/>
-															<span className="font-medium text-teal-700">Ask receiver</span>
-														</label>
+														<div className="flex items-center gap-2">
+															{!values.party_b_signatory_name_ask_receiver && (
+																<label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+																	<input
+																		type="checkbox"
+																		className="rounded border-gray-300 text-teal-700 focus:ring-teal-700/30"
+																		checked={partyBSignatorySame}
+																		onChange={(e) => {
+																			setPartyBSignatorySame(e.target.checked);
+																			if (e.target.checked) setField("party_b_signatory_name", values.party_b_name);
+																		}}
+																	/>
+																	Same as party name
+																</label>
+															)}
+															<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+																<input
+																	type="checkbox"
+																	checked={values.party_b_signatory_name_ask_receiver}
+																	onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)}
+																	className="form-checkbox h-3 w-3 text-teal-700 rounded focus:ring-2 focus:ring-teal-500"
+																/>
+																<span className="font-medium text-teal-700">Ask receiver</span>
+															</label>
+														</div>
 													</div>
 													<input
 														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_signatory_name}
 														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 														placeholder="Full name"
-														disabled={values.party_b_signatory_name_ask_receiver}
+														disabled={values.party_b_signatory_name_ask_receiver || partyBSignatorySame}
 													/>
 													{renderSuggestionBox('party_b_signatory_name', 'Party B Signatory')}
 												</div>
@@ -1750,14 +1872,14 @@ export default function FillNDAHTML() {
 								{step === 3 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 												</svg>
 											</div>
 											<div>
-												<h2 className="text-xl font-bold text-ink">Additional Clauses</h2>
-												<p className="text-sm text-gray-600">Customize your agreement terms</p>
+												<h2 className="text-xl font-bold text-ink">Deal details</h2>
+												<p className="text-sm text-gray-600">Deal-specific details for this NDA</p>
 											</div>
 										</div>
 
@@ -1768,7 +1890,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={2}
 													value={values.purpose}
-													onChange={(e) => setField("purpose", e.target.value)}
+													data-preview-field="purpose" onChange={(e) => setField("purpose", e.target.value)}
 													placeholder="e.g., evaluating a potential business relationship"
 												/>
 											</div>
@@ -1777,7 +1899,7 @@ export default function FillNDAHTML() {
 												<input
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.governing_law}
-													onChange={(e) => setField("governing_law", e.target.value)}
+													data-preview-field="governing_law" onChange={(e) => setField("governing_law", e.target.value)}
 													placeholder="e.g., State of California"
 												/>
 											</div>
@@ -1817,7 +1939,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.additional_terms}
-													onChange={(e) => setField("additional_terms", e.target.value)}
+													data-preview-field="additional_terms" onChange={(e) => setField("additional_terms", e.target.value)}
 													placeholder="Enter any additional terms or clauses..."
 												/>
 											</div>
@@ -1952,18 +2074,8 @@ export default function FillNDAHTML() {
 										</>
 									)}
 
-									{/* Delete button — shown only for saved DRAFT state */}
-									{workflowState === 'DRAFT' && draftId && (
-										<Button
-											variant="outline"
-											onClick={deleteDraft}
-											disabled={deleting}
-											className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-										>
-											<Trash2 />
-											{deleting ? 'Deleting...' : 'Delete Draft'}
-										</Button>
-									)}
+									{/* Deleting a draft is intentionally available only from the
+										dashboard, to avoid accidental deletion mid-edit. */}
 
 									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
@@ -2086,6 +2198,27 @@ export default function FillNDAHTML() {
 												console.warn("Could not restore scroll position", e);
 											}
 										}
+										// Field-sync (C2): inject the focus-highlight style and make preview
+										// tokens clickable to jump back to their form field.
+										try {
+											const doc = iframeRef.current?.contentDocument;
+											if (doc) {
+												if (!doc.getElementById('nda-focus-style')) {
+													const style = doc.createElement('style');
+													style.id = 'nda-focus-style';
+													style.textContent = '.nda-focus-highlight{background:#ccfbf1 !important;outline:2px solid #0f766e;outline-offset:1px;border-radius:3px;} [data-field]{cursor:pointer;}';
+													doc.head?.appendChild(style);
+												}
+												doc.querySelectorAll('[data-field]').forEach((el) => {
+													el.addEventListener('click', () => {
+														const f = el.getAttribute('data-field');
+														if (f) jumpToFormField(f);
+													});
+												});
+											}
+										} catch (e) {
+											console.warn("Could not wire preview field sync", e);
+										}
 									}}
 								/>
 							) : !previewLoading && !previewError ? (
@@ -2103,7 +2236,7 @@ export default function FillNDAHTML() {
 				{/* Send for Input Modal - Prompt for recipient email */}
 				{showSendForInputModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							if (e.target === e.currentTarget) {
 								setShowSendForInputModal(false);
@@ -2162,7 +2295,7 @@ export default function FillNDAHTML() {
 				{/* Shareable Link Modal */}
 				{showShareLinkModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							// Close modal when clicking on backdrop
 							if (e.target === e.currentTarget) {
@@ -2605,7 +2738,7 @@ export default function FillNDAHTML() {
 
 				{/* Reject Internal Submission Modal */}
 				{showRequestChangesModal && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
 							<div className="p-6 border-b border-gray-200">
 								<h3 className="text-lg font-semibold text-gray-900">Request Changes from Party B</h3>
@@ -2647,7 +2780,7 @@ export default function FillNDAHTML() {
 				{/* No Company Profile Modal */}
 				{showNoProfileModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							if (e.target === e.currentTarget) {
 								setShowNoProfileModal(false);
@@ -2703,7 +2836,7 @@ export default function FillNDAHTML() {
 
 				{/* PDF Preview Modal (fallback for blocked popups) */}
 				{showPdfPreview && pdfPreviewUrl && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
 						<div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full relative flex flex-col overflow-hidden" style={{ height: '90vh' }}>
 							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
 								<div className="flex items-center gap-3">
@@ -2718,7 +2851,7 @@ export default function FillNDAHTML() {
 									</div>
 								</div>
 								<button
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg"
+									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white/50 rounded-lg"
 									onClick={() => {
 										setShowPdfPreview(false);
 										setPdfPreviewUrl('');
