@@ -2,240 +2,91 @@
 
 import { useRef } from 'react'
 import { SignUpButton } from '@clerk/nextjs'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { FeatureSteps } from '@/components/ui/feature-section'
+import { motion, useScroll, useTransform, useInView, useReducedMotion } from 'framer-motion'
+import { BookOpenCheck, PenLine, Users, ShieldCheck, ArrowRight } from 'lucide-react'
+import { Reveal, RevealGroup, RevealItem } from '@/components/ui/reveal'
+import { Button } from '@/components/ui/button'
+import { LegalDisclaimer } from '@/components/ui/legal-disclaimer'
 import {
-  FileText,
-  PenLine,
-  ScanSearch,
-  Send,
-  ArrowRight,
-  Check,
-} from 'lucide-react'
+  HeroLockedDoc,
+  OldWayDemo,
+  NewWayDemo,
+  FanOutDemo,
+  ReadOnceMockup,
+  TypingFillMockup,
+  CollaborateSendMockup,
+  SignedTrackedMockup,
+} from './demos'
 
-/* ─── Mockup components ───────────────────────────────────── */
+/* ─── How-it-works timeline ───────────────────────────────── */
 
-function TemplateMockup() {
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
-      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-        <p className="text-xs font-semibold text-gray-500">Select a Template</p>
-      </div>
-      <div className="p-4 space-y-2">
-        {[
-          { name: 'Mutual NDA', tag: 'Most common', active: true },
-          { name: 'One-way NDA', tag: 'Vendor use', active: false },
-          { name: 'Employee NDA', tag: 'HR', active: false },
-        ].map((t) => (
-          <div
-            key={t.name}
-            className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-              t.active ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-white'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <FileText className={`w-4 h-4 ${t.active ? 'text-teal-600' : 'text-gray-400'}`} />
-              <span className={`text-sm font-medium ${t.active ? 'text-teal-800' : 'text-gray-700'}`}>
-                {t.name}
-              </span>
-            </div>
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                t.active ? 'bg-teal-200 text-teal-800' : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {t.tag}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function VariablesMockup() {
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
-      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-        <p className="text-xs font-semibold text-gray-500">Fill in the Details</p>
-      </div>
-      <div className="p-5 space-y-4">
-        {[
-          { label: 'Disclosing Party', value: 'Acme Corp.' },
-          { label: 'Receiving Party', value: 'Initech Ltd.' },
-          { label: 'Effective Date', value: 'March 29, 2026' },
-          { label: 'Duration', value: '2 years' },
-        ].map((field) => (
-          <div key={field.label}>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-              {field.label}
-            </p>
-            <div className="flex items-center px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg">
-              <span className="text-sm text-teal-800 font-medium">{field.value}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ReviewMockup() {
-  return (
-    <div className="relative w-full max-w-sm">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-          </div>
-          <div className="text-xs font-semibold text-gray-400">NDA_Agreement.docx</div>
-          <div className="w-12" />
-        </div>
-        <div className="px-6 py-5 space-y-3">
-          <div className="h-3 bg-gray-800 rounded w-2/3 mb-5" />
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-5/6" />
-          <div className="flex items-center gap-2 rounded-md bg-teal-50 border border-teal-200 px-3 py-2">
-            <div className="h-2 bg-teal-400 rounded w-1/3" />
-            <div className="h-2 bg-teal-200 rounded flex-1" />
-          </div>
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-3/4" />
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-            <div className="h-2 bg-amber-400 rounded w-2/5" />
-            <div className="h-2 bg-amber-200 rounded flex-1" />
-          </div>
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-5/6" />
-        </div>
-      </div>
-      <div className="hidden sm:block absolute -right-2 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 w-44">
-        <p className="text-xs font-semibold text-gray-800 leading-snug">Review only the changes:</p>
-        <p className="text-xs text-teal-700 font-medium mt-0.5">Variables &amp; Custom Clauses</p>
-      </div>
-    </div>
-  )
-}
-
-function SignMockup() {
-  return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden w-full max-w-sm">
-      <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
-        <p className="text-xs font-semibold text-gray-500">Ready to Send</p>
-      </div>
-      <div className="p-5 space-y-4">
-        {[
-          { initials: 'JD', name: 'John Doe', email: 'john@acmecorp.com', signed: true },
-          { initials: 'MS', name: 'Mary Smith', email: 'mary@initech.com', signed: false },
-        ].map((person) => (
-          <div
-            key={person.email}
-            className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200"
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                person.signed ? 'bg-teal-100' : 'bg-amber-50'
-              }`}
-            >
-              <span className={`text-xs font-bold ${person.signed ? 'text-teal-700' : 'text-amber-700'}`}>
-                {person.initials}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-ink">{person.name}</p>
-              <p className="text-xs text-gray-400 truncate">{person.email}</p>
-            </div>
-            {person.signed ? (
-              <Check className="w-4 h-4 text-teal-500 flex-shrink-0" />
-            ) : (
-              <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
-            )}
-          </div>
-        ))}
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-800 text-white rounded-xl text-sm font-semibold">
-          <Send className="w-4 h-4" />
-          Send for Signature
-        </button>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Timeline data ───────────────────────────────────────── */
 const TIMELINE_STEPS = [
   {
     number: '01',
-    title: 'Choose a Trusted Template',
+    title: 'Read the standard once',
     description:
-      'Select from industry-standard, pre-vetted NDA templates built for your situation. No blank page, no guesswork — start from something that already works.',
-    icon: FileText,
-    mockupKey: 'template',
+      'One balanced mutual NDA — the same legal text for every deal. You or your lawyer review it a single time, and that review holds forever.',
+    icon: BookOpenCheck,
+    Mockup: ReadOnceMockup,
   },
   {
     number: '02',
-    title: 'Fill the Variables',
+    title: "Fill only what's different",
     description:
-      'Customize key details like company names, dates, and terms using smart fields. Your context, applied cleanly to a proven structure.',
+      'The legal terms stay fixed. You fill in the variable fields — parties, purpose, term, effective date — and skip the boilerplate you already trust.',
     icon: PenLine,
-    mockupKey: 'variables',
+    Mockup: TypingFillMockup,
   },
   {
     number: '03',
-    title: 'Review only the Changes',
+    title: 'Collaborate & send',
     description:
-      'The platform surfaces deviations from the standard. Focus your attention exactly where it matters — skip the boilerplate you already trust.',
-    icon: ScanSearch,
-    mockupKey: 'review',
+      'Teammates draft, comment, and send without waiting on a gatekeeper. The counterparty gets a secure link — no account needed.',
+    icon: Users,
+    Mockup: CollaborateSendMockup,
   },
   {
     number: '04',
-    title: 'Send & Sign',
+    title: 'Signed, sealed, tracked',
     description:
-      'Send to the counterparty and collect a legally binding signature — signers apply it on behalf of the company, with a full audit trail on every document.',
-    icon: Send,
-    mockupKey: 'sign',
+      'Signed with a full audit trail — signer email, timestamp, and an agreement hash recorded on every executed NDA.',
+    icon: ShieldCheck,
+    Mockup: SignedTrackedMockup,
   },
 ]
 
-/* ─── Mockup renderer ─────────────────────────────────────── */
-function StepMockup({ mockupKey }: { mockupKey: string }) {
-  if (mockupKey === 'template') return <TemplateMockup />
-  if (mockupKey === 'variables') return <VariablesMockup />
-  if (mockupKey === 'review') return <ReviewMockup />
-  if (mockupKey === 'sign') return <SignMockup />
-  return null
-}
-
-/* ─── Timeline step ───────────────────────────────────────── */
-function TimelineStep({
-  step,
-  index,
-}: {
-  step: (typeof TIMELINE_STEPS)[0]
-  index: number
-}) {
+function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
+  const reduceMotion = useReducedMotion()
+  const inView = useInView(ref, { once: true, margin: '-80px' })
+  const isInView = reduceMotion || inView
   const isEven = index % 2 === 0
+  const Mockup = step.Mockup
+
+  const textBlock = (align: 'left' | 'right') => (
+    <div className={`max-w-xs ${align === 'right' ? 'pr-12 text-right' : 'pl-12'}`}>
+      <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
+      <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
+      <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+    </div>
+  )
 
   return (
     <div ref={ref} className="relative mb-14 lg:mb-20 last:mb-0">
       {/* Circle node */}
       <motion.div
-        className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-full bg-teal-800 border-4 border-white shadow-md flex items-center justify-center"
-        initial={{ scale: 0, opacity: 0 }}
+        className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-full bg-teal-800 border-4 border-white shadow-card flex items-center justify-center"
+        initial={reduceMotion ? false : { scale: 0, opacity: 0 }}
         animate={isInView ? { scale: 1, opacity: 1 } : {}}
         transition={{ duration: 0.4, type: 'spring', stiffness: 220, damping: 18 }}
       >
-        <step.icon className="w-5 h-5 text-white" />
+        <step.icon className="w-5 h-5 text-white" aria-hidden="true" />
       </motion.div>
 
-      {/* ── Mobile layout ── */}
+      {/* Mobile */}
       <div className="lg:hidden pl-20 pt-1">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
@@ -243,62 +94,66 @@ function TimelineStep({
           <h3 className="text-xl font-extrabold text-ink mb-2">{step.title}</h3>
           <p className="text-sm text-gray-500 leading-relaxed mb-6">{step.description}</p>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <StepMockup mockupKey={step.mockupKey} />
-        </motion.div>
+        <Mockup />
       </div>
 
-      {/* ── Desktop layout ── */}
+      {/* Desktop */}
       <div className="hidden lg:grid grid-cols-2 gap-16 items-center min-h-[240px]">
-        {/* Left column */}
         <motion.div
           className="flex justify-end"
-          initial={{ opacity: 0, x: -48 }}
+          initial={reduceMotion ? false : { opacity: 0, x: -48 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.65, delay: 0.1, ease: 'easeOut' }}
         >
-          {isEven ? (
-            <div className="max-w-xs pr-12 text-right">
-              <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
-              <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
-            </div>
-          ) : (
-            <div className="pr-12">
-              <StepMockup mockupKey={step.mockupKey} />
-            </div>
-          )}
+          {isEven ? textBlock('right') : <div className="pr-12"><Mockup /></div>}
         </motion.div>
-
-        {/* Right column */}
         <motion.div
           className="flex justify-start"
-          initial={{ opacity: 0, x: 48 }}
+          initial={reduceMotion ? false : { opacity: 0, x: 48 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.65, delay: 0.2, ease: 'easeOut' }}
         >
-          {isEven ? (
-            <div className="pl-12">
-              <StepMockup mockupKey={step.mockupKey} />
-            </div>
-          ) : (
-            <div className="max-w-xs pl-12">
-              <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
-              <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
-            </div>
-          )}
+          {isEven ? <div className="pl-12"><Mockup /></div> : textBlock('left')}
         </motion.div>
       </div>
     </div>
   )
 }
 
+/* ─── Trust + team cards data ─────────────────────────────── */
+
+const TRUST_CARDS = [
+  {
+    title: 'Known standard',
+    body: "When someone sends you an NDA from this platform, you know exactly what you're signing — the same balanced text, every time.",
+  },
+  {
+    title: 'Evidence built in',
+    body: 'Every executed NDA records the signer, timestamp, template version, and an agreement hash — a full audit trail with e-signature.',
+  },
+  {
+    title: 'Secure by default',
+    body: 'Signed documents are stored encrypted and retained for five years from execution, with advance notice before any deletion.',
+  },
+]
+
+const TEAM_CARDS = [
+  {
+    title: 'One company, one template',
+    body: 'NDAs belong to your company, not a single inbox. Everyone works from the same standard, so every NDA that goes out reads the same way.',
+  },
+  {
+    title: 'Everyone contributes',
+    body: 'Contributors can draft, comment, and send NDAs for review or signature — everything except signing. No bottlenecks, no gatekeeper.',
+  },
+  {
+    title: 'Signers sign',
+    body: "Only designated signers apply the company's signature — one clear point of accountability on every executed NDA.",
+  },
+]
+
 /* ─── Page ────────────────────────────────────────────────── */
+
 export default function About() {
   const timelineRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -309,158 +164,193 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-
-      {/* ══════════════════════════════════════════════
-          HERO
-      ══════════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: 'easeOut' }}
-          className="text-center max-w-2xl mx-auto"
-        >
+      {/* ── 1. HERO ── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
+        <Reveal className="text-center max-w-2xl mx-auto mb-10">
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+            About FormalizeIt
+          </p>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
-            NDA in minutes.
+            Review once, reuse forever.
           </h1>
           <p className="text-base text-gray-500 leading-relaxed">
-            Pick a template, fill in what&apos;s different, send — in minutes.
-            No lawyer required, no email ping-pong, no formatting drama.
+            Stop re-reading NDAs. Approve one fair NDA once, then reuse it safely for
+            every deal — NDA in minutes.
           </p>
-        </motion.div>
-      </section>
-
-      {/* ══════════════════════════════════════════════
-          MISSION
-      ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100 py-12 lg:py-16 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              Why FormalizeIt
-            </p>
-            <h2 className="text-3xl font-extrabold text-ink tracking-tight mb-4">
-              Every team deserves a signed NDA before the moment passes
-            </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
-              NDAs shouldn&apos;t be the reason a deal stalls. FormalizeIt gives your whole
-              company one trusted template, so the only thing left to review is what
-              actually changed. Teammates can draft, comment, and send without waiting on
-              a single approver — and it&apos;s all stored securely with a clear audit trail
-              and e-signature, so trust never has to slow you down.
-            </p>
-          </motion.div>
+        </Reveal>
+        <div className="flex justify-center">
+          <HeroLockedDoc />
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          TIMELINE
-      ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100 py-12 lg:py-16">
+      {/* ── 2. THE PROBLEM ── */}
+      <section className="border-y border-gray-100 bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-          {/* Section header */}
-          <motion.div
-            className="mb-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              The process
+              The problem
             </p>
-            <h2 className="text-3xl font-extrabold text-ink tracking-tight">
-              From blank to signed
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+              NDAs are repetitive, low-value to negotiate — and they still waste
+              everyone&apos;s time.
             </h2>
-          </motion.div>
+            <p className="text-base text-gray-500 leading-relaxed">
+              The legal text barely changes between deals, yet every NDA restarts the
+              same review loop.
+            </p>
+          </Reveal>
+          <RevealGroup className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <RevealItem>
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    The old way
+                  </p>
+                </div>
+                <OldWayDemo />
+              </div>
+            </RevealItem>
+            <RevealItem>
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-teal-700 uppercase tracking-wide">
+                    With FormalizeIt
+                  </p>
+                </div>
+                <NewWayDemo />
+              </div>
+            </RevealItem>
+          </RevealGroup>
+        </div>
+      </section>
 
-          {/* Timeline container with scroll-driven line */}
+      {/* ── 3. THE IDEA ── */}
+      <section className="py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              One standard
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+              One NDA. One legal text. Infinite deals.
+            </h2>
+            <p className="text-base text-gray-500 leading-relaxed">
+              Fair by design — a single balanced mutual NDA that both sides can trust.
+              Not &quot;pro-discloser&quot; or &quot;pro-recipient,&quot; and never customized to sneak in
+              weird terms.
+            </p>
+          </Reveal>
+          <Reveal>
+            <FanOutDemo />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── 4. HOW IT WORKS ── */}
+      <section className="border-y border-gray-100 bg-gray-50 py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="mb-8 text-center">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              How it works
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+              From standard to signed
+            </h2>
+          </Reveal>
+
           <div ref={timelineRef} className="relative">
-            {/* Track (faint background line) */}
-            <div className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-gray-100" />
-
-            {/* Animated progress line */}
+            <div className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-gray-200" />
             <motion.div
-              className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-teal-600 origin-top"
+              className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-teal-700 origin-top motion-reduce:hidden"
               style={{ scaleY: lineScaleY }}
             />
-
-            {/* Steps */}
             <div className="relative">
               {TIMELINE_STEPS.map((step, i) => (
-                <TimelineStep key={i} step={step} index={i} />
+                <TimelineStep key={step.number} step={step} index={i} />
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════
-          FEATURE STEPS
-      ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100">
-        <FeatureSteps
-          features={[
-            {
-              step: 'Step 1',
-              title: 'One Company, One Template',
-              content:
-                'NDAs belong to your company, not a single inbox. Everyone works from the same trusted template, so every NDA that goes out looks and reads the same way.',
-              image:
-                'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=2070&auto=format&fit=crop',
-            },
-            {
-              step: 'Step 2',
-              title: 'Collaborate Without Bottlenecks',
-              content:
-                'Any teammate can draft, comment, and send an NDA for review or signature — no waiting on one gatekeeper. Only signers apply the company’s signature.',
-              image:
-                'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
-            },
-            {
-              step: 'Step 3',
-              title: 'Send, Sign, Done',
-              content:
-                'Share a secure link with the counterparty. They can review, suggest changes, and sign — no account required, no email ping-pong.',
-              image:
-                'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop',
-            },
-          ]}
-          title="Built for teams, not just one signer"
-          autoPlayInterval={5000}
-        />
-      </section>
-
-{/* ══════════════════════════════════════════════
-          CTA
-      ══════════════════════════════════════════════ */}
-      <section className="border-t border-gray-100 bg-gray-50 py-10">
+      {/* ── 5. TRUST INFRASTRUCTURE ── */}
+      <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div>
-              <h2 className="text-2xl font-extrabold text-ink mb-2">
-                Get your whole team sending NDAs in minutes.
-              </h2>
-              <p className="text-sm text-gray-500">
-                No setup friction. Start from a trusted template and go.
-              </p>
-            </div>
-            <SignUpButton mode="modal">
-              <button className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer">
-                Get Started Free
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </SignUpButton>
-          </div>
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              Trusted by both sides
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+              When they recognize the standard, they sign faster.
+            </h2>
+            <p className="text-base text-gray-500 leading-relaxed">
+              A recognized standard is trust infrastructure — a basis for a frictionless
+              relationship instead of legalities.
+            </p>
+          </Reveal>
+          <RevealGroup className="grid md:grid-cols-3 gap-6">
+            {TRUST_CARDS.map((card) => (
+              <RevealItem key={card.title}>
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 h-full">
+                  <h3 className="text-sm font-semibold text-ink mb-2">{card.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{card.body}</p>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+          <Reveal className="max-w-3xl mx-auto mt-8">
+            <LegalDisclaimer />
+          </Reveal>
         </div>
       </section>
 
+      {/* ── 6. BUILT FOR TEAMS ── */}
+      <section className="border-y border-gray-100 bg-gray-50 py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
+              Built for teams
+            </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+              Everyone moves the deal. One person signs.
+            </h2>
+          </Reveal>
+          <RevealGroup className="grid md:grid-cols-3 gap-6">
+            {TEAM_CARDS.map((card) => (
+              <RevealItem key={card.title}>
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 h-full">
+                  <h3 className="text-sm font-semibold text-ink mb-2">{card.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{card.body}</p>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── 7. CTA ── */}
+      <section className="py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div>
+                <h2 className="text-2xl font-extrabold text-ink mb-2">
+                  Work on what&apos;s important, not on the standard legalities.
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Review the standard once. Send your first NDA in minutes.
+                </p>
+              </div>
+              <SignUpButton mode="modal">
+                <Button size="lg" className="flex-shrink-0">
+                  Get Started Free
+                  <ArrowRight aria-hidden="true" />
+                </Button>
+              </SignUpButton>
+            </div>
+          </Reveal>
+        </div>
+      </section>
     </div>
   )
 }
