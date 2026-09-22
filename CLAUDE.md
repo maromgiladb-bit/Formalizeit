@@ -165,6 +165,11 @@ only signers/administrators apply the company signature at the `signed` step.
    responsibility) is required before signing
 8. **Receiver reminders** fire automatically at **48h and 5 days** for unsigned NDAs; **2FA
    sign-in** (Clerk) is in MVP scope
+9. **Initial send is links-only (decided Sept 2026)** — the platform does **not** email the first
+   invite (cold mail from an unknown domain lands in spam). `send-for-review` returns the secure
+   link + a pre-written subject/body; the sender sends it from their own inbox via the share menu
+   (Gmail / Outlook / mailto / WhatsApp / copy). Platform emails are reserved for follow-ups the
+   receiver already expects: round notifications, 48h/5d reminders, and the signed copy
 
 ### Plan limits & retention (decided June 2026 — see `docs/strategy-gap-checklist.md` §1, §2)
 - **Plans** (`BillingPlan`): **FREE** = 3 NDAs total, 1 user · **PRO** ($9/mo, $7.65/mo annual) =

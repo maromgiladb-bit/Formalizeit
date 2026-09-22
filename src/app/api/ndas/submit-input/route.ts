@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml, negotiationReviewEmailHtml } from '@/lib/email'
 import { createNotificationsForOrgSigners } from '@/lib/notifications'
-import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink'
-import { summarizeResponses, isFullyAccepted, type SuggestionResponses } from '@/lib/negotiation'
+import { newSignLinkExpiry } from '@/lib/signLink'
+import { applyNegotiationRound, pendingSuggestionsFromRevision, type SuggestionResponses } from '@/lib/negotiation'
+import { persistNegotiationRound } from '@/lib/negotiationRound'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 
 /**
  * Submit filled fields from Party B (public, no auth required)
@@ -11,6 +13,10 @@ import { summarizeResponses, isFullyAccepted, type SuggestionResponses } from '@
  */
 export async function POST(request: NextRequest) {
     try {
+        // The signer id is the only credential here, so throttle guessing.
+        const limit = rateLimitRequest(request, 'submit-input', 30, MINUTE)
+        if (!limit.ok) return tooManyRequests(limit)
+
         const body = await request.json()
         const { signerId, draftId, filledFields, suggestedChanges, suggestionResponses } = body
 
@@ -24,7 +30,11 @@ export async function POST(request: NextRequest) {
             include: {
                 signRequest: {
                     include: {
-                        draft: true,
+                        draft: {
+                            include: {
+                                revisions: { orderBy: { createdAt: 'desc' }, take: 1 },
+                            }
+                        },
                         createdBy: true,
                     }
                 }
@@ -57,29 +67,35 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Merge filled fields into draft content
         const currentContent = (draft.content as Record<string, unknown>) || {}
-        let newContent = {
-            ...currentContent,
-            ...(filledFields || {}),
-        }
 
-        // If Party B submitted, clear "ask receiver" flags
-        if (!isPartyA && filledFields) {
-            newContent = {
-                ...newContent,
-                ...Object.keys(filledFields).reduce((acc, field) => {
-                    acc[`${field}_ask_receiver`] = false
-                    return acc
-                }, {} as Record<string, boolean>)
+        // What the OTHER party proposed last round, as the server knows it. We
+        // resolve "accepted" against this rather than against the client's own
+        // claim, so a tampered client can't accept a value never offered. Same
+        // helper the review page uses, so shown == resolvable.
+        const incomingSuggestions = pendingSuggestionsFromRevision(
+            draft.revisions[0]?.content,
+            signer.email,
+        )
+
+        // Resolve the round. `draft.content` is the AGREED document: counters and
+        // fresh suggestions stay out of it until the other side accepts them.
+        const round = applyNegotiationRound({
+            currentContent,
+            filledFields,
+            suggestedChanges,
+            responses: (suggestionResponses || {}) as SuggestionResponses,
+            incomingSuggestions,
+        })
+
+        // If Party B submitted, clear "ask receiver" flags for what they actually
+        // filled in — not for fields they rejected or countered.
+        const contentOverlay: Record<string, unknown> = {}
+        if (!isPartyA) {
+            for (const field of Object.keys(round.appliedFilledFields)) {
+                contentOverlay[`${field}_ask_receiver`] = false
             }
         }
-
-        // Apply accepted suggestions if provided (Party A approving B's suggestions)
-        // suggestionResponses: { field: { action: 'accepted' | 'rejected' | 'countered', counterValue?: string } }
-        // The client already updates formValues/filledFields with accepted values, 
-        // so `filledFields` might already contain the new values. 
-        // But let's ensure we track the resolution in the revision metadata if needed.
 
         // Determine workflow state.
         // A party may proceed to signature ONLY when they fully agreed: no fresh
@@ -88,10 +104,8 @@ export async function POST(request: NextRequest) {
         // a rejection is a disagreement, not an endpoint (you can't unilaterally sign
         // a version the other party hasn't agreed to).
         let newWorkflowState = draft.workflowState;
-        const hasSuggestions = !!(suggestedChanges &&
-            Object.values(suggestedChanges).some(v => v && (v as string).trim()))
-        const responses = (suggestionResponses || {}) as SuggestionResponses;
-        const fullyAccepted = isFullyAccepted(responses, hasSuggestions);
+        const hasSuggestions = round.hasFreshSuggestions
+        const fullyAccepted = round.fullyAccepted;
 
         let redirectUrl: string | undefined;
 
@@ -115,38 +129,14 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Create revision to track changes
-        // IMPORTANT: for the review UI, the other party needs to see ALL changes as "suggestions".
-        // We store suggestedChanges = merge of filledFields + explicit suggestedChanges.
-        // This way page.tsx can surface them all as incomingSuggestions for the reviewer.
-        const allChangesAssuggested: Record<string, string> = {
-            ...(filledFields || {}),
-            ...(suggestedChanges || {}),
-        };
-
-        const revision = await prisma.ndaRevision.create({
-            data: {
-                draftId: draft.id,
-                content: {
-                    filledFields,          // keep raw filled fields for history
-                    suggestedChanges: allChangesAssuggested,  // merged, used by review UI
-                    suggestionResponses,   // Track responses
-                    submittedBy: signer.email,
-                    submittedAt: new Date().toISOString()
-                }
-            }
-        })
-
-
-        // Update draft with new state and track who made last edit
-        await prisma.ndaDraft.update({
-            where: { id: draft.id },
-            data: {
-                content: newContent,
-                workflowState: newWorkflowState,
-                lastEditedBy: isPartyA ? 'party_a' : 'party_b',
-                pendingInputFields: [] // Clear pending fields
-            }
+        const { revisionId } = await persistNegotiationRound({
+            draftId: draft.id,
+            organizationId: draft.organizationId,
+            signRequestId: signer.signRequestId,
+            actor: { kind: 'signer', signerId: signer.id, email: signer.email, isPartyA },
+            round,
+            newWorkflowState,
+            contentOverlay,
         })
 
         // Update signer status
@@ -155,35 +145,9 @@ export async function POST(request: NextRequest) {
             data: { status: 'VIEWED' }
         })
 
-        // Activity: Party B submitted — keep all open links alive (reset inactivity clock).
-        try { await refreshSignLinkExpiryForRequest(signer.signRequestId) } catch (e) { console.error('refresh expiry failed:', e) }
-
-        // Link revision to sign request
-        await prisma.signRequest.update({
-            where: { id: signer.signRequestId },
-            data: { revisionId: revision.id }
-        })
-
-        // Create audit event
-        await prisma.auditEvent.create({
-            data: {
-                organizationId: draft.organizationId,
-                draftId: draft.id,
-                signRequestId: signer.signRequestId,
-                signerId: signer.id,
-                eventType: 'UPDATED',
-                metadata: {
-                    action: isPartyA ? 'party_a_review' : 'party_b_submitted_input',
-                    filled_fields: filledFields ? Object.keys(filledFields) : [],
-                    has_suggestions: hasSuggestions,
-                    new_state: newWorkflowState
-                }
-            }
-        })
-
         // Email notifications logic
         const owner = signer.signRequest.createdBy
-        const summary = summarizeResponses(responses)
+        const summary = round.summary
 
         // Create review link - always use fillndahtml-public
         let reviewLink: string | undefined
@@ -268,7 +232,7 @@ export async function POST(request: NextRequest) {
                         draft.title || 'Untitled NDA',
                         signer.name || signer.email,
                         signer.email,
-                        (suggestedChanges as Record<string, string>) || {},
+                        round.outgoingSuggestions,
                         reviewLink
                     )
                     : negotiationReviewEmailHtml(
@@ -316,7 +280,7 @@ export async function POST(request: NextRequest) {
             success: true,
             newWorkflowState,
             hasSuggestions,
-            revisionId: revision.id,
+            revisionId,
             redirectUrl
         })
     } catch (error) {

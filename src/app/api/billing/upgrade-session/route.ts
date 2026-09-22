@@ -7,7 +7,7 @@ import { isOrganizationOwner } from '@/lib/organizationRoles'
 import { getAppUrl } from '@/lib/email'
 
 // Creates a Stripe billing portal session with subscription_update_confirm flow.
-// This upgrades PRO → TEAM in-place (proration), keeps PRO access until payment
+// This upgrades PRO â†’ TEAM in-place (proration), keeps PRO access until payment
 // confirms, and opens Stripe's hosted payment UI.
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!activeMembership) return NextResponse.json({ error: 'No active organization' }, { status: 404 })
 
     if (!isOrganizationOwner(activeMembership.role)) {
-      return NextResponse.json({ error: 'Only organization owners can manage billing' }, { status: 403 })
+      return NextResponse.json({ error: 'Only administrators can manage billing' }, { status: 403 })
     }
 
     const organization = await prisma.organization.findUnique({

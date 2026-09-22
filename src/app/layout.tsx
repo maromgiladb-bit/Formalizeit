@@ -4,10 +4,12 @@ import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import ToolbarSwitcher from '@/components/ToolbarSwitcher'
 import FooterWrapper from '@/components/FooterWrapper'
 import { FormiProvider } from '@/components/ai/FormiProvider'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { auth } from '@clerk/nextjs/server'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { ensureDbUser } from '@/lib/db-user'
+import { getSiteUrl } from '@/lib/siteUrl'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,6 +28,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
+  // Without this, Next resolves the OG image relative to the deployment host
+  // and social cards break on the custom domain.
+  metadataBase: new URL(getSiteUrl()),
   title: 'FormalizeIt — Send an NDA in Minutes',
   description: 'Send an NDA in minutes. Pick a template, fill in the details, and send a secure link — no account needed for the recipient.',
   openGraph: {
@@ -81,6 +86,7 @@ export default async function RootLayout({
             </div>
             <FooterWrapper />
           </FormiProvider>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react'
 import FloatingNavShell from './nav/FloatingNavShell'
 import { NotificationIcon } from './ui/notification-icon'
 import NotificationPanel from './NotificationPanel'
+import { NEW_NDA_HREF } from '@/lib/newNdaHref'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -31,7 +32,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
     { name: 'My account', href: '/settings', current: pathname.startsWith('/settings') },
-    { name: 'Plans', href: '/#pricing', current: pathname === '/plans' },
+    // Pricing lives on the home page (#pricing); it is never the current route.
+    { name: 'Pricing', href: '/#pricing', current: false },
   ]
 
   const router = useRouter()
@@ -41,7 +43,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
     { name: 'Contact', href: '/contact' },
     { name: 'FAQ', href: '/faq' },
     { name: 'Help', href: '/help' },
-    { name: 'Homepage', href: '/' },
+    { name: 'Home', href: '/' },
   ]
 
   const devLinks = [
@@ -226,7 +228,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 />
               </div>
               <button
-                onClick={() => router.push('/templates')}
+                onClick={() => router.push(NEW_NDA_HREF)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
@@ -311,7 +313,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 </div>
                 <div className="px-1">
                   <Link
-                    href="/templates"
+                    href={NEW_NDA_HREF}
                     className="w-full flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

@@ -509,7 +509,7 @@ export default function SignNDASimpleClient() {
             </div>
             <h2 className="text-xl font-bold text-ink mb-2">Signing not permitted</h2>
             <p className="text-gray-500 text-sm mb-6">
-              Only Signers and Owners with signing enabled can sign NDAs on behalf of the company. Contact your admin to request access.
+              Only Signers (and Administrators with signing enabled) can sign NDAs on behalf of the company. Contact your admin to request access.
             </p>
             <button
               onClick={() => router.push('/dashboard')}

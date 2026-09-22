@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isOrganizationOwner(activeMembership.role)) {
-      return NextResponse.json({ error: 'Only organization owners can manage billing' }, { status: 403 })
+      return NextResponse.json({ error: 'Only administrators can manage billing' }, { status: 403 })
     }
 
     const organization = await prisma.organization.findUnique({
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     // Block if there is already an active paid subscription.
     // A cancelled subscription is treated as FREE so re-subscribing is allowed.
-    // PRO → TEAM upgrades go through /api/billing/upgrade-session (portal flow), not here.
+    // PRO â†’ TEAM upgrades go through /api/billing/upgrade-session (portal flow), not here.
     const hasActivePaidSubscription =
       (organization.billingPlan === 'PRO' || organization.billingPlan === 'TEAM' || organization.billingPlan === 'ENTERPRISE') &&
       organization.billingStatus !== 'CANCELLED'

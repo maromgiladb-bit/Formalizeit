@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
@@ -13,6 +14,10 @@ export const runtime = 'nodejs'; // Required for Puppeteer
 
 export async function POST(request: NextRequest) {
     try {
+        // The signer id is the only credential on this route, so throttle guessing.
+        const limit = rateLimitRequest(request, 'sign-public', 20, MINUTE);
+        if (!limit.ok) return tooManyRequests(limit);
+
         const body = await request.json();
         const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
 

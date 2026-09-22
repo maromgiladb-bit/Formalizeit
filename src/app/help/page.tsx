@@ -46,18 +46,17 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "FormalizeIt is an NDA workflow tool. Instead of writing a new agreement from scratch each time, you pick a template, fill in the details that change, and send a secure link to the other party. The whole process takes about 5 minutes.",
+				body: "FormalizeIt is an NDA workflow tool built around one standard mutual NDA. The legal text is fixed — you only fill in the details that change for each deal, then send a secure link to the other party. The whole process takes about 5 minutes.",
 			},
 			{
 				heading: "Quick start",
 				body: "Here is the fastest path to a sent NDA:",
 				list: [
 					"Go to Dashboard → New NDA",
-					"Select a template (Mutual NDA is the most common)",
-					"Fill in your company details (Step 1) and the other party's details (Step 2)",
-					"Choose the legal terms in Step 3 — duration, governing law, etc.",
-					"Review the live preview in Step 4, then click Generate Secure Link",
-					"Open Gmail, Outlook, or your preferred app and send the link to the recipient",
+					"Name the document, then fill in your company details (Party A) and the other party's details (Party B)",
+					"Choose the deal terms in Clauses — purpose, duration, governing law, optional clauses",
+					"Check the live preview in Review, then click Send NDA and enter the recipient's email",
+					"Pick Gmail, Outlook, or your email app — the message is pre-written, you just hit send",
 				],
 			},
 		],
@@ -69,29 +68,30 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "From your dashboard, click New NDA. You will be taken to the NDA fill-in form. The form has four steps:",
+				body: "From your dashboard, click New NDA. You will be taken to the NDA form. It has five steps:",
 				list: [
-					"Step 1 — Document & Party A: your company name, address, signatory name, title, and contact details",
-					"Step 2 — Party B: the other party's details. You can fill these in yourself or check 'Ask receiver to fill' to have them complete their own details",
-					"Step 3 — Clauses: purpose of the NDA, governing law, IP ownership, non-solicitation, and exclusivity",
-					"Step 4 — Review: a live preview of the full NDA. Check everything, then generate the link",
+					"Document: a name for this NDA and the effective date",
+					"Party A: your company name, address, signatory name, title, and contact details",
+					"Party B: the other party's details. Fill them in yourself or check 'Ask receiver to fill' to have them complete their own details",
+					"Clauses: purpose of the NDA, term, governing law, and the optional IP ownership, non-solicitation, exclusivity, and additional-terms clauses",
+					"Review: a live preview of the full NDA. Check everything, then click Send NDA",
 				],
-				listNote: "Your draft is saved automatically as you work. If you leave and come back, it will be in My Drafts.",
+				listNote: "Your draft is saved automatically as you work. If you leave and come back, it will be under Drafts on your dashboard.",
 			},
 		],
 	},
 	{
-		id: "choose-template",
+		id: "standard-nda",
 		icon: BookOpen,
-		title: "How to choose the right template",
+		title: "About the standard NDA",
 		content: [
 			{
 				heading: null,
-				body: "For most business situations, the Mutual NDA template is the right choice. It protects both parties equally — both sides agree to keep the other's information confidential.",
+				body: "Every NDA sent through FormalizeIt uses the same mutual NDA. It protects both parties equally — both sides agree to keep the other's information confidential — and its legal text is identical in every transaction, so the other party only needs to review the deal-specific details.",
 			},
 			{
-				heading: "When to use a one-way NDA",
-				body: "If only one party is sharing confidential information (e.g. you are disclosing to a vendor), a one-way NDA may be more appropriate. Contact us if you need templates beyond what is currently available.",
+				heading: "Read it once",
+				body: "You can read the full text at any time on the Standard NDA page, see how it is maintained on the NDA Governance page, and track any wording changes in the NDA Changelog.",
 			},
 		],
 	},
@@ -102,7 +102,7 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "After completing the form, click Generate Secure Link. A unique, secure link is created for the recipient. You then send it yourself using the channel of your choice:",
+				body: "After completing the form, click Send NDA and enter the recipient's email. A unique, secure link is created and the email is pre-written for you. You send it from your own inbox — that way it arrives from someone the recipient knows, not from an unfamiliar address that could land in spam:",
 				list: [
 					"Gmail — opens a pre-filled compose window in Gmail",
 					"Outlook — opens a pre-filled compose window in Outlook Web",
@@ -110,7 +110,7 @@ const sections: Section[] = [
 					"WhatsApp or Telegram — sends the link as a message",
 					"Copy Link — copies the link so you can paste it anywhere",
 				],
-				listNote: "The link stays active while the NDA is in progress and expires after 2 weeks of inactivity. The recipient does not need an account to open it.",
+				listNote: "The link stays active while the NDA is in progress and expires after 2 weeks of inactivity. The recipient does not need an account to open it. If it sits unsigned, FormalizeIt sends the recipient a reminder after 48 hours and again after 5 days.",
 			},
 		],
 	},
@@ -139,17 +139,17 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: "Adding team members",
-				body: "Go to Settings → Team. Enter the person's email and assign a role. They will receive an invitation to join your workspace.",
+				body: "Go to My account → Team. Enter the person's email and assign a role. They will receive an invitation to join your workspace.",
 			},
 			{
 				heading: "Roles explained",
 				body: "There are three roles:",
 				list: [
-					"Owner — manages the workspace, billing, and team members. Can be granted signing authority via a toggle in team settings",
-					"Signer — can create, send, sign, and finalize NDAs on behalf of the company",
-					"Contributor — can create and send NDA drafts, but cannot sign NDAs",
+					"Administrator — manages the workspace, billing, and team members. Can be granted signing authority via a toggle in team settings",
+					"Signer — can create, send, and sign NDAs on behalf of the company",
+					"Contributor — can create, edit, and send NDAs, but cannot sign on behalf of the company",
 				],
-				listNote: "Only Signers (and Owners with the signer toggle enabled) can sign NDAs on behalf of the company.",
+				listNote: "Only Signers (and Administrators with the signer toggle enabled) can sign NDAs on behalf of the company. Everything else is open to every role.",
 			},
 		],
 	},
@@ -160,7 +160,7 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "The Mutual NDA template includes the following customizable fields:",
+				body: "The standard NDA has fixed legal text. These are the only fields you fill in:",
 				list: [
 					"Party A and Party B: name, address, phone, signatory name, title, email",
 					"Effective date and NDA duration (in months)",
@@ -186,7 +186,7 @@ const sections: Section[] = [
 					"Your dashboard — click on the NDA, then Download PDF",
 					"The confirmation email sent after signing — it contains a direct download link",
 				],
-				listNote: "Signed PDFs are stored securely for the duration of your subscription and 90 days after account deletion.",
+				listNote: "Signed NDAs are kept for at least 5 years from execution on every plan, including Free. You will be notified in advance before anything is deleted.",
 			},
 		],
 	},
@@ -197,7 +197,7 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "Billing is managed from Settings → Billing. You can see your current plan, usage, and upgrade or cancel from there.",
+				body: "Billing is managed from My account → Subscription. You can see your current plan, usage, and upgrade or cancel from there.",
 			},
 			{
 				heading: "Plans",

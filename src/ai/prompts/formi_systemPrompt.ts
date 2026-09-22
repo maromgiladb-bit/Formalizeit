@@ -40,18 +40,20 @@ function planFacts(): string {
 		p.maxActiveDrafts
 	)} NDAs. Team — up to ${n(t.maxUsers)} users, ${n(
 		t.maxActiveDrafts
-	)} NDAs. (Direct users to the Plans page for current pricing — don't invent prices.)`;
+	)} NDAs. (Direct users to the Pricing section on the home page for current pricing — don't invent prices.)`;
 }
 
 // Compact product knowledge base — what Formi needs to answer app questions.
 const PRODUCT_KNOWLEDGE = `# About FormalizeIt
-FormalizeIt helps teams send a legally-ready NDA in minutes using a single standard mutual NDA — the legal text is fixed and stays the same across every agreement, so you only fill in the deal-specific details (parties, dates, term, purpose, governing law) plus one optional clause. Documents belong to a Company; teammates collaborate by role. The recipient needs no account — they get a secure link.
+FormalizeIt helps teams send a legally-ready NDA in minutes using a single standard mutual NDA — the legal text is fixed and stays the same across every agreement, so you only fill in the deal-specific details (parties, dates, term, purpose, governing law) plus a few optional clauses (IP ownership, non-solicit, exclusivity, additional terms). Documents belong to a Company; teammates collaborate by role. The recipient needs no account — they get a secure link.
 
 # Where things are
 - Dashboard / "My NDAs": your drafts and sent NDAs with their status; continue, manage, or track them here. If a signing link has expired, the sender sees a "Resend NDA" button here to issue a fresh link.
-- New NDA: create an NDA from a template — fill the parties, term, confidentiality period, and deal details, then send. The document title is optional (it defaults to the counterparty's name). FormalizeIt emails the recipient a secure link automatically, and you can also share the same link yourself (Gmail, Outlook, copy link, etc.).
+- New NDA: opens the standard NDA form (five steps: Document, Party A, Party B, Clauses, Review) — fill the parties, term, confidentiality period, and deal details, then click "Send NDA". FormalizeIt creates a secure link and pre-writes the email; the sender sends it from their OWN inbox (Gmail, Outlook, email app, WhatsApp, or copy link) so it arrives from someone the recipient knows rather than an unfamiliar address. FormalizeIt does not email the initial invite itself. The document title is optional (it defaults to the counterparty's name).
+- Reminders: if an NDA sits unsigned, FormalizeIt automatically emails the recipient a reminder after 48 hours and again after 5 days. Round updates (accepted/rejected/countered changes) and the final signed copy are also emailed by FormalizeIt.
 - My account (Settings) → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
-- My account (Settings) → Subscription and the Plans page: manage the company plan.
+- My account (Settings) → Sign-in & Security: enable two-factor authentication (2FA) and manage sign-in methods.
+- My account (Settings) → Subscription and the Pricing section on the home page: manage the company plan.
 - NDA Changelog page: a plain-language history of changes to the standard NDA.
 - Standard NDA page: a read-only view of the full standard mutual NDA text, so anyone can review the fixed legal language before accepting or signing.
 - NDA Governance Policy page: how the standard NDA is versioned and maintained, and why already-signed agreements are never changed.
@@ -82,7 +84,10 @@ The standard NDA's legal text isn't user-editable. When it's updated to a new ve
 
 # Plans (company-level billing, one plan per company)
 ${planFacts()}
-Administrators can cancel or downgrade from My account (Settings) → Subscription. Cancelling keeps access until the end of the paid period, then the plan drops to Free — your NDAs stay saved per the retention policy, and you can resubscribe anytime to regain full access.`;
+Administrators can cancel or downgrade from My account (Settings) → Subscription. Cancelling keeps access until the end of the paid period, then the plan drops to Free — your NDAs stay saved per the retention policy, and you can resubscribe anytime to regain full access.
+
+# Retention
+Signed NDAs are kept for at least 5 years from execution on every plan, including Free, and users get advance notice before anything is deleted. Paid plans keep documents for as long as the subscription is active.`;
 
 export function buildFormiSystemPrompt(
 	nda: NdaContext | null,

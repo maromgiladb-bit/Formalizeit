@@ -22,15 +22,16 @@ import {
 } from "@/components/ui/accordion";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
 import PricingSection from "@/components/marketing/PricingSection";
+import { NEW_NDA_HREF } from "@/lib/newNdaHref";
 import { faqs } from "./faq/faq-data";
 
 /* ─── Data ────────────────────────────────────────────────── */
 const STEPS = [
   {
     number: "1",
-    title: "Choose a trusted template",
+    title: "Start from the standard NDA",
     description:
-      "Select from industry-standard, pre-vetted NDA templates for any situation.",
+      "One balanced mutual NDA with fixed legal text. Review it once, reuse it for every deal.",
     icon: FileText,
   },
   {
@@ -58,27 +59,27 @@ const FEATURES = [
   },
   {
     icon: CheckCircle,
-    title: "Role-based approvals",
+    title: "Role-based permissions",
     description:
-      "Contributors draft, approvers review, owners finalize. Clear accountability at every stage.",
+      "Anyone on the team can draft and send. Only your designated Signers sign for the company.",
   },
   {
     icon: Shield,
-    title: "Secure & compliant",
+    title: "Secure & audit-trailed",
     description:
-      "Bank-level encryption, full audit trails, and legally binding digital signatures on every agreement.",
+      "Encrypted storage, a full audit trail, and e-signatures with recorded evidence on every agreement.",
   },
   {
     icon: Users,
     title: "Team collaboration",
     description:
-      "Comment, suggest, and co-edit together. No more emailing PDFs back and forth.",
+      "Teammates draft and send from one shared workspace. No more emailing PDFs back and forth.",
   },
   {
     icon: TrendingUp,
     title: "Full status tracking",
     description:
-      "See every NDA — draft, in review, approved, sent, or signed — from a single dashboard.",
+      "See every NDA — draft, sent, in review, or signed — from a single dashboard.",
   },
   {
     icon: Zap,
@@ -215,14 +216,14 @@ export default function Home() {
               variants={fadeUp}
               className="text-lg text-gray-500 leading-relaxed mb-8 max-w-md"
             >
-              You don&apos;t reinvent the NDA each time. Pick a trusted template,
+              You don&apos;t reinvent the NDA each time. Start from the standard NDA,
               fill in what&apos;s different, and send — no back-and-forth, no
               formatting drama, no blank page.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
               {userId ? (
                 <Link
-                  href="/templates"
+                  href={NEW_NDA_HREF}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm"
                 >
                   Send your NDA now
@@ -301,7 +302,7 @@ export default function Home() {
             {[
               { value: "< 5 min", label: "from template to sent" },
               { value: "0", label: "recipient accounts needed" },
-              { value: "100%", label: "audit-trailed & binding" },
+              { value: "100%", label: "audit-trailed & e-signed" },
             ].map((s) => (
               <AnimatedStat key={s.label} value={s.value} label={s.label} />
             ))}
@@ -404,11 +405,11 @@ export default function Home() {
               Your next NDA, sent in minutes.
             </h2>
             <p className="text-teal-100 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto">
-              Pick a template, fill in what&apos;s different, send. No lawyer required.
+              Start from the standard NDA, fill in what&apos;s different, send. No lawyer required.
             </p>
             {userId ? (
               <Link
-                href="/templates"
+                href={NEW_NDA_HREF}
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm"
               >
                 Send your NDA now

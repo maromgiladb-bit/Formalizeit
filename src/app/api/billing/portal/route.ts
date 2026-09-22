@@ -19,7 +19,7 @@ export async function POST() {
     }
 
     if (!isOrganizationOwner(activeMembership.role)) {
-      return NextResponse.json({ error: 'Only organization owners can manage billing' }, { status: 403 })
+      return NextResponse.json({ error: 'Only administrators can manage billing' }, { status: 403 })
     }
 
     const organization = await prisma.organization.findUnique({

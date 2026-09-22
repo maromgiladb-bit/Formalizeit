@@ -141,9 +141,9 @@ export default async function SignNDAPublicPage({
                                 <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
                                     <Info className="w-6 h-6 text-teal-700" />
                                 </div>
-                                <h1 className="text-xl font-extrabold text-gray-900 mb-2">Only approved signers can sign this NDA</h1>
+                                <h1 className="text-xl font-extrabold text-ink mb-2">Only Signers can sign this NDA</h1>
                                 <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                                    Signing on behalf of your company is limited to approved signers. From your dashboard you
+                                    Signing on behalf of your company is limited to your designated Signers. From your dashboard you
                                     can ask a teammate who can sign to finish this NDA.
                                 </p>
                                 <Link
@@ -160,34 +160,44 @@ export default async function SignNDAPublicPage({
         }
     }
 
-    // Allow signing logic
-    let canSign = false;
-
-    if (isPartyA) {
-        // Party A can sign when awaiting their signature OR when reviewing changes (approve & sign)
-        canSign = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(workflowState);
-    } else {
-        // Party B can sign when reviewing or awaiting signature
-        canSign = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_PARTY_B_SIGNATURE'].includes(workflowState);
-    }
+    // A signature may only be applied once the NDA is actually agreed. While
+    // changes are open for review, signing is blocked — you can't unilaterally
+    // sign a version the other side hasn't agreed to. This mirrors the 409
+    // REVIEW_PENDING guard in /api/ndas/sign-public; the two must agree, or the
+    // signer draws a signature only to have the API refuse it.
+    const canSign = isPartyA
+        ? workflowState === 'AWAITING_PARTY_A_SIGNATURE'
+        : workflowState === 'AWAITING_PARTY_B_SIGNATURE';
 
     if (!canSign) {
-        // Show appropriate message based on state
         let title = 'Not Ready for Signature';
         let message = 'This NDA is not ready for your signature yet.';
+        let ctaHref: string | undefined;
+        let ctaLabel: string | undefined;
+
+        const reviewHref = `/fillndahtml-public/${signer.id}`;
 
         if (workflowState === 'COMPLETE') {
             title = 'NDA Complete';
             message = 'This NDA has been fully signed by both parties.';
         } else if (isPartyA) {
-            if (['AWAITING_PARTY_B_REVIEW', 'AWAITING_PARTY_B_SIGNATURE'].includes(workflowState)) {
-                title = 'Waiting for Party B';
-                message = 'Party B is currently reviewing or signing. You will be notified when it is your turn.';
+            if (workflowState === 'AWAITING_PARTY_A_REVIEW') {
+                title = 'Changes need your review';
+                message = 'The other party proposed changes to this NDA. Accept, reject, or counter them — you can sign as soon as both sides agree.';
+                ctaHref = reviewHref;
+                ctaLabel = 'Review changes';
+            } else if (['AWAITING_PARTY_B_REVIEW', 'AWAITING_PARTY_B_SIGNATURE'].includes(workflowState)) {
+                title = 'Waiting on them';
+                message = 'The other party is currently reviewing or signing. You will be notified when it is your turn.';
             }
         } else {
-            // Party B
-            if (['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE'].includes(workflowState)) {
-                title = 'Waiting for Other Party';
+            if (['AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT'].includes(workflowState)) {
+                title = 'Your response is needed';
+                message = 'There are open items on this NDA for you to complete or respond to before it can be signed.';
+                ctaHref = reviewHref;
+                ctaLabel = 'Open the NDA';
+            } else if (['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE'].includes(workflowState)) {
+                title = 'Waiting on them';
                 message = 'The other party is currently reviewing or signing. You will be notified when it is your turn.';
             }
         }
@@ -198,8 +208,16 @@ export default async function SignNDAPublicPage({
                     <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
                         <Info className="w-6 h-6 text-teal-700" />
                     </div>
-                    <h1 className="text-xl font-extrabold text-gray-900 mb-2">{title}</h1>
+                    <h1 className="text-xl font-extrabold text-ink mb-2">{title}</h1>
                     <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
+                    {ctaHref && (
+                        <Link
+                            href={ctaHref}
+                            className="mt-6 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors"
+                        >
+                            {ctaLabel}
+                        </Link>
+                    )}
                 </div>
             </div>
         );

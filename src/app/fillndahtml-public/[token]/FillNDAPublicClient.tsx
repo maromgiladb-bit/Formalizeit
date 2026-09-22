@@ -65,6 +65,8 @@ interface FillNDAPublicClientProps {
     initialHtml: string;
     draftId: string;
     isPartyA?: boolean;
+    /** When the other party submitted the round shown here, if anything is pending. */
+    latestResponseAt?: string | null;
 }
 
 // Field labels for display
@@ -106,6 +108,7 @@ export default function FillNDAPublicClient({
     initialHtml,
     draftId,
     isPartyA = false,
+    latestResponseAt = null,
 }: FillNDAPublicClientProps) {
     const router = useRouter();
 
@@ -126,6 +129,9 @@ export default function FillNDAPublicClient({
 
     // UI State
     const [showLivePreview, setShowLivePreview] = useState(true);
+    // The side-by-side preview column is lg-only; below that we stack a
+    // collapsible preview under the header so phones/tablets can read the NDA.
+    const [showMobilePreview, setShowMobilePreview] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -308,21 +314,6 @@ export default function FillNDAPublicClient({
         return changed;
     };
 
-    // Check if Party B made any changes (suggestions or filled requested fields)
-    const hasPartyBMadeChanges = (): boolean => {
-        // Check for suggestions
-        const hasSuggestions = Object.values(mySuggestions).some(v => v?.trim());
-
-        // Check if any editable fields (Party A asked to fill) were filled/changed
-        const filledRequestedFields = pendingInputFields.some(field => {
-            const initialValue = initialFormData[field] as string || '';
-            const currentValue = formValues[field] as string || '';
-            return initialValue !== currentValue && currentValue.trim() !== '';
-        });
-
-        return hasSuggestions || filledRequestedFields;
-    };
-
     // Handle proceed to sign
     const handleProceedToSign = async () => {
         setError(null);
@@ -336,64 +327,60 @@ export default function FillNDAPublicClient({
             return;
         }
 
-        if (isPartyA) {
-            setIsSubmitting(true);
+        // BOTH parties must submit this round before signing. Party B used to
+        // navigate straight to the sign page, which silently discarded their
+        // acceptances and — now that the sign page only opens in a signature
+        // state — would leave them staring at a "not ready" screen.
+        setIsSubmitting(true);
 
-            try {
-                const changedFields = getChangedTextFields();
-                const responses: Record<string, { action: string; counterValue?: string }> = {};
+        try {
+            const changedFields = getChangedTextFields();
+            const responses: Record<string, { action: string; counterValue?: string }> = {};
 
-                for (const [field, action] of Object.entries(suggestionResponses)) {
-                    responses[field] = { action };
-                    if (action === "countered") {
-                        responses[field].counterValue = counterValues[field];
-                    }
+            for (const [field, action] of Object.entries(suggestionResponses)) {
+                responses[field] = { action };
+                if (action === "countered") {
+                    responses[field].counterValue = counterValues[field];
                 }
-
-                const response = await fetch("/api/ndas/submit-input", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        signerId,
-                        draftId,
-                        filledFields: Object.keys(changedFields).length > 0 ? changedFields : undefined,
-                        suggestionResponses: Object.keys(responses).length > 0 ? responses : undefined,
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Failed to save changes before signing");
-                }
-
-                if (data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
-                    return;
-                }
-
-                window.location.href = `/sign-nda-public/${signerId}`;
-                return;
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "An error occurred");
-                return;
-            } finally {
-                setIsSubmitting(false);
             }
+
+            const response = await fetch("/api/ndas/submit-input", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    signerId,
+                    draftId,
+                    filledFields: Object.keys(changedFields).length > 0 ? changedFields : undefined,
+                    suggestionResponses: Object.keys(responses).length > 0 ? responses : undefined,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to save changes before signing");
+            }
+
+            if (!isPartyA) {
+                // The sign page reads this to prefill without a round trip.
+                sessionStorage.setItem('ndaSignData', JSON.stringify({
+                    draftId,
+                    signerId,
+                    values: formValues,
+                    htmlContent: previewHtml,
+                    partyBEmail: formValues.party_b_email,
+                    partyBName: formValues.party_b_name,
+                }));
+            }
+
+            // The server decides where this goes: the sign page when the round
+            // closed, otherwise back to the other party.
+            window.location.href = data.redirectUrl || `/sign-nda-public/${signerId}`;
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        // Store form data in sessionStorage for the sign page
-        sessionStorage.setItem('ndaSignData', JSON.stringify({
-            draftId,
-            signerId,
-            values: formValues,
-            htmlContent: previewHtml,
-            partyBEmail: formValues.party_b_email,
-            partyBName: formValues.party_b_name,
-        }));
-
-        // Always redirect to sign-nda-public for both parties (Party A and Party B)
-        router.push(`/sign-nda-public/${signerId}`);
     };
 
     // Handle suggest change toggle
@@ -521,6 +508,21 @@ export default function FillNDAPublicClient({
             }
         }
 
+        // Every incoming counter must be answered first. A round only carries
+        // forward what was countered, so anything left unanswered here would
+        // silently drop out of the negotiation and the other party would never
+        // see it again.
+        const unanswered = Object.keys(incomingSuggestions || {}).filter(
+            field => !suggestionResponses[field]
+        );
+        if (unanswered.length > 0) {
+            setError(
+                `Respond to ${unanswered.length} remaining change${unanswered.length === 1 ? '' : 's'} ` +
+                `(${unanswered.slice(0, 3).map(f => FIELD_LABELS[f] || f).join(', ')}${unanswered.length > 3 ? '…' : ''}) before sending back.`
+            );
+            return;
+        }
+
         // Must have at least one outgoing suggestion or a rejection/counter
         const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
             r => r === 'rejected' || r === 'countered'
@@ -564,6 +566,12 @@ export default function FillNDAPublicClient({
                 throw new Error(data.error || "Failed to send back changes");
             }
 
+            // A send-back always carries a suggestion/rejection/counter, so the
+            // server routes it to the other party — but honour a redirect if given.
+            if (data.redirectUrl) {
+                window.location.href = data.redirectUrl;
+                return;
+            }
             setSubmitSuccess(true);
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
@@ -904,7 +912,18 @@ export default function FillNDAPublicClient({
                                     <p className="text-xs text-gray-500 mt-0.5">Complete your information to proceed</p>
                                 </div>
                             </div>
-                            <button onClick={() => setShowLivePreview(!showLivePreview)} className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors flex items-center gap-1.5" suppressHydrationWarning>
+                            {/* Mobile / tablet toggle for the stacked preview */}
+                            <button
+                                type="button"
+                                onClick={() => setShowMobilePreview(v => !v)}
+                                aria-expanded={showMobilePreview}
+                                className="lg:hidden px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors flex items-center gap-1.5"
+                                suppressHydrationWarning
+                            >
+                                {showMobilePreview ? "Hide NDA" : "Read NDA"}
+                            </button>
+                            {/* Desktop toggle for the side column */}
+                            <button onClick={() => setShowLivePreview(!showLivePreview)} className="hidden lg:flex px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors items-center gap-1.5" suppressHydrationWarning>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     {showLivePreview ? (
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -918,6 +937,49 @@ export default function FillNDAPublicClient({
 
                         {/* Legal disclaimer */}
                         <LegalDisclaimer className="mb-4" />
+
+                        {/* Mobile / tablet: stacked document preview */}
+                        {showMobilePreview && (
+                            <div className="lg:hidden mb-4 bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+                                <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+                                    <span className="text-sm font-semibold text-ink">Document preview</span>
+                                    <span className="text-xs text-gray-500">{previewLoading ? "Updating..." : "Updates as you type"}</span>
+                                </div>
+                                <iframe
+                                    srcDoc={previewHtml}
+                                    title="NDA Preview"
+                                    className="w-full border-0 h-[70vh]"
+                                    sandbox="allow-same-origin allow-scripts"
+                                />
+                            </div>
+                        )}
+
+                        {/* Newest round from the other party — always the latest, never a stale one */}
+                        {Object.keys(incomingSuggestions || {}).length > 0 && (() => {
+                            const total = Object.keys(incomingSuggestions).length;
+                            const remaining = getPendingSuggestionsCount();
+                            const from = isPartyA ? 'The other party' : 'The sender';
+                            const when = latestResponseAt
+                                ? new Date(latestResponseAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                                : null;
+                            return (
+                                <div className="flex items-start gap-3 mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                                    <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="text-sm">
+                                        <p className="font-medium text-amber-800">
+                                            {from} sent {total} proposed change{total === 1 ? '' : 's'}{when ? ` on ${when}` : ''}
+                                        </p>
+                                        <p className="text-amber-700 mt-0.5">
+                                            {remaining > 0
+                                                ? `This is their latest response. Accept, reject or counter each one — ${remaining} still need${remaining === 1 ? 's' : ''} your answer.`
+                                                : 'You have answered every change. Send back or proceed to sign.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Alerts */}
                         {error && (
@@ -937,7 +999,7 @@ export default function FillNDAPublicClient({
                                     {steps.map((s, i) => (
                                         <React.Fragment key={s}>
                                             <button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0" suppressHydrationWarning>
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${i === step ? 'bg-teal-800 text-white' : i < step ? 'bg-teal-800 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i === step ? 'bg-teal-800 text-white ring-2 ring-teal-800/25 ring-offset-2 scale-110' : i < step ? 'bg-teal-800 text-white' : 'bg-gray-100 text-gray-400'}`}>
                                                     {i < step ? (
                                                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -946,7 +1008,7 @@ export default function FillNDAPublicClient({
                                                         <span>{i + 1}</span>
                                                     )}
                                                 </div>
-                                                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-ink font-semibold' : i < step ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
+                                                <span className={`text-xs font-medium whitespace-nowrap ${i === step ? 'text-teal-800 font-semibold' : i < step ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
                                             </button>
                                             {i < steps.length - 1 && (
                                                 <div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
@@ -1114,7 +1176,7 @@ export default function FillNDAPublicClient({
                                                             You have {getPendingSuggestionsCount()} suggested change{getPendingSuggestionsCount() !== 1 ? 's' : ''} pending
                                                         </p>
                                                         <p className="text-sm text-amber-700 mt-1">
-                                                            Use "Send Back with Changes" to notify the other party about your proposed changes.
+                                                            Use &ldquo;Send Back with Changes&rdquo; to notify the other party about your proposed changes.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1155,15 +1217,14 @@ export default function FillNDAPublicClient({
                                                 );
                                                 const hasOutgoingSuggestions = Object.values(mySuggestions).some(v => v?.trim());
 
-                                                // Check if Party B made any changes (suggestions or filled requested fields)
-                                                const partyBMadeChanges = !isPartyA && hasPartyBMadeChanges();
-
-                                                const requiresSuggestionResolution = true; // always resolve suggestions before signing
-
+                                                // Filling the fields Party A asked for is NOT a change that needs
+                                                // review — the server routes a fully-accepted round straight to
+                                                // signature (submit-input). Only suggestions, rejections, or
+                                                // counters block signing.
                                                 const canProceedToSign =
-                                                    !partyBMadeChanges &&
                                                     !hasOutgoingSuggestions &&
-                                                    (!requiresSuggestionResolution || (!hasUnresolvedIncoming && !hasRejectionsOrCounters));
+                                                    !hasUnresolvedIncoming &&
+                                                    !hasRejectionsOrCounters;
 
                                                 return (
                                                     <div className="space-y-2">
@@ -1185,8 +1246,6 @@ export default function FillNDAPublicClient({
                                                             <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 text-center">
                                                                 {hasOutgoingSuggestions ? (
                                                                     "You have suggested edits. Send back for review before signing."
-                                                                ) : partyBMadeChanges ? (
-                                                                    "You have made changes (suggestions or filled fields). Please send back for Party A to review."
                                                                 ) : hasUnresolvedIncoming ? (
                                                                     "Please accept or reject all suggestions before signing."
                                                                 ) : hasRejectionsOrCounters ? (
@@ -1207,13 +1266,13 @@ export default function FillNDAPublicClient({
 
                                             {/* Send Back with Changes Button */}
                                             {(() => {
-                                                // Check if Party B has changes (suggestions, filled fields, or rejected/countered)
+                                                // Send-back needs something to negotiate: a suggestion, rejection, or
+                                                // counter. Mirrors the guard in handleSendBackWithChanges.
                                                 const hasOutgoingSuggestions = Object.values(mySuggestions).some(v => v?.trim());
-                                                const partyBChanges = !isPartyA && hasPartyBMadeChanges();
                                                 const hasRejectionsOrCounters = Object.values(suggestionResponses).some(
                                                     r => r === 'rejected' || r === 'countered'
                                                 );
-                                                const canSendBack = partyBChanges || hasRejectionsOrCounters || hasOutgoingSuggestions;
+                                                const canSendBack = hasRejectionsOrCounters || hasOutgoingSuggestions;
 
                                                 return (
                                                     <button

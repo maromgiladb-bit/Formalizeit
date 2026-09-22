@@ -7,12 +7,12 @@ export const faqs: Faq[] = [
 	{
 		question: "What is FormalizeIt?",
 		answer:
-			"FormalizeIt is an NDA workflow tool that helps teams create, fill, send, and sign Non-Disclosure Agreements in minutes. Instead of starting from a blank document each time, you pick a trusted template, fill in the details that change, and send a secure link to the other party — all in one place.",
+			"FormalizeIt is an NDA workflow tool that helps teams create, fill, send, and sign Non-Disclosure Agreements in minutes. Instead of starting from a blank document each time, you use one standard mutual NDA with fixed legal text, fill in the details that change, and send a secure link to the other party — all in one place.",
 	},
 	{
 		question: "How does the recipient receive the NDA?",
 		answer:
-			"After you finalize the NDA, a secure review link is generated. You send it yourself via Gmail, Outlook, your email app, WhatsApp, or any channel you prefer. The recipient clicks the link, reviews the document, fills in their details if needed, and signs — no account required on their end.",
+			"After you finalize the NDA, a secure review link is generated and the email is pre-written for you. You send it from your own inbox — Gmail, Outlook, your email app, WhatsApp, or any channel you prefer — so it arrives from someone the recipient knows rather than an unfamiliar address. The recipient clicks the link, reviews the document, fills in their details if needed, and signs — no account required on their end. If it sits unsigned, FormalizeIt reminds them after 48 hours and again after 5 days.",
 	},
 	{
 		question: "Does the recipient need to create an account?",
@@ -37,7 +37,7 @@ export const faqs: Faq[] = [
 	{
 		question: "What fields can I customize?",
 		answer:
-			"On the standard Mutual NDA template, you can customize: party names and addresses, signatory names and titles, the effective date, NDA duration, confidentiality period, governing law, IP ownership, non-solicitation, and exclusivity clauses. You can also add additional terms in a free-text field.",
+			"The legal text of the standard NDA is fixed. You fill in: party names and addresses, signatory names and titles, the effective date, NDA duration, confidentiality period, governing law, IP ownership, non-solicitation, and exclusivity clauses. You can also add additional terms in a free-text field.",
 	},
 	{
 		question: "Can multiple people review the same document?",
@@ -47,12 +47,12 @@ export const faqs: Faq[] = [
 	{
 		question: "What are the team roles?",
 		answer:
-			"There are three roles: Owner (manages the workspace, billing, and members), Signer (can create, send, sign, and finalize NDAs), and Contributor (can create and send NDA drafts, but cannot sign). Owners can also be granted signing authority via a toggle in team settings.",
+			"There are three roles: Administrator (manages the workspace, billing, and members), Signer (can create, send, and sign NDAs on behalf of the company), and Contributor (can create, edit, and send NDAs — everything except signing for the company). Administrators can also be granted signing authority via a toggle in team settings.",
 	},
 	{
 		question: "How do I invite team members?",
 		answer:
-			"Go to Settings → Team. Enter the person's email address and select their role. They will receive an invitation email with a link to join your workspace.",
+			"Go to My account → Team. Enter the person's email address and select their role. They will receive an invitation email with a link to join your workspace.",
 	},
 	{
 		question: "Is my information secure?",
@@ -67,7 +67,7 @@ export const faqs: Faq[] = [
 	{
 		question: "Can I use FormalizeIt for any legal document?",
 		answer:
-			"FormalizeIt is purpose-built for NDA workflows. It is not designed for general-purpose legal drafting. If you need to handle other contract types, contact us — we may be adding support for additional templates.",
+			"FormalizeIt is purpose-built for NDA workflows. It is not designed for general-purpose legal drafting. It centers on one standard mutual NDA so the other party always knows what they are signing. If you need other contract types, contact us and tell us what you would use.",
 	},
 	{
 		question: "What is included in the free plan?",
@@ -77,12 +77,12 @@ export const faqs: Faq[] = [
 	{
 		question: "What happens after I upgrade?",
 		answer:
-			"Your workspace immediately gets access to the features included in your new plan — Pro unlocks unlimited NDAs, search, and a full audit trail for a single user; Team adds up to 10 users, a shared workspace, a centralized repository, and role-based permissions. Billing is handled by Stripe and you can cancel anytime from Settings → Billing.",
+			"Your workspace immediately gets access to the features included in your new plan — Pro unlocks unlimited NDAs, search, and a full audit trail for a single user; Team adds up to 10 users, a shared workspace, a centralized repository, and role-based permissions. Billing is handled by Stripe and you can cancel anytime from My account → Subscription.",
 	},
 	{
 		question: "Can I cancel later?",
 		answer:
-			"Yes. Cancel anytime from Settings → Billing. Your plan stays active until the end of the current billing period and you won't be charged again.",
+			"Yes. Cancel anytime from My account → Subscription. Your plan stays active until the end of the current billing period and you won't be charged again.",
 	},
 	{
 		question: "Who should use FormalizeIt?",

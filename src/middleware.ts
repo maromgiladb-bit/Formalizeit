@@ -57,11 +57,14 @@ const isPublicRoute = createRouteMatcher([
 // `/fillndahtml-public/dev` matters most: it sits under the public
 // `/fillndahtml-public(.*)` matcher, so without this it would be world-reachable.
 const isDevOnlyRoute = createRouteMatcher([
-  '/test-auth',
-  '/devtemplates',
-  '/devemails',
-  '/companydetails',
   '/fillndahtml-public/dev',
+  // Legacy app pages superseded by the dashboard / public token flow. Kept
+  // for local debugging (dev menu) but hidden in production.
+  '/mydrafts',
+  '/viewpdf',
+  '/viewpdf/(.*)',
+  '/sign-nda',          // NOT /sign-nda-public — that is the live counterparty flow
+  '/sign-nda/(.*)',
   '/api/debug(.*)',        // /api/debug, /api/debug-preview, /api/debug-templates, /api/debug/*
   '/api/test',
   '/api/generate-preview',

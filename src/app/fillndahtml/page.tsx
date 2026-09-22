@@ -4,12 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
-import { filterPhoneChars } from "@/lib/phone";
+import { filterPhoneChars, isValidPhone } from "@/lib/phone";
 import { deriveNdaTitle, confidentialityBelowTerm } from "@/lib/ndaTerms";
 import { useFormi } from "@/components/ai/FormiProvider";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 import { FieldTooltip } from "@/components/ui/field-tooltip";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
+import { getWorkflowStatusInfo } from "@/lib/workflowStatus";
 import { ChevronLeft, ChevronRight, Send, Save } from "lucide-react";
 
 type FormValues = {
@@ -148,7 +150,6 @@ export default function FillNDAHTML() {
 	const [suggestedEmailBody, setSuggestedEmailBody] = useState("");
 	const [emailSent, setEmailSent] = useState(false);
 	// True when the server auto-sent the email via Resend (vs. only generating a link).
-	const [autoEmailed, setAutoEmailed] = useState(false);
 	const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
@@ -274,7 +275,6 @@ export default function FillNDAHTML() {
 					...(profile.signatoryTitle && { party_a_title: profile.signatoryTitle }),
 					...(profile.email && { party_a_email: profile.email })
 				}));
-				console.log('✅ Auto-filled Party A from company profile');
 			} else {
 				setShowNoProfileModal(true);
 			}
@@ -289,18 +289,12 @@ export default function FillNDAHTML() {
 	const previewPDF = async () => {
 		setGeneratingPdf(true);
 		try {
-			console.log("📄 Generating PDF preview with data:", values);
-			console.log("📋 Using template:", templateId);
 
 			// Always use current form data for preview (not draft from DB)
 			// This ensures the preview matches what you see in the HTML preview
 			const payload = { ...templateData };  // templateData already includes templateId
 
-			console.log("📦 Sending payload to PDF API:", {
-				hasTemplateId: !!payload.templateId,
-				templateId: payload.templateId,
-				hasDraftId: false
-			});			// Use PDF preview endpoint (supports both draftId and direct data)
+			// Use PDF preview endpoint (supports both draftId and direct data)
 			const res = await fetch("/api/ndas/preview", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -308,7 +302,6 @@ export default function FillNDAHTML() {
 			});
 
 			const json = await res.json();
-			console.log("PDF Preview response:", json);
 
 			if (!res.ok) {
 				console.error("❌ PDF preview failed:", json);
@@ -347,7 +340,6 @@ export default function FillNDAHTML() {
 				setShowPdfPreview(true);
 			}
 
-			console.log("✅ PDF preview opened successfully");
 			setWarning(""); // Clear any previous warnings
 		} catch (e) {
 			console.error("PDF preview error:", e);
@@ -404,13 +396,6 @@ export default function FillNDAHTML() {
 
 	// Update live preview HTML when data arrives
 	useEffect(() => {
-		console.log('🎨 Live data received:', {
-			hasData: !!liveData,
-			hasHtml: !!liveData?.html,
-			htmlLength: liveData?.html?.length || 0,
-			htmlPreview: liveData?.html?.substring(0, 100),
-			values: values
-		});
 		if (liveData?.html) {
 			// Save current scroll position before update
 			if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -420,7 +405,6 @@ export default function FillNDAHTML() {
 					console.warn("Could not save scroll position", e);
 				}
 			}
-			console.log('🎨 Setting live preview HTML, length:', liveData.html.length);
 			setLivePreviewHtml(liveData.html);
 		}
 	}, [liveData, values]);
@@ -463,20 +447,15 @@ export default function FillNDAHTML() {
 	}, [signersEmail, fetchEmailSuggestions]);
 
 	const loadDraft = useCallback(async (id: string) => {
-		console.log('=== Loading draft ===')
-		console.log('Draft ID:', id)
 		setLoading(true);
 		try {
 			const res = await fetch(`/api/ndas/drafts/${id}`);
-			console.log('Response status:', res.status)
 
 			const json = await res.json();
-			console.log('Response data:', json)
 
 			if (!res.ok) throw new Error(json.error || "Failed to load draft");
 
 			if (json.draft?.content) {
-				console.log('Setting form values from draft content:', json.draft.content)
 				// Compute next values in one pass, then set once
 				const next = { ...DEFAULTS, ...json.draft.content };
 				if (json.draft.title) next.docName = json.draft.title;
@@ -485,32 +464,27 @@ export default function FillNDAHTML() {
 				setDraftId(json.draft.id);
 				setWorkflowState(json.draft.workflowState || null);
 
-				// Parse revisions to extract incoming suggestions from Party B
-				if (json.draft.revisions && json.draft.revisions.length > 0) {
-					const latestRevision = json.draft.revisions[0];
+				// Incoming suggestions are whatever Party B proposed in the NEWEST
+				// revision. Always reassign — after we send our own response the latest
+				// revision is ours, and leaving the previous round on screen would show
+				// stale proposals with their buttons reset, as if still pending.
+				const suggestions: Record<string, Suggestion> = {};
+				const latestRevision = json.draft.revisions?.[0];
+				if (latestRevision && json.draft.lastEditedBy === 'party_b') {
 					const revContent = latestRevision.content as Record<string, unknown>;
 					const revSuggestions = revContent?.suggestedChanges as Record<string, string> | undefined;
-					const submittedBy = revContent?.submittedBy as string | undefined;
-					const lastEditedBy = json.draft.lastEditedBy;
-
-					// If last edit was by party_b and there are suggestions, show them
-					if (lastEditedBy === 'party_b' && revSuggestions) {
-						const suggestions: Record<string, Suggestion> = {};
-						for (const [field, newValue] of Object.entries(revSuggestions)) {
-							if (newValue?.trim()) {
-								suggestions[field] = {
-									oldValue: (json.draft.content[field] as string) || '',
-									newValue,
-									suggestedBy: 'party_b'
-								};
-							}
+					for (const [field, newValue] of Object.entries(revSuggestions || {})) {
+						if (newValue?.trim()) {
+							suggestions[field] = {
+								oldValue: (json.draft.content[field] as string) || '',
+								newValue,
+								suggestedBy: 'party_b'
+							};
 						}
-						setIncomingSuggestions(suggestions);
-						console.log('Loaded incoming suggestions from Party B:', suggestions);
 					}
 				}
+				setIncomingSuggestions(suggestions);
 			} else {
-				console.log('No draft data found, using defaults')
 				setValues(DEFAULTS);
 			}
 		} catch (e) {
@@ -530,16 +504,13 @@ export default function FillNDAHTML() {
 
 		// Always use HTML template for this page, but allow override from URL
 		if (urlTemplateId) {
-			console.log("📋 Using template:", urlTemplateId);
 			setTemplateId(urlTemplateId);
 		} else {
-			console.log("📋 Using default HTML template: professional_mutual_nda_v1");
 			setTemplateId("professional_mutual_nda_v1");
 		}
 
 		if (isNewNda) {
 			// Starting a new NDA - clear everything and use defaults
-			console.log("🆕 Starting new NDA - clearing all data");
 			setValues(DEFAULTS);
 			setLastSavedValues(DEFAULTS);
 			setDraftId(null);
@@ -555,7 +526,6 @@ export default function FillNDAHTML() {
 					const parsed = JSON.parse(d);
 					setValues({ ...DEFAULTS, ...(parsed.values || {}) });
 					setDraftId(parsed.draftId || null);
-					console.log("📂 Restored from localStorage");
 				} catch (e) {
 					console.error(e);
 				}
@@ -709,6 +679,27 @@ export default function FillNDAHTML() {
 		}
 		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`;
 	};
+
+	/**
+	 * Phone fields are optional, so we only flag a value that is present and
+	 * implausible. `setField` already clears the error as the user types, so
+	 * blur re-checks and the red state dismisses itself on correction.
+	 */
+	const validatePhoneOnBlur = (field: "party_a_phone" | "party_b_phone", value: string) => {
+		setValidationErrors((prev) => {
+			const next = new Set(prev);
+			if (isValidPhone(value)) next.delete(field);
+			else next.add(field);
+			return next;
+		});
+	};
+
+	const phoneError = (field: "party_a_phone" | "party_b_phone") =>
+		validationErrors.has(field) ? (
+			<p className="mt-1 text-xs text-red-600">
+				Enter a valid phone number, or leave it blank.
+			</p>
+		) : null;
 
 	// Suggestion handlers
 	const acceptSuggestion = (field: string) => {
@@ -914,10 +905,21 @@ export default function FillNDAHTML() {
 		// Still validate email format if Party B email is provided and not asking receiver to fill
 		// Removed strict check to allow skipping email in this step
 
+		// Phone numbers are optional, but a filled-in one has to be plausible.
+		// isValidPhone("") is true, so this never makes the field required.
+		const badPhones = (["party_a_phone", "party_b_phone"] as const).filter(
+			(field) => !isValidPhone(values[field] || "")
+		);
+		badPhones.forEach((field) => errors.add(field));
 
 		let message = null;
-		if (errors.size > 0) {
-			message = `Please fill in ${errors.size} required field(s)`;
+		const missingCount = errors.size - badPhones.length;
+		if (missingCount > 0 && badPhones.length > 0) {
+			message = `Please fill in ${missingCount} required field(s) and correct the highlighted phone number(s)`;
+		} else if (missingCount > 0) {
+			message = `Please fill in ${missingCount} required field(s)`;
+		} else if (badPhones.length > 0) {
+			message = `Please correct the highlighted phone number${badPhones.length === 1 ? "" : "s"}`;
 		}
 
 		return { isValid: errors.size === 0, errors, message };
@@ -1130,22 +1132,21 @@ export default function FillNDAHTML() {
 			return;
 		}
 
-		// Formi gentle pre-send nudge (once): open Formi and offer a quick review.
-		// Clicking "Send for Review" again proceeds.
+		// Formi pre-send nudge — only when there is something high-severity to flag.
+		// Shown once; clicking "Send NDA" again proceeds.
 		if (!formiNudgeShownRef.current) {
 			formiNudgeShownRef.current = true;
 			const highs = formiFindings.filter((f) => f.severity === "high");
-			const nudge = highs.length
-				? `Heads up — I flagged ${highs.length} high-severity item${
+			if (highs.length) {
+				openFormiNudge(
+					`Heads up — I flagged ${highs.length} high-severity item${
 						highs.length > 1 ? "s" : ""
-				  }: ${highs
-						.map((f) => f.fieldLabel)
-						.join(", ")}. Want me to walk through ${
+					}: ${highs.map((f) => f.fieldLabel).join(", ")}. Want me to walk through ${
 						highs.length > 1 ? "them" : "it"
-				  }? Or click "Send for Review" again to send.`
-				: `Want me to review this NDA before you send? Just ask — or click "Send for Review" again to send.`;
-			openFormiNudge(nudge);
-			return;
+					}? Or click "Send NDA" again to send.`
+				);
+				return;
+			}
 		}
 
 		// Auto-save draft if not already saved
@@ -1184,20 +1185,53 @@ export default function FillNDAHTML() {
 		setShowVerifyEmailModal(true);
 	};
 
-	const approveChanges = async () => {
+	/**
+	 * Send this round's per-field answers back. Accepting everything moves the
+	 * NDA to our signature; any rejection or counter returns it to the other
+	 * party for another round.
+	 */
+	const submitReviewResponse = async () => {
 		if (!draftId) return;
+
+		// Every pending suggestion must be answered, or "Accept Changes" would
+		// silently accept nothing.
+		const unanswered = getPendingSuggestionsCount();
+		if (unanswered > 0) {
+			setWarning(
+				`Respond to ${unanswered} remaining change${unanswered === 1 ? '' : 's'} before sending your reply.`
+			);
+			return;
+		}
+
+		const responses: Record<string, { action: string; counterValue?: string }> = {};
+		const acceptedFields: Record<string, string> = {};
+		for (const [field, action] of Object.entries(suggestionResponses)) {
+			responses[field] = { action };
+			if (action === 'countered') responses[field].counterValue = counterValues[field] ?? '';
+			if (action === 'accepted') {
+				acceptedFields[field] = String((values as Record<string, unknown>)[field] ?? '');
+			}
+		}
+
 		setProcessingChanges(true);
 		try {
 			const res = await fetch('/api/ndas/approve-changes', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ draftId }),
+				body: JSON.stringify({
+					draftId,
+					filledFields: acceptedFields,
+					suggestionResponses: responses,
+				}),
 			});
 			const data = await res.json();
-			if (!res.ok) throw new Error(data.error || 'Failed to approve changes');
-			setWorkflowState('AWAITING_PARTY_A_SIGNATURE');
+			if (!res.ok) throw new Error(data.error || 'Failed to send your response');
+			setWorkflowState(data.workflowState);
+			setSuggestionResponses({});
+			setCounterValues({});
+			await loadDraft(draftId);
 		} catch (e) {
-			setWarning(e instanceof Error ? e.message : 'Failed to approve changes');
+			setWarning(e instanceof Error ? e.message : 'Failed to send your response');
 		} finally {
 			setProcessingChanges(false);
 		}
@@ -1261,7 +1295,6 @@ export default function FillNDAHTML() {
 			if (link) setGeneratedShareLink(link);
 			if (result.suggestedSubject) setSuggestedEmailSubject(result.suggestedSubject);
 			if (result.suggestedBody) setSuggestedEmailBody(result.suggestedBody);
-			setAutoEmailed(!!result.emailSent);
 			setEmailSent(true);
 
 		} catch (e) {
@@ -1271,11 +1304,11 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// Share NDA via external platform (WhatsApp, LinkedIn, etc.)
-	// Only available after the email has been sent — uses the cached review link
+	// Share the review link via the sender's own channel (Gmail, Outlook, mailto,
+	// WhatsApp, copy…). Requires the link created by confirmAndSend.
 	const handleShare = (platform: string) => {
 		if (!generatedShareLink) {
-			setWarning("Please send by email first to generate the review link.");
+			setWarning("Create the secure link first, then choose how to send it.");
 			return;
 		}
 		openSharePlatform(platform, generatedShareLink);
@@ -1451,9 +1484,9 @@ export default function FillNDAHTML() {
 									{steps.map((s, i) => (
 										<React.Fragment key={s}>
 											<button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0">
-												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
 													i === step
-														? 'bg-teal-800 text-white'
+														? 'bg-teal-800 text-white ring-2 ring-teal-800/25 ring-offset-2 scale-110'
 													: isStepComplete(i)
 														? 'bg-teal-800 text-white'
 														: 'bg-gray-100 text-gray-400'
@@ -1466,7 +1499,7 @@ export default function FillNDAHTML() {
 														<span>{i + 1}</span>
 													)}
 												</div>
-												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
+												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-teal-800 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
 											</button>
 											{i < steps.length - 1 && (
 												<div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
@@ -1637,11 +1670,13 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-xs font-normal text-gray-400">(optional)</span></label>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className={`${getFieldClass('party_a_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_phone}
 													onChange={(e) => setField("party_a_phone", filterPhoneChars(e.target.value))}
+													onBlur={(e) => validatePhoneOnBlur("party_a_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 												/>
+												{phoneError('party_a_phone')}
 												{renderSuggestionBox('party_a_phone', 'Party A Phone')}
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1772,12 +1807,14 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className={`${getFieldClass('party_b_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_phone}
 													onChange={(e) => setField("party_b_phone", filterPhoneChars(e.target.value))}
+													onBlur={(e) => validatePhoneOnBlur("party_b_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 													disabled={values.party_b_phone_ask_receiver}
 												/>
+												{phoneError('party_b_phone')}
 												{renderSuggestionBox('party_b_phone', 'Party B Phone')}
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2051,18 +2088,21 @@ export default function FillNDAHTML() {
 									)}
 								</div>
 								<div className="flex flex-wrap items-center gap-2">
-									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
-									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
-										<span className="h-10 inline-flex items-center px-4 rounded-xl font-semibold text-sm bg-teal-50 text-teal-700 border border-teal-200">
-											Awaiting Party B
-										</span>
-									)}
+									{/* Status while the NDA is with Party B — same label as the dashboard */}
+									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (() => {
+										const info = getWorkflowStatusInfo({ workflowState, viewer: 'sender' });
+										return <StatusPill tone={info.tone} label={info.label} className="h-10 px-4 text-sm" />;
+									})()}
 
 									{/* Party A Review Buttons — shown when Party B has submitted changes */}
 									{workflowState === 'AWAITING_PARTY_A_REVIEW' && (
 										<>
-											<Button onClick={approveChanges} disabled={processingChanges}>
-												{processingChanges ? 'Processing...' : 'Accept Changes'}
+											<Button onClick={submitReviewResponse} disabled={processingChanges}>
+												{processingChanges
+													? 'Processing...'
+													: Object.values(suggestionResponses).some((r) => r !== 'accepted')
+														? 'Send Response'
+														: 'Accept Changes'}
 											</Button>
 											<Button
 												onClick={() => setShowRequestChangesModal(true)}
@@ -2503,19 +2543,19 @@ export default function FillNDAHTML() {
 							}
 						}}
 					>
-						<div className="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] overflow-hidden">
+						<div className="bg-white rounded-2xl shadow-float border border-gray-100 w-full max-w-[480px] overflow-hidden">
 
 							{/* Header */}
-							<div className="bg-[#0f2a4a] px-6 py-5 flex items-center justify-between">
+							<div className="px-6 py-5 flex items-center justify-between border-b border-gray-100">
 								<div className="flex items-center gap-3">
-									<div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
+									<div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
 										<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
 										</svg>
 									</div>
 									<div>
-										<h3 className="text-white font-semibold text-base leading-tight">Send NDA to Recipient</h3>
-										<p className="text-white/50 text-xs mt-0.5">Choose how to deliver the NDA</p>
+										<h3 className="text-ink font-semibold text-base leading-tight">Send NDA</h3>
+										<p className="text-gray-500 text-xs mt-0.5">Create a secure link, then send it from your own inbox</p>
 									</div>
 								</div>
 								<button
@@ -2528,7 +2568,7 @@ export default function FillNDAHTML() {
 										setEmailSent(false);
 										if (emailSent) router.push('/dashboard');
 									}}
-									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+									className="text-gray-400 hover:text-ink p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
 									aria-label="Close"
 								>
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2542,46 +2582,47 @@ export default function FillNDAHTML() {
 								<label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recipient Email</label>
 								<input
 									type="email"
-									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all placeholder:text-gray-400"
+									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-all placeholder:text-gray-400"
 									value={verifyRecipientEmail}
 									onChange={(e) => setVerifyRecipientEmail(e.target.value)}
 									placeholder="recipient@example.com"
+									disabled={emailSent}
 									autoFocus
 								/>
-								<p className="text-xs text-gray-400 mt-2 leading-relaxed">
+								<p className="text-xs text-gray-500 mt-2 leading-relaxed">
 									{emailSent
-										? (autoEmailed
-											? `We emailed the NDA to ${verifyRecipientEmail.trim()}. Want to send it another way too? Use any option below.`
-											: 'Secure link ready — choose Gmail, Outlook, or any option below to send it.')
-										: "Enter the recipient's email — we'll email it for you and give you a shareable link."}
+										? 'Link ready. Pick Gmail, Outlook, or your email app below — the message is pre-written, you just hit send.'
+										: "Enter the recipient's email. We'll create a secure link and pre-write the email — you send it from your own inbox so it lands in their primary mail, not spam."}
 								</p>
 
-								<button
-									onClick={confirmAndSend}
-									disabled={sendingForSignature || emailSent || !verifyRecipientEmail?.trim()}
-									className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${emailSent ? 'bg-emerald-600 text-white cursor-default' : 'bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
-								>
-									{sendingForSignature ? (
-										<>
-											<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-											Generating link…
-										</>
-									) : emailSent ? (
-										<>
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-											</svg>
-											{autoEmailed ? 'Email Sent' : 'Link Ready — Choose How to Send'}
-										</>
-									) : (
-										<>
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-											</svg>
-											Generate Secure Link
-										</>
-									)}
-								</button>
+								{emailSent ? (
+									<div className="w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-teal-50 text-teal-800 border border-teal-100">
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+										</svg>
+										Secure link ready — choose how to send it
+									</div>
+								) : (
+									<button
+										onClick={confirmAndSend}
+										disabled={sendingForSignature || !verifyRecipientEmail?.trim()}
+										className="w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{sendingForSignature ? (
+											<>
+												<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+												Creating link…
+											</>
+										) : (
+											<>
+												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+												</svg>
+												Create secure link
+											</>
+										)}
+									</button>
+								)}
 							</div>
 
 							{/* Divider */}
@@ -2713,7 +2754,7 @@ export default function FillNDAHTML() {
 
 							{/* Footer note */}
 							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-								<p className="text-xs text-gray-400">{emailSent ? 'Link ready — send it your way. Recipient gets a secure review page.' : 'Generate the link first, then choose how to send it.'}</p>
+								<p className="text-xs text-gray-400">{emailSent ? 'The recipient opens a secure review page — no account needed. We’ll remind them if it sits unsigned.' : 'Create the link first, then choose how to send it.'}</p>
 								<button
 									onClick={() => {
 										setShowVerifyEmailModal(false);

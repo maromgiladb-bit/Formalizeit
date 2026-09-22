@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { NEW_NDA_HREF } from "@/lib/newNdaHref";
 
 const columns = [
 	{
 		heading: "Product",
 		links: [
-			{ name: "Browse Templates", href: "/templates" },
-			{ name: "Pricing", href: "/#pricing" },
+			{ name: "New NDA", href: NEW_NDA_HREF },
 			{ name: "Dashboard", href: "/dashboard" },
-			{ name: "My Drafts", href: "/mydrafts" },
+			{ name: "Pricing", href: "/#pricing" },
 		],
 	},
 	{
@@ -19,7 +19,7 @@ const columns = [
 			{ name: "About", href: "/about" },
 			{ name: "Contact", href: "/contact" },
 			{ name: "FAQ", href: "/faq" },
-			{ name: "Help Center", href: "/help" },
+			{ name: "Help", href: "/help" },
 		],
 	},
 	{
@@ -60,7 +60,7 @@ export default function Footer() {
 							/>
 						</Link>
 						<p className="text-sm text-gray-500 leading-relaxed max-w-xs">
-							Pick a template, fill in what&apos;s different, send — in minutes. No lawyer required.
+							One standard NDA. Fill in what&apos;s different, send — in minutes. No lawyer required.
 						</p>
 					</div>
 
