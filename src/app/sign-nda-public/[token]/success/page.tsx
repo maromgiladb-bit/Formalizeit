@@ -29,7 +29,7 @@ export default async function SignSuccessPage({
                 </div>
 
                 <h1 className="text-2xl font-bold text-ink mb-2">
-                    Sign Sent Successfully!
+                    Signed successfully
                 </h1>
 
                 <p className="text-gray-600 mb-8">

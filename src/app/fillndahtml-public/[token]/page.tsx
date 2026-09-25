@@ -3,6 +3,7 @@ import { Clock, Info } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
 import { refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import { pendingSuggestionsFromRevision } from '@/lib/negotiation';
 import FillNDAPublicClient from './FillNDAPublicClient';
 
 type FieldState = "readonly" | "editable" | "pending_suggestion";
@@ -138,48 +139,29 @@ export default async function FillNDAPublicPage({
     ];
 
     // ── Build incoming suggestions ──────────────────────────────────────────
-    // These come from the OTHER party's latest revision:
-    //   Party A reviewing → sees Party B's filledFields + suggestedChanges
-    //   Party B reviewing → sees Party A's suggestedChanges (counter-proposals)
-    // We merge filledFields + suggestedChanges so ALL other-party changes are visible.
-    const incomingSuggestions: Suggestions = {};
+    // Whatever the OTHER party proposed in the NEWEST revision, and nothing else.
+    // `pendingSuggestionsFromRevision` is the single definition of "outstanding",
+    // shared with the two routes that resolve a round, so what this page shows and
+    // what the server will accept can never drift apart.
     const latestRevision = draft.revisions[0];
-    if (latestRevision) {
-        const revContent = latestRevision.content as Record<string, unknown>;
-        const submittedBy = revContent.submittedBy as string | undefined;
+    const latestRevContent = (latestRevision?.content as Record<string, unknown>) || null;
+    const pending = pendingSuggestionsFromRevision(latestRevContent, signer.email);
 
-        // Only show suggestions from the OTHER party
-        const isFromOtherParty = isPartyA
-            ? submittedBy !== signer.email  // Party A sees submissions not from themselves
-            : submittedBy !== signer.email; // Party B sees submissions not from themselves
-
-        if (isFromOtherParty) {
-            const revSuggestions = revContent.suggestedChanges as Record<string, string> | undefined;
-            const revFilledFields = revContent.filledFields as Record<string, string> | undefined;
-
-            // Merge: filledFields are what Party B directly typed into requested fields;
-            // suggestedChanges are explicit suggestions for locked fields.
-            // Both should surface as "suggestions" for the reviewing party.
-            const allChanges: Record<string, string> = {
-                ...(revFilledFields || {}),
-                ...(revSuggestions || {}),
-            };
-
-            for (const [field, newValue] of Object.entries(allChanges)) {
-                if (newValue?.trim()) {
-                    const currentValue = (formData[field] as string) || "";
-                    // Only surface as suggestion if the value actually differs
-                    if (newValue !== currentValue) {
-                        incomingSuggestions[field] = {
-                            oldValue: currentValue,
-                            newValue,
-                            suggestedBy: isPartyA ? "party_b" : "party_a"
-                        };
-                    }
-                }
-            }
-        }
+    const incomingSuggestions: Suggestions = {};
+    for (const [field, newValue] of Object.entries(pending)) {
+        incomingSuggestions[field] = {
+            oldValue: (formData[field] as string) || "",
+            newValue,
+            suggestedBy: isPartyA ? "party_b" : "party_a",
+        };
     }
+
+    // Header context so the reviewer can tell at a glance that they are looking at
+    // the other side's most recent response rather than an older round.
+    const latestResponseAt =
+        Object.keys(incomingSuggestions).length > 0
+            ? (latestRevContent?.submittedAt as string | undefined) || null
+            : null;
 
     // ── Compute field states ────────────────────────────────────────────────
     // Both parties use the same review model:
@@ -248,6 +230,7 @@ export default async function FillNDAPublicPage({
             initialHtml={initialHtml}
             draftId={draft.id}
             isPartyA={isPartyA}
+            latestResponseAt={latestResponseAt}
         />
     );
 }

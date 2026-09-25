@@ -14,7 +14,7 @@ export async function GET() {
     if (!activeMembership) return NextResponse.json({ invoices: [] })
 
     if (!isOrganizationOwner(activeMembership.role)) {
-      return NextResponse.json({ error: 'Only organization owners can view billing' }, { status: 403 })
+      return NextResponse.json({ error: 'Only administrators can view billing' }, { status: 403 })
     }
 
     const organization = await prisma.organization.findUnique({

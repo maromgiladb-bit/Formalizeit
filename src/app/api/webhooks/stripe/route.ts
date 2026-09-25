@@ -84,10 +84,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const periodEnd = getCurrentPeriodEnd(subscription)
   const priceId = subscription.items.data[0]?.price.id ?? null
 
+  // An unrecognised price means the live price IDs are misconfigured. Silently
+  // defaulting to PRO here would provision a $50 TEAM customer on a $9 plan, so
+  // throw instead: Stripe retries, and the failure is visible.
+  const plan = planFromPriceId(priceId)
+  if (!plan) {
+    throw new Error(
+      `checkout.session.completed: price ${priceId} maps to no plan. Check STRIPE_*_PRICE_ID env vars.`
+    )
+  }
+
   await prisma.organization.update({
     where: { id: organizationId },
     data: {
-      billingPlan: planFromPriceId(priceId) ?? 'PRO',
+      billingPlan: plan,
       billingStatus,
       stripeSubscriptionId: subscription.id,
       stripePriceId: priceId,
@@ -130,6 +140,12 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
+  // Stripe retries and redelivers events, and this handler is not otherwise
+  // idempotent: without this check a redelivery re-sends the cancellation email
+  // to a customer who already got it. The DB update below is safely repeatable.
+  const alreadyCancelled =
+    organization.billingStatus === 'CANCELLED' && organization.billingPlan === 'FREE'
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: {
@@ -142,6 +158,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       // stripeCustomerId is kept — reused if user re-subscribes
     },
   })
+
+  if (alreadyCancelled) {
+    console.log('customer.subscription.deleted: already cancelled, skipping duplicate email')
+    return
+  }
 
   // "Sad to see you go" — best-effort email to the administrator on final cancellation.
   try {

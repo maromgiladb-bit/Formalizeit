@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit';
 import { renderNdaHtml } from '@/lib/renderNdaHtml'
 
 /**
@@ -10,6 +11,10 @@ import { renderNdaHtml } from '@/lib/renderNdaHtml'
  */
 export async function POST(request: NextRequest) {
     try {
+        // Unauthenticated template rendering — bound the work a stranger can ask for.
+        const limit = rateLimitRequest(request, 'preview-html-public', 60, MINUTE)
+        if (!limit.ok) return tooManyRequests(limit)
+
         const body = await request.json()
         console.log('🌐 Public HTML Preview request received')
 

@@ -52,11 +52,13 @@ export default function SignNDAPublicClient({
     const [success, setSuccess] = useState(false);
     const [previewHtml, setPreviewHtml] = useState<string>(initialHtml);
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    // Below lg the side-by-side preview column is hidden; this drives the
+    // stacked, collapsible preview so mobile signers can still read the NDA.
+    const [showMobilePreview, setShowMobilePreview] = useState(false);
     const documentRef = useRef<HTMLDivElement>(null);
 
     // Set initial HTML on mount
     useEffect(() => {
-        console.log('🎨 Initial HTML loaded from server');
         setPreviewHtml(initialHtml);
     }, [initialHtml]);
 
@@ -96,29 +98,41 @@ export default function SignNDAPublicClient({
     }, []);
 
     // Canvas drawing handlers
-    const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Pointer events cover mouse, touch, and pen. The canvas is CSS-stretched to
+    // the column width but keeps a fixed 400px backing store, so map client
+    // coordinates into canvas space or strokes drift on narrow screens.
+    const canvasPoint = (canvas: HTMLCanvasElement, e: React.PointerEvent<HTMLCanvasElement>) => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (canvas.width / rect.width),
+            y: (e.clientY - rect.top) * (canvas.height / rect.height),
+        };
+    };
+
+    const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        canvas.setPointerCapture(e.pointerId);
         setIsDrawing(true);
+        const { x, y } = canvasPoint(canvas, e);
         ctx.beginPath();
-        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.moveTo(x, y);
     };
 
-    const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!isDrawing) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        const { x, y } = canvasPoint(canvas, e);
+        ctx.lineTo(x, y);
         ctx.stroke();
     };
 
@@ -144,7 +158,6 @@ export default function SignNDAPublicClient({
     useEffect(() => {
         if (!previewHtml) return;
 
-        console.log('🔄 Updating preview HTML, signatureImage exists:', !!signatureImage, 'signerRole:', signerRole);
 
         let updatedHtml = previewHtml;
 
@@ -164,7 +177,6 @@ export default function SignNDAPublicClient({
                     `$1<img src="${signatureImage}" alt="Signature" style="max-height: 70px; max-width: 100%; display: block; margin: auto;" />$3`
                 );
                 injected = true;
-                console.log(`✅ Signature injected using Professional template pattern (${signatureBoxId})`);
             }
 
             // Pattern 2: Look for Nth signature box if pattern 1 didn't match
@@ -184,7 +196,6 @@ export default function SignNDAPublicClient({
                         }
                     );
                     injected = true;
-                    console.log(`✅ Signature injected into sign-box ${signatureBoxIndex}`);
                 }
             }
 
@@ -197,7 +208,6 @@ export default function SignNDAPublicClient({
                         `$1<img src="${signatureImage}" alt="Signature" style="max-height: 60px; display: block; margin: 4px auto;" />$3`
                     );
                     injected = true;
-                    console.log('✅ Signature injected using Fallback pattern');
                 }
             }
 
@@ -329,6 +339,40 @@ export default function SignNDAPublicClient({
                             <p className="text-sm text-gray-500">Review the document and add your signature below.</p>
                         </div>
 
+                        {/* Mobile / tablet: stacked document preview (the side column is lg-only) */}
+                        <div className="lg:hidden mb-4 bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => setShowMobilePreview(v => !v)}
+                                aria-expanded={showMobilePreview}
+                                className="w-full flex items-center justify-between px-5 py-3.5 text-left cursor-pointer hover:bg-gray-50 transition-colors"
+                            >
+                                <span className="text-sm font-semibold text-ink">
+                                    {showMobilePreview ? 'Hide document' : 'Read the full NDA'}
+                                </span>
+                                <svg
+                                    className={`w-4 h-4 text-gray-500 transition-transform ${showMobilePreview ? 'rotate-180' : ''}`}
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            {showMobilePreview && (
+                                <div className="border-t border-gray-100">
+                                    {previewHtml ? (
+                                        <iframe
+                                            srcDoc={previewHtml}
+                                            className="w-full border-0 h-[70vh]"
+                                            title="NDA Preview"
+                                            sandbox="allow-same-origin allow-scripts"
+                                        />
+                                    ) : (
+                                        <p className="p-6 text-sm text-gray-500">Loading preview...</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         <div ref={signatureCardRef} className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 flex flex-col flex-1 min-h-0">
                             <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">Your Signature</p>
 
@@ -410,11 +454,12 @@ export default function SignNDAPublicClient({
                                             ref={canvasRef}
                                             width={400}
                                             height={150}
-                                            onMouseDown={startDrawing}
-                                            onMouseMove={draw}
-                                            onMouseUp={stopDrawing}
-                                            onMouseLeave={stopDrawing}
-                                            className="w-full border border-gray-200 rounded-lg cursor-crosshair bg-white flex-1"
+                                            onPointerDown={startDrawing}
+                                            onPointerMove={draw}
+                                            onPointerUp={stopDrawing}
+                                            onPointerCancel={stopDrawing}
+                                            onPointerLeave={stopDrawing}
+                                            className="w-full border border-gray-200 rounded-lg cursor-crosshair bg-white flex-1 touch-none"
                                         />
                                         <button
                                             onClick={clearCanvas}

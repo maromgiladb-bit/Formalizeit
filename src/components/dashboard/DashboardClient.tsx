@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, Search, RotateCw, Archive, ArchiveRestore } from 'lucide-react';
 import Link from 'next/link';
-import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
+import { useRouter } from 'next/navigation';
+import { StatusPill } from '@/components/ui/status-pill';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { canArchiveNda } from '@/lib/ndaLifecycle';
 import ProfilePrompt from './ProfilePrompt';
@@ -12,6 +13,8 @@ import InvitePrompt, { type PendingInvite } from './InvitePrompt';
 import NdaUpdatePrompt from './NdaUpdatePrompt';
 import { NotifySignerModal } from './NotifySignerModal';
 import type { NdaChangelogEntry } from '@/lib/ndaChangelog';
+import { NEW_NDA_HREF } from '@/lib/newNdaHref';
+import { getWorkflowStatusInfo as getSharedWorkflowStatusInfo, type WorkflowStatusInfo } from '@/lib/workflowStatus';
 
 interface NDA {
   id: string;
@@ -42,53 +45,18 @@ interface DashboardClientProps {
   ndaUpdate?: { version: string; entries: NdaChangelogEntry[] };
 }
 
-function getWorkflowStatusInfo(nda: NDA): { label: string; tone: StatusTone } {
-  const workflowState = nda.workflowState;
-
-  // A lapsed signing link needs the sender's attention (resend).
-  const isComplete = workflowState === 'COMPLETE' || workflowState === 'SIGNING_COMPLETE' || nda.status === 'signed';
-  if (nda.expired && !isComplete && nda.status !== 'cancelled') {
-    return { label: 'Link expired', tone: 'action' };
-  }
-
-  switch (workflowState) {
-    case 'AWAITING_INPUT':
-      return { label: 'Awaiting input', tone: 'progress' };
-    case 'REVIEWING_CHANGES':
-      return { label: 'Review changes', tone: 'action' };
-    case 'READY_TO_SIGN':
-      return { label: 'Ready to sign', tone: 'progress' };
-    case 'AWAITING_SIGNATURE':
-      return { label: 'Awaiting signature', tone: 'progress' };
-    case 'SIGNING_COMPLETE':
-    case 'COMPLETE':
-      return { label: 'Complete', tone: 'done' };
-    case 'AWAITING_PARTY_A_REVIEW':
-      return { label: 'Changes to review', tone: 'action' };
-    case 'AWAITING_PARTY_B_REVIEW':
-      return { label: 'Waiting review', tone: 'progress' };
-    case 'AWAITING_PARTY_A_SIGNATURE':
-      return { label: 'Sign now', tone: 'action' };
-    case 'AWAITING_PARTY_B_SIGNATURE':
-      if (nda.type === 'received') {
-        return { label: 'Sign now', tone: 'action' };
-      }
-      return { label: 'Waiting signature', tone: 'progress' };
-    case 'FILLING':
-    default:
-      if (nda.status === 'cancelled') {
-        return { label: 'Cancelled', tone: 'neutral' };
-      } else if (nda.status === 'signed') {
-        return { label: 'Signed', tone: 'done' };
-      } else if (nda.status === 'sent' || nda.status === 'pending') {
-        return { label: 'Sent', tone: 'progress' };
-      } else {
-        return { label: 'Draft', tone: 'neutral' };
-      }
-  }
+function getWorkflowStatusInfo(nda: NDA): WorkflowStatusInfo {
+  // If we received it we are Party B; if we created it we are Party A.
+  return getSharedWorkflowStatusInfo({
+    workflowState: nda.workflowState,
+    status: nda.status,
+    viewer: nda.type === 'received' ? 'receiver' : 'sender',
+    expired: nda.expired,
+  });
 }
 
 export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfile, pendingInvites, ndaUpdate }: DashboardClientProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'draft' | 'sent' | 'received' | 'signed' | 'action' | 'archived'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
@@ -193,6 +161,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       setLocalNdas(prev => prev.filter(nda => nda.id !== id));
       setMessage({ type: 'success', text: 'Draft deleted successfully' });
       setTimeout(() => setMessage(null), 3000);
+      // Drop the row from the server component cache too, so a refresh/return
+      // never resurrects the deleted draft (fixes the "Draft not found" reopen).
+      router.refresh();
     } catch (error) {
       console.error('Delete error:', error);
       setMessage({
@@ -278,7 +249,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       if (isArchived) return false; // archived rows are hidden from every other view
       if (filter === 'all') return true;
       const isActionRequired = ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(nda.workflowState || '') ||
-        (nda.type === 'received' && nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
+        (nda.type === 'received' && ['AWAITING_PARTY_B_SIGNATURE', 'AWAITING_PARTY_B_REVIEW'].includes(nda.workflowState || ''));
       const isSigned = nda.status === 'signed' || nda.workflowState === 'COMPLETE';
       if (filter === 'action') return isActionRequired;
       if (filter === 'signed') return isSigned && !isActionRequired;
@@ -295,7 +266,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
   const actionRequired = (n: NDA) =>
     ['AWAITING_PARTY_A_SIGNATURE', 'AWAITING_PARTY_A_REVIEW'].includes(n.workflowState || '') ||
-    (n.type === 'received' && n.workflowState === 'AWAITING_PARTY_B_SIGNATURE');
+    (n.type === 'received' && ['AWAITING_PARTY_B_SIGNATURE', 'AWAITING_PARTY_B_REVIEW'].includes(n.workflowState || ''));
   const isSigned = (n: NDA) => n.status === 'signed' || n.workflowState === 'COMPLETE';
 
   const active = localNdas.filter((n) => n.archivedAt == null);
@@ -317,7 +288,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     countColor: string;
     urgent?: boolean;
   }[] = [
-    { key: 'all', label: 'Total NDAs', count: stats.total, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
+    { key: 'all', label: 'All my NDAs', count: stats.total, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
     { key: 'draft', label: 'Drafts', count: stats.draft, iconColor: 'text-gray-500 bg-gray-100', countColor: 'text-ink' },
     { key: 'sent', label: 'Sent', count: stats.sent, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
     { key: 'received', label: 'Received', count: stats.received, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
@@ -370,11 +341,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       {/* DRAFT: Edit + Delete */}
       {nda.status === 'draft' && (
         <>
-          <Link href={`/fillndahtml?draftId=${nda.id}`}>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+          <Link href={`/fillndahtml?draftId=${nda.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
               <Edit className="w-3.5 h-3.5" />
               Edit
-            </button>
           </Link>
           <button
             onClick={() => handleDelete(nda.id, nda.partyName, false)}
@@ -393,11 +362,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           sees a clickable Sign Now during the fetch. */}
       {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
         canSign === true ? (
-          <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
+          <Link href={`/sign-nda-public/${nda.partyASignerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
               <Edit className="w-3.5 h-3.5" />
               Sign Now
-            </button>
           </Link>
         ) : (
           <div className="flex flex-col items-start gap-1">
@@ -409,36 +376,30 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               <CheckCircle className="w-3.5 h-3.5" />
               Ask a teammate to sign
             </button>
-            <span className="text-xs text-gray-500">Only approved signers can sign this NDA.</span>
+            <span className="text-xs text-gray-500">Only Signers can sign this NDA.</span>
           </div>
         )
       )}
 
       {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
       {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
-        <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors duration-200 cursor-pointer">
+        <Link href={`/fillndahtml-public/${nda.partyASignerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors duration-200 cursor-pointer">
             <Eye className="w-3.5 h-3.5" />
             Review
-          </button>
         </Link>
       )}
 
       {/* RECEIVED/INCOMING: Sign Now or Review */}
       {nda.type === 'received' && nda.signerId && !['COMPLETE', 'SIGNING_COMPLETE'].includes(nda.workflowState || '') && (
         nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE' ? (
-          <Link href={`/sign-nda-public/${nda.signerId}`}>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
+          <Link href={`/sign-nda-public/${nda.signerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
               <Edit className="w-3.5 h-3.5" />
               Sign Now
-            </button>
           </Link>
         ) : (
-          <Link href={`/fillndahtml-public/${nda.signerId}`}>
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+          <Link href={`/fillndahtml-public/${nda.signerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
               <Eye className="w-3.5 h-3.5" />
               Review
-            </button>
           </Link>
         )
       )}
@@ -464,11 +425,9 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
         if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created') {
           return (
-            <Link href={`/view-nda/${nda.id}`}>
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <Link href={`/view-nda/${nda.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
                 <Eye className="w-3.5 h-3.5" />
                 View
-              </button>
             </Link>
           );
         }
@@ -530,16 +489,10 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Compact header */}
-        <div className="flex items-center justify-between pt-8 pb-6 border-b border-gray-100">
-          <div>
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Dashboard</p>
-            <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Manage and track your non-disclosure agreements</p>
-          </div>
-          <Link href="/templates" className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-teal-800 text-white rounded-xl font-semibold shadow-card hover:bg-teal-700 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-700 text-sm">
-            <Plus className="w-4 h-4" />
-            New NDA
-          </Link>
+        <div className="pt-8 pb-6 border-b border-gray-100">
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Dashboard</p>
+          <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage and track your Non-Disclosure Agreements</p>
         </div>
 
 
@@ -571,6 +524,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               <button
                 key={card.key}
                 onClick={() => setFilter(card.key)}
+                title={card.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
                 className={`relative text-left p-4 rounded-2xl border transition-all duration-200 focus:outline-none cursor-pointer ${
                   isActive
                     ? 'bg-white border-transparent ring-2 ring-teal-600 shadow-card'
@@ -646,7 +600,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                   Send secure link
                 </span>
               </div>
-              <Link href="/templates" className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm">
+              <Link href={NEW_NDA_HREF} className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm">
                 <Plus className="w-4 h-4" />
                 Send Your First NDA
               </Link>

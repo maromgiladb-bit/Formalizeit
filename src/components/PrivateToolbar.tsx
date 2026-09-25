@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react'
 import FloatingNavShell from './nav/FloatingNavShell'
 import { NotificationIcon } from './ui/notification-icon'
 import NotificationPanel from './NotificationPanel'
+import { NEW_NDA_HREF } from '@/lib/newNdaHref'
 
 interface OrganizationData {
   organizations: { id: string; name: string; slug: string }[]
@@ -30,35 +31,26 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', current: pathname === '/dashboard' },
-    { name: 'Fill NDA', href: '/templates', current: pathname === '/fillndahtml' || pathname === '/templates' },
-    { name: 'Plans', href: '/#pricing', current: pathname === '/plans' },
+    { name: 'My account', href: '/settings', current: pathname.startsWith('/settings') },
+    // Pricing lives on the home page (#pricing); it is never the current route.
+    { name: 'Pricing', href: '/#pricing', current: false },
   ]
 
   const router = useRouter()
-
-  const primaryLinks = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Settings', href: '/settings' },
-    { name: 'Pricing', href: '/#pricing' },
-  ]
 
   const secondaryLinks = [
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'FAQ', href: '/faq' },
     { name: 'Help', href: '/help' },
-    { name: 'Homepage', href: '/' },
+    { name: 'Home', href: '/' },
   ]
 
   const devLinks = [
     { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
-    { name: '🎨 Fill NDA (Design)', href: '/fillndahtml?templateId=design_mutual_nda_v1' },
-    { name: '📥 Fill NDA Public (Party B)', href: '/fillndahtml-public/dev' },
     { name: '📄 Sign PDF', href: '/sign-nda' },
     { name: '✍️ Sign NDA (Dev)', href: '/sign-nda?draftId=test-draft-123' },
     { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
-    { name: '📧 Email Templates', href: '/devemails' },
-    { name: '📋 NDA Templates', href: '/devtemplates' },
     { name: '🏠 Homepage', href: '/' },
   ]
 
@@ -142,8 +134,8 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   </Link>
                 ))}
 
-                {/* More dropdown — folds away in the floating pill */}
-                <div className={`relative ${scrolled ? 'hidden' : ''}`} ref={moreMenuRef}>
+                {/* More dropdown — stays available in the floating pill */}
+                <div className="relative" ref={moreMenuRef}>
                   <button
                     onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
                     className={`inline-flex items-center px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -159,17 +151,6 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   {isMoreMenuOpen && (
                     <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-float z-50 overflow-hidden">
                       <div className="py-1.5">
-                        {primaryLinks.map((link) => (
-                          <Link
-                            key={link.name}
-                            href={link.href}
-                            className="block px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-ink transition-colors"
-                            onClick={() => setIsMoreMenuOpen(false)}
-                          >
-                            {link.name}
-                          </Link>
-                        ))}
-                        <div className="border-t border-gray-100 my-1.5"></div>
                         {secondaryLinks.map((link) => (
                           <Link
                             key={link.name}
@@ -246,7 +227,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 />
               </div>
               <button
-                onClick={() => router.push('/templates')}
+                onClick={() => router.push(NEW_NDA_HREF)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
@@ -295,7 +276,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                   </Link>
                 ))}
                 <div className="border-t border-gray-100 my-2"></div>
-                {[...primaryLinks, ...secondaryLinks].map((link) => (
+                {secondaryLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
@@ -331,7 +312,7 @@ export default function PrivateToolbar({ organizationData }: { organizationData?
                 </div>
                 <div className="px-1">
                   <Link
-                    href="/templates"
+                    href={NEW_NDA_HREF}
                     className="w-full flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

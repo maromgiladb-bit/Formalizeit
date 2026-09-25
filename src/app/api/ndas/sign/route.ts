@@ -45,14 +45,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Only signers and owners may apply the company's (Party A) signature.
+        // Only Signers (and Administrators with the signer toggle) may apply the company's (Party A) signature.
         // Contributors can do everything else (create, edit, send) but cannot sign.
         const activeMembership = await getActiveOrganization();
         if (!activeMembership) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 });
         }
         if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only signers and owners can sign on behalf of the company' }, { status: 403 });
+            return NextResponse.json({ error: 'Only Signers can sign on behalf of the company' }, { status: 403 });
         }
 
         // Find the draft with sign request info — scope to active org to prevent cross-org signing
@@ -71,6 +71,16 @@ export async function POST(request: NextRequest) {
 
         if (!draft) {
             return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
+        }
+
+        // Sign-gating (mirrors /api/ndas/sign-public): a signature may only be
+        // applied once the NDA is agreed. While a review round is open, block it.
+        const blockedForSigning = ['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW'];
+        if (blockedForSigning.includes(draft.workflowState as string)) {
+            return NextResponse.json(
+                { error: 'This NDA has open changes to review. Resolve the suggestions before signing.', code: 'REVIEW_PENDING' },
+                { status: 409 }
+            );
         }
 
         // Party A is signing (internal user)

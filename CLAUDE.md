@@ -2,9 +2,21 @@
 
 ## What this project is
 
-FormalizeIt is a **company-based NDA workflow SaaS** in production. It helps teams create, review, approve, and finalize NDAs faster by reusing known templates and focusing review only on the terms that actually change.
+FormalizeIt is a **company-based NDA workflow SaaS** in production. Its mission (per the product
+strategy) is to let teams send a legally-ready **NDA in minutes** by standardizing on a **single,
+fixed mutual NDA** whose legal text stays identical across every transaction. Users review the
+standard NDA once, then only fill in the deal-specific variables that differ per agreement. The
+goal is to reduce legal friction, accelerate business conversations, and build a **trusted
+standard** for confidential discussions. The workflow is `draft → sent → signed` — there is no
+internal approval step.
 
 The site is at an **advanced stage**. Most of the core product flow already exists. Avoid unnecessary rewrites or refactors unless explicitly asked.
+
+> **One standard NDA (MVP):** the product centers on a single standard mutual NDA. A template
+> selection UI still exists (`src/app/templates`, `/api/templates`) and can technically list more
+> than one template — for MVP, treat the one standard NDA as *the* product. Additional templates
+> are a deliberate **post-MVP** possibility, not the current model; revisit this framing when/if
+> more templates ship.
 
 ---
 
@@ -85,10 +97,11 @@ Comment / Suggestion
 Three roles. Keep permission logic consistent with this model.
 
 > **Renamed June 2026 (strategy terminology):** the role is now `ADMINISTRATOR` (was `OWNER`) and
-> the signer toggle field is `isSigner` (was `isApprover`). Code + schema use the new names;
-> apply the DB rename via migration `20260629000001_rename_owner_to_administrator_and_signer_flag`
-> (`prisma generate` + `migrate deploy`). The strategy's future "Legal approver/filler" role is
-> deferred (today covered by an administrator with the signer toggle on).
+> the signer toggle field is `isSigner` (was `isApprover`). This rename is **applied** — code +
+> schema use the new names and migration
+> `20260629000001_rename_owner_to_administrator_and_signer_flag` is committed. The strategy's
+> future "Legal approver/filler" role is deferred (today covered by an administrator with the
+> signer toggle on).
 
 ### Administrator (role `ADMINISTRATOR`; formerly "Owner")
 - Manages company settings, billing, members
@@ -152,6 +165,11 @@ only signers/administrators apply the company signature at the `signed` step.
    responsibility) is required before signing
 8. **Receiver reminders** fire automatically at **48h and 5 days** for unsigned NDAs; **2FA
    sign-in** (Clerk) is in MVP scope
+9. **Initial send is links-only (decided Sept 2026)** — the platform does **not** email the first
+   invite (cold mail from an unknown domain lands in spam). `send-for-review` returns the secure
+   link + a pre-written subject/body; the sender sends it from their own inbox via the share menu
+   (Gmail / Outlook / mailto / WhatsApp / copy). Platform emails are reserved for follow-ups the
+   receiver already expects: round notifications, 48h/5d reminders, and the signed copy
 
 ### Plan limits & retention (decided June 2026 — see `docs/strategy-gap-checklist.md` §1, §2)
 - **Plans** (`BillingPlan`): **FREE** = 3 NDAs total, 1 user · **PRO** ($9/mo, $7.65/mo annual) =
@@ -172,9 +190,19 @@ only signers/administrators apply the company signature at the `signed` step.
 ### Required legal documents (before launch)
 Website Disclaimer · Terms of Service · Privacy Policy · Electronic Signature Consent · viewable
 Standard NDA · NDA Governance Policy · NDA Changelog (human-readable summary of standard-NDA
-changes). Existing today: Terms (`src/app/terms`), Privacy (`src/app/privacy`), Compliance
-(`src/app/compliance`). Still to add: E-Signature Consent, viewable Standard NDA, Governance
-Policy, Changelog. All documents should be reviewed by qualified legal counsel before launch.
+changes). All seven routes are now scaffolded and linked in nav: Terms (`src/app/terms`),
+Privacy (`src/app/privacy`), Compliance (`src/app/compliance`), Standard NDA
+(`src/app/standard-nda`), NDA Governance Policy (`src/app/nda-governance`), E-Signature Consent
+(`src/app/esignature-consent`), NDA Changelog (`src/app/nda-changelog`). The Changelog is
+content-complete (driven by `src/lib/ndaChangelog.ts`). Standard NDA, Governance Policy, and
+E-Signature Consent are now **content-complete with founder-drafted text** (launched with a
+prominent "not legal advice" disclaimer; Standard NDA mirrors `templates/professional_mutual_nda_v1.hbs`
+v1.0, E-Signature Consent mirrors `src/lib/signatureEvidence.ts`).
+
+**LEGAL READINESS (standing obligation):** all seven legal docs launch with founder-drafted text
+and a prominent disclaimer. They **must still be reviewed by qualified legal counsel** — do this
+in parallel with launch and before scaling / removing any beta framing. Keep each page in sync
+with the behavior it describes when the underlying code changes.
 
 ---
 
@@ -239,7 +267,7 @@ Confidence signals come after the speed hook, never before:
 
 ### Core message (use as a copywriting anchor)
 
-*"Pick a template, fill in what's different, send — in minutes. No lawyer required."*
+*"Pick a template, fill in what's different, send — in minutes."*
 
 ---
 

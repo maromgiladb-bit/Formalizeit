@@ -1,5 +1,10 @@
 # Strategy Implementation Roadmap (29 Jun 2026)
 
+> **RECONCILED 2026-09-20 — this is now a historical record, not a worklist.**
+> Every B1–B7 item below is complete. This document spent ten weeks reporting shipped features as
+> open work. It was checked line by line against the code on 2026-09-20 and updated.
+> **The live launch worklist is `docs/launch/README.md`.** Do not drive work from this file.
+
 Implementation plan for the gaps identified in the 29 Jun 2026 strategy review. Decisions are
 recorded in `docs/strategy-gap-checklist.md`; product rules in `CLAUDE.md`. MVP-critical items
 first; non-MVP deferred at the bottom.
@@ -17,7 +22,15 @@ Status legend: ☐ not started · ◑ in progress · ☑ done
 - [x] `src/lib/stripe-price-ids.ts` (`priceIdFor` / `planFromPriceId`) maps all four IDs.
 - [x] `src/billing/planLimits.ts` (`PLAN_LIMITS`) — no change needed (limits already matched).
 
-## B2 — Signature evidence + authority-to-sign  ☐  (legal defensibility, MVP)
+## B2 — Signature evidence + authority-to-sign  ☑  (legal defensibility, MVP)
+
+> Verified 2026-09-20. `src/lib/signatureEvidence.ts` exists and exports `AUTHORITY_CONSENT_TEXT`,
+> `getClientIp`, `sha256Hex`, `templateSnapshot`, `partiesSnapshot`, `authorityConsent`. Both sign
+> routes import and use all of them. The authority checkbox is in both sign clients and enforced
+> server-side with a 400 (`sign/route.ts:29`, `sign-public/route.ts:26`). `/esignature-consent`
+> ships the mirrored language. Two known nits, neither launch-blocking: both routes record
+> `authorityConsent(true)` as a literal rather than echoing the received flag, and `agreementHash`
+> is only computed on the COMPLETE branch, so a first partial signature has no hash.
 
 **Goal:** when an NDA is signed, capture enough tamper-evident proof of *who* signed, *from
 where*, *what exact document*, and *that they affirmed authority* — so an executed NDA holds up
@@ -29,7 +42,7 @@ The two routes that actually apply a binding signature are `src/app/api/ndas/sig
 *send* paths (guarded by `canSendNDA`) and are out of scope. Evidence is stored in the existing
 `AuditEvent` (`metadata Json?` + `ipAddress` columns already exist — **no migration needed**).
 
-- [ ] **New shared helper `src/lib/signatureEvidence.ts`** so UI and server agree on wording and
+- [x] **New shared helper `src/lib/signatureEvidence.ts`** so UI and server agree on wording and
       logic isn't duplicated:
   - `getClientIp(request)` — `x-forwarded-for` (first hop) → `x-real-ip` fallback.
   - `sha256Hex(buffer)` — `crypto.createHash('sha256').update(buffer).digest('hex')`.
@@ -38,37 +51,55 @@ The two routes that actually apply a binding signature are `src/app/api/ndas/sig
     verbatim into the audit record — never re-derived from the active template later.
   - `AUTHORITY_CONSENT_TEXT` — the exact checkbox sentence, imported by both the UI and the
     server so the recorded consent text always matches what the signer saw.
-- [ ] **`sign-public/route.ts`** — accept `authorityConfirmed` in the body; reject with 400 if not
+- [x] **`sign-public/route.ts`** — accept `authorityConfirmed` in the body; reject with 400 if not
       `true`. On every SIGNED audit event add `ipAddress`, `templateSnapshot`, and
       `authority: { confirmed, text, at }`. On the COMPLETE branch (final PDF already generated)
       add `agreementHash = sha256Hex(pdfBuffer)` to the audit metadata.
-- [ ] **`sign/route.ts`** — same as above for the authenticated Party A signature.
-- [ ] **`SignNDAPublicClient.tsx`** — add a required authority-to-sign checkbox above Submit
+- [x] **`sign/route.ts`** — same as above for the authenticated Party A signature.
+- [x] **`SignNDAPublicClient.tsx`** — add a required authority-to-sign checkbox above Submit
       (design-system styling per `.claude/skills/stitch-design.md`); block submit until checked;
       send `authorityConfirmed: true`. Use `AUTHORITY_CONSENT_TEXT` as the label.
-- [ ] **`SignNDASimpleClient.tsx`** — same checkbox near the sign/save actions; gate submit.
-- [ ] Mirror the authority + e-signature consent language in `src/app/terms/page.tsx`.
-- [ ] Update Formi (`src/ai/prompts/formi_systemPrompt.ts`) so it can explain what evidence is
+- [x] **`SignNDASimpleClient.tsx`** — same checkbox near the sign/save actions; gate submit.
+- [x] Mirror the authority + e-signature consent language — shipped as the dedicated
+      `/esignature-consent` page rather than inside Terms.
+- [x] Update Formi (`src/ai/prompts/formi_systemPrompt.ts`) so it can explain what evidence is
       recorded at signing and the authority-to-sign affirmation (per the Formi-sync rule).
 
-## B3 — "No legal advice" disclaimer in UI  ☐  (MVP)
-- [ ] Add a compact, persistent disclaimer to fill / review / sign pages
-      (`src/app/fillndahtml/*`, `src/app/review-nda/[token]/*`, `src/app/sign-nda-public/[token]/*`)
-      using existing design-system components per `.claude/skills/stitch-design.md`.
+## B3 — "No legal advice" disclaimer in UI  ☑  (MVP)
+- [x] Shipped as `src/components/ui/legal-disclaimer.tsx`, rendered on the sender fill page, the
+      counterparty fill/review page, and both sign pages. (`/review-nda/[token]` named in the
+      original plan was dead and has since been deleted; the counterparty review step reuses
+      `fillndahtml-public`, which carries the disclaimer.)
+      Not present on `/view-nda/[draftId]`, `/viewpdf/[id]` or `/mydrafts` — read-only surfaces,
+      judged out of scope.
 
-## B4 — Receiver reminders at 48h & 5 days  ☐  (MVP)
-- [ ] New cron mirroring `src/app/api/cron/retention-cleanup` + a `vercel.json` schedule: find
-      unsigned NDAs in `sent`/awaiting-signature past 48h / 5d, send via existing Resend helpers,
-      stamp a `reminderSentAt` marker on the draft (new schema field) to avoid duplicates.
+## B4 — Receiver reminders at 48h & 5 days  ☑  (MVP)
+- [x] `src/app/api/cron/nda-reminders` scheduled daily at 05:00 UTC in `vercel.json`, fails closed
+      without `CRON_SECRET`. Idempotent via `NdaDraft.reminder48hSentAt` / `reminder5dSentAt`
+      (migration `20260629000000`). Known rough edge: the reminder targets the Party B signer even
+      when the NDA is waiting on Party A, so your own company's delay can still nag the
+      counterparty. Filed as post-launch polish.
 
-## B5 — 2FA sign-in  ☐  (MVP)
-- [ ] Enable 2FA/MFA in the **Clerk dashboard**; surface it in account settings. Mostly config.
+## B5 — 2FA sign-in  ☑  (MVP — config only, no code)
+- [x] No product code is required or possible: `/settings/account-security` renders Clerk's
+      `<UserProfile />`, whose Security tab exposes 2FA as soon as MFA is enabled in the Clerk
+      dashboard. Steps are documented in `docs/2fa-setup.md`. **The dashboard toggle itself is
+      still pending on the production Clerk instance — tracked in
+      `docs/launch/phase-0-external-setup.md` §0.2.**
 
-## B6 — Legal/compliance pages  ☑  (placeholders; final text from legal counsel later)
+## B6 — Legal/compliance pages  ☑  (founder-drafted text shipped; counsel review still pending)
 - [x] Added placeholder routes (PageHero + "coming soon" card, design-system compliant):
       `src/app/esignature-consent`, `src/app/standard-nda`, `src/app/nda-governance`,
       `src/app/nda-changelog`. Footer-linked (Legal + new "The Standard NDA" column).
-- [ ] Replace placeholder copy with the final legal text when provided.
+- [x] Replaced placeholder copy with founder-drafted text (commit `1d6809a`): `/standard-nda`
+      renders all 16 clauses of `templates/professional_mutual_nda_v1.hbs` v1.0,
+      `/esignature-consent` mirrors `src/lib/signatureEvidence.ts`, `/nda-governance` is complete,
+      and `/nda-changelog` is driven by `src/lib/ndaChangelog.ts`. All seven legal routes exist and
+      are nav-linked.
+- [ ] **Standing obligation, not a launch blocker:** qualified legal counsel must still review all
+      seven documents. Launching with founder-drafted text plus a prominent disclaimer was the
+      explicit decision (2026-07-09). Do this in parallel with launch, and before scaling or
+      removing any beta framing.
 
 ## B7 — Role rename: OWNER→ADMINISTRATOR, isApprover→isSigner  ☑
 - [x] Schema: `MembershipRole.OWNER`→`ADMINISTRATOR`, `Membership.isApprover`→`isSigner`
@@ -78,8 +109,11 @@ The two routes that actually apply a binding signature are `src/app/api/ndas/sig
       `settings/team/page.tsx`, `api/user/role`, `notifications.ts`, `company-profile`, `drafts`,
       `sign-nda/SignNDASimpleClient.tsx`, tests. Formi prompt roles + status flow updated; CLAUDE.md
       roles updated. Permission model unchanged. Role-guard vitest: 10/10 pass.
-- [ ] **User must run** `npx prisma generate` then `npx prisma migrate deploy` — until then, Prisma
-      queries using the new enum value/field will type-error (generated client still has old names).
+- [x] `npx prisma generate` has been run — `tsc --noEmit` passes clean against the new enum value
+      and field names, which it could not do with a stale client. Local and Vercel Preview
+      databases are migrated (all 25 migrations).
+- [ ] **`prisma migrate deploy` against PRODUCTION is still unverified** and is the single highest
+      -risk item in the launch. Tracked in `docs/launch/phase-0-external-setup.md` §0.1.
 
 ---
 

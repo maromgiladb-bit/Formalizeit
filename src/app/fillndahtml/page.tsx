@@ -4,8 +4,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
 import { sanitizeForHtml } from "@/lib/sanitize";
+import { filterPhoneChars, isValidPhone } from "@/lib/phone";
+import { deriveNdaTitle, confidentialityBelowTerm } from "@/lib/ndaTerms";
 import { useFormi } from "@/components/ai/FormiProvider";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
+import { FieldTooltip } from "@/components/ui/field-tooltip";
+import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
+import { getWorkflowStatusInfo } from "@/lib/workflowStatus";
+import { ChevronLeft, ChevronRight, Send, Save } from "lucide-react";
 
 type FormValues = {
 	docName: string;
@@ -78,7 +85,6 @@ export default function FillNDAHTML() {
 	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
 	const [saving, setSaving] = useState(false);
-	const [deleting, setDeleting] = useState(false);
 	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
 	const [draftId, setDraftId] = useState<string | null>(null);
@@ -98,6 +104,10 @@ export default function FillNDAHTML() {
 	const [showShareLinkModal, setShowShareLinkModal] = useState(false);
 	const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 	const [step, setStep] = useState<number>(0);
+	// "Signatory is the same as the party name" toggles (opt-in — we never prefill,
+	// since the party may be a company).
+	const [partyASignatorySame, setPartyASignatorySame] = useState(false);
+	const [partyBSignatorySame, setPartyBSignatorySame] = useState(false);
 	// Send for input modal state
 	const [showSendForInputModal, setShowSendForInputModal] = useState(false);
 	const [inputRecipientEmail, setInputRecipientEmail] = useState("");
@@ -140,22 +150,11 @@ export default function FillNDAHTML() {
 	const [suggestedEmailBody, setSuggestedEmailBody] = useState("");
 	const [emailSent, setEmailSent] = useState(false);
 	// True when the server auto-sent the email via Resend (vs. only generating a link).
-	const [autoEmailed, setAutoEmailed] = useState(false);
 	const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
 
-	// Email suggestions state
-	const [emailSuggestions, setEmailSuggestions] = useState<Array<{
-		email: string;
-		count: number;
-		lastUsed: string;
-		recentNda: string;
-		hasSignedBefore: boolean;
-	}>>([]);
-	const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
-	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 	const [loadingCompanyProfile, setLoadingCompanyProfile] = useState(false);
 
 	// Warn on tab close if unsaved changes
@@ -266,7 +265,6 @@ export default function FillNDAHTML() {
 					...(profile.signatoryTitle && { party_a_title: profile.signatoryTitle }),
 					...(profile.email && { party_a_email: profile.email })
 				}));
-				console.log('✅ Auto-filled Party A from company profile');
 			} else {
 				setShowNoProfileModal(true);
 			}
@@ -281,18 +279,12 @@ export default function FillNDAHTML() {
 	const previewPDF = async () => {
 		setGeneratingPdf(true);
 		try {
-			console.log("📄 Generating PDF preview with data:", values);
-			console.log("📋 Using template:", templateId);
 
 			// Always use current form data for preview (not draft from DB)
 			// This ensures the preview matches what you see in the HTML preview
 			const payload = { ...templateData };  // templateData already includes templateId
 
-			console.log("📦 Sending payload to PDF API:", {
-				hasTemplateId: !!payload.templateId,
-				templateId: payload.templateId,
-				hasDraftId: false
-			});			// Use PDF preview endpoint (supports both draftId and direct data)
+			// Use PDF preview endpoint (supports both draftId and direct data)
 			const res = await fetch("/api/ndas/preview", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -300,7 +292,6 @@ export default function FillNDAHTML() {
 			});
 
 			const json = await res.json();
-			console.log("PDF Preview response:", json);
 
 			if (!res.ok) {
 				console.error("❌ PDF preview failed:", json);
@@ -339,7 +330,6 @@ export default function FillNDAHTML() {
 				setShowPdfPreview(true);
 			}
 
-			console.log("✅ PDF preview opened successfully");
 			setWarning(""); // Clear any previous warnings
 		} catch (e) {
 			console.error("PDF preview error:", e);
@@ -396,13 +386,6 @@ export default function FillNDAHTML() {
 
 	// Update live preview HTML when data arrives
 	useEffect(() => {
-		console.log('🎨 Live data received:', {
-			hasData: !!liveData,
-			hasHtml: !!liveData?.html,
-			htmlLength: liveData?.html?.length || 0,
-			htmlPreview: liveData?.html?.substring(0, 100),
-			values: values
-		});
 		if (liveData?.html) {
 			// Save current scroll position before update
 			if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -412,63 +395,20 @@ export default function FillNDAHTML() {
 					console.warn("Could not save scroll position", e);
 				}
 			}
-			console.log('🎨 Setting live preview HTML, length:', liveData.html.length);
 			setLivePreviewHtml(liveData.html);
 		}
 	}, [liveData, values]);
 
-	// Fetch email suggestions
-	const fetchEmailSuggestions = useCallback(async (query: string) => {
-		if (!query || query.length < 2) {
-			setEmailSuggestions([]);
-			setShowEmailSuggestions(false);
-			return;
-		}
-
-		try {
-			setLoadingSuggestions(true);
-			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
-			const data = await res.json();
-
-			if (res.ok && data.suggestions) {
-				setEmailSuggestions(data.suggestions);
-				setShowEmailSuggestions(data.suggestions.length > 0);
-			}
-		} catch (error) {
-			console.error("Failed to fetch email suggestions:", error);
-		} finally {
-			setLoadingSuggestions(false);
-		}
-	}, []);
-
-	// C) Fix email suggestions debounce - clean timeout on unmount
-	useEffect(() => {
-		if (signersEmail.length < 2) {
-			setEmailSuggestions([]);
-			setShowEmailSuggestions(false);
-			return;
-		}
-		const id = setTimeout(() => {
-			fetchEmailSuggestions(signersEmail);
-		}, 300);
-		return () => clearTimeout(id);
-	}, [signersEmail, fetchEmailSuggestions]);
-
 	const loadDraft = useCallback(async (id: string) => {
-		console.log('=== Loading draft ===')
-		console.log('Draft ID:', id)
 		setLoading(true);
 		try {
 			const res = await fetch(`/api/ndas/drafts/${id}`);
-			console.log('Response status:', res.status)
 
 			const json = await res.json();
-			console.log('Response data:', json)
 
 			if (!res.ok) throw new Error(json.error || "Failed to load draft");
 
 			if (json.draft?.content) {
-				console.log('Setting form values from draft content:', json.draft.content)
 				// Compute next values in one pass, then set once
 				const next = { ...DEFAULTS, ...json.draft.content };
 				if (json.draft.title) next.docName = json.draft.title;
@@ -477,32 +417,27 @@ export default function FillNDAHTML() {
 				setDraftId(json.draft.id);
 				setWorkflowState(json.draft.workflowState || null);
 
-				// Parse revisions to extract incoming suggestions from Party B
-				if (json.draft.revisions && json.draft.revisions.length > 0) {
-					const latestRevision = json.draft.revisions[0];
+				// Incoming suggestions are whatever Party B proposed in the NEWEST
+				// revision. Always reassign — after we send our own response the latest
+				// revision is ours, and leaving the previous round on screen would show
+				// stale proposals with their buttons reset, as if still pending.
+				const suggestions: Record<string, Suggestion> = {};
+				const latestRevision = json.draft.revisions?.[0];
+				if (latestRevision && json.draft.lastEditedBy === 'party_b') {
 					const revContent = latestRevision.content as Record<string, unknown>;
 					const revSuggestions = revContent?.suggestedChanges as Record<string, string> | undefined;
-					const submittedBy = revContent?.submittedBy as string | undefined;
-					const lastEditedBy = json.draft.lastEditedBy;
-
-					// If last edit was by party_b and there are suggestions, show them
-					if (lastEditedBy === 'party_b' && revSuggestions) {
-						const suggestions: Record<string, Suggestion> = {};
-						for (const [field, newValue] of Object.entries(revSuggestions)) {
-							if (newValue?.trim()) {
-								suggestions[field] = {
-									oldValue: (json.draft.content[field] as string) || '',
-									newValue,
-									suggestedBy: 'party_b'
-								};
-							}
+					for (const [field, newValue] of Object.entries(revSuggestions || {})) {
+						if (newValue?.trim()) {
+							suggestions[field] = {
+								oldValue: (json.draft.content[field] as string) || '',
+								newValue,
+								suggestedBy: 'party_b'
+							};
 						}
-						setIncomingSuggestions(suggestions);
-						console.log('Loaded incoming suggestions from Party B:', suggestions);
 					}
 				}
+				setIncomingSuggestions(suggestions);
 			} else {
-				console.log('No draft data found, using defaults')
 				setValues(DEFAULTS);
 			}
 		} catch (e) {
@@ -522,16 +457,13 @@ export default function FillNDAHTML() {
 
 		// Always use HTML template for this page, but allow override from URL
 		if (urlTemplateId) {
-			console.log("📋 Using template:", urlTemplateId);
 			setTemplateId(urlTemplateId);
 		} else {
-			console.log("📋 Using default HTML template: professional_mutual_nda_v1");
 			setTemplateId("professional_mutual_nda_v1");
 		}
 
 		if (isNewNda) {
 			// Starting a new NDA - clear everything and use defaults
-			console.log("🆕 Starting new NDA - clearing all data");
 			setValues(DEFAULTS);
 			setLastSavedValues(DEFAULTS);
 			setDraftId(null);
@@ -547,7 +479,6 @@ export default function FillNDAHTML() {
 					const parsed = JSON.parse(d);
 					setValues({ ...DEFAULTS, ...(parsed.values || {}) });
 					setDraftId(parsed.draftId || null);
-					console.log("📂 Restored from localStorage");
 				} catch (e) {
 					console.error(e);
 				}
@@ -639,6 +570,60 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// Keep the signatory name mirrored to the party name while "same as party name"
+	// is checked, so editing the party name updates the signatory too.
+	useEffect(() => {
+		if (partyASignatorySame && values.party_a_signatory_name !== values.party_a_name) {
+			setField("party_a_signatory_name", values.party_a_name);
+		}
+	}, [partyASignatorySame, values.party_a_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if (partyBSignatorySame && values.party_b_signatory_name !== values.party_b_name) {
+			setField("party_b_signatory_name", values.party_b_name);
+		}
+	}, [partyBSignatorySame, values.party_b_name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// --- Live-preview ↔ form field sync (C2) ------------------------------------
+	// The rendered NDA already wraps every deal variable in <span data-field="…">,
+	// so we can highlight/scroll the matching token when a field is focused, and
+	// jump back to the form field when a preview token is clicked. Preview-only —
+	// no change to the document content or the signed PDF.
+	const PREVIEW_FIELD_STEP: Record<string, number> = {
+		effective_date: 0, term_months: 0,
+		party_a_name: 1, party_a_address: 1,
+		party_b_name: 2, party_b_address: 2,
+		governing_law: 3, purpose: 3, additional_terms: 3,
+	};
+
+	const highlightPreviewField = (field: string) => {
+		const doc = iframeRef.current?.contentDocument;
+		if (!doc) return;
+		doc.querySelectorAll('.nda-focus-highlight').forEach((el) => el.classList.remove('nda-focus-highlight'));
+		const el = doc.querySelector<HTMLElement>(`[data-field="${field}"]`);
+		if (el) {
+			el.classList.add('nda-focus-highlight');
+			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	};
+
+	const clearPreviewHighlight = () => {
+		iframeRef.current?.contentDocument
+			?.querySelectorAll('.nda-focus-highlight')
+			.forEach((el) => el.classList.remove('nda-focus-highlight'));
+	};
+
+	// Clicking a token in the preview jumps to (and focuses) its form field.
+	const jumpToFormField = (field: string) => {
+		const targetStep = PREVIEW_FIELD_STEP[field];
+		if (targetStep !== undefined) setStep(targetStep);
+		setTimeout(() => {
+			const input = document.querySelector<HTMLElement>(`[data-preview-field="${field}"]`);
+			input?.focus();
+			input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}, 80);
+	};
+
 	const getFieldClass = (fieldName: string, baseClass: string = "p-2.5 border") => {
 		const hasError = validationErrors.has(fieldName);
 		const hasSuggestion = incomingSuggestions[fieldName] && !suggestionResponses[fieldName];
@@ -647,6 +632,27 @@ export default function FillNDAHTML() {
 		}
 		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`;
 	};
+
+	/**
+	 * Phone fields are optional, so we only flag a value that is present and
+	 * implausible. `setField` already clears the error as the user types, so
+	 * blur re-checks and the red state dismisses itself on correction.
+	 */
+	const validatePhoneOnBlur = (field: "party_a_phone" | "party_b_phone", value: string) => {
+		setValidationErrors((prev) => {
+			const next = new Set(prev);
+			if (isValidPhone(value)) next.delete(field);
+			else next.add(field);
+			return next;
+		});
+	};
+
+	const phoneError = (field: "party_a_phone" | "party_b_phone") =>
+		validationErrors.has(field) ? (
+			<p className="mt-1 text-xs text-red-600">
+				Enter a valid phone number, or leave it blank.
+			</p>
+		) : null;
 
 	// Suggestion handlers
 	const acceptSuggestion = (field: string) => {
@@ -806,8 +812,8 @@ export default function FillNDAHTML() {
 
 	const validate = (): { isValid: boolean; errors: Set<string>; message: string | null } => {
 		const errors = new Set<string>();
+		// docName is optional — a title is derived from the counterparty when blank.
 		const mandatoryFields = [
-			"docName",
 			"effective_date",
 			"term_months",
 			"confidentiality_period_months",
@@ -852,10 +858,21 @@ export default function FillNDAHTML() {
 		// Still validate email format if Party B email is provided and not asking receiver to fill
 		// Removed strict check to allow skipping email in this step
 
+		// Phone numbers are optional, but a filled-in one has to be plausible.
+		// isValidPhone("") is true, so this never makes the field required.
+		const badPhones = (["party_a_phone", "party_b_phone"] as const).filter(
+			(field) => !isValidPhone(values[field] || "")
+		);
+		badPhones.forEach((field) => errors.add(field));
 
 		let message = null;
-		if (errors.size > 0) {
-			message = `Please fill in ${errors.size} required field(s)`;
+		const missingCount = errors.size - badPhones.length;
+		if (missingCount > 0 && badPhones.length > 0) {
+			message = `Please fill in ${missingCount} required field(s) and correct the highlighted phone number(s)`;
+		} else if (missingCount > 0) {
+			message = `Please fill in ${missingCount} required field(s)`;
+		} else if (badPhones.length > 0) {
+			message = `Please correct the highlighted phone number${badPhones.length === 1 ? "" : "s"}`;
 		}
 
 		return { isValid: errors.size === 0, errors, message };
@@ -865,7 +882,7 @@ export default function FillNDAHTML() {
 		const stepFields: string[] = [];
 		switch (s) {
 			case 0:
-				stepFields.push("docName", "term_months", "confidentiality_period_months");
+				stepFields.push("term_months", "confidentiality_period_months");
 				break;
 			case 1:
 				// Party A fields only required if not asking receiver to fill
@@ -902,7 +919,6 @@ export default function FillNDAHTML() {
 			case 4:
 				// review - all mandatory fields based on ask_receiver_fill flags
 				stepFields.push(
-					"docName",
 					"effective_date",
 					"term_months",
 					"confidentiality_period_months",
@@ -929,7 +945,6 @@ export default function FillNDAHTML() {
 	// D) Fix computeCompletionPercent - respect "ask receiver to fill" like validate() does
 	const computeCompletionPercent = () => {
 		const requiredFields = [
-			"docName",
 			"effective_date",
 			"term_months",
 			"confidentiality_period_months",
@@ -990,30 +1005,11 @@ export default function FillNDAHTML() {
 		await performSave();
 	};
 
-	const deleteDraft = async () => {
-		if (!draftId) return;
-		if (!window.confirm('Delete this draft? This cannot be undone.')) return;
-		setDeleting(true);
-		try {
-			const res = await fetch(`/api/ndas/drafts/${draftId}`, { method: 'DELETE' });
-			if (!res.ok) {
-				const data = await res.json();
-				setWarning(data.error || 'Failed to delete draft');
-				return;
-			}
-			router.push('/dashboard');
-		} catch {
-			setWarning('Failed to delete draft');
-		} finally {
-			setDeleting(false);
-		}
-	};
-
 	const performSave = async () => {
 		setSaving(true);
 		setWarning("");
 		try {
-			const payload = { draftId, title: values.docName, data: { ...values, templateId } };
+			const payload = { draftId, title: deriveNdaTitle(values.docName, values.party_b_name), data: { ...values, templateId } };
 			const res = await fetch("/api/ndas/drafts", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -1032,17 +1028,8 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// Handle email input change with debounce
-	// C) Clean email change handler - debounce moved to useEffect
 	const handleEmailChange = (email: string) => {
 		setSignersEmail(email);
-		// Debounce logic now in useEffect above - prevents leaked timers
-	};
-
-	const selectEmailSuggestion = (email: string) => {
-		setSignersEmail(email);
-		setShowEmailSuggestions(false);
-		setEmailSuggestions([]);
 	};
 
 	// Check if there are empty Party B fields that need to be filled
@@ -1059,37 +1046,58 @@ export default function FillNDAHTML() {
 		return partyBFields.some(field => !field.value.trim() && field.askReceiver);
 	};
 
+	// Ordered required fields → their wizard step, used to jump to the first
+	// missing field when a send is blocked (instead of only showing a count).
+	const FIELD_STEP: Record<string, number> = {
+		effective_date: 0, term_months: 0, confidentiality_period_months: 0,
+		party_a_name: 1, party_a_address: 1, party_a_signatory_name: 1, party_a_title: 1,
+		party_b_name: 2, party_b_address: 2, party_b_signatory_name: 2, party_b_title: 2,
+		governing_law: 3, ip_ownership: 3, non_solicit: 3, exclusivity: 3,
+	};
+
+	const focusFirstMissing = (errors: Set<string>) => {
+		const first = Object.keys(FIELD_STEP).find((f) => errors.has(f));
+		if (!first) return;
+		setStep(FIELD_STEP[first]);
+		// Let the step render, then bring the first flagged field into view + focus.
+		setTimeout(() => {
+			const el = document.querySelector<HTMLElement>('.border-red-500');
+			el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			el?.focus?.();
+		}, 80);
+	};
+
 	const sendForReview = async () => {
 		const validation = validate();
 		if (!validation.isValid) {
 			setValidationErrors(validation.errors);
 			setWarning(validation.message || "Please fill in all required fields");
+			focusFirstMissing(validation.errors);
 			return;
 		}
 
-		// Formi gentle pre-send nudge (once): open Formi and offer a quick review.
-		// Clicking "Send for Review" again proceeds.
+		// Formi pre-send nudge — only when there is something high-severity to flag.
+		// Shown once; clicking "Send NDA" again proceeds.
 		if (!formiNudgeShownRef.current) {
 			formiNudgeShownRef.current = true;
 			const highs = formiFindings.filter((f) => f.severity === "high");
-			const nudge = highs.length
-				? `Heads up — I flagged ${highs.length} high-severity item${
+			if (highs.length) {
+				openFormiNudge(
+					`Heads up — I flagged ${highs.length} high-severity item${
 						highs.length > 1 ? "s" : ""
-				  }: ${highs
-						.map((f) => f.fieldLabel)
-						.join(", ")}. Want me to walk through ${
+					}: ${highs.map((f) => f.fieldLabel).join(", ")}. Want me to walk through ${
 						highs.length > 1 ? "them" : "it"
-				  }? Or click "Send for Review" again to send.`
-				: `Want me to review this NDA before you send? Just ask — or click "Send for Review" again to send.`;
-			openFormiNudge(nudge);
-			return;
+					}? Or click "Send NDA" again to send.`
+				);
+				return;
+			}
 		}
 
 		// Auto-save draft if not already saved
 		let currentDraftId = draftId;
 		if (!currentDraftId) {
 			try {
-				const payload = { draftId: draftId, title: values.docName, data: { ...values, templateId } };
+				const payload = { draftId: draftId, title: deriveNdaTitle(values.docName, values.party_b_name), data: { ...values, templateId } };
 				const res = await fetch("/api/ndas/drafts", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -1121,20 +1129,53 @@ export default function FillNDAHTML() {
 		setShowVerifyEmailModal(true);
 	};
 
-	const approveChanges = async () => {
+	/**
+	 * Send this round's per-field answers back. Accepting everything moves the
+	 * NDA to our signature; any rejection or counter returns it to the other
+	 * party for another round.
+	 */
+	const submitReviewResponse = async () => {
 		if (!draftId) return;
+
+		// Every pending suggestion must be answered, or "Accept Changes" would
+		// silently accept nothing.
+		const unanswered = getPendingSuggestionsCount();
+		if (unanswered > 0) {
+			setWarning(
+				`Respond to ${unanswered} remaining change${unanswered === 1 ? '' : 's'} before sending your reply.`
+			);
+			return;
+		}
+
+		const responses: Record<string, { action: string; counterValue?: string }> = {};
+		const acceptedFields: Record<string, string> = {};
+		for (const [field, action] of Object.entries(suggestionResponses)) {
+			responses[field] = { action };
+			if (action === 'countered') responses[field].counterValue = counterValues[field] ?? '';
+			if (action === 'accepted') {
+				acceptedFields[field] = String((values as Record<string, unknown>)[field] ?? '');
+			}
+		}
+
 		setProcessingChanges(true);
 		try {
 			const res = await fetch('/api/ndas/approve-changes', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ draftId }),
+				body: JSON.stringify({
+					draftId,
+					filledFields: acceptedFields,
+					suggestionResponses: responses,
+				}),
 			});
 			const data = await res.json();
-			if (!res.ok) throw new Error(data.error || 'Failed to approve changes');
-			setWorkflowState('AWAITING_PARTY_A_SIGNATURE');
+			if (!res.ok) throw new Error(data.error || 'Failed to send your response');
+			setWorkflowState(data.workflowState);
+			setSuggestionResponses({});
+			setCounterValues({});
+			await loadDraft(draftId);
 		} catch (e) {
-			setWarning(e instanceof Error ? e.message : 'Failed to approve changes');
+			setWarning(e instanceof Error ? e.message : 'Failed to send your response');
 		} finally {
 			setProcessingChanges(false);
 		}
@@ -1198,7 +1239,6 @@ export default function FillNDAHTML() {
 			if (link) setGeneratedShareLink(link);
 			if (result.suggestedSubject) setSuggestedEmailSubject(result.suggestedSubject);
 			if (result.suggestedBody) setSuggestedEmailBody(result.suggestedBody);
-			setAutoEmailed(!!result.emailSent);
 			setEmailSent(true);
 
 		} catch (e) {
@@ -1208,11 +1248,11 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// Share NDA via external platform (WhatsApp, LinkedIn, etc.)
-	// Only available after the email has been sent — uses the cached review link
+	// Share the review link via the sender's own channel (Gmail, Outlook, mailto,
+	// WhatsApp, copy…). Requires the link created by confirmAndSend.
 	const handleShare = (platform: string) => {
 		if (!generatedShareLink) {
-			setWarning("Please send by email first to generate the review link.");
+			setWarning("Create the secure link first, then choose how to send it.");
 			return;
 		}
 		openSharePlatform(platform, generatedShareLink);
@@ -1293,7 +1333,14 @@ export default function FillNDAHTML() {
 			<div className="flex h-[calc(100vh-64px)]">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
 				<div className={`transition-all duration-300 ${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
-					<div className="max-w-4xl mx-auto p-6">
+					<div
+						className="max-w-4xl mx-auto p-6"
+						onFocusCapture={(e) => {
+							const f = (e.target as HTMLElement).getAttribute?.('data-preview-field');
+							if (f && showLivePreview) highlightPreviewField(f);
+						}}
+						onBlurCapture={() => { if (showLivePreview) clearPreviewHighlight(); }}
+					>
 						{/* Header */}
 						<div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
 							<div className="flex items-center gap-3">
@@ -1303,14 +1350,14 @@ export default function FillNDAHTML() {
 									</svg>
 								</div>
 								<div>
-									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA Draft" : "Create New NDA"}</h1>
-									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Fill out the form to generate your agreement"}</p>
+									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA draft" : "Fill out the form to generate your agreement"}</h1>
+									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Add the deal-specific details below"}</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-2">
 								<button
 									onClick={() => setShowLivePreview(!showLivePreview)}
-									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors flex items-center gap-1.5"
 								>
 									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -1381,9 +1428,9 @@ export default function FillNDAHTML() {
 									{steps.map((s, i) => (
 										<React.Fragment key={s}>
 											<button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0">
-												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
 													i === step
-														? 'bg-teal-800 text-white'
+														? 'bg-teal-800 text-white ring-2 ring-teal-800/25 ring-offset-2 scale-110'
 													: isStepComplete(i)
 														? 'bg-teal-800 text-white'
 														: 'bg-gray-100 text-gray-400'
@@ -1396,7 +1443,7 @@ export default function FillNDAHTML() {
 														<span>{i + 1}</span>
 													)}
 												</div>
-												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-gray-900 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
+												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-teal-800 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-400'}`}>{s}</span>
 											</button>
 											{i < steps.length - 1 && (
 												<div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
@@ -1426,7 +1473,14 @@ export default function FillNDAHTML() {
 
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 											<div className="md:col-span-2">
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Document Title *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Document Title
+													<span className="text-xs font-normal text-gray-400">(optional)</span>
+													<FieldTooltip
+														text="A name to help you find this NDA on your dashboard. Leave blank and we'll name it after the other party."
+														onAskFormi={() => openFormiNudge("What should I put as the document title for my NDA?")}
+													/>
+												</label>
 												<input
 													className={`${getFieldClass("docName")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.docName}
@@ -1440,23 +1494,35 @@ export default function FillNDAHTML() {
 													type="date"
 													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors")}`}
 													value={values.effective_date}
-													onChange={(e) => setField("effective_date", e.target.value)}
+													data-preview-field="effective_date" onChange={(e) => setField("effective_date", e.target.value)}
 													required
 												/>
 												<div className="text-xs text-gray-500 mt-1">DD/MM/YYYY</div>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Term (months) *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Term (months) *
+													<FieldTooltip
+														text="The period during which confidential materials can be shared under this NDA."
+														onAskFormi={() => openFormiNudge("Explain the 'Term (months)' field in this NDA and how to choose it.")}
+													/>
+												</label>
 												<input
 													type="number"
 													className={`${getFieldClass("term_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.term_months}
-													onChange={(e) => setField("term_months", e.target.value)}
+													data-preview-field="term_months" onChange={(e) => setField("term_months", e.target.value)}
 													placeholder="e.g., 12"
 												/>
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Confidentiality Period (months) *</label>
+												<label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+													Confidentiality Period (months) *
+													<FieldTooltip
+														text="How long confidentiality obligations must be kept. This can be longer than the agreement term."
+														onAskFormi={() => openFormiNudge("Explain the 'Confidentiality Period' field in this NDA and how it differs from the term.")}
+													/>
+												</label>
 												<input
 													type="number"
 													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
@@ -1464,14 +1530,20 @@ export default function FillNDAHTML() {
 													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
 													placeholder="e.g., 24"
 												/>
+												{confidentialityBelowTerm(values.term_months, values.confidentiality_period_months) && (
+													<p className="mt-1.5 text-xs text-amber-700 flex items-start gap-1">
+														<span aria-hidden="true">⚠</span>
+														<span>The confidentiality period is shorter than the term. Confidentiality obligations usually last at least as long as the agreement.</span>
+													</p>
+												)}
 											</div>
 										</div>
 									</div>
 								)}
 
 								{step === 1 && (
-									<div className="space-y-6">
-										<div className="flex items-center gap-3 mb-6">
+									<div className="space-y-4">
+										<div className="flex items-center gap-3 mb-3">
 											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
 												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1504,18 +1576,16 @@ export default function FillNDAHTML() {
 										</div>
 
 										{/* Info box about company profile */}
-										<div className="bg-teal-50 rounded-lg p-4 border border-teal-200 mb-4">
-											<div className="flex gap-3">
-												<svg className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<div className="bg-teal-50 rounded-lg px-3 py-2 border border-teal-200">
+											<p className="text-xs text-teal-800 flex items-start gap-2">
+												<svg className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 												</svg>
-												<div>
-													<p className="text-sm text-teal-800">
-														<strong>Tip:</strong> Click &quot;Auto-fill from Profile&quot; to quickly fill Party A with your saved company details.
-														You can manage your company profile in <a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
-													</p>
-												</div>
-											</div>
+												<span>
+													<strong>Tip:</strong> Use &quot;Auto-fill from Profile&quot; to fill Party A from your saved{' '}
+													<a href="/settings/company-profile" className="underline hover:text-teal-900">Company Details</a>.
+												</span>
+											</p>
 										</div>
 
 										<div className="space-y-4">
@@ -1524,7 +1594,7 @@ export default function FillNDAHTML() {
 												<input
 													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_name}
-													onChange={(e) => setField("party_a_name", e.target.value)}
+													data-preview-field="party_a_name" onChange={(e) => setField("party_a_name", e.target.value)}
 													placeholder="Enter party name"
 												/>
 												{renderSuggestionBox('party_a_name', 'Party A Name')}
@@ -1535,30 +1605,47 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.party_a_address}
-													onChange={(e) => setField("party_a_address", e.target.value)}
+													data-preview-field="party_a_address" onChange={(e) => setField("party_a_address", e.target.value)}
 													placeholder="Enter full address"
 												/>
 												{renderSuggestionBox('party_a_address', 'Party A Address')}
 											</div>
 											<div>
-												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-xs font-normal text-gray-400">(optional)</span></label>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className={`${getFieldClass('party_a_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_phone}
-													onChange={(e) => setField("party_a_phone", e.target.value)}
+													onChange={(e) => setField("party_a_phone", filterPhoneChars(e.target.value))}
+													onBlur={(e) => validatePhoneOnBlur("party_a_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 												/>
+												{phoneError('party_a_phone')}
 												{renderSuggestionBox('party_a_phone', 'Party A Phone')}
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
-													<label className="block text-sm font-semibold text-gray-700 mb-2">Signatory Name</label>
+													<div className="flex items-center justify-between mb-2">
+														<label className="block text-sm font-semibold text-gray-700">Signatory Name <span className="text-xs font-normal text-gray-400">(if different from party name)</span></label>
+														<label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+															<input
+																type="checkbox"
+																className="rounded border-gray-300 text-teal-700 focus:ring-teal-700/30"
+																checked={partyASignatorySame}
+																onChange={(e) => {
+																	setPartyASignatorySame(e.target.checked);
+																	if (e.target.checked) setField("party_a_signatory_name", values.party_a_name);
+																}}
+															/>
+															Same as party name
+														</label>
+													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_a_signatory_name}
 														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
 														placeholder="Full name"
+														disabled={partyASignatorySame}
 													/>
 													{renderSuggestionBox('party_a_signatory_name', 'Signatory Name')}
 												</div>
@@ -1620,7 +1707,7 @@ export default function FillNDAHTML() {
 												<input
 													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_name}
-													onChange={(e) => setField("party_b_name", e.target.value)}
+													data-preview-field="party_b_name" onChange={(e) => setField("party_b_name", e.target.value)}
 													placeholder="Enter party name"
 													disabled={values.party_b_name_ask_receiver}
 												/>
@@ -1643,7 +1730,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													rows={3}
 													value={values.party_b_address}
-													onChange={(e) => setField("party_b_address", e.target.value)}
+													data-preview-field="party_b_address" onChange={(e) => setField("party_b_address", e.target.value)}
 													placeholder="Enter full address"
 													disabled={values.party_b_address_ask_receiver}
 												/>
@@ -1664,34 +1751,52 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="tel"
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className={`${getFieldClass('party_b_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_phone}
-													onChange={(e) => setField("party_b_phone", e.target.value)}
+													onChange={(e) => setField("party_b_phone", filterPhoneChars(e.target.value))}
+													onBlur={(e) => validatePhoneOnBlur("party_b_phone", e.target.value)}
 													placeholder="e.g., +1 (555) 123-4567"
 													disabled={values.party_b_phone_ask_receiver}
 												/>
+												{phoneError('party_b_phone')}
 												{renderSuggestionBox('party_b_phone', 'Party B Phone')}
 											</div>
 											<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 												<div>
 													<div className="flex items-center justify-between mb-2">
 														<label className="block text-sm font-semibold text-gray-700">Signatory Name</label>
-														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
-															<input
-																type="checkbox"
-																checked={values.party_b_signatory_name_ask_receiver}
-																onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)}
-																className="form-checkbox h-3 w-3 text-teal-700 rounded focus:ring-2 focus:ring-teal-500"
-															/>
-															<span className="font-medium text-teal-700">Ask receiver</span>
-														</label>
+														<div className="flex items-center gap-2">
+															{!values.party_b_signatory_name_ask_receiver && (
+																<label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+																	<input
+																		type="checkbox"
+																		className="rounded border-gray-300 text-teal-700 focus:ring-teal-700/30"
+																		checked={partyBSignatorySame}
+																		onChange={(e) => {
+																			setPartyBSignatorySame(e.target.checked);
+																			if (e.target.checked) setField("party_b_signatory_name", values.party_b_name);
+																		}}
+																	/>
+																	Same as party name
+																</label>
+															)}
+															<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+																<input
+																	type="checkbox"
+																	checked={values.party_b_signatory_name_ask_receiver}
+																	onChange={(e) => setField("party_b_signatory_name_ask_receiver", e.target.checked)}
+																	className="form-checkbox h-3 w-3 text-teal-700 rounded focus:ring-2 focus:ring-teal-500"
+																/>
+																<span className="font-medium text-teal-700">Ask receiver</span>
+															</label>
+														</div>
 													</div>
 													<input
 														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_signatory_name}
 														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 														placeholder="Full name"
-														disabled={values.party_b_signatory_name_ask_receiver}
+														disabled={values.party_b_signatory_name_ask_receiver || partyBSignatorySame}
 													/>
 													{renderSuggestionBox('party_b_signatory_name', 'Party B Signatory')}
 												</div>
@@ -1748,14 +1853,14 @@ export default function FillNDAHTML() {
 								{step === 3 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-												<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+												<svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 												</svg>
 											</div>
 											<div>
-												<h2 className="text-xl font-bold text-ink">Additional Clauses</h2>
-												<p className="text-sm text-gray-600">Customize your agreement terms</p>
+												<h2 className="text-xl font-bold text-ink">Deal details</h2>
+												<p className="text-sm text-gray-600">Deal-specific details for this NDA</p>
 											</div>
 										</div>
 
@@ -1766,7 +1871,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={2}
 													value={values.purpose}
-													onChange={(e) => setField("purpose", e.target.value)}
+													data-preview-field="purpose" onChange={(e) => setField("purpose", e.target.value)}
 													placeholder="e.g., evaluating a potential business relationship"
 												/>
 											</div>
@@ -1775,7 +1880,7 @@ export default function FillNDAHTML() {
 												<input
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.governing_law}
-													onChange={(e) => setField("governing_law", e.target.value)}
+													data-preview-field="governing_law" onChange={(e) => setField("governing_law", e.target.value)}
 													placeholder="e.g., State of California"
 												/>
 											</div>
@@ -1815,7 +1920,7 @@ export default function FillNDAHTML() {
 													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.additional_terms}
-													onChange={(e) => setField("additional_terms", e.target.value)}
+													data-preview-field="additional_terms" onChange={(e) => setField("additional_terms", e.target.value)}
 													placeholder="Enter any additional terms or clauses..."
 												/>
 											</div>
@@ -1909,82 +2014,56 @@ export default function FillNDAHTML() {
 							</div>
 
 							{/* Navigation Buttons */}
-							<div className="mt-6 mb-2 flex items-center justify-between gap-3 pt-4 border-t border-gray-200">
-								<div className="flex gap-2">
-									<button
+							<div className="mt-6 mb-2 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-200">
+								<div className="flex flex-wrap items-center gap-2">
+									<Button
+										variant="secondary"
 										onClick={goBack}
 										disabled={step === 0}
-										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${step === 0
-											? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-											}`}
 									>
-										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-										</svg>
+										<ChevronLeft />
 										Back
-									</button>
+									</Button>
 									{step < steps.length - 1 && (
-										<button
-											onClick={goNext}
-											className="px-5 py-2.5 bg-teal-800 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-all duration-200 flex items-center gap-2"
-										>
-											Next Step: {steps[step + 1]}
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-											</svg>
-										</button>
+										<Button onClick={goNext}>
+											Next<span className="hidden sm:inline"> · {steps[step + 1]}</span>
+											<ChevronRight />
+										</Button>
 									)}
 								</div>
-								<div className="flex gap-2">
-									{/* Awaiting Party B badge — shown while the NDA is with Party B */}
-									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (
-										<span className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-teal-50 text-teal-700 border border-teal-200">
-											Awaiting Party B
-										</span>
-									)}
+								<div className="flex flex-wrap items-center gap-2">
+									{/* Status while the NDA is with Party B — same label as the dashboard */}
+									{(workflowState === 'AWAITING_PARTY_B_REVIEW' || workflowState === 'AWAITING_PARTY_B_SIGNATURE') && (() => {
+										const info = getWorkflowStatusInfo({ workflowState, viewer: 'sender' });
+										return <StatusPill tone={info.tone} label={info.label} className="h-10 px-4 text-sm" />;
+									})()}
 
 									{/* Party A Review Buttons — shown when Party B has submitted changes */}
 									{workflowState === 'AWAITING_PARTY_A_REVIEW' && (
 										<>
-											<button
-												onClick={approveChanges}
-												disabled={processingChanges}
-												className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${processingChanges ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'}`}
-											>
-												{processingChanges ? 'Processing...' : 'Accept Changes'}
-											</button>
-											<button
+											<Button onClick={submitReviewResponse} disabled={processingChanges}>
+												{processingChanges
+													? 'Processing...'
+													: Object.values(suggestionResponses).some((r) => r !== 'accepted')
+														? 'Send Response'
+														: 'Accept Changes'}
+											</Button>
+											<Button
 												onClick={() => setShowRequestChangesModal(true)}
 												disabled={processingChanges}
-												className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+												className="bg-amber-500 text-white hover:bg-amber-600"
 											>
 												Request Changes
-											</button>
+											</Button>
 										</>
 									)}
 
-									{/* Delete button — shown only for saved DRAFT state */}
-									{workflowState === 'DRAFT' && draftId && (
-										<button
-											onClick={deleteDraft}
-											disabled={deleting}
-											className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 border border-red-200 text-red-600 bg-white hover:border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-										>
-											{deleting ? 'Deleting...' : 'Delete Draft'}
-										</button>
-									)}
+									{/* Deleting a draft is intentionally available only from the
+										dashboard, to avoid accidental deletion mid-edit. */}
 
 									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
-										<button
-											onClick={sendForReview}
-											disabled={sendingForSignature}
-											className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${sendingForSignature
-												? 'bg-gray-400 text-white cursor-not-allowed'
-												: 'bg-teal-800 text-white hover:bg-teal-700 shadow-card'
-												}`}
-										>
+										<Button onClick={sendForReview} disabled={sendingForSignature}>
 											{sendingForSignature ? (
 												<>
 													<svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -1995,27 +2074,16 @@ export default function FillNDAHTML() {
 												</>
 											) : (
 												<>
-													<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-													</svg>
-													Send for Review
+													<Send />
+													Send NDA
 												</>
 											)}
-										</button>
+										</Button>
 									)}
-									<button
-										onClick={saveDraft}
-										disabled={saving}
-										className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${saving
-											? 'bg-gray-400 text-white cursor-not-allowed'
-											: 'bg-teal-800 text-white hover:bg-teal-700'
-											}`}
-									>
-										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-										</svg>
+									<Button variant="outline" onClick={saveDraft} disabled={saving}>
+										<Save />
 										{saving ? "Saving..." : "Save"}
-									</button>
+									</Button>
 								</div>
 							</div>
 						</div>
@@ -2114,6 +2182,27 @@ export default function FillNDAHTML() {
 												console.warn("Could not restore scroll position", e);
 											}
 										}
+										// Field-sync (C2): inject the focus-highlight style and make preview
+										// tokens clickable to jump back to their form field.
+										try {
+											const doc = iframeRef.current?.contentDocument;
+											if (doc) {
+												if (!doc.getElementById('nda-focus-style')) {
+													const style = doc.createElement('style');
+													style.id = 'nda-focus-style';
+													style.textContent = '.nda-focus-highlight{background:#ccfbf1 !important;outline:2px solid #0f766e;outline-offset:1px;border-radius:3px;} [data-field]{cursor:pointer;}';
+													doc.head?.appendChild(style);
+												}
+												doc.querySelectorAll('[data-field]').forEach((el) => {
+													el.addEventListener('click', () => {
+														const f = el.getAttribute('data-field');
+														if (f) jumpToFormField(f);
+													});
+												});
+											}
+										} catch (e) {
+											console.warn("Could not wire preview field sync", e);
+										}
 									}}
 								/>
 							) : !previewLoading && !previewError ? (
@@ -2131,7 +2220,7 @@ export default function FillNDAHTML() {
 				{/* Send for Input Modal - Prompt for recipient email */}
 				{showSendForInputModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							if (e.target === e.currentTarget) {
 								setShowSendForInputModal(false);
@@ -2190,7 +2279,7 @@ export default function FillNDAHTML() {
 				{/* Shareable Link Modal */}
 				{showShareLinkModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							// Close modal when clicking on backdrop
 							if (e.target === e.currentTarget) {
@@ -2398,19 +2487,19 @@ export default function FillNDAHTML() {
 							}
 						}}
 					>
-						<div className="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] overflow-hidden">
+						<div className="bg-white rounded-2xl shadow-float border border-gray-100 w-full max-w-[480px] overflow-hidden">
 
 							{/* Header */}
-							<div className="bg-[#0f2a4a] px-6 py-5 flex items-center justify-between">
+							<div className="px-6 py-5 flex items-center justify-between border-b border-gray-100">
 								<div className="flex items-center gap-3">
-									<div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center shrink-0">
+									<div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
 										<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
 										</svg>
 									</div>
 									<div>
-										<h3 className="text-white font-semibold text-base leading-tight">Send NDA to Recipient</h3>
-										<p className="text-white/50 text-xs mt-0.5">Choose how to deliver the NDA</p>
+										<h3 className="text-ink font-semibold text-base leading-tight">Send NDA</h3>
+										<p className="text-gray-500 text-xs mt-0.5">Create a secure link, then send it from your own inbox</p>
 									</div>
 								</div>
 								<button
@@ -2423,7 +2512,7 @@ export default function FillNDAHTML() {
 										setEmailSent(false);
 										if (emailSent) router.push('/dashboard');
 									}}
-									className="text-white/50 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+									className="text-gray-400 hover:text-ink p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
 									aria-label="Close"
 								>
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2437,46 +2526,47 @@ export default function FillNDAHTML() {
 								<label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recipient Email</label>
 								<input
 									type="email"
-									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all placeholder:text-gray-400"
+									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-all placeholder:text-gray-400"
 									value={verifyRecipientEmail}
 									onChange={(e) => setVerifyRecipientEmail(e.target.value)}
 									placeholder="recipient@example.com"
+									disabled={emailSent}
 									autoFocus
 								/>
-								<p className="text-xs text-gray-400 mt-2 leading-relaxed">
+								<p className="text-xs text-gray-500 mt-2 leading-relaxed">
 									{emailSent
-										? (autoEmailed
-											? `We emailed the NDA to ${verifyRecipientEmail.trim()}. Want to send it another way too? Use any option below.`
-											: 'Secure link ready — choose Gmail, Outlook, or any option below to send it.')
-										: "Enter the recipient's email — we'll email it for you and give you a shareable link."}
+										? 'Link ready. Pick Gmail, Outlook, or your email app below — the message is pre-written, you just hit send.'
+										: "Enter the recipient's email. We'll create a secure link and pre-write the email — you send it from your own inbox so it lands in their primary mail, not spam."}
 								</p>
 
-								<button
-									onClick={confirmAndSend}
-									disabled={sendingForSignature || emailSent || !verifyRecipientEmail?.trim()}
-									className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${emailSent ? 'bg-emerald-600 text-white cursor-default' : 'bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'}`}
-								>
-									{sendingForSignature ? (
-										<>
-											<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-											Generating link…
-										</>
-									) : emailSent ? (
-										<>
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-											</svg>
-											{autoEmailed ? 'Email Sent' : 'Link Ready — Choose How to Send'}
-										</>
-									) : (
-										<>
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-											</svg>
-											Generate Secure Link
-										</>
-									)}
-								</button>
+								{emailSent ? (
+									<div className="w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-teal-50 text-teal-800 border border-teal-100">
+										<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+										</svg>
+										Secure link ready — choose how to send it
+									</div>
+								) : (
+									<button
+										onClick={confirmAndSend}
+										disabled={sendingForSignature || !verifyRecipientEmail?.trim()}
+										className="w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{sendingForSignature ? (
+											<>
+												<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+												Creating link…
+											</>
+										) : (
+											<>
+												<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+												</svg>
+												Create secure link
+											</>
+										)}
+									</button>
+								)}
 							</div>
 
 							{/* Divider */}
@@ -2608,7 +2698,7 @@ export default function FillNDAHTML() {
 
 							{/* Footer note */}
 							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-								<p className="text-xs text-gray-400">{emailSent ? 'Link ready — send it your way. Recipient gets a secure review page.' : 'Generate the link first, then choose how to send it.'}</p>
+								<p className="text-xs text-gray-400">{emailSent ? 'The recipient opens a secure review page — no account needed. We’ll remind them if it sits unsigned.' : 'Create the link first, then choose how to send it.'}</p>
 								<button
 									onClick={() => {
 										setShowVerifyEmailModal(false);
@@ -2633,7 +2723,7 @@ export default function FillNDAHTML() {
 
 				{/* Reject Internal Submission Modal */}
 				{showRequestChangesModal && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 						<div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
 							<div className="p-6 border-b border-gray-200">
 								<h3 className="text-lg font-semibold text-gray-900">Request Changes from Party B</h3>
@@ -2675,7 +2765,7 @@ export default function FillNDAHTML() {
 				{/* No Company Profile Modal */}
 				{showNoProfileModal && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
 						onClick={(e) => {
 							if (e.target === e.currentTarget) {
 								setShowNoProfileModal(false);
@@ -2731,7 +2821,7 @@ export default function FillNDAHTML() {
 
 				{/* PDF Preview Modal (fallback for blocked popups) */}
 				{showPdfPreview && pdfPreviewUrl && (
-					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 animate-fadeIn">
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
 						<div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full relative flex flex-col overflow-hidden" style={{ height: '90vh' }}>
 							<div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
 								<div className="flex items-center gap-3">
@@ -2746,7 +2836,7 @@ export default function FillNDAHTML() {
 									</div>
 								</div>
 								<button
-									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white hover:bg-opacity-50 rounded-lg"
+									className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-white/50 rounded-lg"
 									onClick={() => {
 										setShowPdfPreview(false);
 										setPdfPreviewUrl('');

@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
-import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
+import { StatusPill } from '@/components/ui/status-pill';
+import { getWorkflowStatusInfo } from '@/lib/workflowStatus';
 
 interface ViewNdaClientProps {
   html: string;
@@ -14,27 +15,10 @@ interface ViewNdaClientProps {
   createdAt: string;
 }
 
-function getStatusBadge(workflowState: string, status: string): { label: string; tone: StatusTone } {
-  switch (workflowState) {
-    case 'AWAITING_PARTY_B_REVIEW':
-      return { label: 'Waiting review', tone: 'progress' };
-    case 'AWAITING_PARTY_B_SIGNATURE':
-      return { label: 'Waiting signature', tone: 'progress' };
-    case 'AWAITING_PARTY_A_SIGNATURE':
-      return { label: 'Awaiting signature', tone: 'action' };
-    case 'COMPLETE':
-    case 'SIGNING_COMPLETE':
-      return { label: 'Complete', tone: 'done' };
-    default:
-      if (status === 'SIGNED') return { label: 'Signed', tone: 'done' };
-      if (status === 'SENT' || status === 'PENDING') return { label: 'Sent', tone: 'progress' };
-      return { label: 'Draft', tone: 'neutral' };
-  }
-}
-
 export default function ViewNdaClient({ html, title, status, workflowState, recipientEmail, createdAt }: ViewNdaClientProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const badge = getStatusBadge(workflowState, status);
+  // This page is only reachable from the sender's dashboard, so the viewer is Party A.
+  const badge = getWorkflowStatusInfo({ workflowState, status, viewer: 'sender' });
 
   const formattedDate = new Date(createdAt).toLocaleDateString('en-US', {
     year: 'numeric',

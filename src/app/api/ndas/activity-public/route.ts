@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit';
 import { prisma } from '@/lib/prisma';
 import { iconForEvent } from '@/lib/writeActivity';
 
@@ -8,6 +9,9 @@ import { iconForEvent } from '@/lib/writeActivity';
  */
 export async function GET(req: NextRequest) {
     try {
+        const limit = rateLimitRequest(req, 'activity-public', 60, MINUTE);
+        if (!limit.ok) return tooManyRequests(limit);
+
         const { searchParams } = new URL(req.url);
         const signerId = searchParams.get('signerId');
 
