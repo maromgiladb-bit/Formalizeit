@@ -35,6 +35,10 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 6. ☐ **Next: Phase 0.** Nothing in the codebase blocks launch — start 0.3 (Stripe activation) and
    0.4 (Resend DNS) today, since their lead time sets the launch date. Phase 3 cleanup and the
    Phase 1 verification matrix can run in parallel while you wait.
+7. ☑ (2026-09-25) Clerk live; Phase 3 done; launch **draft PR #18** open
+   (https://github.com/maromgiladb-bit/Formalizeit/pull/18) — `main` is 0 ahead, no schema changes.
+   Merge only after Phase 0. Remaining Phase 0: Stripe (in progress), Resend SPF + vars,
+   `CRON_SECRET`, base URLs, DB check, Gemini, S3, Sentry.
 
 ## Phase 0 — your part, and the critical path
 
