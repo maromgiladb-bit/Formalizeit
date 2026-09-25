@@ -62,8 +62,7 @@ A multi-tenant SaaS platform for creating, managing, and signing Non-Disclosure 
 │  ├── /api/ndas/preview-html  → Live HTML preview generation     │
 │  ├── /api/ndas/send          → Send for signature               │
 │  ├── /api/ndas/send-for-input→ Send for Party B input           │
-│  ├── /api/ndas/submit-input  → Party B submits filled data      │
-│  └── /api/html-to-pdf        → Convert HTML to PDF              │
+│  └── /api/ndas/submit-input  → Party B submits filled data      │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -110,13 +109,12 @@ nda-saas/
 ├── src/
 │   ├── app/                   # Next.js App Router
 │   │   ├── api/               # API routes
-│   │   │   ├── ndas/          # NDA-related endpoints
-│   │   │   │   ├── drafts/
-│   │   │   │   ├── preview-html/
-│   │   │   │   ├── send/
-│   │   │   │   ├── send-for-input/
-│   │   │   │   └── submit-input/
-│   │   │   └── html-to-pdf/
+│   │   │   └── ndas/          # NDA-related endpoints
+│   │   │       ├── drafts/
+│   │   │       ├── preview-html/
+│   │   │       ├── send/
+│   │   │       ├── send-for-input/
+│   │   │       └── submit-input/
 │   │   ├── dashboard/
 │   │   ├── fillndahtml/
 │   │   ├── fillndahtml-public/[token]/
@@ -244,7 +242,6 @@ enum NdaStatus {
 
 | Route | Method | Description |
 |-------|--------|-------------|
-| `/api/html-to-pdf` | POST | Convert HTML to PDF |
 | `/api/nda-pdfs/[id]/view` | GET | View/download PDF |
 
 ---
