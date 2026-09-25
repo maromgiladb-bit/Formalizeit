@@ -11,19 +11,19 @@ Done 2026-09-20. Both `docs/strategy-implementation-roadmap.md` and
 misleading for anyone picking the project back up. Each now carries a dated reconciliation header
 and ticks what is genuinely built. See `docs/launch/README.md` for the live worklist.
 
-## 3.2 ☐ Comments route authorization
+## 3.2 ☑ Comments route authorization — deleted 2026-09-25 (no callers; any signed-in user could read/write any revision's content)
 
 - [ ] `src/app/api/revisions/[revisionId]/comments/route.ts:46` carries
       `// Verify authorization (TODO: add proper token-based auth for recipient)` on a
       recipient-facing route. Close it properly or delete the route if nothing uses it.
 
-## 3.3 ☐ Dead API call
+## 3.3 ☑ Dead API call — removed the fetch and its unused suggestion state 2026-09-25 (no UI rendered it)
 
 - [ ] `src/app/fillndahtml/page.tsx:438` fetches `/api/ndas/email-suggestions`, which does not
       exist. It 404s on every keystroke, swallowed by a `catch`, so the autocomplete dropdown never
       populates. Either build the route or remove the call and its UI.
 
-## 3.4 ☐ Orphaned viewpdf route
+## 3.4 ☑ Orphaned viewpdf route — deleted `src/app/viewpdf/page.tsx` and `POST /api/ndas/send` 2026-09-25
 
 - [ ] `src/app/viewpdf/page.tsx` sits at a non-dynamic route but reads `useParams().id`, so it can
       never load a draft. Nothing links to it; `/mydrafts` links `/viewpdf/{id}`, which is a
@@ -31,7 +31,7 @@ and ticks what is genuinely built. See `docs/launch/README.md` for the live work
 - [ ] Delete both, or fix the route. **Do not touch `/viewpdf/[id]` or `/api/ndas/viewpdf`** —
       those are live and used by the dashboard and by completion emails.
 
-## 3.5 ☐ Formi sync — required by CLAUDE.md
+## 3.5 ☑ Formi sync — done 2026-09-25 (status flow clarified, "14 days", 2FA marked not available)
 
 The keep-Formi-in-sync rule makes an out-of-date Formi answer a bug in the change that caused it.
 The negotiation work in Phase 1 triggers it.
@@ -44,12 +44,12 @@ The negotiation work in Phase 1 triggers it.
 - [ ] After editing, re-read the prompt and confirm roles, routes, workflow and feature copy match
       reality.
 
-## 3.6 ☐ Duplicate template managers
+## 3.6 ⊘ Duplicate template managers — checked 2026-09-25: BOTH are live (`template-manager` ← fill-template, template-config; `templateManager` ← templates API, changelog, renderNdaHtml, signatureEvidence). Merge post-launch.
 
 - [ ] `src/lib/template-manager.ts` and `src/lib/templateManager.ts` both exist. Identify which is
       live, add a comment on the dead one. **Defer the actual merge** — not launch work.
 
-## 3.7 ☐ Minor copy leftovers
+## 3.7 ☑ Minor copy leftovers — dev link removed; non-functional Settings "Preferences" card removed 2026-09-25 (templates copy left as-is by your July call)
 
 Cosmetic, ship-blocking for nobody, but each is visible to a first customer.
 

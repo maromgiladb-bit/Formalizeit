@@ -52,7 +52,7 @@ FormalizeIt helps teams send a legally-ready NDA in minutes using a single stand
 - New NDA: opens the standard NDA form (five steps: Document, Party A, Party B, Clauses, Review) — fill the parties, term, confidentiality period, and deal details, then click "Send NDA". FormalizeIt creates a secure link and pre-writes the email; the sender sends it from their OWN inbox (Gmail, Outlook, email app, WhatsApp, or copy link) so it arrives from someone the recipient knows rather than an unfamiliar address. FormalizeIt does not email the initial invite itself. The document title is optional (it defaults to the counterparty's name).
 - Reminders: if an NDA sits unsigned, FormalizeIt automatically emails the recipient a reminder after 48 hours and again after 5 days. Round updates (accepted/rejected/countered changes) and the final signed copy are also emailed by FormalizeIt.
 - My account (Settings) → Team: invite members by email and assign roles. Invited users also see a popup on their dashboard to accept or decline.
-- My account (Settings) → Sign-in & Security: enable two-factor authentication (2FA) and manage sign-in methods.
+- My account (Settings) → Sign-in & Security: change your password, manage sign-in methods (email or Google), and see active devices. Two-factor authentication (2FA) is not available yet.
 - My account (Settings) → Subscription and the Pricing section on the home page: manage the company plan.
 - NDA Changelog page: a plain-language history of changes to the standard NDA.
 - Standard NDA page: a read-only view of the full standard mutual NDA text, so anyone can review the fixed legal language before accepting or signing.
@@ -68,7 +68,7 @@ FormalizeIt helps teams send a legally-ready NDA in minutes using a single stand
 When the recipient replies to or returns an NDA, updates go back to the person who actually sent it (email replies reach the sender directly), not just an admin.
 
 # Document status flow
-draft → sent → signed. There is no internal approval step.
+draft → sent → signed. Between "sent" and "signed" the NDA can go back and forth with the other party in review rounds (see below). There is no internal company approval step — any teammate can send; only the final signature needs a signer.
 
 # Reviewing, negotiating, and signing
 When a party reviews the other side's proposed changes, they can accept, reject, or counter each one. You can only proceed to sign once you've accepted all changes — signing means you agree to the current terms. Any rejection or counter sends the NDA back to the other party (with an email summarizing what was accepted, rejected, and countered) for another round, so negotiation can repeat until both sides agree. On the dashboard, "Your turn: review/sign" means an NDA needs your action, while "Waiting on them" means you're waiting on the other party.
@@ -77,7 +77,7 @@ When a party reviews the other side's proposed changes, they can accept, reject,
 There is no "cancel". An in-progress NDA simply runs until its signing link lapses (14 days of inactivity). Once a link has expired, the sender can either resend a fresh link or delete the NDA from the dashboard — deleting removes it permanently, including its audit trail. Finalized (signed) NDAs are always kept: they can't be deleted, but they can be archived into an "Archived" list on the dashboard and unarchived back at any time. Drafts (never sent) can be deleted at any time.
 
 # Signing & evidence
-Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required. Signing links expire after 2 weeks of inactivity — any activity (opening the link, filling it in, requesting or approving changes, sending or signing) resets the clock, so a link stays open as long as someone's acting on it. There's no "cancel" — the sender just resends to issue a fresh link.
+Before signing, the signer must tick a checkbox affirming they are authorized to sign in their company's name — having that authority is the signer's and their company's responsibility, not FormalizeIt's. At signing we record evidence on each NDA: signer email, timestamp, IP address, the exact template version signed, and a cryptographic hash (fingerprint) of the final signed PDF. Recipients sign via a secure link with no account required. Signing links expire after 14 days of inactivity — any activity (opening the link, filling it in, requesting or approving changes, sending or signing) resets the clock, so a link stays open as long as someone's acting on it. There's no "cancel" — the sender just resends to issue a fresh link.
 
 # Standard NDA updates
 The standard NDA's legal text isn't user-editable. When it's updated to a new version, users see a popup on their next sign-in summarizing what changed, and confirm they've reviewed it. Already-signed NDAs are unaffected (each keeps a snapshot of the version it was signed under).

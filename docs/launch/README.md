@@ -17,10 +17,10 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 | Phase | File | Owner | Status |
 |---|---|---|---|
-| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ☐ not started |
+| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk done; Resend in progress; Stripe later |
 | 1 — Finish the negotiation loop | [phase-1-negotiation.md](phase-1-negotiation.md) | Claude | ◑ code complete, browser verification pending |
 | 2 — Essential hardening | [phase-2-hardening.md](phase-2-hardening.md) | Claude | ☑ code complete (Sentry DSN is a Phase 0 item) |
-| 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ◑ docs reconciled only |
+| 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
 ### Resume here (updated 2026-09-22)
@@ -31,8 +31,10 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
    party sees; unanswered counters can no longer be dropped by sending back early.
 3. ☑ `@vercel/analytics` mounted in the root layout.
 4. ☑ Sentry installed and wired (no-op until `NEXT_PUBLIC_SENTRY_DSN` is set — see Phase 0).
-5. ☐ Nothing is committed yet (46 changed/new files). Next: commit, then Phase 3 cleanup and
-   the Phase 1 manual verification matrix.
+5. ☑ All work is committed (`035c2e8`, branch `feat/todolistimpl-2`); working tree clean.
+6. ☐ **Next: Phase 0.** Nothing in the codebase blocks launch — start 0.3 (Stripe activation) and
+   0.4 (Resend DNS) today, since their lead time sets the launch date. Phase 3 cleanup and the
+   Phase 1 verification matrix can run in parallel while you wait.
 
 ## Phase 0 — your part, and the critical path
 

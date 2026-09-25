@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, ToggleLeft, AlertTriangle, ShieldCheck, ChevronRight } from 'lucide-react'
+import { User, AlertTriangle, ShieldCheck, ChevronRight } from 'lucide-react'
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -95,42 +95,11 @@ export default function SettingsPage() {
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-bold text-gray-900">Sign-in &amp; Security</h3>
             <p className="text-sm text-gray-500">
-              Update your password and turn on two-factor authentication (2FA).
+              Update your password and manage how you sign in.
             </p>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
         </Link>
-      </motion.div>
-
-      {/* Preferences */}
-      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
-              <ToggleLeft className="w-5 h-5 text-teal-700" />
-            </div>
-            <h3 className="text-sm font-bold text-gray-900">Preferences</h3>
-          </div>
-        </div>
-
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between">
-            <span className="flex flex-col">
-              <span className="text-sm font-medium text-gray-900">Show Organization Switcher</span>
-              <span className="text-sm text-gray-500">Display the organization dropdown in the toolbar</span>
-            </span>
-            <button
-              type="button"
-              disabled
-              className="bg-gray-200 relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
-              role="switch"
-              aria-checked="false"
-            >
-              <span aria-hidden="true" className="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" />
-            </button>
-          </div>
-          <p className="text-xs text-gray-400 mt-3 italic">* This setting is managed by your organization administrator (Coming Soon)</p>
-        </div>
       </motion.div>
 
       {/* Danger Zone */}

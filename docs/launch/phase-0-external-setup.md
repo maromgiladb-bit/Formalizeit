@@ -34,7 +34,13 @@ Production, once ticked Preview.
 
 ---
 
-## 0.1 ☐ Production database schema — HIGHEST RISK, DO FIRST
+## 0.1 ◑ Production database schema — HIGHEST RISK, DO FIRST
+
+> **Checked 2026-09-24:** `npx prisma migrate status` against the `DATABASE_URL` currently in
+> `.env` (Neon `ep-wild-sea-aglnn451`, eu-central-1) reports **all 25 migrations applied, schema up
+> to date**. Remaining work: confirm this is the *same* connection string Vercel holds as
+> `DATABASE_URL` in the **Production** scope — if it is, the migration half of 0.1 is done and only
+> the `staging` branch (steps 5–7) is left.
 
 As of July, the production `DATABASE_URL` was never confirmed migrated. There are **25
 migrations** in `prisma/migrations/`. If the one dated `20260629000001` has not run, every query
@@ -72,7 +78,29 @@ billing checkout and all member management.
 
 ---
 
-## 0.2 ☐ Clerk production instance
+## 0.2 ☑ Clerk production instance
+
+> **Done 2026-09-25.** Verified live: `app.formalizeit.com/sign-in` serves `pk_live_` via
+> `clerk.formalizeit.com` (valid SSL); a dashboard-created user signed in on production; Clerk
+> webhook test `user.deleted` → Succeeded.
+> - Production instance on `formalizeit.com` (cloned from dev). DNS host is **GoDaddy**
+>   (nameservers `domaincontrol.com`); all 5 CNAMEs verified.
+> - Vercel: live `pk_live_`/`sk_live_` + `CLERK_WEBHOOK_SECRET` scoped **Production** (secrets
+>   stored as Secret type); test pair scoped **All Pre-Production**; the 4
+>   `NEXT_PUBLIC_CLERK_*_URL` vars on All Environments.
+> - Google sign-in: own OAuth client in Google Cloud project `formalizeit`, branding filled, app
+>   published; client secret rotated 2026-09-25. Credentials in Bitwarden.
+> - Paths set as full URLs on `app.formalizeit.com` (sign-in, `/signup`, sign-out → home).
+> - ⊘ **2FA deferred:** MFA (TOTP + backup codes) needs the paid Clerk **Pro** plan; account is on
+>   Hobby. Turn on after upgrading — no code change needed.
+>
+> **Still to test after the launch branch is merged** (live `main` is the private-beta build: it
+> blocks `/signup` and sends logged-out visitors to `/coming-soon`): public sign-up with email and
+> with Google, end to end; the `/coming-soon` "Sign in" modal button was unresponsive on the old
+> build (direct `/sign-in` works) — confirm it is fixed or unreachable.
+>
+> **Also found:** Vercel Production builds from `main`; all launch work is on
+> `feat/todolistimpl-2` and is **not live yet**. Merge to `main` after Phase 0 + Preview testing.
 
 Today only a test instance exists (`pk_test_` / `sk_test_`). Production needs its own instance
 with live keys, on the real domain.
@@ -135,6 +163,13 @@ Account security, sign out, sign in again through the TOTP challenge.
      **Production**.
 5. **Settings → Billing → Customer portal** → enable, allow customers to cancel and update payment
    method. The app's "Manage billing" button opens this.
+   - **Also required:** turn on **"Customers can switch plans"** (subscription update) and add
+     **both products with all four prices** to it. The in-app Pro→Team upgrade and Team→Pro
+     downgrade (`/api/billing/upgrade-session`, `/api/billing/downgrade`) open a portal
+     `subscription_update_confirm` flow, which Stripe rejects unless plan switching is enabled
+     and the target price is listed.
+   - When creating the webhook (step 4), pick **Snapshot** payloads (not "thin" events) and, if
+     asked for an API version, `2026-04-22.dahlia` — the version pinned in `src/lib/stripe.ts`.
 6. Keep the existing **test-mode** keys, test price IDs and a test-mode webhook (pointed at your
    staging URL) scoped to **Preview + Development** so staging checkouts never charge anyone.
 
@@ -148,7 +183,22 @@ portal and refund yourself in Stripe.
 
 ---
 
-## 0.4 ☐ Resend sending domain
+## 0.4 ◑ Resend sending domain
+
+> **Status checked 2026-09-25 (DNS queried directly at GoDaddy) — started, NOT finished.** The
+> sending domain is the subdomain **`mail.formalizeit.com`**.
+> - ☑ DKIM TXT `resend._domainkey.mail` present.
+> - ☐ **SPF missing:** the **MX** and **TXT** records at `send.mail` (i.e. `send.mail.formalizeit.com`)
+>   do not exist. Copy both from Resend → Domains → `mail.formalizeit.com` and add them at GoDaddy
+>   (Name field: `send.mail`). Then click Verify in Resend.
+> - ☑ DMARC at root `_dmarc` exists (`p=quarantine`, reports to your Gmail) — stricter than the
+>   `p=none` suggested below; fine once SPF+DKIM pass, but that is why SPF must be done first.
+> - ☐ Step 4–5 below (Vercel vars) not confirmed. **`MAIL_FROM` must use the subdomain**, e.g.
+>   `FormalizeIt <noreply@mail.formalizeit.com>`. If `MAIL_FROM` is unset, `src/lib/email.ts` falls
+>   back to `noreply@formalizeit.app` (a different domain) and every email is rejected.
+> - Acceptance (updated): the first NDA invite is **links-only** (the sender shares it), so test
+>   with an email the platform does send — a round notification, a reminder, or the signed copy —
+>   and the contact form (needs `CONTACT_INBOX`).
 
 Email is the product's delivery mechanism — every NDA link, reminder and signed PDF goes out
 through Resend. Unverified domains land in spam or are refused.
@@ -235,6 +285,13 @@ Set as **Production scope only**, all three to the same value:
 **Do not set them for Preview.** The code falls back to Vercel's per-deployment `VERCEL_URL`,
 which is always the correct staging origin. Setting them on Preview would make every staging email
 link point at production.
+
+**Planned domain move:** the site runs on `app.formalizeit.com` for now; the main address will
+later be `formalizeit.com` (no `app.`). When that happens, update: these three base-URL vars, the
+Clerk webhook URL (0.2 step 7), the Clerk **Paths** page (Home URL, SignIn, SignUp, Signing Out
+— all currently full `app.formalizeit.com/...` URLs), the Stripe webhook URL (0.3 step 4), and the
+Google OAuth Branding page links (home / privacy / terms). Clerk's domain and Google's authorized domain are
+already the root `formalizeit.com` and need no change.
 
 Also confirm in Vercel → **Settings → Domains** that `app.formalizeit.com` is attached to the
 project and shows a valid certificate.

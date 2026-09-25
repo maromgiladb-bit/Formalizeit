@@ -33,7 +33,7 @@ export default function AccountSecurityPage() {
             <div>
               <h3 className="text-sm font-bold text-gray-900">Sign-in &amp; Security</h3>
               <p className="text-sm text-gray-500">
-                Manage your password, two-factor authentication, and active devices.
+                Manage your password, sign-in methods, and active devices.
               </p>
             </div>
           </div>

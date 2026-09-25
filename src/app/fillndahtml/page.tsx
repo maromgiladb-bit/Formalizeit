@@ -155,16 +155,6 @@ export default function FillNDAHTML() {
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
 
-	// Email suggestions state
-	const [emailSuggestions, setEmailSuggestions] = useState<Array<{
-		email: string;
-		count: number;
-		lastUsed: string;
-		recentNda: string;
-		hasSignedBefore: boolean;
-	}>>([]);
-	const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
-	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 	const [loadingCompanyProfile, setLoadingCompanyProfile] = useState(false);
 
 	// Warn on tab close if unsaved changes
@@ -408,43 +398,6 @@ export default function FillNDAHTML() {
 			setLivePreviewHtml(liveData.html);
 		}
 	}, [liveData, values]);
-
-	// Fetch email suggestions
-	const fetchEmailSuggestions = useCallback(async (query: string) => {
-		if (!query || query.length < 2) {
-			setEmailSuggestions([]);
-			setShowEmailSuggestions(false);
-			return;
-		}
-
-		try {
-			setLoadingSuggestions(true);
-			const res = await fetch(`/api/ndas/email-suggestions?q=${encodeURIComponent(query)}`);
-			const data = await res.json();
-
-			if (res.ok && data.suggestions) {
-				setEmailSuggestions(data.suggestions);
-				setShowEmailSuggestions(data.suggestions.length > 0);
-			}
-		} catch (error) {
-			console.error("Failed to fetch email suggestions:", error);
-		} finally {
-			setLoadingSuggestions(false);
-		}
-	}, []);
-
-	// C) Fix email suggestions debounce - clean timeout on unmount
-	useEffect(() => {
-		if (signersEmail.length < 2) {
-			setEmailSuggestions([]);
-			setShowEmailSuggestions(false);
-			return;
-		}
-		const id = setTimeout(() => {
-			fetchEmailSuggestions(signersEmail);
-		}, 300);
-		return () => clearTimeout(id);
-	}, [signersEmail, fetchEmailSuggestions]);
 
 	const loadDraft = useCallback(async (id: string) => {
 		setLoading(true);
@@ -1075,17 +1028,8 @@ export default function FillNDAHTML() {
 		}
 	};
 
-	// Handle email input change with debounce
-	// C) Clean email change handler - debounce moved to useEffect
 	const handleEmailChange = (email: string) => {
 		setSignersEmail(email);
-		// Debounce logic now in useEffect above - prevents leaked timers
-	};
-
-	const selectEmailSuggestion = (email: string) => {
-		setSignersEmail(email);
-		setShowEmailSuggestions(false);
-		setEmailSuggestions([]);
 	};
 
 	// Check if there are empty Party B fields that need to be filled
