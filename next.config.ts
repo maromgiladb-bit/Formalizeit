@@ -20,13 +20,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['docusign-esign', 'stripe'],
+  serverExternalPackages: ['stripe'],
   webpack: (config, { isServer }) => {
-    // Exclude docusign-esign from client-side bundle
+    // Keep server-only PDF tooling out of the client bundle
     if (!isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
-        'docusign-esign': false,
         '@sparticuz/chromium': false,
         'puppeteer-core': false,
       };

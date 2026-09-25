@@ -1,6 +1,6 @@
 # Formalize It - NDA SaaS Platform
 
-A multi-tenant SaaS platform for creating, managing, and signing Non-Disclosure Agreements (NDAs) with support for DocuSign integration, real-time HTML previews, and PDF generation.
+A multi-tenant SaaS platform for creating, managing, and signing Non-Disclosure Agreements (NDAs) with built-in e-signatures, real-time HTML previews, and PDF generation.
 
 ## Table of Contents
 
@@ -33,7 +33,6 @@ A multi-tenant SaaS platform for creating, managing, and signing Non-Disclosure 
 | **PDF Generation** | Puppeteer + Chromium | 23.x / 131 |
 | **Object Storage** | AWS S3 | SDK v3 |
 | **Template Engine** | Handlebars | 4.7 |
-| **eSignature (Optional)** | DocuSign | 8.x |
 
 ---
 
@@ -76,8 +75,7 @@ A multi-tenant SaaS platform for creating, managing, and signing Non-Disclosure 
 │  ├── htmlToPdf.ts         → Puppeteer PDF generation            │
 │  ├── email.ts             → Resend email dispatch               │
 │  ├── prisma.ts            → Database client singleton           │
-│  ├── s3.ts                → AWS S3 file operations              │
-│  └── docusign.ts          → DocuSign API integration            │
+│  └── s3.ts                → AWS S3 file operations              │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -238,12 +236,6 @@ enum NdaStatus {
 | `/api/ndas/send-for-input` | POST | Send for Party B input |
 | `/api/ndas/submit-input` | POST | Party B submits filled data |
 
-### PDF Operations
-
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/nda-pdfs/[id]/view` | GET | View/download PDF |
-
 ---
 
 ## NDA Workflow States
@@ -301,12 +293,6 @@ S3_BUCKET="your-bucket-name"
 
 # App URL
 APP_URL="https://app.yourdomain.com"
-
-# DocuSign (Optional)
-DOCUSIGN_INTEGRATION_KEY="..."
-DOCUSIGN_USER_ID="..."
-DOCUSIGN_ACCOUNT_ID="..."
-DOCUSIGN_RSA_PRIVATE_KEY="..."
 ```
 
 ---

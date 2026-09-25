@@ -29,8 +29,8 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 - **Auth:** Clerk (`@clerk/nextjs`) — handles sessions, user identity, and middleware
 - **Email:** Resend — for transactional emails (invites, notifications)
 - **File storage:** AWS S3 (`@aws-sdk/client-s3`) — stores signed NDA PDFs and documents
-- **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless), `pdf-lib`, `pdfjs-dist`
-- **Document templating:** `docxtemplater` + `mammoth` for `.docx` templates, Handlebars for HTML template rendering
+- **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless); `pdf-lib` only in dev scripts
+- **Document templating:** Handlebars for HTML template rendering
 - **Testing:** Vitest
 - **Payments:** Stripe — subscription billing, embedded checkout, webhooks, billing portal
 
