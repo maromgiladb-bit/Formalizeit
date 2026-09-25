@@ -7,7 +7,6 @@ import { FormiProvider } from '@/components/ai/FormiProvider'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { auth } from '@clerk/nextjs/server'
-import { getActiveOrganization } from '@/lib/db-organization'
 import { ensureDbUser } from '@/lib/db-user'
 import { getSiteUrl } from '@/lib/siteUrl'
 
@@ -52,26 +51,13 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const { userId } = await auth()
-  let organizationData = null
 
+  // Provision the DB user and run pending signer claims on every signed-in visit.
   if (userId) {
     try {
-      const user = await ensureDbUser(userId)
-
-      if (user && user.memberships.length > 0) {
-        const activeMembership = await getActiveOrganization()
-        const [firstMembership] = user.memberships
-        organizationData = {
-          organizations: user.memberships.map((m: any) => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug
-          })),
-          activeOrgId: activeMembership?.organizationId || firstMembership.organizationId
-        }
-      }
+      await ensureDbUser(userId)
     } catch (error) {
-      console.error('Database unavailable, continuing without org data:', error)
+      console.error('Database unavailable, skipping user sync:', error)
     }
   }
 
@@ -80,7 +66,7 @@ export default async function RootLayout({
       <html lang="en">
         <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
           <FormiProvider>
-            <ToolbarSwitcher organizationData={organizationData} />
+            <ToolbarSwitcher />
             <div className="flex-1">
               {children}
             </div>

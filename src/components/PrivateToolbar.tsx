@@ -12,12 +12,7 @@ import { NotificationIcon } from './ui/notification-icon'
 import NotificationPanel from './NotificationPanel'
 import { NEW_NDA_HREF } from '@/lib/newNdaHref'
 
-interface OrganizationData {
-  organizations: { id: string; name: string; slug: string }[]
-  activeOrgId: string
-}
-
-export default function PrivateToolbar({ organizationData }: { organizationData?: OrganizationData | null }) {
+export default function PrivateToolbar() {
   const { userId } = useAuth()
   const pathname = usePathname()
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)

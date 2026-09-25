@@ -2,6 +2,8 @@ import puppeteer, { Browser } from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 
 let browserInstance: Browser | null = null
+// In-flight launch, shared so concurrent callers don't each spawn (and leak) a Chromium.
+let browserLaunch: Promise<Browser> | null = null
 
 /**
  * Get browser executable path
@@ -40,18 +42,24 @@ async function getBrowser(): Promise<Browser> {
   if (browserInstance && browserInstance.isConnected()) {
     return browserInstance
   }
+  if (browserLaunch) return browserLaunch
 
-  const executablePath = await getExecutablePath()
-  
-  browserInstance = await puppeteer.launch({
-    headless: true,
-    executablePath,
-    args: process.env.NODE_ENV === 'production' 
-      ? chromium.args
-      : ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=medium'],
+  browserLaunch = (async () => {
+    const executablePath = await getExecutablePath()
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath,
+      args: process.env.NODE_ENV === 'production'
+        ? chromium.args
+        : ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=medium'],
+    })
+    browserInstance = browser
+    return browser
+  })().finally(() => {
+    browserLaunch = null
   })
 
-  return browserInstance
+  return browserLaunch
 }
 
 /**
