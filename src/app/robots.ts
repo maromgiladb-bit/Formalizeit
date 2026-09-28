@@ -23,7 +23,6 @@ export default function robots(): MetadataRoute.Robots {
           '/templates',
           '/fillndahtml',
           '/fillndahtml-public/',
-          '/sign-nda',
           '/sign-nda-public/',
           '/view-nda/',
           '/viewpdf',

@@ -63,8 +63,6 @@ const isDevOnlyRoute = createRouteMatcher([
   '/mydrafts',
   '/viewpdf',
   '/viewpdf/(.*)',
-  '/sign-nda',          // NOT /sign-nda-public — that is the live counterparty flow
-  '/sign-nda/(.*)',
   '/api/debug(.*)',        // /api/debug, /api/debug-preview, /api/debug-templates, /api/debug/*
   '/api/test',
   '/api/generate-preview',
