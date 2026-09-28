@@ -36,10 +36,10 @@ Status legend: ☐ not started · ◑ in progress · ☑ done
 where*, *what exact document*, and *that they affirmed authority* — so an executed NDA holds up
 later even if the Standard NDA template is changed.
 
-The two routes that actually apply a binding signature are `src/app/api/ndas/sign/route.ts`
-(company / Party A, guarded by `canSignNDA`) and `src/app/api/ndas/sign-public/route.ts`
-(counterparty / Party B via secure link). `generate-and-save` and `send-for-signature` are
-*send* paths (guarded by `canSendNDA`) and are out of scope. Evidence is stored in the existing
+The route that applies a binding signature is `src/app/api/ndas/sign-public/route.ts`, for both
+the counterparty (Party B, via secure link) and the company (Party A, which requires sign-in and
+`canSignNDA`). The former `sign`, `generate-and-save` and `send-for-signature` routes were
+removed in Sept 2026 (unused; the latter two applied a signature with only `canSendNDA`). Evidence is stored in the existing
 `AuditEvent` (`metadata Json?` + `ipAddress` columns already exist — **no migration needed**).
 
 - [x] **New shared helper `src/lib/signatureEvidence.ts`** so UI and server agree on wording and
