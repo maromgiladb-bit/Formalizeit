@@ -219,13 +219,40 @@ export default function SignNDAPublicClient({
         }
     }, [signatureImage, previewHtml, signerRole]);
 
-    // Check if scrolled to bottom
-    const handleScroll = () => {
-        if (!documentRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = documentRef.current;
-        if (scrollTop + clientHeight >= scrollHeight - 50) {
+    // The signer must scroll to the end of the NDA before signing. A hidden
+    // element (clientHeight 0) never counts, so the desktop panel can't unlock
+    // signing on mobile and vice versa.
+    const markIfAtEnd = (el: Element | null) => {
+        if (!el || el.clientHeight === 0) return;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
             setHasScrolledToBottom(true);
         }
+    };
+
+    const handleScroll = () => markIfAtEnd(documentRef.current);
+
+    // Desktop: grow the iframe to its content so only the side panel scrolls,
+    // then re-check (a short NDA that fits on screen counts as read).
+    const handleDesktopPreviewLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
+        const doc = e.currentTarget.contentDocument;
+        if (!doc) return;
+        e.currentTarget.style.height = `${doc.documentElement.scrollHeight}px`;
+        handleScroll();
+    };
+
+    // Mobile: the iframe has a fixed height and scrolls itself, so track its
+    // inner document. The listener goes away with the old document on reload.
+    const handleMobilePreviewLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
+        const frame = e.currentTarget;
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const scroller = doc.scrollingElement ?? doc.documentElement;
+        const check = () => {
+            if (frame.clientHeight === 0) return;
+            markIfAtEnd(scroller);
+        };
+        frame.contentWindow?.addEventListener('scroll', check, { passive: true });
+        check();
     };
 
     // Typed signature
@@ -260,6 +287,11 @@ export default function SignNDAPublicClient({
 
     // Submit signature
     const handleSubmit = async () => {
+
+        if (!hasScrolledToBottom) {
+            setError('Please read the entire NDA before signing');
+            return;
+        }
 
         if (!signature.name || !signature.title) {
             setError('Please fill in all required fields');
@@ -365,6 +397,7 @@ export default function SignNDAPublicClient({
                                             className="w-full border-0 h-[70vh]"
                                             title="NDA Preview"
                                             sandbox="allow-same-origin allow-scripts"
+                                            onLoad={handleMobilePreviewLoad}
                                         />
                                     ) : (
                                         <p className="p-6 text-sm text-gray-500">Loading preview...</p>
@@ -506,10 +539,17 @@ export default function SignNDAPublicClient({
                                 <span className="text-sm text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
                             </label>
 
+                            {!hasScrolledToBottom && (
+                                <p className="mb-3 text-xs font-medium text-amber-700" role="status">
+                                    <span className="lg:hidden">Open &ldquo;Read the full NDA&rdquo; above and scroll to the end to sign.</span>
+                                    <span className="hidden lg:inline">Scroll to the end of the document to sign.</span>
+                                </p>
+                            )}
+
                             {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={loading || !authorityConfirmed}
+                                disabled={loading || !authorityConfirmed || !hasScrolledToBottom}
                                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                             >
                                 {loading ? 'Submitting...' : 'Submit Signature'}
@@ -537,6 +577,7 @@ export default function SignNDAPublicClient({
                                 style={{ minHeight: '1200px', height: 'auto' }}
                                 title="NDA Preview"
                                 sandbox="allow-same-origin allow-scripts"
+                                onLoad={handleDesktopPreviewLoad}
                             />
                         ) : (
                             <div className="flex items-center justify-center h-64">
