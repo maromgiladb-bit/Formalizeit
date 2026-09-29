@@ -198,8 +198,11 @@ portal and refund yourself in Stripe.
 >   only. The older key stays on All Pre-Production.
 > - ☑ `MAIL_FROM` = `FormalizeIt <noreply@mail.formalizeit.com>`, All Environments. (If unset,
 >   `src/lib/email.ts` falls back to `noreply@formalizeit.app`, a different domain.)
-> - ☐ `CONTACT_INBOX` — being added (founder Gmail for now; company address is a post-MVP task).
-> - ☐ Redeploy, then acceptance below.
+> - ☑ `CONTACT_INBOX` = founder Gmail, Production (2026-09-29; company address is a post-MVP task).
+> - ☑ Production redeployed 2026-09-29.
+> - ☐ Acceptance below. Can't be tested from outside yet: production runs `main`, whose
+>   private-beta middleware redirects every signed-out request, `/api/contact` included, to
+>   `/coming-soon`. Test while signed in, or after the launch branch is merged.
 > - Acceptance (updated): the first NDA invite is **links-only** (the sender shares it), so test
 >   with an email the platform does send — a round notification, a reminder, or the signed copy —
 >   and the contact form (needs `CONTACT_INBOX`).
@@ -228,7 +231,7 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `app.f
 
 ---
 
-## 0.5 ☐ Gemini and S3
+## 0.5 ☑ Gemini and S3
 
 ### Gemini (Formi AI assistant)
 
@@ -242,6 +245,23 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `app.f
 2. Vercel `GEMINI_API_KEY`, scope **Production**. A free-tier key is fine for Preview.
 
 ### S3 (signed PDFs)
+
+> **Done 2026-09-29.** Production and dev storage are now separate:
+> - **Production:** new bucket `formalizeit-prod` (`eu-central-1`, Frankfurt, same region as the
+>   Neon DB), public access blocked, SSE-S3. New IAM user `formalizeit-app-prod`, no console
+>   access, one inline policy `formalizeit-prod-rw` (Put/Get/Delete on `formalizeit-prod/*`
+>   only). Its access key is saved only in Vercel (Sensitive) and Bitwarden. The four `S3_*` vars
+>   (Production) were edited to point here.
+> - **Dev/Preview:** existing bucket `formalizeit-pdfs` (`eu-north-1`), IAM user `formalizeit-s3`
+>   with policy `formalizeit-pdfs-rw`. Its key lives in `.env.local` and is now also set as the
+>   four `S3_*` vars for **Preview** (Preview previously had none, so PDF storage failed there).
+> - Before this, production used the dev bucket and the laptop's key. Only test PDFs existed,
+>   so nothing was migrated.
+> - ☐ Acceptance (Phase 4): sign an NDA end to end on production, then confirm the PDF lands in
+>   `formalizeit-prod` and downloads from the dashboard.
+> - Consider setting Vercel → Settings → Functions → region to **Frankfurt (`fra1`)** so
+>   functions sit next to the DB and bucket. The region hasn't been checked; the default is
+>   Washington DC (`iad1`).
 
 1. AWS console → S3 → **Create bucket**: name e.g. `formalizeit-prod`, region `us-east-1` (or your
    choice — must match `S3_REGION`), **Block all public access ON**, versioning optional,
@@ -283,7 +303,7 @@ returns 200 JSON; the same call with no header returns 401.
 
 ---
 
-## 0.7 ☐ Base URLs
+## 0.7 ◑ Base URLs
 
 Set as **Production scope only**, all three to the same value:
 
@@ -310,8 +330,11 @@ link point at production.
   domain was already the root domain, no change needed.
 - ☐ **Still to do when you reach Stripe (0.3 step 4): create/point the Stripe webhook at
   `https://formalizeit.com/api/webhooks/stripe`, not `app.`.**
-- ☐ Redeploy Production so the new base-URL values take effect, then re-check email links and the
-  contact form once the launch branch is live (private-beta code currently blocks most pages).
+- ☑ Production redeployed 2026-09-29. Checked from outside: `formalizeit.com` is served by Vercel
+  (and redirects to `/coming-soon` while the private-beta gate is on), and `app.formalizeit.com`
+  308-redirects to it. `www` fails its TLS certificate check (still GoDaddy parking).
+- ☐ Re-check email links and the contact form once the launch branch is live (private-beta code
+  currently blocks most pages).
 
 Also confirm in Vercel → **Settings → Domains** that `app.formalizeit.com` is attached to the
 project and shows a valid certificate.
