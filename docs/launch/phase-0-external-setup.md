@@ -11,7 +11,7 @@ code reads).
 
 Two Vercel environments matter:
 
-- **Production** — `app.formalizeit.com`. Live keys only. Real users only.
+- **Production** — `formalizeit.com` (`app.` 308-redirects here since 2026-09-28). Live keys only. Real users only.
 - **Preview** (used as staging) — Vercel preview deployments of the branch. Test-mode keys,
   a **separate** Neon database branch. All manual testing (Phase 1 matrix, Phase 4) happens here.
 
@@ -123,12 +123,12 @@ with live keys, on the real domain.
 4. **Paths** page → set Sign-in URL `/sign-in`, Sign-up URL `/signup`, after sign-in `/dashboard`,
    after sign-up `/dashboard`. (These mirror the `NEXT_PUBLIC_CLERK_*_URL` vars, which should be
    set for all scopes with those same values.)
-5. **Domains / allowed origins** → confirm `https://app.formalizeit.com` is listed.
+5. **Domains / allowed origins** → confirm `https://formalizeit.com` is listed.
 6. **Multi-factor** page → enable **Authenticator application (TOTP)** and **Backup codes**.
    Leave it optional (users opt in). This is the entire 2FA work item — the app already renders
    Clerk's Security tab at `/settings/account-security`, and the 2FA option appears there once
    this is on. Detailed steps in `docs/2fa-setup.md`.
-7. **Webhooks** → **Add endpoint** → URL `https://app.formalizeit.com/api/webhooks/clerk`, subscribe
+7. **Webhooks** → **Add endpoint** → URL `https://formalizeit.com/api/webhooks/clerk`, subscribe
    to the single event **`user.deleted`**. Copy the **Signing secret** (`whsec_…`) →
    Vercel `CLERK_WEBHOOK_SECRET`, scope **Production**.
    - Repeat for Preview if you want deletion to work on staging (endpoint = your staging URL).
@@ -160,7 +160,7 @@ Account security, sign out, sign in again through the TOTP challenge.
    - `STRIPE_SECRET_KEY` = `sk_live_…`
    - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` = `pk_live_…`
 4. **Developers → Webhooks → Add endpoint**:
-   - URL: `https://app.formalizeit.com/api/webhooks/stripe`
+   - URL: `https://formalizeit.com/api/webhooks/stripe`
    - Events, exactly these four: `checkout.session.completed`, `customer.subscription.updated`,
      `customer.subscription.deleted`, `invoice.payment_failed`
    - After creating, **Reveal signing secret** → Vercel `STRIPE_WEBHOOK_SECRET`, scope
@@ -227,7 +227,7 @@ through Resend. Unverified domains land in spam or are refused.
 6. In Resend → **Settings → Webhooks** nothing is needed; the app does not consume Resend events.
 
 **Acceptance:** from production, send an NDA to an external Gmail/Outlook address. It arrives in
-the inbox (not spam), the "from" shows your domain, and the link opens on `app.formalizeit.com`.
+the inbox (not spam), the "from" shows your domain, and the link opens on `formalizeit.com`.
 
 ---
 
@@ -259,9 +259,9 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `app.f
 >   so nothing was migrated.
 > - ☐ Acceptance (Phase 4): sign an NDA end to end on production, then confirm the PDF lands in
 >   `formalizeit-prod` and downloads from the dashboard.
-> - Consider setting Vercel → Settings → Functions → region to **Frankfurt (`fra1`)** so
->   functions sit next to the DB and bucket. The region hasn't been checked; the default is
->   Washington DC (`iad1`).
+> - ☑ Function region moved from Washington DC (`iad1`) to **Frankfurt (`fra1`) only**
+>   (2026-09-29), so functions, the DB and the bucket are in one region. Verified: the
+>   `x-vercel-id` response header changed from `fra1::iad1::…` to `fra1::fra1::…`.
 
 1. AWS console → S3 → **Create bucket**: name e.g. `formalizeit-prod`, region `us-east-1` (or your
    choice — must match `S3_REGION`), **Block all public access ON**, versioning optional,
@@ -288,7 +288,16 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `app.f
 
 ---
 
-## 0.6 ☐ Cron secret
+## 0.6 ☑ Cron secret
+
+> **Done 2026-09-29.** The existing Vercel `CRON_SECRET` was replaced with a new value (the old
+> one likely matched `.env.local`). Production only, Sensitive, and stored in Bitwarden
+> ("FormalizeIt CRON_SECRET (production)"); Production was redeployed. **Preview deliberately has
+> no value:** Vercel doesn't run crons on Preview, and with no value the routes refuse every call.
+> That's the safe default until Preview's `DATABASE_URL` is confirmed to be a staging DB (§0.1),
+> because `nda-reminders` emails people and `retention-cleanup` deletes files.
+> `.env.local` keeps its own value for local testing. ☐ Acceptance (the curl below) needs the
+> launch branch live, because `main`'s private-beta gate blocks outside calls.
 
 Four daily crons run from `vercel.json` (user cleanup 03:00, retention 04:00, reminders 05:00,
 link expiry 06:00 UTC). Vercel calls them with `Authorization: Bearer <CRON_SECRET>`. **All four
@@ -298,7 +307,7 @@ now refuse to run without it.**
 2. Vercel `CRON_SECRET`, scope **Production** (and a different value for Preview).
 3. Vercel picks it up automatically for its cron invocations — nothing else to configure.
 
-**Acceptance (Phase 4):** `curl -H "Authorization: Bearer <secret>" https://app.formalizeit.com/api/cron/nda-reminders`
+**Acceptance (Phase 4):** `curl -H "Authorization: Bearer <secret>" https://formalizeit.com/api/cron/nda-reminders`
 returns 200 JSON; the same call with no header returns 401.
 
 ---
@@ -307,9 +316,9 @@ returns 200 JSON; the same call with no header returns 401.
 
 Set as **Production scope only**, all three to the same value:
 
-- `APP_URL` = `https://app.formalizeit.com`
-- `NEXT_PUBLIC_APP_URL` = `https://app.formalizeit.com`
-- `NEXT_PUBLIC_BASE_URL` = `https://app.formalizeit.com`
+- `APP_URL` = `https://formalizeit.com`
+- `NEXT_PUBLIC_APP_URL` = `https://formalizeit.com`
+- `NEXT_PUBLIC_BASE_URL` = `https://formalizeit.com`
 
 **Do not set them for Preview.** The code falls back to Vercel's per-deployment `VERCEL_URL`,
 which is always the correct staging origin. Setting them on Preview would make every staging email
@@ -336,7 +345,7 @@ link point at production.
 - ☐ Re-check email links and the contact form once the launch branch is live (private-beta code
   currently blocks most pages).
 
-Also confirm in Vercel → **Settings → Domains** that `app.formalizeit.com` is attached to the
+Also confirm in Vercel → **Settings → Domains** that `formalizeit.com` is attached to the
 project and shows a valid certificate.
 
 **Known issue to re-test:** in July, test emails once rendered a literal `${VERCEL_URL}` in links.

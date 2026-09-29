@@ -17,7 +17,7 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 | Phase | File | Owner | Status |
 |---|---|---|---|
-| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move done; Stripe, cron secret, Sentry left |
+| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region done; Stripe, Sentry, staging DB left |
 | 1 — Finish the negotiation loop | [phase-1-negotiation.md](phase-1-negotiation.md) | Claude | ◑ code complete, browser verification pending |
 | 2 — Essential hardening | [phase-2-hardening.md](phase-2-hardening.md) | Claude | ☑ code complete (Sentry DSN is a Phase 0 item) |
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
@@ -87,8 +87,6 @@ production · counterparty claim-by-token linkage · About-page redesign.
 - Switch `CONTACT_INBOX` (Vercel, all environments) from the founder's personal Gmail to a
   company address, e.g. `support@formalizeit.com`. Also update Google OAuth Branding → user
   support email to the same address.
-- Move from `app.formalizeit.com` to the root `formalizeit.com` — full checklist in
-  `phase-0-external-setup.md` §0.7.
 - Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
   the Security / Settings pages and in Formi).
 - Legal counsel review of all seven legal pages before removing beta framing.
