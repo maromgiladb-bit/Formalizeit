@@ -3,6 +3,7 @@
 import { SignUp, useAuth } from '@clerk/nextjs'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function SignUpPage() {
   const { isLoaded, userId } = useAuth()
@@ -18,7 +19,7 @@ export default function SignUpPage() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-700"></div>
       </div>
     )
   }
@@ -27,17 +28,17 @@ export default function SignUpPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-ink tracking-tight">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Start drafting and managing NDAs today
+          <p className="mt-2 text-center text-sm text-gray-500">
+            Send your first NDA in minutes — free
           </p>
         </div>
-        <div className="bg-white py-8 px-6 shadow rounded-lg">
-          <SignUp 
+        <div className="bg-white py-8 px-6 rounded-2xl border border-gray-100 shadow-card">
+          <SignUp
             routing="hash"
-            redirectUrl="/"
+            fallbackRedirectUrl="/dashboard"
             appearance={{
               elements: {
                 footerAction: { display: 'none' },
@@ -46,6 +47,12 @@ export default function SignUpPage() {
             }}
           />
         </div>
+        <p className="text-center text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link href="/sign-in" className="font-semibold text-teal-800 hover:text-teal-700">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
@@ -13,6 +14,10 @@ export const runtime = 'nodejs'; // Required for Puppeteer
 
 export async function POST(request: NextRequest) {
     try {
+        // The signer id is the only credential on this route, so throttle guessing.
+        const limit = rateLimitRequest(request, 'sign-public', 20, MINUTE);
+        if (!limit.ok) return tooManyRequests(limit);
+
         const body = await request.json();
         const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
 
@@ -116,6 +121,18 @@ export async function POST(request: NextRequest) {
 
         // Extract form data from draft
         const draft = signer.signRequest.draft;
+
+        // Sign-gating: a signature may only be applied once the NDA is agreed. While
+        // there are open suggestions/changes to review or input, block signing — a
+        // party can't unilaterally sign a version the other side hasn't agreed to.
+        const blockedForSigning = ['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT'];
+        if (blockedForSigning.includes(draft.workflowState as string)) {
+            return NextResponse.json(
+                { error: 'This NDA has open changes to review. Resolve the suggestions before signing.', code: 'REVIEW_PENDING' },
+                { status: 409 }
+            );
+        }
+
         const formData = (draft.content as Prisma.JsonObject) || {};
 
         // Update draft content with signature

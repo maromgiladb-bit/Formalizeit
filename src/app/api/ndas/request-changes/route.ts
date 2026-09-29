@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, partyARequestChangesEmailHtml } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { canSignNDA } from '@/lib/organizationRoles'
+import { canContributeToDrafts } from '@/lib/organizationRoles'
 import { refreshSignLinkExpiryForDraft } from '@/lib/signLink'
 
 /**
@@ -39,8 +39,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No active organization context found' }, { status: 404 })
         }
 
-        if (!canSignNDA(activeMembership)) {
-            return NextResponse.json({ error: 'Only signers and owners can request changes' }, { status: 403 })
+        // Asking the counterparty to revise is negotiation, not signing. The
+        // organizationId scoping below is the real authorization here.
+        if (!canContributeToDrafts(activeMembership.role)) {
+            return NextResponse.json({ error: 'You do not have access to this NDA' }, { status: 403 })
         }
 
         // Get draft with sign request and signer in active organization

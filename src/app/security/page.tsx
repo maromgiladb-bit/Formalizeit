@@ -62,7 +62,7 @@ export default function SecurityPage() {
 							Access Control
 						</h3>
 						<p className="text-gray-600">
-							Multi-factor authentication and role-based access control ensure only authorized users 
+							Secure sign-in and role-based access control ensure only authorized users 
 							can access your sensitive documents.
 						</p>
 					</div>

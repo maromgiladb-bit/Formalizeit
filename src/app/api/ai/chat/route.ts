@@ -14,6 +14,7 @@ import {
 import { formiTools } from "@/ai/tools/formiTools";
 import { getActiveOrganization } from "@/lib/db-organization";
 import type { NdaContext, FormiUserContext, Finding } from "@/ai/types";
+import { rateLimit, tooManyRequests, MINUTE } from "@/lib/rateLimit";
 
 // Formi chat endpoint. Streams Gemini responses for the floating NDA copilot.
 // Role/company/name are resolved SERVER-SIDE (never trusted from the client).
@@ -22,6 +23,13 @@ export async function POST(req: Request) {
 		const { userId } = await auth();
 		if (!userId) {
 			return new Response("Unauthorized", { status: 401 });
+		}
+
+		// Every request spends Gemini tokens on our key. Bound it per user —
+		// stepCountIs caps a single run's tool loop, not how often it runs.
+		const quota = rateLimit(`ai-chat:${userId}`, 30, 5 * MINUTE);
+		if (!quota.ok) {
+			return tooManyRequests(quota, "You're sending messages faster than Formi can keep up. Give it a moment.");
 		}
 
 		const apiKey = process.env.GEMINI_API_KEY;
