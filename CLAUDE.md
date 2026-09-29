@@ -209,7 +209,16 @@ with the behavior it describes when the underlying code changes.
 ## Formi (AI assistant) — keep its knowledge in sync
 
 Formi is the in-app AI assistant. It answers questions about the whole product — what the site
-does, where things are, roles, plans, workflow, and NDA help. **Whenever you add or change
+does, where things are, roles, plans, workflow, and NDA help.
+
+> **Currently switched off (decided Sept 2026)** — held back from the MVP launch over cost,
+> response quality, and legal review. The flag is `FORMI_ENABLED` in `src/lib/featureFlags.ts`;
+> it hides the chat widget and the "Ask Formi" tooltip buttons, and makes `/api/ai/chat` return
+> 503. All Formi code stays in place. **The sync rule below still applies while it's off**, so
+> turning it back on is a one-line change. Before re-enabling: confirm `GEMINI_API_KEY` is set
+> in Vercel (Production), review the prompt, and check the model name in `/api/ai/chat`.
+
+**Whenever you add or change
 anything users could ask Formi about** (features, pages/routes, roles, permissions, pricing,
 workflow steps, legal/disclaimer behavior, plan limits), you MUST also update what Formi knows so
 it stays accurate. This is a standing rule, not optional.

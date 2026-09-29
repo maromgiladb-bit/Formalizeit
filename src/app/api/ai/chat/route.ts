@@ -15,10 +15,15 @@ import { formiTools } from "@/ai/tools/formiTools";
 import { getActiveOrganization } from "@/lib/db-organization";
 import type { NdaContext, FormiUserContext, Finding } from "@/ai/types";
 import { rateLimit, tooManyRequests, MINUTE } from "@/lib/rateLimit";
+import { FORMI_ENABLED } from "@/lib/featureFlags";
 
 // Formi chat endpoint. Streams Gemini responses for the floating NDA copilot.
 // Role/company/name are resolved SERVER-SIDE (never trusted from the client).
 export async function POST(req: Request) {
+	if (!FORMI_ENABLED) {
+		return new Response("AI assistant is not available", { status: 503 });
+	}
+
 	try {
 		const { userId } = await auth();
 		if (!userId) {

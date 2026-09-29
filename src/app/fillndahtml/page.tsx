@@ -7,6 +7,7 @@ import { sanitizeForHtml } from "@/lib/sanitize";
 import { filterPhoneChars, isValidPhone } from "@/lib/phone";
 import { deriveNdaTitle, confidentialityBelowTerm } from "@/lib/ndaTerms";
 import { useFormi } from "@/components/ai/FormiProvider";
+import { FORMI_ENABLED } from "@/lib/featureFlags";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 import { FieldTooltip } from "@/components/ui/field-tooltip";
 import { Button } from "@/components/ui/button";
@@ -1471,7 +1472,7 @@ export default function FillNDAHTML() {
 													<span className="text-xs font-normal text-gray-400">(optional)</span>
 													<FieldTooltip
 														text="A name to help you find this NDA on your dashboard. Leave blank and we'll name it after the other party."
-														onAskFormi={() => openFormiNudge("What should I put as the document title for my NDA?")}
+														onAskFormi={FORMI_ENABLED ? () => openFormiNudge("What should I put as the document title for my NDA?") : undefined}
 													/>
 												</label>
 												<input
@@ -1497,7 +1498,7 @@ export default function FillNDAHTML() {
 													Term (months) *
 													<FieldTooltip
 														text="The period during which confidential materials can be shared under this NDA."
-														onAskFormi={() => openFormiNudge("Explain the 'Term (months)' field in this NDA and how to choose it.")}
+														onAskFormi={FORMI_ENABLED ? () => openFormiNudge("Explain the 'Term (months)' field in this NDA and how to choose it.") : undefined}
 													/>
 												</label>
 												<input
@@ -1513,7 +1514,7 @@ export default function FillNDAHTML() {
 													Confidentiality Period (months) *
 													<FieldTooltip
 														text="How long confidentiality obligations must be kept. This can be longer than the agreement term."
-														onAskFormi={() => openFormiNudge("Explain the 'Confidentiality Period' field in this NDA and how it differs from the term.")}
+														onAskFormi={FORMI_ENABLED ? () => openFormiNudge("Explain the 'Confidentiality Period' field in this NDA and how it differs from the term.") : undefined}
 													/>
 												</label>
 												<input
