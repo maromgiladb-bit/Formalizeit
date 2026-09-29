@@ -36,11 +36,15 @@ Production, once ticked Preview.
 
 ## 0.1 ◑ Production database schema — HIGHEST RISK, DO FIRST
 
-> **Checked 2026-09-24:** `npx prisma migrate status` against the `DATABASE_URL` currently in
-> `.env` (Neon `ep-wild-sea-aglnn451`, eu-central-1) reports **all 25 migrations applied, schema up
-> to date**. Remaining work: confirm this is the *same* connection string Vercel holds as
-> `DATABASE_URL` in the **Production** scope — if it is, the migration half of 0.1 is done and only
-> the `staging` branch (steps 5–7) is left.
+> **Migration half confirmed done, 2026-09-28.** Vercel's Production `DATABASE_URL` is saved as a
+> Secret and can't be re-revealed via the dashboard, so this was confirmed indirectly instead: a
+> fresh sign-up on the live production site on 2026-09-25 succeeded, which requires a DB write
+> (`ensureDbUser` in `src/lib/db-user.ts`) that would fail on an unmigrated schema (e.g. the
+> `ADMINISTRATOR`/`isSigner` rename). A prior direct check on 2026-09-24 (against the `.env` value,
+> Neon `ep-wild-sea-aglnn451`, eu-central-1) also reported all 25 migrations applied. Remaining
+> work: steps 5–7 below (create + migrate the separate `staging` Neon branch for Preview) — Vercel
+> already has a *different* `DATABASE_URL` value scoped to Preview (added Jul 9), but whether it
+> points at a real migrated `staging` branch or something else hasn't been checked.
 
 As of July, the production `DATABASE_URL` was never confirmed migrated. There are **25
 migrations** in `prisma/migrations/`. If the one dated `20260629000001` has not run, every query
@@ -185,17 +189,17 @@ portal and refund yourself in Stripe.
 
 ## 0.4 ◑ Resend sending domain
 
-> **Status checked 2026-09-25 (DNS queried directly at GoDaddy) — started, NOT finished.** The
-> sending domain is the subdomain **`mail.formalizeit.com`**.
-> - ☑ DKIM TXT `resend._domainkey.mail` present.
-> - ☐ **SPF missing:** the **MX** and **TXT** records at `send.mail` (i.e. `send.mail.formalizeit.com`)
->   do not exist. Copy both from Resend → Domains → `mail.formalizeit.com` and add them at GoDaddy
->   (Name field: `send.mail`). Then click Verify in Resend.
-> - ☑ DMARC at root `_dmarc` exists (`p=quarantine`, reports to your Gmail) — stricter than the
->   `p=none` suggested below; fine once SPF+DKIM pass, but that is why SPF must be done first.
-> - ☐ Step 4–5 below (Vercel vars) not confirmed. **`MAIL_FROM` must use the subdomain**, e.g.
->   `FormalizeIt <noreply@mail.formalizeit.com>`. If `MAIL_FROM` is unset, `src/lib/email.ts` falls
->   back to `noreply@formalizeit.app` (a different domain) and every email is rejected.
+> **Status 2026-09-28.** Sending domain is the subdomain **`mail.formalizeit.com`**, verified in
+> Resend (set up ~Dec 2025). (A 2026-09-25 note here claimed SPF was missing — wrong: this setup
+> uses a custom return path `bounce.mail`, not the default `send.mail`.)
+> - ☑ DKIM TXT `resend._domainkey.mail`; SPF MX + TXT at `bounce.mail`; DMARC at root `_dmarc`
+>   (`p=quarantine`). All verified.
+> - ☑ New Resend key `production` (sending access) → Vercel `RESEND_API_KEY`, Secret, Production
+>   only. The older key stays on All Pre-Production.
+> - ☑ `MAIL_FROM` = `FormalizeIt <noreply@mail.formalizeit.com>`, All Environments. (If unset,
+>   `src/lib/email.ts` falls back to `noreply@formalizeit.app`, a different domain.)
+> - ☐ `CONTACT_INBOX` — being added (founder Gmail for now; company address is a post-MVP task).
+> - ☐ Redeploy, then acceptance below.
 > - Acceptance (updated): the first NDA invite is **links-only** (the sender shares it), so test
 >   with an email the platform does send — a round notification, a reminder, or the signed copy —
 >   and the contact form (needs `CONTACT_INBOX`).
@@ -286,12 +290,23 @@ Set as **Production scope only**, all three to the same value:
 which is always the correct staging origin. Setting them on Preview would make every staging email
 link point at production.
 
-**Planned domain move:** the site runs on `app.formalizeit.com` for now; the main address will
-later be `formalizeit.com` (no `app.`). When that happens, update: these three base-URL vars, the
-Clerk webhook URL (0.2 step 7), the Clerk **Paths** page (Home URL, SignIn, SignUp, Signing Out
-— all currently full `app.formalizeit.com/...` URLs), the Stripe webhook URL (0.3 step 4), and the
-Google OAuth Branding page links (home / privacy / terms). Clerk's domain and Google's authorized domain are
-already the root `formalizeit.com` and need no change.
+**Domain move — done 2026-09-28.** Site now lives on the root `formalizeit.com` (no `app.`).
+- ☑ Vercel: `formalizeit.com` added (Production, apex not redirected to www — www still points at
+  GoDaddy's old parking page, harmless, fix later if wanted); `app.formalizeit.com` now a 308
+  redirect to `formalizeit.com` (old links keep working).
+- ☑ GoDaddy: root `A @` record repointed from GoDaddy's parking page to Vercel's `216.150.1.1`.
+- ☑ The three base-URL vars (`APP_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BASE_URL`) updated to
+  `https://formalizeit.com`, Production only. (`NEXT_PUBLIC_WEB_URL` also exists, Production —
+  unused by the code, left as-is.)
+- ☑ Clerk Paths (Home/SignIn/SignUp/SignOut) and the `user.deleted` webhook URL updated to
+  `formalizeit.com`. Verified: `/sign-in` loads via `clerk.formalizeit.com`; webhook endpoint
+  responds correctly to an unsigned test call.
+- ☑ Google OAuth Branding links (home/privacy/terms) updated to `formalizeit.com`. Authorized
+  domain was already the root domain, no change needed.
+- ☐ **Still to do when you reach Stripe (0.3 step 4): create/point the Stripe webhook at
+  `https://formalizeit.com/api/webhooks/stripe`, not `app.`.**
+- ☐ Redeploy Production so the new base-URL values take effect, then re-check email links and the
+  contact form once the launch branch is live (private-beta code currently blocks most pages).
 
 Also confirm in Vercel → **Settings → Domains** that `app.formalizeit.com` is attached to the
 project and shows a valid certificate.

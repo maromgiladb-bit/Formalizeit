@@ -82,6 +82,17 @@ production · counterparty claim-by-token linkage · About-page redesign.
 
 2FA needs no code. It is a Clerk dashboard toggle; steps are in `docs/2fa-setup.md`.
 
+## Post-MVP tasks (decided during launch setup)
+
+- Switch `CONTACT_INBOX` (Vercel, all environments) from the founder's personal Gmail to a
+  company address, e.g. `support@formalizeit.com`. Also update Google OAuth Branding → user
+  support email to the same address.
+- Move from `app.formalizeit.com` to the root `formalizeit.com` — full checklist in
+  `phase-0-external-setup.md` §0.7.
+- Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
+  the Security / Settings pages and in Formi).
+- Legal counsel review of all seven legal pages before removing beta framing.
+
 ## Deferred, by decision
 
 Link-open tracking for live opened/signed status · NDA term-expiry alerts · onboarding
