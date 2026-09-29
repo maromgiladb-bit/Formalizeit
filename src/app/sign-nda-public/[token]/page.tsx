@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { Info } from 'lucide-react';
 import SignNDAPublicClient from './SignNDAPublicClient';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
-import { refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import { refreshSignLinkExpiryForRequest, isValidSignLinkToken } from '@/lib/signLink';
 import { canSignNDA } from '@/lib/organizationRoles';
 
 const DEV_TEST_TOKEN = '00000000-0000-0000-0000-000000000001';
@@ -66,6 +66,10 @@ export default async function SignNDAPublicPage({
                 initialHtml={initialHtml}
             />
         );
+    }
+
+    if (!isValidSignLinkToken(token)) {
+        notFound();
     }
 
     // Find signer by ID (using token as ID for now)

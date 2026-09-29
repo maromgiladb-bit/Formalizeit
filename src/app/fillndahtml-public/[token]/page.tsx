@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { Clock, Info } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { renderNdaHtml } from '@/lib/renderNdaHtml';
-import { refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import { refreshSignLinkExpiryForRequest, isValidSignLinkToken } from '@/lib/signLink';
 import { pendingSuggestionsFromRevision } from '@/lib/negotiation';
 import FillNDAPublicClient from './FillNDAPublicClient';
 
@@ -36,6 +36,10 @@ export default async function FillNDAPublicPage({
     params: Promise<{ token: string }>;
 }) {
     const { token } = await params;
+
+    if (!isValidSignLinkToken(token)) {
+        notFound();
+    }
 
     // Find signer by ID with revisions
     const signer = await prisma.signer.findUnique({

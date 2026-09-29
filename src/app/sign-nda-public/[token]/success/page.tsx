@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
+import { isValidSignLinkToken } from '@/lib/signLink';
 
 export default async function SignSuccessPage({
     params,
@@ -8,6 +9,10 @@ export default async function SignSuccessPage({
     params: Promise<{ token: string }>;
 }) {
     const { token } = await params;
+
+    if (!isValidSignLinkToken(token)) {
+        notFound();
+    }
 
     // Verify signer exists (optional validation)
     const signer = await prisma.signer.findUnique({
