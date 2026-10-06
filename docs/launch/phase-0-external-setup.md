@@ -354,9 +354,20 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 
 ---
 
-## 0.8 ☐ Error monitoring and analytics
+## 0.8 ◑ Error monitoring and analytics
 
 ### Sentry
+
+> **Done 2026-10-06 (Analytics still open).** Organization `formalizeit`, project `formalizeit`,
+> **EU data region** (DSN host `ingest.de.sentry.io`). Org-level **Prevent Storing of IP
+> Addresses**, **Data Scrubber** and **Require Using Default Scrubbers** are on (the Privacy Policy
+> promises this). `NEXT_PUBLIC_SENTRY_DSN` is a **Config** (not Secret) var for Production +
+> Preview, because `NEXT_PUBLIC_` values reach the browser anyway. Source-map upload: an
+> **organization token** (`vercel-sourcemaps`, kept in Bitwarden) is `SENTRY_AUTH_TOKEN` (Secret),
+> with `SENTRY_ORG` and `SENTRY_PROJECT` (Config), all Production only. Alert rule "high priority
+> issues" emails the account's primary address. No GitHub integration (deliberately skipped).
+> ☐ Acceptance: after the launch branch deploys, trigger one error and confirm it appears with a
+> readable file/line.
 
 1. sentry.io → **Create project** → platform **Next.js**, name `formalizeit`.
 2. Copy the **DSN** (`https://…@….ingest.sentry.io/…`) → Vercel `NEXT_PUBLIC_SENTRY_DSN`, scope
