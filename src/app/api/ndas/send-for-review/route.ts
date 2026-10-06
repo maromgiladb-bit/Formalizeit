@@ -5,7 +5,7 @@ import { getAppUrl } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
-import { assertCanSendNda } from '@/organizations/limits'
+import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { newSignLinkExpiry } from '@/lib/signLink'
 
 /**
@@ -246,6 +246,9 @@ export async function POST(request: NextRequest) {
             message: `NDA link generated for ${recipientEmail}`
         })
     } catch (error) {
+        if (error instanceof PlanLimitError) {
+            return NextResponse.json({ error: error.message, code: error.code }, { status: 403 })
+        }
         console.error('Send for review error:', error)
         return NextResponse.json({
             error: error instanceof Error ? error.message : 'Failed to send for review'

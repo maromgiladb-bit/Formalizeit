@@ -11,6 +11,7 @@ import { FORMI_ENABLED } from "@/lib/featureFlags";
 import { LegalDisclaimer } from "@/components/ui/legal-disclaimer";
 import { FieldTooltip } from "@/components/ui/field-tooltip";
 import { Button } from "@/components/ui/button";
+import LimitReachedNotice from "@/components/LimitReachedNotice";
 import { StatusPill } from "@/components/ui/status-pill";
 import { getWorkflowStatusInfo } from "@/lib/workflowStatus";
 import { ChevronLeft, ChevronRight, Send, Save } from "lucide-react";
@@ -85,6 +86,8 @@ export default function FillNDAHTML() {
 	const [values, setValues] = useState<FormValues>(DEFAULTS);
 	const [lastSavedValues, setLastSavedValues] = useState<FormValues>(DEFAULTS);
 	const [warning, setWarning] = useState("");
+	const [limitReached, setLimitReached] = useState(false);
+	const [sendError, setSendError] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [showLivePreview, setShowLivePreview] = useState(false);
 	const [livePreviewHtml, setLivePreviewHtml] = useState("");
@@ -1209,6 +1212,8 @@ export default function FillNDAHTML() {
 
 		setSendingForSignature(true);
 		setWarning("");
+		setLimitReached(false);
+		setSendError("");
 
 		try {
 			const response = await fetch('/api/ndas/send-for-review', {
@@ -1225,6 +1230,7 @@ export default function FillNDAHTML() {
 			const result = await response.json();
 
 			if (!response.ok) {
+				if (result.code === 'LIMIT_REACHED') setLimitReached(true);
 				throw new Error(result.error || 'Failed to send for review');
 			}
 
@@ -1236,7 +1242,9 @@ export default function FillNDAHTML() {
 			setEmailSent(true);
 
 		} catch (e) {
-			setWarning(e instanceof Error ? e.message : "Failed to send");
+			const message = e instanceof Error ? e.message : "Failed to send";
+			setWarning(message);
+			setSendError(message);
 		} finally {
 			setSendingForSignature(false);
 		}
@@ -1289,6 +1297,7 @@ export default function FillNDAHTML() {
 		}
 
 		setSendingForInput(true);
+		setLimitReached(false);
 		try {
 			const response = await fetch('/api/ndas/send-for-input', {
 				method: 'POST',
@@ -1304,6 +1313,7 @@ export default function FillNDAHTML() {
 			const data = await response.json();
 
 			if (!response.ok) {
+				if (data.code === 'LIMIT_REACHED') setLimitReached(true);
 				throw new Error(data.error || 'Failed to send for input');
 			}
 
@@ -1385,7 +1395,9 @@ export default function FillNDAHTML() {
 								Loading draft...
 							</div>
 						)}
-						{warning && (
+						{limitReached && warning ? (
+							<LimitReachedNotice message={warning} className="mb-4" />
+						) : warning && (
 							warning === "Draft saved successfully." ? (
 								<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-xl border border-teal-200">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2247,7 +2259,9 @@ export default function FillNDAHTML() {
 									className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
 									autoFocus
 								/>
-								{warning && (
+								{limitReached && warning ? (
+									<LimitReachedNotice message={warning} className="mt-3" />
+								) : warning && (
 									<p className="text-red-500 text-sm mt-2">{warning}</p>
 								)}
 								<div className="flex gap-3 mt-6">
@@ -2367,6 +2381,12 @@ export default function FillNDAHTML() {
 										)}
 									</button>
 								)}
+
+								{limitReached && !emailSent ? (
+									<LimitReachedNotice message={sendError} className="mt-4" />
+								) : sendError && !emailSent ? (
+									<p role="alert" className="mt-3 text-sm text-red-700">{sendError}</p>
+								) : null}
 							</div>
 
 							{/* Divider */}
