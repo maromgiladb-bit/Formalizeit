@@ -361,25 +361,32 @@ export function signReminderEmailHtml(
   draftTitle: string,
   signLink: string,
   senderName?: string,
-  secondReminder = false
+  secondReminder = false,
+  mode: 'sign' | 'review' = 'sign'
 ): string {
   const safeDraftTitle = sanitizeForHtml(draftTitle)
   const safeSenderName = sanitizeForHtml(senderName)
+  const isReview = mode === 'review'
+  const waitingFor = isReview ? 'your review' : 'your signature'
   const fromLine = safeSenderName
-    ? `${safeSenderName} is still waiting on your signature.`
-    : 'This agreement is still waiting on your signature.'
+    ? `${safeSenderName} is still waiting on ${waitingFor}.`
+    : `This agreement is still waiting on ${waitingFor}.`
   const lead = secondReminder
-    ? 'It only takes a minute, and it has been a few days — please sign so this can be finalized.'
-    : 'Just a quick nudge — the NDA below is ready and only needs your signature to move forward.'
+    ? isReview
+      ? 'It only takes a few minutes, and it has been a few days — please take a look so this can move forward.'
+      : 'It only takes a minute, and it has been a few days — please sign so this can be finalized.'
+    : isReview
+      ? 'Just a quick nudge — the NDA below is ready for you to review and complete.'
+      : 'Just a quick nudge — the NDA below is ready and only needs your signature to move forward.'
   const content = `
     ${emailAccentLabel(secondReminder ? 'Second reminder' : 'Reminder')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is waiting for your signature</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is waiting for ${waitingFor}</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} ${lead}</p>
     ${emailDocTitle(safeDraftTitle)}
-    ${emailButton('Review and Sign', signLink)}
+    ${emailButton(isReview ? 'Review the NDA' : 'Review and Sign', signLink)}
     ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
-  return getBaseEmailHtml('Reminder: NDA awaiting your signature', content)
+  return getBaseEmailHtml(isReview ? 'Reminder: NDA awaiting your review' : 'Reminder: NDA awaiting your signature', content)
 }
 
 export function timeToSignEmailHtml(
