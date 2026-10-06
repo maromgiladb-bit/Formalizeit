@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
 import { isValidSignLinkToken } from '@/lib/signLink'
+import { sha256Hex } from '@/lib/signatureEvidence'
 
 export const runtime = 'nodejs'
 
@@ -132,6 +133,25 @@ export async function GET(request: NextRequest) {
                 pdf = (await prisma.ndaPdf.findUnique({
                     where: { signRequestId_kind: { signRequestId: signRequest.id, kind: 'SIGNED' } },
                 })) ?? undefined
+
+                // A rebuilt PDF is not byte-identical to the one fingerprinted at signing
+                // (or there was none), so put the hash of THIS copy on record.
+                try {
+                    await prisma.auditEvent.create({
+                        data: {
+                            organizationId: signRequest.organizationId,
+                            draftId,
+                            eventType: 'PDF_EXPORTED',
+                            metadata: {
+                                action: 'regenerated_signed_pdf',
+                                reason: 'signed PDF was missing from storage',
+                                agreementHash: sha256Hex(pdfBuffer),
+                            },
+                        },
+                    })
+                } catch (auditError) {
+                    console.error('❌ Failed to record regenerated PDF hash:', auditError)
+                }
             } catch (regenError) {
                 console.error('❌ Failed to regenerate SIGNED PDF:', regenError)
             }

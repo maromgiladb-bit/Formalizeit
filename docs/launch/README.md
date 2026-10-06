@@ -92,8 +92,11 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
 
 - ☐ Limit error has no upgrade path: it surfaces as a plain error (HTTP 500 from `send-for-review`),
   with no link to Plans. (~1h)
-- ☐ A failed PDF render/S3 store during signing is swallowed: the NDA is marked COMPLETE with no
-  hash or stored PDF and no retry (`sign-public/route.ts`). (~2h)
+- ☑ Signed-PDF failures are no longer swallowed (2026-10-06): render and S3 store are retried
+  (`src/lib/signedPdf.ts`), a final failure is recorded as `pdfStatus` on the SIGNED audit event and
+  sent to Sentry, the PDF is still emailed when only the store failed, and a PDF rebuilt on demand
+  in `viewpdf` records its own hash (`PDF_EXPORTED` event). ☐ Not yet exercised end to end: needs
+  the staging DB + a real signing on Preview.
 - ☐ `sendEmail` silently skips when `RESEND_API_KEY` is unset and falls back to
   `noreply@formalizeit.app`; make production fail loudly (or alert via Sentry). Also logs recipient
   addresses on every send.

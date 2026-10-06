@@ -9,6 +9,8 @@ import { canSignNDA } from '@/lib/organizationRoles';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
 import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
 import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import * as Sentry from '@sentry/nextjs';
+import { produceSignedPdf, type SignedPdfStatus } from '@/lib/signedPdf';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -284,68 +286,76 @@ export async function POST(request: NextRequest) {
         // Kept OUT of the email try/catch so an email failure can never drop the hash.
         let agreementHash: string | null = null;
         let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
+        let pdfStatus: SignedPdfStatus | null = null;
 
         if (newWorkflowState === 'COMPLETE') {
-                console.log('📄 Both parties signed - generating final PDF with signatures...');
-                try {
+            console.log('📄 Both parties signed - generating final PDF with signatures...');
+
+            // Prepare template data with both signatures
+            const templateData = {
+                ...updatedContent,
+                party_1_name: formData.party_a_name || '',
+                party_1_address: formData.party_a_address || '',
+                party_1_signatory_name: formData.party_a_signatory_name || updatedContent.party_1_signatory_name || '',
+                party_1_signatory_title: formData.party_a_title || updatedContent.party_1_signatory_title || '',
+                party_1_phone: formData.party_a_phone || '',
+                party_1_emails_joined: formData.party_a_email || '',
+                party_1_signature_image: updatedContent.party_1_signature_image || '',
+                party_1_signature_date: updatedContent.party_1_signature_date || '',
+                party_2_name: formData.party_b_name || '',
+                party_2_address: formData.party_b_address || '',
+                party_2_signatory_name: formData.party_b_signatory_name || updatedContent.party_2_signatory_name || '',
+                party_2_signatory_title: formData.party_b_title || updatedContent.party_2_signatory_title || '',
+                party_2_phone: formData.party_b_phone || '',
+                party_2_emails_joined: formData.party_b_email || '',
+                party_2_signature_image: updatedContent.party_2_signature_image || '',
+                party_2_signature_date: updatedContent.party_2_signature_date || '',
+            };
+
+            // Signing is already committed at this point, so this never throws: a failure
+            // comes back as a status that is recorded on the audit event and sent to Sentry.
+            const signedPdf = await produceSignedPdf({
+                render: async () => {
                     const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
                     const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
-
-                    // Prepare template data with both signatures
-                    const templateData = {
-                        ...updatedContent,
-                        party_1_name: formData.party_a_name || '',
-                        party_1_address: formData.party_a_address || '',
-                        party_1_signatory_name: formData.party_a_signatory_name || updatedContent.party_1_signatory_name || '',
-                        party_1_signatory_title: formData.party_a_title || updatedContent.party_1_signatory_title || '',
-                        party_1_phone: formData.party_a_phone || '',
-                        party_1_emails_joined: formData.party_a_email || '',
-                        party_1_signature_image: updatedContent.party_1_signature_image || '',
-                        party_1_signature_date: updatedContent.party_1_signature_date || '',
-                        party_2_name: formData.party_b_name || '',
-                        party_2_address: formData.party_b_address || '',
-                        party_2_signatory_name: formData.party_b_signatory_name || updatedContent.party_2_signatory_name || '',
-                        party_2_signatory_title: formData.party_b_title || updatedContent.party_2_signatory_title || '',
-                        party_2_phone: formData.party_b_phone || '',
-                        party_2_emails_joined: formData.party_b_email || '',
-                        party_2_signature_image: updatedContent.party_2_signature_image || '',
-                        party_2_signature_date: updatedContent.party_2_signature_date || '',
-                    };
-
                     const html = await renderNdaHtml(templateData, (formData.templateId as string) || 'professional_mutual_nda_v1');
-                    const pdfBuffer = await renderHtmlToPdf(html, {
+                    return renderHtmlToPdf(html, {
                         pageWidthPx: 900,
                         baseUrl: getAppUrl(),
                         isA4: true,
                     });
+                },
+                store: async (pdfBuffer) => {
+                    const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                    await storeNdaPdf({
+                        signRequestId: signer.signRequestId,
+                        kind: 'SIGNED',
+                        pdfBuffer,
+                    });
+                },
+                hash: sha256Hex,
+            });
 
-                    agreementHash = sha256Hex(pdfBuffer);
+            pdfStatus = signedPdf.status;
+            agreementHash = signedPdf.agreementHash;
 
-                    const pdfBase64 = pdfBuffer.toString('base64');
-                    pdfAttachment = [{
-                        filename: `${draft.title || 'NDA'}_Signed.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf'
-                    }];
+            if (signedPdf.pdfBuffer) {
+                pdfAttachment = [{
+                    filename: `${draft.title || 'NDA'}_Signed.pdf`,
+                    content: signedPdf.pdfBuffer.toString('base64'),
+                    contentType: 'application/pdf'
+                }];
+            }
 
-                    console.log('✅ Final PDF generated with both signatures');
-
-                    // Store SIGNED PDF to S3
-                    try {
-                        const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
-                        await storeNdaPdf({
-                            signRequestId: signer.signRequestId,
-                            kind: 'SIGNED',
-                            pdfBuffer: pdfBuffer,
-                        });
-                        console.log('✅ SIGNED PDF stored in S3');
-                    } catch (s3Error) {
-                        console.error('❌ Failed to store PDF to S3:', s3Error);
-                        // Continue - S3 storage failure shouldn't block completion
-                    }
-                } catch (pdfError) {
-                    console.error('❌ Failed to generate final signed PDF:', pdfError);
-                }
+            if (signedPdf.status === 'stored') {
+                console.log('✅ Final PDF generated and stored');
+            } else {
+                console.error(`❌ Signed PDF ${signedPdf.status} for draft ${draft.id}:`, signedPdf.error);
+                Sentry.captureException(signedPdf.error, {
+                    tags: { area: 'signed-pdf', pdfStatus: signedPdf.status },
+                    extra: { draftId: draft.id, signRequestId: signer.signRequestId },
+                });
+            }
         }
 
         // Send Email Notifications
@@ -530,6 +540,7 @@ export async function POST(request: NextRequest) {
                     parties: partiesSnapshot(updatedContent as Record<string, unknown>),
                     authority: authorityConsent(true),
                     ...(agreementHash ? { agreementHash } : {}),
+                    ...(pdfStatus ? { pdfStatus } : {}),
                 },
             },
         });
