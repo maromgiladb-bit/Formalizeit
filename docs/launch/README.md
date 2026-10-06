@@ -82,6 +82,31 @@ production · counterparty claim-by-token linkage · About-page redesign.
 
 2FA needs no code. It is a Clerk dashboard toggle; steps are in `docs/2fa-setup.md`.
 
+## Launch-readiness audit follow-ups (2026-10-06)
+
+A read-only review agent checked the code against the docs. All six blockers are fixed and
+committed: unsupported claims removed from Compliance and Security (and the page rewritten to what
+is true), placeholder contact details replaced, 48h/5d reminders now cover first-send NDAs (review
+link and wording), signed-copy link and robots/sitemap reachable signed-out, and the FREE cap no
+longer counts the draft being re-sent. Still open, roughly in priority order:
+
+- ☐ Limit error has no upgrade path: it surfaces as a plain error (HTTP 500 from `send-for-review`),
+  with no link to Plans. (~1h)
+- ☐ A failed PDF render/S3 store during signing is swallowed: the NDA is marked COMPLETE with no
+  hash or stored PDF and no retry (`sign-public/route.ts`). (~2h)
+- ☐ `sendEmail` silently skips when `RESEND_API_KEY` is unset and falls back to
+  `noreply@formalizeit.app`; make production fail loudly (or alert via Sentry). Also logs recipient
+  addresses on every send.
+- ☐ Rate limiting is per-instance memory: add a Vercel Firewall rule for the sign, contact and
+  token endpoints.
+- ☐ Missing Stripe env vars fail late (500 at checkout); a FREE-only launch would still show paid
+  buttons that fail.
+- ☐ No customer email on `invoice.payment_failed`; check whether PAST_DUE still allows sending.
+- ☐ Nice to have: 83 `console.log` calls on sensitive paths; delete `generate-token.js` and
+  `private.key` (old DocuSign key, untracked) from disk; orphaned `internal-approve` /
+  `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.
+- ☐ Unverified: full `npm run build`; whether the Stripe client throws at import without a key.
+
 ## Post-MVP tasks (decided during launch setup)
 
 - Switch `CONTACT_INBOX` (Vercel, all environments) from the founder's personal Gmail to a
