@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
+import { isValidSignLinkToken } from '@/lib/signLink'
 
 export const runtime = 'nodejs'
 
@@ -32,6 +33,9 @@ export async function GET(request: NextRequest) {
         // Resolve + authorize the target draft before doing any work.
         let draftId: string
         if (signerIdParam) {
+            if (!isValidSignLinkToken(signerIdParam)) {
+                return NextResponse.json({ error: 'NDA not found' }, { status: 404 })
+            }
             // Bearer-token path: a valid signer id grants access to its own NDA only.
             const signer = await prisma.signer.findUnique({
                 where: { id: signerIdParam },
