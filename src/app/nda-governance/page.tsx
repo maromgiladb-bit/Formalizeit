@@ -89,7 +89,7 @@ export default function NdaGovernancePage() {
 					<h2>7. Questions</h2>
 					<p>
 						Questions about how the standard NDA is governed? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>

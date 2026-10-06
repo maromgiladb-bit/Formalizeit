@@ -163,7 +163,7 @@ export default function TermsPage() {
 					<h2>16. Contact</h2>
 					<p>
 						Questions about these Terms? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>

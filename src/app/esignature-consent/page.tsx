@@ -111,7 +111,7 @@ export default function ESignatureConsentPage() {
 						do not complete the electronic signature, and arrange signing by other
 						means directly with the other party. To request a paper copy of a
 						document or to ask a question about electronic signing, contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 						Withdrawing consent does not affect the validity of any agreement you
 						have already signed electronically.
 					</p>
@@ -119,7 +119,7 @@ export default function ESignatureConsentPage() {
 					<h2>7. Contact</h2>
 					<p>
 						Questions about electronic signatures? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>
