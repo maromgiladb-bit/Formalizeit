@@ -109,9 +109,11 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
 
 ## Post-MVP tasks (decided during launch setup)
 
-- Switch `CONTACT_INBOX` (Vercel, all environments) from the founder's personal Gmail to a
-  company address, e.g. `support@formalizeit.com`. Also update Google OAuth Branding → user
-  support email to the same address.
+- `support@formalizeit.com` now exists (2026-10-06): ImprovMX free forwarding to the founder's
+  Gmail via root MX + SPF records at GoDaddy, catch-all `*` alias, no mailbox. Replies still go out
+  from Gmail; consider Google Workspace later for send-as. ☐ Switch `CONTACT_INBOX` (Vercel, all
+  environments) from the founder's Gmail to `support@formalizeit.com`, and update Google OAuth
+  Branding → user support email to the same address.
 - Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
   the Security / Settings pages and in Formi).
 - Legal counsel review of all seven legal pages before removing beta framing.
