@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, ArrowRight, CheckCircle } from "lucide-react";
+import { Mail, Send, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const fadeUp = {
@@ -20,22 +20,8 @@ const contactCards = [
     icon: Mail,
     title: "Email Us",
     description: "For general inquiries and support",
-    link: "mailto:maromgiladb@gmail.com",
-    linkLabel: "maromgiladb@gmail.com",
-  },
-  {
-    icon: Phone,
-    title: "Call Us",
-    description: "Mon-Fri from 9am to 6pm EST",
-    link: "tel:+15551234567",
-    linkLabel: "+1 (555) 123-4567",
-  },
-  {
-    icon: MapPin,
-    title: "Visit Us",
-    description: "123 Legal Tech Blvd\nSan Francisco, CA 94105",
-    link: null,
-    linkLabel: null,
+    link: "mailto:support@formalizeit.com",
+    linkLabel: "support@formalizeit.com",
   },
 ];
 
