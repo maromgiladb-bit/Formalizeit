@@ -51,6 +51,29 @@ describe('assertCanSendNda', () => {
     await expect(assertCanSendNda('org-1')).rejects.toThrow('maximum number of NDAs')
   })
 
+  it('excludes the draft being sent from the count, so a counted draft does not block its own next round', async () => {
+    mockFindOrg.mockResolvedValue(freeOrg as any)
+    mockCountDrafts.mockResolvedValue(2) // the other two; the draft being re-sent is excluded
+    await expect(assertCanSendNda('org-1', 'draft-9')).resolves.toBeUndefined()
+    expect(mockCountDrafts).toHaveBeenCalledWith({
+      where: expect.objectContaining({ organizationId: 'org-1', id: { not: 'draft-9' } }),
+    })
+  })
+
+  it('still blocks a brand-new send when three OTHER NDAs are already sent', async () => {
+    mockFindOrg.mockResolvedValue(freeOrg as any)
+    mockCountDrafts.mockResolvedValue(3)
+    await expect(assertCanSendNda('org-1', 'draft-new')).rejects.toThrow('maximum number of NDAs')
+  })
+
+  it('does not filter by draft id when none is given', async () => {
+    mockFindOrg.mockResolvedValue(freeOrg as any)
+    mockCountDrafts.mockResolvedValue(0)
+    await assertCanSendNda('org-1')
+    const where = mockCountDrafts.mock.calls[0][0]?.where as Record<string, unknown>
+    expect(where).not.toHaveProperty('id')
+  })
+
   it('allows unlimited sends on PRO (no NDA cap)', async () => {
     mockFindOrg.mockResolvedValue(proOrg as any)
     mockCountDrafts.mockResolvedValue(9999)

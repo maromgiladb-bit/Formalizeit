@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
 
-        await assertCanSendNda(activeMembership.organizationId)
+        await assertCanSendNda(activeMembership.organizationId, draftId)
 
         // Get draft and verify organization access
         const draft = await prisma.ndaDraft.findFirst({
