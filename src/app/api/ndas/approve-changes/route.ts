@@ -78,6 +78,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
         }
 
+        // Only answer a round the counterparty is actually waiting on — never a
+        // signed or completed NDA.
+        if (existingDraft.workflowState !== 'AWAITING_PARTY_A_REVIEW') {
+            return NextResponse.json({ error: 'This NDA is not waiting for your review' }, { status: 409 })
+        }
+
         const signRequest = existingDraft.signRequests[0]
         if (!signRequest) {
             return NextResponse.json({ error: 'This NDA has not been sent yet' }, { status: 400 })
@@ -97,6 +103,9 @@ export async function POST(request: NextRequest) {
         const round = applyNegotiationRound({
             currentContent,
             filledFields,
+            // Party A answers proposals here; it fills nothing directly, so an
+            // "accepted" value can only be one the counterparty actually offered.
+            fillableFields: [],
             suggestedChanges,
             responses: (suggestionResponses || {}) as SuggestionResponses,
             incomingSuggestions,

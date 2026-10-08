@@ -124,6 +124,13 @@ export interface NegotiationRoundInput {
   currentContent: Record<string, unknown>;
   /** Values the submitter typed into fields they were asked to fill. */
   filledFields?: Record<string, string>;
+  /**
+   * The only keys `filledFields` may write. Everything else in it is dropped:
+   * the client is untrusted, and locked terms (governing law, Party A details,
+   * signatures...) change only by being proposed and accepted. Omit only in
+   * tests; both routes pass it.
+   */
+  fillableFields?: readonly string[];
   /** Fresh changes the submitter is proposing for locked fields. */
   suggestedChanges?: Record<string, string>;
   /** The submitter's per-field answers to the other party's pending proposals. */
@@ -150,6 +157,23 @@ export interface NegotiationRoundResult {
 }
 
 /**
+ * Fields a receiver may fill directly this round: the ones the sender asked
+ * them to fill that are still empty. Mirrors the "editable" state on the public
+ * review page; anything else the receiver wants changed must be suggested.
+ */
+export function receiverFillableFields(
+  pendingInputFields: unknown,
+  currentContent: Record<string, unknown>,
+): string[] {
+  if (!Array.isArray(pendingInputFields)) return [];
+  return pendingInputFields.filter((field): field is string => {
+    if (typeof field !== 'string') return false;
+    const value = currentContent[field];
+    return value === undefined || value === null || (typeof value === 'string' && !value.trim());
+  });
+}
+
+/**
  * Resolve one round of negotiation into a new agreed document plus the set of
  * proposals the other party must answer.
  *
@@ -161,8 +185,12 @@ export interface NegotiationRoundResult {
  * content would be invisible to the very person who has to respond to it.
  */
 export function applyNegotiationRound(input: NegotiationRoundInput): NegotiationRoundResult {
-  const { currentContent, filledFields, suggestedChanges, incomingSuggestions } = input;
+  const { currentContent, suggestedChanges, incomingSuggestions, fillableFields } = input;
   const responses = normalizeResponses(input.responses || {});
+  const filledFields: Record<string, string> = {};
+  for (const [field, value] of Object.entries(input.filledFields || {})) {
+    if (!fillableFields || fillableFields.includes(field)) filledFields[field] = value;
+  }
 
   const newContent: Record<string, unknown> = { ...currentContent };
   const appliedFilledFields: Record<string, string> = {};
@@ -171,7 +199,7 @@ export function applyNegotiationRound(input: NegotiationRoundInput): Negotiation
   //    value into filledFields regardless of how the field was answered, so a
   //    rejected or countered field can arrive here carrying a value we must not
   //    write.
-  for (const [field, value] of Object.entries(filledFields || {})) {
+  for (const [field, value] of Object.entries(filledFields)) {
     const action = responses[field]?.action;
     if (action === 'rejected' || action === 'countered') continue;
     newContent[field] = value;
@@ -185,7 +213,7 @@ export function applyNegotiationRound(input: NegotiationRoundInput): Negotiation
       // Prefer the value the server knows was offered over whatever the client
       // sent, so a tampered client cannot "accept" a value never proposed.
       const agreed =
-        incomingSuggestions?.[field] ?? filledFields?.[field] ?? currentContent[field];
+        incomingSuggestions?.[field] ?? filledFields[field] ?? currentContent[field];
       newContent[field] = agreed;
       if (typeof agreed === 'string') appliedFilledFields[field] = agreed;
     } else {

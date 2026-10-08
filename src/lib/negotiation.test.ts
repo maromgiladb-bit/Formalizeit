@@ -6,6 +6,7 @@ import {
   normalizeResponses,
   applyNegotiationRound,
   pendingSuggestionsFromRevision,
+  receiverFillableFields,
 } from './negotiation';
 
 describe('pendingSuggestionsFromRevision', () => {
@@ -312,5 +313,62 @@ describe('applyNegotiationRound', () => {
     expect(r.hasFreshSuggestions).toBe(false);
     expect(r.outgoingSuggestions).toEqual({});
     expect(r.fullyAccepted).toBe(true);
+  });
+});
+
+describe('fillableFields allow-list', () => {
+  const base = { party_a_name: 'Us Ltd', governing_law: 'Delaware', party_b_address: '' };
+
+  it('drops filled values for fields the submitter was not asked to fill', () => {
+    const r = applyNegotiationRound({
+      currentContent: base,
+      filledFields: {
+        party_b_address: '1 Main St',
+        governing_law: 'Cayman Islands',
+        party_a_name: 'Someone Else',
+        party_1_signature_image: 'data:forged',
+      },
+      fillableFields: ['party_b_address'],
+    });
+    expect(r.newContent).toEqual({ ...base, party_b_address: '1 Main St' });
+    expect(r.appliedFilledFields).toEqual({ party_b_address: '1 Main St' });
+  });
+
+  it('cannot "accept" a value that was never offered when the field is not fillable', () => {
+    const r = applyNegotiationRound({
+      currentContent: base,
+      filledFields: { governing_law: 'Cayman Islands' },
+      responses: { governing_law: { action: 'accepted' } },
+      fillableFields: [],
+    });
+    expect(r.newContent.governing_law).toBe('Delaware');
+  });
+
+  it('still accepts what the other party actually offered', () => {
+    const r = applyNegotiationRound({
+      currentContent: base,
+      incomingSuggestions: { governing_law: 'New York' },
+      filledFields: { governing_law: 'New York' },
+      responses: { governing_law: { action: 'accepted' } },
+      fillableFields: [],
+    });
+    expect(r.newContent.governing_law).toBe('New York');
+  });
+});
+
+describe('receiverFillableFields', () => {
+  it('returns requested fields that are still empty', () => {
+    expect(
+      receiverFillableFields(
+        ['party_b_name', 'party_b_address', 'party_b_phone'],
+        { party_b_name: 'Acme', party_b_address: '  ' },
+      ),
+    ).toEqual(['party_b_address', 'party_b_phone']);
+  });
+
+  it('returns nothing for a missing or malformed list', () => {
+    expect(receiverFillableFields(null, {})).toEqual([]);
+    expect(receiverFillableFields('party_b_name', {})).toEqual([]);
+    expect(receiverFillableFields([1, 'party_b_name'], {})).toEqual(['party_b_name']);
   });
 });

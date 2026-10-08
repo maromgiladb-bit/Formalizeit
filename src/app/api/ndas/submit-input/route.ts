@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, recipientInputSubmittedEmailHtml, partyBSuggestionsEmailHtml, negotiationReviewEmailHtml } from '@/lib/email'
 import { createNotificationsForOrgSigners } from '@/lib/notifications'
 import { newSignLinkExpiry } from '@/lib/signLink'
-import { applyNegotiationRound, pendingSuggestionsFromRevision, type SuggestionResponses } from '@/lib/negotiation'
+import { applyNegotiationRound, pendingSuggestionsFromRevision, receiverFillableFields, type SuggestionResponses } from '@/lib/negotiation'
 import { persistNegotiationRound } from '@/lib/negotiationRound'
 import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 
@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
         const round = applyNegotiationRound({
             currentContent,
             filledFields,
+            // Party B may only fill what Party A asked them to; Party A never
+            // fills directly here. Anything else has to be proposed.
+            fillableFields: isPartyA ? [] : receiverFillableFields(draft.pendingInputFields, currentContent),
             suggestedChanges,
             responses: (suggestionResponses || {}) as SuggestionResponses,
             incomingSuggestions,

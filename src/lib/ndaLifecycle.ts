@@ -41,3 +41,16 @@ export function canHardDeleteNda(nda: NdaLifecycleInput): boolean {
 export function canArchiveNda(nda: NdaLifecycleInput): boolean {
   return isNdaFinalized(nda)
 }
+
+/**
+ * The NDA's content may be freely edited only while it is an unsent draft. Once
+ * it is sent, values change only through a negotiation round (which records a
+ * revision the other party sees), and never after anyone has signed: a free
+ * edit there would put a signature on terms the signer never saw.
+ */
+export function canEditNdaContent(nda: { status: string; workflowState?: string | null }): boolean {
+  return norm(nda.status) === 'DRAFT' && norm(nda.workflowState || 'DRAFT') === 'DRAFT'
+}
+
+export const NDA_LOCKED_MESSAGE =
+  'This NDA has already been sent, so its terms can only change through a review round with the other party.'
