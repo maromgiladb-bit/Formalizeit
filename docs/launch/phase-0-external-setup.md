@@ -262,6 +262,8 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `forma
 > project ("Gemini API Key Formalizeit") is saved in Vercel as `GEMINI_API_KEY` (Production,
 > Sensitive). Formi itself is off via `FORMI_ENABLED = false` in `src/lib/featureFlags.ts` (cost,
 > response quality, legal review), so the key goes unused until Formi is turned back on.
+> Google Cloud billing budget "Gemini safety budget" (alerts only, ₪20/month, all projects) emails the
+> billing admin at 50%, 90% and 100% of actual spend (set 2026-10-08).
 
 1. Google AI Studio → **Get API key** → create in a project that has **billing enabled** (the free
    tier rate-limits under any real load and Formi will start failing).
