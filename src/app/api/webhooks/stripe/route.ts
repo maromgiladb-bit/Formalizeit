@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { stripe, planFromPriceId } from '@/lib/stripe'
-import { sendEmail, subscriptionCancelledEmailHtml, getAppUrl } from '@/lib/email'
+import { sendEmail, subscriptionCancelledEmailHtml, paymentFailedEmailHtml, getAppUrl } from '@/lib/email'
 import {
   SUBSCRIPTION_STATUS_MAP,
   getCurrentPeriodEnd,
@@ -84,10 +84,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const periodEnd = getCurrentPeriodEnd(subscription)
   const priceId = subscription.items.data[0]?.price.id ?? null
 
+  // An unrecognised price means the live price IDs are misconfigured. Silently
+  // defaulting to PRO here would provision a $50 TEAM customer on a $9 plan, so
+  // throw instead: Stripe retries, and the failure is visible.
+  const plan = planFromPriceId(priceId)
+  if (!plan) {
+    throw new Error(
+      `checkout.session.completed: price ${priceId} maps to no plan. Check STRIPE_*_PRICE_ID env vars.`
+    )
+  }
+
   await prisma.organization.update({
     where: { id: organizationId },
     data: {
-      billingPlan: planFromPriceId(priceId) ?? 'PRO',
+      billingPlan: plan,
       billingStatus,
       stripeSubscriptionId: subscription.id,
       stripePriceId: priceId,
@@ -130,6 +140,12 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
+  // Stripe retries and redelivers events, and this handler is not otherwise
+  // idempotent: without this check a redelivery re-sends the cancellation email
+  // to a customer who already got it. The DB update below is safely repeatable.
+  const alreadyCancelled =
+    organization.billingStatus === 'CANCELLED' && organization.billingPlan === 'FREE'
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: {
@@ -142,6 +158,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       // stripeCustomerId is kept — reused if user re-subscribes
     },
   })
+
+  if (alreadyCancelled) {
+    console.log('customer.subscription.deleted: already cancelled, skipping duplicate email')
+    return
+  }
 
   // "Sad to see you go" — best-effort email to the administrator on final cancellation.
   try {
@@ -174,8 +195,30 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     return
   }
 
+  // Stripe emits this event on every retry of the same invoice, and redelivers events,
+  // so only the first failure (the transition into PAST_DUE) emails the customer.
+  const alreadyPastDue = organization.billingStatus === 'PAST_DUE'
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { billingStatus: 'PAST_DUE' },
   })
+
+  if (alreadyPastDue) return
+
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: organization.ownerUserId },
+      select: { email: true },
+    })
+    if (owner?.email) {
+      await sendEmail({
+        to: owner.email,
+        subject: 'Action needed: your Formalize It payment failed',
+        html: paymentFailedEmailHtml(organization.name, `${getAppUrl()}/settings/billing`),
+      })
+    }
+  } catch (emailError) {
+    console.error('Failed to send payment-failed email:', emailError)
+  }
 }

@@ -9,7 +9,7 @@ export default function SecurityPage() {
 			<PageHero
 				icon={Lock}
 				title="Security"
-				subtitle="Your data security is our top priority"
+				subtitle="How we protect your documents"
 			/>
 
 			{/* Security Features */}
@@ -20,11 +20,11 @@ export default function SecurityPage() {
 							<Key className="w-6 h-6 text-teal-700" />
 						</div>
 						<h3 className="text-xl font-bold text-ink mb-4">
-							End-to-End Encryption
+							Encryption
 						</h3>
 						<p className="text-gray-600">
-							All data is encrypted in transit using TLS 1.3 and at rest using AES-256 encryption. 
-							Your documents are protected at every step.
+							All data travels over HTTPS (TLS encryption in transit), and signed documents are
+							encrypted at rest in private storage.
 						</p>
 					</div>
 
@@ -33,11 +33,11 @@ export default function SecurityPage() {
 							<Server className="w-6 h-6 text-teal-700" />
 						</div>
 						<h3 className="text-xl font-bold text-ink mb-4">
-							Secure Infrastructure
+							EU-Based Infrastructure
 						</h3>
 						<p className="text-gray-600">
-							Our infrastructure is hosted on enterprise-grade cloud providers with 99.9% uptime SLA 
-							and regular security audits.
+							Our application servers, database, and document storage run in the European Union
+							(Frankfurt, Germany) on established cloud providers.
 						</p>
 					</div>
 
@@ -46,11 +46,12 @@ export default function SecurityPage() {
 							<FileCheck className="w-6 h-6 text-teal-700" />
 						</div>
 						<h3 className="text-xl font-bold text-ink mb-4">
-							Regular Backups
+							Document Integrity
 						</h3>
 						<p className="text-gray-600">
-							Automated daily backups with point-in-time recovery ensure your data is never lost. 
-							Backups are encrypted and stored in multiple locations.
+							Each executed NDA is fingerprinted with a SHA-256 hash and stored with the signer&apos;s
+							email, timestamp, IP address, and the exact NDA version signed, so any later change to
+							the document is detectable.
 						</p>
 					</div>
 
@@ -62,8 +63,8 @@ export default function SecurityPage() {
 							Access Control
 						</h3>
 						<p className="text-gray-600">
-							Multi-factor authentication and role-based access control ensure only authorized users 
-							can access your sensitive documents.
+							Secure sign-in and role-based access control ensure only authorized users
+							can access your documents. Only designated signers can sign on behalf of a company.
 						</p>
 					</div>
 				</div>
@@ -78,31 +79,25 @@ export default function SecurityPage() {
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
 								<span className="text-teal-700 text-sm">✓</span>
 							</div>
-							<p>Regular security assessments and penetration testing by third-party experts</p>
+							<p>Documents are kept in private storage and shared only through short-lived download links</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
 								<span className="text-teal-700 text-sm">✓</span>
 							</div>
-							<p>Continuous monitoring for security threats and suspicious activity</p>
+							<p>Signing and review links are random and unguessable, and expire after two weeks of inactivity</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
 								<span className="text-teal-700 text-sm">✓</span>
 							</div>
-							<p>Regular software updates and security patches</p>
+							<p>Signing authority is checked on our servers, not just in the interface</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
 								<span className="text-teal-700 text-sm">✓</span>
 							</div>
-							<p>Employee security training and background checks</p>
-						</div>
-						<div className="flex items-start gap-3">
-							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
-								<span className="text-teal-700 text-sm">✓</span>
-							</div>
-							<p>Incident response plan with 24/7 monitoring</p>
+							<p>Error monitoring is configured not to store IP addresses or record your sessions</p>
 						</div>
 					</div>
 				</div>
@@ -116,7 +111,7 @@ export default function SecurityPage() {
 						If you discover a security vulnerability, please report it to us immediately.
 					</p>
 					<a
-						href="mailto:security@ndasaas.com"
+						href="mailto:support@formalizeit.com?subject=Security%20issue"
 						className="inline-block px-6 py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
 					>
 						Report Issue

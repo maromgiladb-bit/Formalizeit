@@ -9,7 +9,7 @@ export default function PrivacyPage() {
 			<PageHero
 				icon={Shield}
 				title="Privacy Policy"
-				subtitle="Last updated: June 11, 2026"
+				subtitle="Last updated: October 8, 2026"
 			/>
 
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -25,12 +25,18 @@ export default function PrivacyPage() {
 					<h2>2. Information We Collect</h2>
 					<h3>Information you provide directly</h3>
 					<ul>
-						<li><strong>Account data:</strong> Name, email address, and password (managed through Clerk authentication)</li>
+						<li><strong>Account data:</strong> Name, email address, and password (managed through Clerk authentication). If you choose to sign in with Google, we receive your name, email address, and profile photo from your Google account instead of a password</li>
 						<li><strong>Company data:</strong> Company name and workspace settings you configure</li>
 						<li><strong>Document content:</strong> The NDA text, filled-in variables, party names, addresses, and other fields you enter when creating documents</li>
 						<li><strong>Signature data:</strong> Electronic signatures collected through the signing flow, including the signer's name and timestamp</li>
 						<li><strong>Payment data:</strong> Billing information is collected and stored by Stripe — we do not store your full card number on our servers</li>
 					</ul>
+					<p>
+						<strong>Sign in with Google.</strong> If you sign in with Google, Google shares your name, email
+						address, and profile photo with us through our authentication provider. We use this information
+						only to create, secure, and identify your account. We do not access your Gmail, contacts, Google
+						Drive, or any other Google data, and we do not use or share Google user data for advertising.
+					</p>
 					<h3>Information collected automatically</h3>
 					<ul>
 						<li><strong>Usage data:</strong> Pages visited, actions taken (e.g. draft created, NDA sent), and session duration</li>
@@ -43,7 +49,7 @@ export default function PrivacyPage() {
 						<li>To provide, operate, and improve the Service</li>
 						<li>To authenticate you and manage your account and company workspace</li>
 						<li>To generate, store, and deliver NDA documents to the parties you designate</li>
-						<li>To send transactional emails (e.g. NDA review requests, signature confirmations) via Resend</li>
+						<li>To send transactional emails (e.g. round notifications, reminders, and signed copies) via Resend</li>
 						<li>To process billing and manage your subscription via Stripe</li>
 						<li>To respond to support requests and improve the product based on usage patterns</li>
 						<li>To comply with legal obligations</li>
@@ -53,11 +59,14 @@ export default function PrivacyPage() {
 					<h2>4. Third-Party Service Providers</h2>
 					<p>We use the following trusted third-party services to operate the platform. Each is bound by its own privacy and security obligations:</p>
 					<ul>
-						<li><strong>Clerk</strong> — user authentication and identity management</li>
+						<li><strong>Clerk</strong> — user authentication and identity management, including sign-in with Google</li>
 						<li><strong>Stripe</strong> — payment processing and subscription billing</li>
 						<li><strong>Amazon Web Services (S3)</strong> — storage of signed PDF documents and uploaded files</li>
-						<li><strong>Resend</strong> — transactional email delivery (NDA invitations, signature requests)</li>
-						<li><strong>PostgreSQL (hosted database)</strong> — storage of all application data</li>
+						<li><strong>Resend</strong> — transactional email delivery (round notifications, reminders, signed copies)</li>
+						<li><strong>Neon</strong> — hosted PostgreSQL database; storage of all application data</li>
+						<li><strong>Vercel</strong> — application hosting, and privacy-friendly, cookie-free page-view analytics</li>
+						<li><strong>ImprovMX</strong> — forwarding of emails sent to our support address</li>
+						<li><strong>Sentry</strong> — error monitoring; receives technical details when something goes wrong in the app. It is configured not to collect cookies or store IP addresses, and it does not record your screen or sessions</li>
 					</ul>
 					<p>We do not sell, rent, or trade your personal information to any third party for marketing purposes.</p>
 
@@ -73,14 +82,15 @@ export default function PrivacyPage() {
 					</ul>
 					<p>
 						No system is 100% secure. If you believe your account has been compromised, contact us
-						immediately at <a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						immediately at <a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 
 					<h2>6. Data Retention</h2>
 					<p>
 						We retain your account and document data for as long as your account is active. If you delete
-						your account, we will delete your personal data within 30 days, except where we are required
-						to retain it for legal or financial record-keeping purposes (e.g. payment history for up to
+						your account, we anonymize your profile (name, email address, and photo) after a 30-day period.
+						Documents belong to your company workspace and are kept as described below, and we keep records
+						we are required to retain for legal or financial purposes (e.g. payment history for up to
 						7 years as required by law).
 					</p>
 					<p>
@@ -107,7 +117,7 @@ export default function PrivacyPage() {
 					</ul>
 					<p>
 						To exercise any of these rights, email us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>. We will respond within
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>. We will respond within
 						30 days.
 					</p>
 
@@ -127,9 +137,11 @@ export default function PrivacyPage() {
 
 					<h2>10. International Transfers</h2>
 					<p>
-						Your data may be stored and processed in data centers operated by our providers (including
-						AWS and Clerk) located in the United States and other countries. By using the Service, you
-						consent to this transfer. We ensure that transfers comply with applicable data protection laws.
+						Our core infrastructure is located in the European Union (Frankfurt, Germany): the application
+						servers (Vercel), the database (Neon), document storage (AWS S3), and error monitoring (Sentry).
+						Some providers process data in the United States, including Clerk (authentication), Stripe
+						(payments), and Resend (email delivery). By using the Service, you consent to this transfer.
+						We ensure that transfers comply with applicable data protection laws.
 					</p>
 
 					<h2>11. Changes to This Policy</h2>
@@ -142,7 +154,7 @@ export default function PrivacyPage() {
 					<h2>12. Contact Us</h2>
 					<p>
 						Questions or concerns about this Privacy Policy? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>

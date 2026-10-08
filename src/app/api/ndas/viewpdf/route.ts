@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
+import { isValidSignLinkToken } from '@/lib/signLink'
+import { sha256Hex } from '@/lib/signatureEvidence'
 
 export const runtime = 'nodejs'
 
@@ -32,6 +34,9 @@ export async function GET(request: NextRequest) {
         // Resolve + authorize the target draft before doing any work.
         let draftId: string
         if (signerIdParam) {
+            if (!isValidSignLinkToken(signerIdParam)) {
+                return NextResponse.json({ error: 'NDA not found' }, { status: 404 })
+            }
             // Bearer-token path: a valid signer id grants access to its own NDA only.
             const signer = await prisma.signer.findUnique({
                 where: { id: signerIdParam },
@@ -128,6 +133,25 @@ export async function GET(request: NextRequest) {
                 pdf = (await prisma.ndaPdf.findUnique({
                     where: { signRequestId_kind: { signRequestId: signRequest.id, kind: 'SIGNED' } },
                 })) ?? undefined
+
+                // A rebuilt PDF is not byte-identical to the one fingerprinted at signing
+                // (or there was none), so put the hash of THIS copy on record.
+                try {
+                    await prisma.auditEvent.create({
+                        data: {
+                            organizationId: signRequest.organizationId,
+                            draftId,
+                            eventType: 'PDF_EXPORTED',
+                            metadata: {
+                                action: 'regenerated_signed_pdf',
+                                reason: 'signed PDF was missing from storage',
+                                agreementHash: sha256Hex(pdfBuffer),
+                            },
+                        },
+                    })
+                } catch (auditError) {
+                    console.error('❌ Failed to record regenerated PDF hash:', auditError)
+                }
             } catch (regenError) {
                 console.error('❌ Failed to regenerate SIGNED PDF:', regenError)
             }

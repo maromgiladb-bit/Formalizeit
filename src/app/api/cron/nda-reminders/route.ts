@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, signReminderEmailHtml } from '@/lib/email'
+import { REMINDER_STATES, reminderMode, reminderLinkPath } from '@/lib/reminders'
 
 export const runtime = 'nodejs'
 
 /**
  * GET /api/cron/nda-reminders
  * Sends reminder emails to the receiver (Party B) of NDAs that have been sent for
- * signature but are not yet signed or declined.
+ * review or signature but are not yet signed or declined.
  *  - First reminder: 48 hours after the NDA was sent.
  *  - Second reminder: 5 days after the NDA was sent.
  * Idempotent: NdaDraft.reminder48hSentAt / reminder5dSentAt are stamped after each
@@ -31,14 +32,15 @@ export async function GET(req: Request) {
     const cutoff48h = new Date(now - 48 * HOUR) // sentAt <= this → 48h elapsed
     const cutoff5d = new Date(now - 5 * DAY) // sentAt <= this → 5 days elapsed
 
-    // Drafts that are out for signature and not yet finalized.
-    const AWAITING_STATES = ['AWAITING_PARTY_B_SIGNATURE', 'AWAITING_PARTY_A_SIGNATURE'] as const
+    // Drafts that are out with the receiver and not yet finalized. A first send leaves the
+    // draft in AWAITING_PARTY_B_REVIEW, so that state must be scanned too.
+    const AWAITING_STATES = REMINDER_STATES
 
     // Helper: find the receiver (Party B SIGNER) who still has to sign, plus the
     // sign link, for a given draft. Returns null when nobody is pending.
     type ReminderTarget = { email: string; signLink: string }
 
-    async function receiverFor(draftId: string): Promise<ReminderTarget | null> {
+    async function receiverFor(draftId: string, workflowState: string): Promise<ReminderTarget | null> {
         const signer = await prisma.signer.findFirst({
             where: {
                 signRequest: { draftId },
@@ -49,7 +51,7 @@ export async function GET(req: Request) {
             select: { id: true, email: true },
         })
         if (!signer?.email) return null
-        return { email: signer.email, signLink: `${getAppUrl()}/sign-nda-public/${signer.id}` }
+        return { email: signer.email, signLink: `${getAppUrl()}${reminderLinkPath(workflowState, signer.id)}` }
     }
 
     // ---- First reminder pass (48h) ----
@@ -59,18 +61,18 @@ export async function GET(req: Request) {
             reminder48hSentAt: null,
             sentAt: { not: null, lte: cutoff48h },
         },
-        select: { id: true, title: true, createdBy: { select: { name: true } } },
+        select: { id: true, title: true, workflowState: true, createdBy: { select: { name: true } } },
     })
 
     let sent48h = 0
     for (const draft of due48h) {
         try {
-            const target = await receiverFor(draft.id)
+            const target = await receiverFor(draft.id, draft.workflowState)
             if (!target) continue
             await sendEmail({
                 to: target.email,
-                subject: `Reminder: please sign ${draft.title || 'your NDA'}`,
-                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, false),
+                subject: `Reminder: please ${reminderMode(draft.workflowState) === 'review' ? 'review' : 'sign'} ${draft.title || 'your NDA'}`,
+                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, false, reminderMode(draft.workflowState)),
             })
             await prisma.ndaDraft.update({
                 where: { id: draft.id },
@@ -89,18 +91,18 @@ export async function GET(req: Request) {
             reminder5dSentAt: null,
             sentAt: { not: null, lte: cutoff5d },
         },
-        select: { id: true, title: true, createdBy: { select: { name: true } } },
+        select: { id: true, title: true, workflowState: true, createdBy: { select: { name: true } } },
     })
 
     let sent5d = 0
     for (const draft of due5d) {
         try {
-            const target = await receiverFor(draft.id)
+            const target = await receiverFor(draft.id, draft.workflowState)
             if (!target) continue
             await sendEmail({
                 to: target.email,
-                subject: `Second reminder: please sign ${draft.title || 'your NDA'}`,
-                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, true),
+                subject: `Second reminder: please ${reminderMode(draft.workflowState) === 'review' ? 'review' : 'sign'} ${draft.title || 'your NDA'}`,
+                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, true, reminderMode(draft.workflowState)),
             })
             await prisma.ndaDraft.update({
                 where: { id: draft.id },

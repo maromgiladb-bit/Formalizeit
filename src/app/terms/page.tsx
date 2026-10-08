@@ -43,7 +43,7 @@ export default function TermsPage() {
 					</p>
 					<p>
 						The Service is organized around company workspaces. Documents, billing, and team access are
-						managed at the company level. The person who creates a company workspace becomes the Owner and
+						managed at the company level. The person who creates a company workspace becomes the Administrator and
 						is responsible for managing members and billing.
 					</p>
 
@@ -163,7 +163,7 @@ export default function TermsPage() {
 					<h2>16. Contact</h2>
 					<p>
 						Questions about these Terms? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>

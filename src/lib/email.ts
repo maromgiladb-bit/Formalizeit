@@ -1,9 +1,19 @@
 import { Resend } from 'resend'
+import * as Sentry from '@sentry/nextjs'
 import { sanitizeForHtml } from '@/lib/sanitize'
+import type { NegotiationSummary } from '@/lib/negotiation'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000'
-const MAIL_FROM = process.env.MAIL_FROM || 'noreply@formalizeit.app'
+// Preview deployments don't get a fixed URL, so fall back to Vercel's
+// per-deployment VERCEL_URL before localhost.
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+// Fallback is the verified sending domain; Vercel should still set MAIL_FROM explicitly.
+const MAIL_FROM = process.env.MAIL_FROM || 'FormalizeIt <noreply@mail.formalizeit.com>'
+// Replies to automated emails reach a person (forwarded to the founder's inbox).
+const SUPPORT_EMAIL = 'support@formalizeit.com'
 
 export interface EmailAttachment {
   filename: string
@@ -21,53 +31,40 @@ export interface SendEmailParams {
 }
 
 export async function sendEmail({ to, subject, html, attachments, replyTo }: SendEmailParams): Promise<void> {
-  console.log('📧 sendEmail called with:', { to, subject, hasHtml: !!html, attachmentCount: attachments?.length || 0 })
-  console.log('📧 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
-  console.log('📧 MAIL_FROM:', MAIL_FROM)
-  console.log('📧 APP_URL:', APP_URL)
-
   if (!resend) {
-    console.warn('⚠️  Email not sent: RESEND_API_KEY not configured. Set it in .env to enable email notifications.')
+    const message = 'Email not sent: RESEND_API_KEY is not configured'
+    if (process.env.NODE_ENV === 'production') {
+      // A production deploy without a key must be loud: every NDA link, reminder and
+      // signed copy goes out through this function.
+      const error = new Error(message)
+      Sentry.captureException(error, { tags: { area: 'email' } })
+      throw error
+    }
+    console.warn(`⚠️  ${message}. Set it in .env.local to enable email.`)
     return
   }
 
   try {
-    console.log('📧 Attempting to send email via Resend...')
-
-    // Prepare attachments in Resend format
-    const resendAttachments = attachments?.map(att => ({
-      filename: att.filename,
-      content: att.content, // Base64 string
-      contentType: att.contentType || 'application/octet-stream'
-    }))
-
     const { data, error } = await resend.emails.send({
       from: MAIL_FROM,
       to,
       subject,
       html,
-      replyTo: replyTo || MAIL_FROM,
-      attachments: resendAttachments
+      replyTo: replyTo || SUPPORT_EMAIL,
+      attachments: attachments?.map((att) => ({
+        filename: att.filename,
+        content: att.content, // Base64 string
+        contentType: att.contentType || 'application/octet-stream',
+      })),
     })
 
-    if (error) {
-      console.error('❌ Resend API Error:', error)
-      if (error.message?.includes('You can only send testing emails')) {
-        console.error('⚠️  IMPORTANT: You are using Resend test domain (onboarding@resend.dev)')
-        console.error('⚠️  Test domain can ONLY send to your verified email address')
-        console.error('⚠️  To send to other recipients:')
-        console.error('   1. Go to https://resend.com/domains')
-        console.error('   2. Verify your own domain')
-        console.error('   3. Update MAIL_FROM in .env.local to use your domain')
-      }
-      throw new Error(error.message || 'Email sending failed')
-    }
+    if (error) throw new Error(error.message || 'Email sending failed')
 
-    console.log('✅ Email sent successfully!', data)
-    console.log('✅ Email sent to:', to)
+    console.log('✅ Email sent', data?.id)
   } catch (error) {
-    console.error('❌ Failed to send email:', error)
-    console.error('❌ Error details:', JSON.stringify(error, null, 2))
+    // Recipient addresses and message bodies are deliberately not logged.
+    console.error('❌ Failed to send email:', error instanceof Error ? error.message : error)
+    Sentry.captureException(error, { tags: { area: 'email' } })
     throw error
   }
 }
@@ -216,9 +213,52 @@ export function recipientEditEmailHtml(
       { title: 'Submit your response', desc: 'Once you are happy with the terms, submit or sign directly.' },
     ])}
     ${emailButton('Review Document', editLink)}
-    ${emailSubtext('This secure link expires after 2 weeks of inactivity. No account needed.')}
+    ${emailSubtext('This secure link expires after 14 days of inactivity. No account needed.')}
   `
   return getBaseEmailHtml('New NDA for Your Review', content)
+}
+
+/**
+ * Sent when a party finishes reviewing the other side's proposed changes and
+ * sends the NDA back — spelling out what was accepted, rejected, and countered,
+ * with a link to review and respond in the next round.
+ */
+export function negotiationReviewEmailHtml(
+  draftTitle: string,
+  actorName: string | undefined,
+  summary: NegotiationSummary,
+  reviewLink: string,
+): string {
+  const safeTitle = sanitizeForHtml(draftTitle)
+  const safeActor = sanitizeForHtml(actorName) || 'The other party'
+
+  const line = (label: string, color: string, items: string[]): string => {
+    if (!items.length) return ''
+    const chips = items.map((i) => sanitizeForHtml(i)).join(', ')
+    return `<tr><td style="padding: 6px 0; font-size: 14px; color: #374151; line-height: 1.5;">
+      <span style="display: inline-block; min-width: 84px; font-weight: 700; color: ${color};">${label}</span>${chips}
+    </td></tr>`
+  }
+
+  const anyChanges = summary.accepted.length || summary.rejected.length || summary.countered.length
+  const summaryTable = anyChanges
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0; border-top: 1px solid #f3f4f6;">
+        ${line('Accepted', '#0f766e', summary.accepted)}
+        ${line('Rejected', '#b91c1c', summary.rejected)}
+        ${line('Countered', '#92400e', summary.countered)}
+      </table>`
+    : ''
+
+  const content = `
+    ${emailAccentLabel('Changes reviewed')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeActor} reviewed your proposed changes</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">Here's how they responded. Open the document to review their response and reply.</p>
+    ${emailDocTitle(safeTitle)}
+    ${summaryTable}
+    ${emailButton('Review & respond', reviewLink)}
+    ${emailSubtext('This secure link expires after 14 days of inactivity. No account needed.')}
+  `
+  return getBaseEmailHtml('NDA changes reviewed', content)
 }
 
 export function ownerReviewEmailHtml(
@@ -303,7 +343,7 @@ export function recipientSignRequestEmailHtml(
       { title: 'Done — you will get a copy', desc: 'Once all parties sign, everyone receives the fully executed NDA by email.' },
     ])}
     ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
   return getBaseEmailHtml('Signature Request', content)
 }
@@ -312,25 +352,32 @@ export function signReminderEmailHtml(
   draftTitle: string,
   signLink: string,
   senderName?: string,
-  secondReminder = false
+  secondReminder = false,
+  mode: 'sign' | 'review' = 'sign'
 ): string {
   const safeDraftTitle = sanitizeForHtml(draftTitle)
   const safeSenderName = sanitizeForHtml(senderName)
+  const isReview = mode === 'review'
+  const waitingFor = isReview ? 'your review' : 'your signature'
   const fromLine = safeSenderName
-    ? `${safeSenderName} is still waiting on your signature.`
-    : 'This agreement is still waiting on your signature.'
+    ? `${safeSenderName} is still waiting on ${waitingFor}.`
+    : `This agreement is still waiting on ${waitingFor}.`
   const lead = secondReminder
-    ? 'It only takes a minute, and it has been a few days — please sign so this can be finalized.'
-    : 'Just a quick nudge — the NDA below is ready and only needs your signature to move forward.'
+    ? isReview
+      ? 'It only takes a few minutes, and it has been a few days — please take a look so this can move forward.'
+      : 'It only takes a minute, and it has been a few days — please sign so this can be finalized.'
+    : isReview
+      ? 'Just a quick nudge — the NDA below is ready for you to review and complete.'
+      : 'Just a quick nudge — the NDA below is ready and only needs your signature to move forward.'
   const content = `
     ${emailAccentLabel(secondReminder ? 'Second reminder' : 'Reminder')}
-    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is waiting for your signature</h2>
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">Your NDA is waiting for ${waitingFor}</h2>
     <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">${fromLine} ${lead}</p>
     ${emailDocTitle(safeDraftTitle)}
-    ${emailButton('Review and Sign', signLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailButton(isReview ? 'Review the NDA' : 'Review and Sign', signLink)}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
-  return getBaseEmailHtml('Reminder: NDA awaiting your signature', content)
+  return getBaseEmailHtml(isReview ? 'Reminder: NDA awaiting your review' : 'Reminder: NDA awaiting your signature', content)
 }
 
 export function timeToSignEmailHtml(
@@ -537,6 +584,21 @@ export function subscriptionCancelledEmailHtml(
   return getBaseEmailHtml(`Your Formalize It subscription has ended`, content)
 }
 
+export function paymentFailedEmailHtml(
+  orgName: string,
+  billingLink: string
+): string {
+  const safeOrgName = sanitizeForHtml(orgName)
+  const content = `
+    ${emailAccentLabel('Payment failed')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">We couldn't process your payment</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">The latest payment for your ${safeOrgName} subscription didn't go through. This is usually an expired card or a bank decline, and it only takes a minute to fix.</p>
+    ${emailNote('What happens next', 'We will retry the payment automatically over the next few days. If it still fails, the subscription ends and the plan moves to Free. Your signed NDAs stay stored under our retention policy.')}
+    ${emailButton('Update payment method', billingLink)}
+  `
+  return getBaseEmailHtml('Action needed: payment failed', content)
+}
+
 export function approvalRequestEmailHtml(
   draftTitle: string,
   submitterName: string,
@@ -604,7 +666,7 @@ export function inputRequestEmailHtml(
       { title: 'Submit and move forward', desc: 'Once you submit, the NDA proceeds to the signing stage.' },
     ])}
     ${emailButton('Complete My Part', inputLink)}
-    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 2 weeks of inactivity')}
+    ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
   return getBaseEmailHtml('Input Needed on NDA', content)
 }

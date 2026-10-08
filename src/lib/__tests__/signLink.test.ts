@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { newSignLinkExpiry, SIGN_LINK_TTL_MS, isSignerExpired, isDraftExpired } from '@/lib/signLink'
+import { newSignLinkExpiry, SIGN_LINK_TTL_MS, isSignerExpired, isDraftExpired, isValidSignLinkToken } from '@/lib/signLink'
+
+describe('isValidSignLinkToken', () => {
+  it('accepts a uuid, any case', () => {
+    expect(isValidSignLinkToken('7b1e2c3d-4f5a-4b6c-8d9e-0f1a2b3c4d5e')).toBe(true)
+    expect(isValidSignLinkToken('7B1E2C3D-4F5A-4B6C-8D9E-0F1A2B3C4D5E')).toBe(true)
+  })
+
+  it('rejects anything Postgres would refuse as a uuid', () => {
+    for (const bad of ['', 'test-token', '7b1e2c3d-4f5a-4b6c-8d9e', '7b1e2c3d-4f5a-4b6c-8d9e-0f1a2b3c4d5e/x', "' OR 1=1 --"]) {
+      expect(isValidSignLinkToken(bad)).toBe(false)
+    }
+  })
+})
 
 describe('SIGN_LINK_TTL_MS', () => {
   it('is a 2-week inactivity window', () => {
