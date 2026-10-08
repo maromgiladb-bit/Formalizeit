@@ -17,28 +17,33 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 | Phase | File | Owner | Status |
 |---|---|---|---|
-| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry done; Stripe, Analytics, staging DB left |
+| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry done; Stripe, Analytics left; staging DB done |
 | 1 — Finish the negotiation loop | [phase-1-negotiation.md](phase-1-negotiation.md) | Claude | ◑ code complete, browser verification pending |
 | 2 — Essential hardening | [phase-2-hardening.md](phase-2-hardening.md) | Claude | ☑ code complete (Sentry DSN is a Phase 0 item) |
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
-### Resume here (updated 2026-09-22)
+### Resume here (updated 2026-10-08)
 
-1. ☑ `npm run build` passes with the TypeScript gate on (only the pre-existing Handlebars
-   `require.extensions` warning).
-2. ☑ Counter visibility hardened — see phase 1 §1.7. The newest counter is always what the other
-   party sees; unanswered counters can no longer be dropped by sending back early.
-3. ☑ `@vercel/analytics` mounted in the root layout.
-4. ☑ Sentry installed and wired (no-op until `NEXT_PUBLIC_SENTRY_DSN` is set — see Phase 0).
-5. ☑ All work is committed (`035c2e8`, branch `feat/todolistimpl-2`); working tree clean.
-6. ☐ **Next: Phase 0.** Nothing in the codebase blocks launch — start 0.3 (Stripe activation) and
-   0.4 (Resend DNS) today, since their lead time sets the launch date. Phase 3 cleanup and the
-   Phase 1 verification matrix can run in parallel while you wait.
-7. ☑ (2026-09-25) Clerk live; Phase 3 done; launch **draft PR #18** open
-   (https://github.com/maromgiladb-bit/Formalizeit/pull/18) — `main` is 0 ahead, no schema changes.
-   Merge only after Phase 0. Remaining Phase 0: Stripe (in progress), Resend SPF + vars,
-   `CRON_SECRET`, base URLs, DB check, Gemini, S3, Sentry.
+Code is launch-ready; what is left is external setup, two product decisions and manual testing.
+Launch **draft PR #18** (https://github.com/maromgiladb-bit/Formalizeit/pull/18) stays unmerged
+until Phase 0 is done — merging it opens signups.
+
+1. ☐ **You — Phase 0:** activate Stripe (4 live prices, live webhook at
+   `https://formalizeit.com/api/webhooks/stripe`, portal plan switching) and enable Vercel
+   Analytics. Everything else in Phase 0 is done.
+2. ☐ **You — decide** the two items under [Open decisions](#open-decisions-2026-10-08):
+   free-only launch, and how to open the site.
+3. ☐ **Claude — remaining audit follow-ups** (see below): Vercel Firewall rate-limit rule, fail-fast
+   Stripe env vars, `console.log` / dead-route cleanup.
+4. ☐ **Both — Phase 1 browser matrix and Phase 4** (full flow on staging, live checkout, email round
+   trip, cron dry run, then open signups).
+
+Done since the last update: Clerk, Resend, Gemini, S3, Sentry, staging DB, domain move to the root
+`formalizeit.com` · launch-readiness audit blockers fixed (2026-10-06) · security headers and an
+automated smoke test (2026-10-08) · terms lock once an NDA is sent, and each party may only fill
+the fields it is allowed to (`e7828d6`) · state changes are gated by workflow state and replaced
+signing links are retired (`c5a8cf5`, `src/lib/ndaTransitions.ts`).
 
 ## Phase 0 — your part, and the critical path
 
@@ -139,6 +144,9 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
 - Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
   the Security / Settings pages and in Formi).
 - Legal counsel review of all seven legal pages before removing beta framing.
+- Multi-recipient send (first post-launch feature, PRO+): one shared link, up to 20 receivers,
+  each gets their own sign-only copy. Design:
+  [2026-10-06-multi-recipient-send-design.md](../superpowers/specs/2026-10-06-multi-recipient-send-design.md).
 
 ## Deferred, by decision
 

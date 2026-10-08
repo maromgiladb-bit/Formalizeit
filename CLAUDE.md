@@ -280,6 +280,17 @@ Confidence signals come after the speed hook, never before:
 
 ---
 
+## Task list — keep it current
+
+The live task list is **`docs/launch/README.md`** (with `phase-0` … `phase-4` files beside it):
+launch status, open decisions, post-MVP tasks and deferred items. Specs for planned features live in
+`docs/superpowers/specs/`.
+
+**Standing rule:** read it at the start of any task-planning conversation. In the same commit as
+any change that finishes, adds, defers or changes a task, update it — tick the item (☑ with the
+date), add new items in the right section, and refresh the "Resume here" block when the next step
+changes. A finished change that leaves the tracker stale is incomplete.
+
 ## Notes for Claude Code
 
 - This is a **production site** — be conservative with structural changes
