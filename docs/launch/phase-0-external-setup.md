@@ -95,6 +95,18 @@ billing checkout and all member management.
 
 ## 0.2 ☑ Clerk production instance
 
+> **Google sign-in app status (2026-10-08).** Google Auth Platform → Audience: publishing status is
+> **In production** (basic scopes only, so no Google review is needed for people to sign in). The
+> **branding verification** (app name/logo on the consent screen) failed earlier because Google's checker
+> saw the "coming soon" page, not a public home page, and because the Privacy Policy never described
+> Google sign-in data. Done so far: domain `formalizeit.com` verified in Google Search Console
+> (2026-10-08, via GoDaddy's one-click DNS flow); Privacy Policy now has a "Sign in with Google"
+> paragraph. ☐ **After the launch branch is live and the home page is public, and at least 24h after the
+> domain verification, open Branding → View issues and click "I have fixed the issues".** Also ☐ check
+> Data Access lists only email, profile and openid (the Privacy Policy says that is all we receive). The
+> user support email stays the founder's Gmail: Google only offers an account's own address or a Google
+> Group, and `support@formalizeit.com` is a forwarding alias, not a Google account.
+
 > **Done 2026-09-25.** Verified live: `app.formalizeit.com/sign-in` serves `pk_live_` via
 > `clerk.formalizeit.com` (valid SSL); a dashboard-created user signed in on production; Clerk
 > webhook test `user.deleted` → Succeeded.
