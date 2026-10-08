@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Great_Vibes } from 'next/font/google';
 import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
-import { AUTHORITY_CONSENT_TEXT } from '@/lib/signatureEvidence';
+import { AUTHORITY_CONSENT_TEXT } from '@/lib/authorityConsentText';
 
 const greatVibes = Great_Vibes({
     weight: '400',
