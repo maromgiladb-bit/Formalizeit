@@ -90,21 +90,25 @@ is true), placeholder contact details replaced, 48h/5d reminders now cover first
 link and wording), signed-copy link and robots/sitemap reachable signed-out, and the FREE cap no
 longer counts the draft being re-sent. Still open, roughly in priority order:
 
-- ☐ Limit error has no upgrade path: it surfaces as a plain error (HTTP 500 from `send-for-review`),
-  with no link to Plans. (~1h)
+- ☑ Limit error now has an upgrade path (2026-10-08): `PlanLimitError` -> HTTP 403 `LIMIT_REACHED`
+  from both send routes; the fill page shows an amber notice with a "See plans" button (top banner,
+  send-for-input modal, review modal, which previously showed no send errors at all). Until Stripe is
+  live, "See plans" leads to pricing that can't be bought yet.
 - ☑ Signed-PDF failures are no longer swallowed (2026-10-06): render and S3 store are retried
   (`src/lib/signedPdf.ts`), a final failure is recorded as `pdfStatus` on the SIGNED audit event and
   sent to Sentry, the PDF is still emailed when only the store failed, and a PDF rebuilt on demand
   in `viewpdf` records its own hash (`PDF_EXPORTED` event). ☐ Not yet exercised end to end: needs
   the staging DB + a real signing on Preview.
-- ☐ `sendEmail` silently skips when `RESEND_API_KEY` is unset and falls back to
-  `noreply@formalizeit.app`; make production fail loudly (or alert via Sentry). Also logs recipient
-  addresses on every send.
+- ☑ `sendEmail` is loud in production (2026-10-08): throws and reports to Sentry when
+  `RESEND_API_KEY` is missing or Resend fails; fallback `MAIL_FROM` is the verified
+  `mail.formalizeit.com` address; replies default to `support@formalizeit.com`; recipient addresses
+  are no longer logged.
 - ☐ Rate limiting is per-instance memory: add a Vercel Firewall rule for the sign, contact and
   token endpoints.
 - ☐ Missing Stripe env vars fail late (500 at checkout); a FREE-only launch would still show paid
   buttons that fail.
-- ☐ No customer email on `invoice.payment_failed`; check whether PAST_DUE still allows sending.
+- ☑ First `invoice.payment_failed` now emails the administrator (once per failure streak, not on
+  Stripe's retries). PAST_DUE keeps the plan's limits until Stripe ends the subscription.
 - ☐ Nice to have: 83 `console.log` calls on sensitive paths; delete `generate-token.js` and
   `private.key` (old DocuSign key, untracked) from disk; orphaned `internal-approve` /
   `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.

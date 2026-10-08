@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import * as Sentry from '@sentry/nextjs'
 import { sanitizeForHtml } from '@/lib/sanitize'
 import type { NegotiationSummary } from '@/lib/negotiation'
 
@@ -9,7 +10,10 @@ const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ||
   process.env.APP_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-const MAIL_FROM = process.env.MAIL_FROM || 'noreply@formalizeit.app'
+// Fallback is the verified sending domain; Vercel should still set MAIL_FROM explicitly.
+const MAIL_FROM = process.env.MAIL_FROM || 'FormalizeIt <noreply@mail.formalizeit.com>'
+// Replies to automated emails reach a person (forwarded to the founder's inbox).
+const SUPPORT_EMAIL = 'support@formalizeit.com'
 
 export interface EmailAttachment {
   filename: string
@@ -27,53 +31,40 @@ export interface SendEmailParams {
 }
 
 export async function sendEmail({ to, subject, html, attachments, replyTo }: SendEmailParams): Promise<void> {
-  console.log('📧 sendEmail called with:', { to, subject, hasHtml: !!html, attachmentCount: attachments?.length || 0 })
-  console.log('📧 RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY)
-  console.log('📧 MAIL_FROM:', MAIL_FROM)
-  console.log('📧 APP_URL:', APP_URL)
-
   if (!resend) {
-    console.warn('⚠️  Email not sent: RESEND_API_KEY not configured. Set it in .env to enable email notifications.')
+    const message = 'Email not sent: RESEND_API_KEY is not configured'
+    if (process.env.NODE_ENV === 'production') {
+      // A production deploy without a key must be loud: every NDA link, reminder and
+      // signed copy goes out through this function.
+      const error = new Error(message)
+      Sentry.captureException(error, { tags: { area: 'email' } })
+      throw error
+    }
+    console.warn(`⚠️  ${message}. Set it in .env.local to enable email.`)
     return
   }
 
   try {
-    console.log('📧 Attempting to send email via Resend...')
-
-    // Prepare attachments in Resend format
-    const resendAttachments = attachments?.map(att => ({
-      filename: att.filename,
-      content: att.content, // Base64 string
-      contentType: att.contentType || 'application/octet-stream'
-    }))
-
     const { data, error } = await resend.emails.send({
       from: MAIL_FROM,
       to,
       subject,
       html,
-      replyTo: replyTo || MAIL_FROM,
-      attachments: resendAttachments
+      replyTo: replyTo || SUPPORT_EMAIL,
+      attachments: attachments?.map((att) => ({
+        filename: att.filename,
+        content: att.content, // Base64 string
+        contentType: att.contentType || 'application/octet-stream',
+      })),
     })
 
-    if (error) {
-      console.error('❌ Resend API Error:', error)
-      if (error.message?.includes('You can only send testing emails')) {
-        console.error('⚠️  IMPORTANT: You are using Resend test domain (onboarding@resend.dev)')
-        console.error('⚠️  Test domain can ONLY send to your verified email address')
-        console.error('⚠️  To send to other recipients:')
-        console.error('   1. Go to https://resend.com/domains')
-        console.error('   2. Verify your own domain')
-        console.error('   3. Update MAIL_FROM in .env.local to use your domain')
-      }
-      throw new Error(error.message || 'Email sending failed')
-    }
+    if (error) throw new Error(error.message || 'Email sending failed')
 
-    console.log('✅ Email sent successfully!', data)
-    console.log('✅ Email sent to:', to)
+    console.log('✅ Email sent', data?.id)
   } catch (error) {
-    console.error('❌ Failed to send email:', error)
-    console.error('❌ Error details:', JSON.stringify(error, null, 2))
+    // Recipient addresses and message bodies are deliberately not logged.
+    console.error('❌ Failed to send email:', error instanceof Error ? error.message : error)
+    Sentry.captureException(error, { tags: { area: 'email' } })
     throw error
   }
 }
@@ -591,6 +582,21 @@ export function subscriptionCancelledEmailHtml(
     ${emailButton('Resubscribe', resubscribeLink)}
   `
   return getBaseEmailHtml(`Your Formalize It subscription has ended`, content)
+}
+
+export function paymentFailedEmailHtml(
+  orgName: string,
+  billingLink: string
+): string {
+  const safeOrgName = sanitizeForHtml(orgName)
+  const content = `
+    ${emailAccentLabel('Payment failed')}
+    <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">We couldn't process your payment</h2>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">The latest payment for your ${safeOrgName} subscription didn't go through. This is usually an expired card or a bank decline, and it only takes a minute to fix.</p>
+    ${emailNote('What happens next', 'We will retry the payment automatically over the next few days. If it still fails, the subscription ends and the plan moves to Free. Your signed NDAs stay stored under our retention policy.')}
+    ${emailButton('Update payment method', billingLink)}
+  `
+  return getBaseEmailHtml('Action needed: payment failed', content)
 }
 
 export function approvalRequestEmailHtml(

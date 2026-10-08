@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { stripe, planFromPriceId } from '@/lib/stripe'
-import { sendEmail, subscriptionCancelledEmailHtml, getAppUrl } from '@/lib/email'
+import { sendEmail, subscriptionCancelledEmailHtml, paymentFailedEmailHtml, getAppUrl } from '@/lib/email'
 import {
   SUBSCRIPTION_STATUS_MAP,
   getCurrentPeriodEnd,
@@ -195,8 +195,30 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     return
   }
 
+  // Stripe emits this event on every retry of the same invoice, and redelivers events,
+  // so only the first failure (the transition into PAST_DUE) emails the customer.
+  const alreadyPastDue = organization.billingStatus === 'PAST_DUE'
+
   await prisma.organization.update({
     where: { id: organization.id },
     data: { billingStatus: 'PAST_DUE' },
   })
+
+  if (alreadyPastDue) return
+
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: organization.ownerUserId },
+      select: { email: true },
+    })
+    if (owner?.email) {
+      await sendEmail({
+        to: owner.email,
+        subject: 'Action needed: your Formalize It payment failed',
+        html: paymentFailedEmailHtml(organization.name, `${getAppUrl()}/settings/billing`),
+      })
+    }
+  } catch (emailError) {
+    console.error('Failed to send payment-failed email:', emailError)
+  }
 }
