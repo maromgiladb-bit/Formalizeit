@@ -102,8 +102,8 @@ billing checkout and all member management.
 > Google sign-in data. Done so far: domain `formalizeit.com` verified in Google Search Console
 > (2026-10-08, via GoDaddy's one-click DNS flow); Privacy Policy now has a "Sign in with Google"
 > paragraph. ☐ **After the launch branch is live and the home page is public, and at least 24h after the
-> domain verification, open Branding → View issues and click "I have fixed the issues".** Also ☐ check
-> Data Access lists only email, profile and openid (the Privacy Policy says that is all we receive). The
+> domain verification, open Branding → View issues and click "I have fixed the issues".** Also ☑ Data Access checked
+> 2026-10-08: no non-sensitive or sensitive scopes are declared beyond the implicit openid/email/profile, matching the Privacy Policy. The
 > user support email stays the founder's Gmail: Google only offers an account's own address or a Google
 > Group, and `support@formalizeit.com` is a forwarding alias, not a Google account.
 
