@@ -7,6 +7,7 @@ import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
 import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { newSignLinkExpiry } from '@/lib/signLink'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 
 /**
  * Send NDA for Party B review
@@ -66,14 +67,31 @@ export async function POST(request: NextRequest) {
         // Check for existing SignRequest or create new one
         let signRequest = await prisma.signRequest.findFirst({
             where: { draftId: draftId },
-            include: { signers: true }
+            orderBy: { createdAt: 'desc' },
+            include: { signers: { orderBy: { createdAt: 'desc' } } }
         })
+
+        const blockedReason = transitionBlockedReason('send_for_review', {
+            status: draft.status,
+            workflowState: draft.workflowState,
+            signers: signRequest?.signers,
+        })
+        if (blockedReason) {
+            return NextResponse.json({ error: blockedReason, code: 'INVALID_STATE' }, { status: 409 })
+        }
 
         let signer
 
         if (signRequest) {
             // Update existing signer or create if not exists
-            signer = signRequest.signers.find(s => s.role === 'SIGNER')
+            signer = signRequest.signers.find(s => s.role === 'SIGNER' && s.status !== 'DECLINED')
+            if (signer && signer.email.toLowerCase() !== String(recipientEmail).trim().toLowerCase()) {
+                // Recipient changed: retire the old link (DECLINED is terminal and
+                // never reopened by resend/reminders) and issue a new one, so the
+                // first, wrong recipient can't act on this NDA.
+                await prisma.signer.update({ where: { id: signer.id }, data: { status: 'DECLINED' } })
+                signer = undefined
+            }
             if (signer) {
                 signer = await prisma.signer.update({
                     where: { id: signer.id },

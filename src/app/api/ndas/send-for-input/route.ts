@@ -7,6 +7,7 @@ import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
 import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { newSignLinkExpiry } from '@/lib/signLink'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 
 /**
  * Send NDA for Party B input (not signature)

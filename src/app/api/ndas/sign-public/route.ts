@@ -11,6 +11,8 @@ import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityCon
 import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink';
 import * as Sentry from '@sentry/nextjs';
 import { produceSignedPdf, type SignedPdfStatus } from '@/lib/signedPdf';
+import { signerLinkBlockedReason } from '@/lib/ndaTransitions';
+import { isNdaFinalized } from '@/lib/ndaLifecycle';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -79,6 +81,20 @@ export async function POST(request: NextRequest) {
                 },
                 { status: 410 }
             );
+        }
+
+        // Replaced links (recipient changed, NDA re-sent) and closed NDAs can't sign.
+        const latestSignRequest = await prisma.signRequest.findFirst({
+            where: { draftId: signer.signRequest.draftId },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+        });
+        const linkBlocked = signerLinkBlockedReason(signer, latestSignRequest?.id, signer.signRequest.draft);
+        if (linkBlocked) {
+            return NextResponse.json({ error: linkBlocked, status: 'INACTIVE' }, { status: 410 });
+        }
+        if (isNdaFinalized(signer.signRequest.draft)) {
+            return NextResponse.json({ error: 'This NDA has already been completed.', status: 'COMPLETE' }, { status: 409 });
         }
 
         // Activity: signing in progress — keep the counterparty's link alive too.

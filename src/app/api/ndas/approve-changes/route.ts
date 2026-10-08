@@ -5,6 +5,7 @@ import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts } from '@/lib/organizationRoles'
 import { applyNegotiationRound, pendingSuggestionsFromRevision, type SuggestionResponses } from '@/lib/negotiation'
 import { persistNegotiationRound } from '@/lib/negotiationRound'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 import { sendEmail, getAppUrl, negotiationReviewEmailHtml } from '@/lib/email'
 
 /**
@@ -80,8 +81,13 @@ export async function POST(request: NextRequest) {
 
         // Only answer a round the counterparty is actually waiting on — never a
         // signed or completed NDA.
-        if (existingDraft.workflowState !== 'AWAITING_PARTY_A_REVIEW') {
-            return NextResponse.json({ error: 'This NDA is not waiting for your review' }, { status: 409 })
+        const blockedReason = transitionBlockedReason('approve_changes', {
+            status: existingDraft.status,
+            workflowState: existingDraft.workflowState,
+            signers: existingDraft.signRequests[0]?.signers,
+        })
+        if (blockedReason) {
+            return NextResponse.json({ error: blockedReason, code: 'INVALID_STATE' }, { status: 409 })
         }
 
         const signRequest = existingDraft.signRequests[0]

@@ -5,6 +5,7 @@ import { sendEmail, getAppUrl, partyARequestChangesEmailHtml } from '@/lib/email
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts } from '@/lib/organizationRoles'
 import { refreshSignLinkExpiryForDraft } from '@/lib/signLink'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 
 /**
  * Request changes from Party B
@@ -64,6 +65,15 @@ export async function POST(request: NextRequest) {
 
         if (!draft) {
             return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+        }
+
+        const blockedReason = transitionBlockedReason('request_changes', {
+            status: draft.status,
+            workflowState: draft.workflowState,
+            signers: draft.signRequests[0]?.signers,
+        })
+        if (blockedReason) {
+            return NextResponse.json({ error: blockedReason, code: 'INVALID_STATE' }, { status: 409 })
         }
 
         const latestSignRequest = draft.signRequests[0]

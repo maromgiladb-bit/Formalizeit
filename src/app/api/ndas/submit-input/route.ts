@@ -5,6 +5,7 @@ import { createNotificationsForOrgSigners } from '@/lib/notifications'
 import { newSignLinkExpiry } from '@/lib/signLink'
 import { applyNegotiationRound, pendingSuggestionsFromRevision, receiverFillableFields, type SuggestionResponses } from '@/lib/negotiation'
 import { persistNegotiationRound } from '@/lib/negotiationRound'
+import { signerLinkBlockedReason } from '@/lib/ndaTransitions'
 import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 
 /**
@@ -47,6 +48,20 @@ export async function POST(request: NextRequest) {
 
         const draft = signer.signRequest.draft
         const isPartyA = signer.role === 'SENDER';
+
+        // Replaced links (recipient changed, NDA re-sent) and closed NDAs can't submit.
+        const latestSignRequest = await prisma.signRequest.findFirst({
+            where: { draftId: draft.id },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+        })
+        const linkBlocked = signerLinkBlockedReason(signer, latestSignRequest?.id, draft)
+        if (linkBlocked) {
+            return NextResponse.json({ error: linkBlocked }, { status: 410 })
+        }
+        if (signer.expiresAt && signer.expiresAt < new Date()) {
+            return NextResponse.json({ error: 'This NDA link has expired. Please contact the sender to have it resent.' }, { status: 410 })
+        }
 
         // Verify draft is in correct state
         const allowedStates = ['AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT', 'DRAFT', 'AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_A_SIGNATURE']
