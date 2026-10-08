@@ -114,6 +114,21 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
   `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.
 - ☐ Unverified: full `npm run build`; whether the Stripe client throws at import without a key.
 
+## Open decisions (2026-10-08)
+
+- ☐ **Free-only launch (no Stripe at launch) — decide later; judged too big a change for now.** Feasible,
+  ~2-3h: a `PAID_PLANS_ENABLED` switch like `FORMI_ENABLED`; pricing section shows "Coming soon" for Pro
+  and Team; billing/team/dashboard upgrade prompts hidden; the limit notice's "See plans" becomes a
+  "contact us" link; the 8 Stripe API routes refuse while off; FAQ/Help copy adjusted. **Must also make
+  `src/lib/stripe.ts` lazy:** `new Stripe(process.env.STRIPE_SECRET_KEY!)` throws on import when the key
+  is missing (verified), which would crash those routes in a Stripe-less production. Needs a product call
+  on the FREE cap, which dead-ends after 3 NDAs with nothing to buy: raise it temporarily, keep 3 with a
+  contact-us route, or add a waitlist. Only worth doing if Stripe activation would otherwise set the
+  launch date.
+- ☐ **How to open the site:** gate switch (`PRIVATE_BETA` env var, merge early, open later) vs one merge
+  at launch. Today `main` gates the public site behind `/coming-soon` and the launch branch removes
+  the gate, so merging PR #18 as-is opens signups. `/signup` is public on both.
+
 ## Post-MVP tasks (decided during launch setup)
 
 - `support@formalizeit.com` now exists (2026-10-06): ImprovMX free forwarding to the founder's
