@@ -353,6 +353,12 @@ link point at production.
 - ☑ Vercel: `formalizeit.com` added (Production, apex not redirected to www — www still points at
   GoDaddy's old parking page, harmless, fix later if wanted); `app.formalizeit.com` now a 308
   redirect to `formalizeit.com` (old links keep working).
+- ☑ Defensive domains (2026-10-08): `formalizeit.net`, `formalizeit.co` and `formalizit.com` (typo) are
+  forwarded to `https://formalizeit.com` with GoDaddy's Forward Domain (GoDaddy said up to 1h-48h to
+  propagate; `formalizeit.net` still served GoDaddy's parking page at 11:36 UTC, recheck). Plain-http
+  visits redirect cleanly; https on these may show a certificate warning first. ☐ Confirm each has
+  auto-renew and Domain Lock on. Main domain `formalizeit.com`: auto-renew on, Domain Lock on, Domain
+  Privacy on, renews Dec 3, 2026.
 - ☑ GoDaddy: root `A @` record repointed from GoDaddy's parking page to Vercel's `216.150.1.1`.
 - ☑ The three base-URL vars (`APP_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BASE_URL`) updated to
   `https://formalizeit.com`, Production only. (`NEXT_PUBLIC_WEB_URL` also exists, Production —
