@@ -71,6 +71,17 @@ billing checkout and all member management.
      Claude**; do not run `migrate reset` (it drops the database).
 4. Close the terminal so the env var is gone.
 
+> **Staging database done, 2026-10-08.** The Neon project (`FormalizeIt`, Frankfurt, Free plan) already
+> had a second branch, **`development`** (child of `production`, created ~July), so it was reused as
+> staging instead of creating a new one. Production host `ep-wild-sea-aglnn451`; development host
+> `ep-falling-sound-agy7ghz6`. `prisma migrate status` against development: **25 migrations, schema up
+> to date**. The development pooled string is now in the laptop's `.env.local` **and** `.env` (Prisma
+> CLI reads `.env`, Next reads `.env.local`; both previously held the production URL, so the laptop no
+> longer has it) and in Vercel `DATABASE_URL` scoped to **Preview** only (Secret, no surrounding
+> quotes, must start with `postgresql://`; a pasted `psql '…'` snippet breaks it). Production's
+> `DATABASE_URL` is untouched. ☐ Acceptance: the next Preview deployment connects (env var changes only
+> apply to new builds).
+
 ### Also: create the staging database
 
 5. Neon console → production project → **Branches** → **Create branch** from `main`, name it
