@@ -68,7 +68,7 @@ FormalizeIt helps teams send a legally-ready NDA in minutes using a single stand
 When the recipient replies to or returns an NDA, updates go back to the person who actually sent it (email replies reach the sender directly), not just an admin.
 
 # Document status flow
-draft → sent → signed. Between "sent" and "signed" the NDA can go back and forth with the other party in review rounds (see below). There is no internal company approval step — any teammate can send; only the final signature needs a signer.
+draft → sent → signed. Between "sent" and "signed" the NDA can go back and forth with the other party in review rounds (see below). Once an NDA is sent, its terms can no longer be edited directly — any change goes through a review round the other party sees, and a signed NDA can't be changed or re-sent. The receiver can only fill in the details the sender asked them for; anything else they want changed must be suggested. If the sender re-sends to a corrected email address before anyone signs, the earlier link stops working. There is no internal company approval step — any teammate can send; only the final signature needs a signer.
 
 # Reviewing, negotiating, and signing
 When a party reviews the other side's proposed changes, they can accept, reject, or counter each one. You can only proceed to sign once you've accepted all changes — signing means you agree to the current terms. Any rejection or counter sends the NDA back to the other party (with an email summarizing what was accepted, rejected, and countered) for another round, so negotiation can repeat until both sides agree. On the dashboard, "Your turn: review/sign" means an NDA needs your action, while "Waiting on them" means you're waiting on the other party.
