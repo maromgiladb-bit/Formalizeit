@@ -385,11 +385,11 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 
 ---
 
-## 0.8 ◑ Error monitoring and analytics
+## 0.8 ☑ Error monitoring and analytics
 
 ### Sentry
 
-> **Done 2026-10-06 (Analytics still open).** Organization `formalizeit`, project `formalizeit`,
+> **Done 2026-10-06 (Vercel Analytics enabled 2026-10-08).** Organization `formalizeit`, project `formalizeit`,
 > **EU data region** (DSN host `ingest.de.sentry.io`). Org-level **Prevent Storing of IP
 > Addresses**, **Data Scrubber** and **Require Using Default Scrubbers** are on (the Privacy Policy
 > promises this). `NEXT_PUBLIC_SENTRY_DSN` is a **Config** (not Secret) var for Production +
@@ -410,6 +410,9 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 4. Sentry → **Alerts** → create one rule: "new issue → email me". Default is fine.
 
 ### Vercel Analytics
+
+> **Done 2026-10-08.** Enabled in the Vercel dashboard. ☐ Acceptance: page views appear after the
+> launch branch deploys (`main` still serves the private-beta gate).
 
 1. Vercel → Project → **Analytics** tab → **Enable**. The `<Analytics />` component is already in
    the root layout; page views appear within minutes of the next deploy.

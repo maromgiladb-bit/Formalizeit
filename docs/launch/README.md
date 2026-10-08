@@ -17,7 +17,7 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 | Phase | File | Owner | Status |
 |---|---|---|---|
-| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry done; Stripe, Analytics left; staging DB done |
+| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry, Vercel Analytics, staging DB done; Stripe left |
 | 1 — Finish the negotiation loop | [phase-1-negotiation.md](phase-1-negotiation.md) | Claude | ◑ code complete, browser verification pending |
 | 2 — Essential hardening | [phase-2-hardening.md](phase-2-hardening.md) | Claude | ☑ code complete (Sentry DSN is a Phase 0 item) |
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
@@ -30,8 +30,8 @@ Launch **draft PR #18** (https://github.com/maromgiladb-bit/Formalizeit/pull/18)
 until Phase 0 is done — merging it opens signups.
 
 1. ☐ **You — Phase 0:** activate Stripe (4 live prices, live webhook at
-   `https://formalizeit.com/api/webhooks/stripe`, portal plan switching) and enable Vercel
-   Analytics. Everything else in Phase 0 is done.
+   `https://formalizeit.com/api/webhooks/stripe`, portal plan switching). Everything else in
+   Phase 0 is done (Vercel Analytics enabled 2026-10-08).
 2. ☐ **You — decide** the two items under [Open decisions](#open-decisions-2026-10-08):
    free-only launch, and how to open the site.
 3. ☐ **Claude — remaining audit follow-ups** (see below): Vercel Firewall rate-limit rule, fail-fast

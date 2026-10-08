@@ -286,10 +286,17 @@ The live task list is **`docs/launch/README.md`** (with `phase-0` … `phase-4` 
 launch status, open decisions, post-MVP tasks and deferred items. Specs for planned features live in
 `docs/superpowers/specs/`.
 
-**Standing rule:** read it at the start of any task-planning conversation. In the same commit as
-any change that finishes, adds, defers or changes a task, update it — tick the item (☑ with the
-date), add new items in the right section, and refresh the "Resume here" block when the next step
-changes. A finished change that leaves the tracker stale is incomplete.
+**Standing rule (every session):**
+- **New task → write it down immediately.** Whenever a session adds a task — the user asks for
+  something to be done later, a decision creates follow-up work, or a review/bug hunt finds
+  something not fixed right away — add it to the tracker in the right section (launch phase, open
+  decisions, post-MVP, or deferred) before the session ends, even if no code changed. Tasks that
+  live only in chat are lost.
+- **Task finished or changed → tick it** (☑ with the date) in the same commit as the change, or
+  mark it ⊘ deferred with the reason.
+- **Next step changed → refresh the "Resume here" block.**
+- Read the tracker at the start of any planning conversation. A finished change that leaves the
+  tracker stale is incomplete.
 
 ## Notes for Claude Code
 
