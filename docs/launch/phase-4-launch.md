@@ -2,6 +2,24 @@
 
 **Owner: both.** Nothing here starts until Phases 0–2 are done.
 
+> **Decision 2026-10-08:** the manual click-through checks (4.1 here, plus the Phase 1 negotiation
+> matrix) are deferred until **right before release**; the other launch work continues first.
+>
+> **Automated smoke test, run by Claude 2026-10-08** (production build + `next start`, staging DB):
+> - `npm run build` passes (only the known Handlebars `require.extensions` warning, server-side).
+> - 17 public pages return 200; `/dashboard`, `/settings`, `/fillndahtml`, `/templates` redirect to
+>   sign-in; protected APIs return 401; dev-only routes (`/mydrafts`, `/api/debug`, `/api/test`,
+>   `/api/dev/*`, `/fillndahtml-public/dev`) return 404 in production mode; fake sign/fill tokens
+>   return 404 (never 500); all four crons return 401 without the secret; unsigned Stripe webhook 400.
+> - Content checks: no fake contact details, no SOC 2 / ISO / AES-256 claims, no `formalizeit.app`;
+>   Privacy mentions ImprovMX and Frankfurt.
+> - Found and fixed: no security headers (now X-Frame-Options, nosniff, Referrer-Policy), and the
+>   signing page shipped Handlebars to the browser (page code 159 kB -> 5.8 kB).
+> - Not covered (needs a signed-in session, or secrets that exist only on Vercel): the actual
+>   create -> send -> fill -> sign -> PDF flow, Clerk webhook (local env has no secret), contact form
+>   (local env has no `CONTACT_INBOX`), Stripe checkout.
+> - Minor, left as is: signed-out visitors who hit an unknown URL are sent to sign-in instead of a 404.
+
 ---
 
 ## 4.1 ☐ Full flow on staging
