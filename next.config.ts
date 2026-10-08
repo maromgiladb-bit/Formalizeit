@@ -21,6 +21,23 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ['stripe'],
+  poweredByHeader: false,
+  // Conservative headers only. No Content-Security-Policy yet: it needs careful allowances for
+  // Clerk, Stripe, Sentry and Vercel, and a wrong one breaks sign-in or checkout.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          // The signing and review pages must not be framed by other sites (clickjacking).
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // Signing links carry the credential in the path; never leak it in a Referer.
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // Keep server-only PDF tooling out of the client bundle
     if (!isServer) {
