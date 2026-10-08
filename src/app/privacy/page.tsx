@@ -9,7 +9,7 @@ export default function PrivacyPage() {
 			<PageHero
 				icon={Shield}
 				title="Privacy Policy"
-				subtitle="Last updated: September 29, 2026"
+				subtitle="Last updated: October 8, 2026"
 			/>
 
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -25,12 +25,18 @@ export default function PrivacyPage() {
 					<h2>2. Information We Collect</h2>
 					<h3>Information you provide directly</h3>
 					<ul>
-						<li><strong>Account data:</strong> Name, email address, and password (managed through Clerk authentication)</li>
+						<li><strong>Account data:</strong> Name, email address, and password (managed through Clerk authentication). If you choose to sign in with Google, we receive your name, email address, and profile photo from your Google account instead of a password</li>
 						<li><strong>Company data:</strong> Company name and workspace settings you configure</li>
 						<li><strong>Document content:</strong> The NDA text, filled-in variables, party names, addresses, and other fields you enter when creating documents</li>
 						<li><strong>Signature data:</strong> Electronic signatures collected through the signing flow, including the signer's name and timestamp</li>
 						<li><strong>Payment data:</strong> Billing information is collected and stored by Stripe — we do not store your full card number on our servers</li>
 					</ul>
+					<p>
+						<strong>Sign in with Google.</strong> If you sign in with Google, Google shares your name, email
+						address, and profile photo with us through our authentication provider. We use this information
+						only to create, secure, and identify your account. We do not access your Gmail, contacts, Google
+						Drive, or any other Google data, and we do not use or share Google user data for advertising.
+					</p>
 					<h3>Information collected automatically</h3>
 					<ul>
 						<li><strong>Usage data:</strong> Pages visited, actions taken (e.g. draft created, NDA sent), and session duration</li>
@@ -53,7 +59,7 @@ export default function PrivacyPage() {
 					<h2>4. Third-Party Service Providers</h2>
 					<p>We use the following trusted third-party services to operate the platform. Each is bound by its own privacy and security obligations:</p>
 					<ul>
-						<li><strong>Clerk</strong> — user authentication and identity management</li>
+						<li><strong>Clerk</strong> — user authentication and identity management, including sign-in with Google</li>
 						<li><strong>Stripe</strong> — payment processing and subscription billing</li>
 						<li><strong>Amazon Web Services (S3)</strong> — storage of signed PDF documents and uploaded files</li>
 						<li><strong>Resend</strong> — transactional email delivery (round notifications, reminders, signed copies)</li>
