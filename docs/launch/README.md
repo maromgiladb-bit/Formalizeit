@@ -43,7 +43,8 @@ Done since the last update: Clerk, Resend, Gemini, S3, Sentry, staging DB, domai
 `formalizeit.com` · launch-readiness audit blockers fixed (2026-10-06) · security headers and an
 automated smoke test (2026-10-08) · terms lock once an NDA is sent, and each party may only fill
 the fields it is allowed to (`e7828d6`) · state changes are gated by workflow state and replaced
-signing links are retired (`c5a8cf5`, `src/lib/ndaTransitions.ts`).
+signing links are retired (`c5a8cf5`, `src/lib/ndaTransitions.ts`) · each signature is recorded
+atomically under a row lock, with its evidence row in the same transaction (`7880e84`).
 
 ## Phase 0 — your part, and the critical path
 
@@ -118,6 +119,25 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
   `private.key` (old DocuSign key, untracked) from disk; orphaned `internal-approve` /
   `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.
 - ☐ Unverified: full `npm run build`; whether the Stripe client throws at import without a key.
+
+Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above), in priority order:
+
+- ☐ H4: deleting the last administrator's account leaves the company with no administrator while
+  Stripe keeps billing (`src/app/api/user/account/route.ts`, Clerk `user.deleted` webhook).
+- ☐ H5: `viewpdf` regeneration passes `draft.templateId` (a placeholder DB row) instead of
+  `content.templateId` and skips the `party_a`→`party_1` mapping, so rebuilding a missing signed PDF
+  always fails.
+- ☐ Schema drift: add `@@index([organizationId, status, sentAt])` to `NdaDraft` and `@db.Timestamptz`
+  to `stripeCurrentPeriodEnd`, or the next `prisma migrate dev` drops/converts them.
+- ☐ M1: send limit is check-then-act (race) and deleting an expired NDA frees a FREE slot.
+- ☐ M2: Stripe webhook has no event-id dedupe and doesn't check the subscription id matches the
+  company's.
+- ☐ M3: retention cleanup can delete without the 30-day notice, leaves `NdaRevision` content behind,
+  and skips completed NDAs with no `completedAt` (backfill on production).
+- ☐ M4/M5/M6: lowercase emails on write + `lower(email)` unique index; set `isSigner` for every new
+  administrator; `storeNdaPdf.ts` should use the shared Prisma client.
+- ☐ Before deploy: on production, count in-flight NDAs with more than one SignRequest (the new
+  "latest link only" check would refuse an active link on an older one).
 
 ## Open decisions (2026-10-08)
 
