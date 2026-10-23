@@ -168,7 +168,7 @@ model Organization {
   stripeCustomerId       String?       @unique @map("stripe_customer_id")
   stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
   stripePriceId          String?       @map("stripe_price_id")
-  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end")
+  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end") @db.Timestamptz
   cancelAtPeriodEnd      Boolean       @default(false) @map("cancel_at_period_end")
   settings               Json?         @default("{}")
   createdAt     DateTime      @default(now()) @map("created_at")
@@ -289,6 +289,7 @@ model NdaDraft {
   @@index([createdByUserId])
   @@index([organizationId])
   @@index([templateId])
+  @@index([organizationId, status, sentAt], map: "nda_drafts_org_status_sent_at_idx")
   @@map("nda_drafts")
 }
 
