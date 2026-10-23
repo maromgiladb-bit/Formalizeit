@@ -17,34 +17,40 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 | Phase | File | Owner | Status |
 |---|---|---|---|
-| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry, Vercel Analytics, staging DB done; Stripe left |
+| 0 — External setup (Clerk/Stripe/Resend/DB) | [phase-0-external-setup.md](phase-0-external-setup.md) | **You** | ◑ Clerk, Resend setup, Gemini, S3, domain move, cron secret, `fra1` region, Sentry, Vercel Analytics, staging DB done; Stripe ⊘ deferred to after the free-beta launch (2026-10-23) |
 | 1 — Finish the negotiation loop | [phase-1-negotiation.md](phase-1-negotiation.md) | Claude | ◑ code complete, browser verification pending |
 | 2 — Essential hardening | [phase-2-hardening.md](phase-2-hardening.md) | Claude | ☑ code complete (Sentry DSN is a Phase 0 item) |
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
-### Resume here (updated 2026-10-08)
+### Resume here (updated 2026-10-23)
 
-Code is launch-ready; what is left is external setup, two product decisions and manual testing.
-Launch **draft PR #18** (https://github.com/maromgiladb-bit/Formalizeit/pull/18) stays unmerged
-until Phase 0 is done — merging it opens signups.
+Launch plan changed 2026-10-23: Stripe can't be activated yet, so the MVP launches as a **free
+beta** (paid plans off, no 3-NDA limit), behind a **site gate** so production can be tested closed
+before signups open. Both are switches. Plans to review:
+[free beta](../superpowers/specs/2026-10-23-free-beta-design.md) ·
+[site gate](../superpowers/specs/2026-10-23-site-gate-design.md).
 
-1. ☐ **You — Phase 0:** activate Stripe (4 live prices, live webhook at
-   `https://formalizeit.com/api/webhooks/stripe`, portal plan switching). Everything else in
-   Phase 0 is done (Vercel Analytics enabled 2026-10-08).
-2. ☐ **You — decide** the two items under [Open decisions](#open-decisions-2026-10-08):
-   free-only launch, and how to open the site.
-3. ☐ **Claude — remaining audit follow-ups** (see below): Vercel Firewall rate-limit rule, fail-fast
-   Stripe env vars, `console.log` / dead-route cleanup.
-4. ☐ **Both — Phase 1 browser matrix and Phase 4** (full flow on staging, live checkout, email round
-   trip, cron dry run, then open signups).
+1. ☐ **You — review both plans** and answer their questions.
+2. ☐ **You — Clerk dashboard:** add `{"email": "{{user.primary_email_address}}"}` to the session
+   token on both instances (needed by the site gate).
+3. ☐ **Claude — build** the free-beta switch and the site gate once the plans are approved.
+4. ☐ **Merge, in this order** (see [Merge plan](#merge-plan-2026-10-23)): integrate branch
+   `launch-fixes` → `feat/todolistimpl-2`; build both switches; set Vercel Production env vars; run
+   `prisma migrate deploy` on production; merge PR #18 (site stays closed); test on production;
+   flip `PRIVATE_BETA=off`.
+5. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on closed production.
+6. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
 
 Done since the last update: Clerk, Resend, Gemini, S3, Sentry, staging DB, domain move to the root
 `formalizeit.com` · launch-readiness audit blockers fixed (2026-10-06) · security headers and an
 automated smoke test (2026-10-08) · terms lock once an NDA is sent, and each party may only fill
 the fields it is allowed to (`e7828d6`) · state changes are gated by workflow state and replaced
 signing links are retired (`c5a8cf5`, `src/lib/ndaTransitions.ts`) · each signature is recorded
-atomically under a row lock, with its evidence row in the same transaction (`7880e84`).
+atomically under a row lock, with its evidence row in the same transaction (`7880e84`) · branch
+`launch-fixes` (2026-10-23): Stripe webhook idempotency and ownership checks, schema drift,
+last-administrator protection, signed-PDF regeneration, lazy Stripe client, claim/viewpdf rate
+limits, Vercel Firewall runbook.
 
 ## Phase 0 — your part, and the critical path
 
@@ -109,29 +115,37 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
   `RESEND_API_KEY` is missing or Resend fails; fallback `MAIL_FROM` is the verified
   `mail.formalizeit.com` address; replies default to `support@formalizeit.com`; recipient addresses
   are no longer logged.
-- ☐ Rate limiting is per-instance memory: add a Vercel Firewall rule for the sign, contact and
-  token endpoints.
-- ☐ Missing Stripe env vars fail late (500 at checkout); a FREE-only launch would still show paid
-  buttons that fail.
+- ◑ Rate limiting is per-instance memory. ☑ Runbook written (2026-10-23): "Vercel Firewall
+  rate-limit rules" in [phase-2-hardening.md](phase-2-hardening.md) (6 rules, log first then deny;
+  Hobby plans get only 1 rate-limit rule). ☑ `/api/claim` and `/api/ndas/viewpdf` now have in-code
+  limits too. ☐ **You:** create the rules in the Vercel dashboard (rate limits can't be set in
+  `vercel.json`).
+- ☑ Missing Stripe env vars no longer crash (2026-10-23): `src/lib/stripe.ts` is a lazy
+  `getStripe()` with `isStripeConfigured()`; billing routes and the webhook answer 503
+  `BILLING_UNAVAILABLE` when Stripe isn't set up; the build passes with no Stripe vars. Hiding the
+  paid buttons is part of the free-beta switch.
 - ☑ First `invoice.payment_failed` now emails the administrator (once per failure streak, not on
   Stripe's retries). PAST_DUE keeps the plan's limits until Stripe ends the subscription.
 - ☐ Nice to have: 83 `console.log` calls on sensitive paths; delete `generate-token.js` and
   `private.key` (old DocuSign key, untracked) from disk; orphaned `internal-approve` /
   `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.
-- ☐ Unverified: full `npm run build`; whether the Stripe client throws at import without a key.
+- ☑ Full `npm run build` passes on branch `launch-fixes` (2026-10-23), also with no Stripe env vars set.
 
 Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above), in priority order:
 
-- ☐ H4: deleting the last administrator's account leaves the company with no administrator while
-  Stripe keeps billing (`src/app/api/user/account/route.ts`, Clerk `user.deleted` webhook).
-- ☐ H5: `viewpdf` regeneration passes `draft.templateId` (a placeholder DB row) instead of
-  `content.templateId` and skips the `party_a`→`party_1` mapping, so rebuilding a missing signed PDF
-  always fails.
-- ☐ Schema drift: add `@@index([organizationId, status, sentAt])` to `NdaDraft` and `@db.Timestamptz`
-  to `stripeCurrentPeriodEnd`, or the next `prisma migrate dev` drops/converts them.
-- ☐ M1: send limit is check-then-act (race) and deleting an expired NDA frees a FREE slot.
-- ☐ M2: Stripe webhook has no event-id dedupe and doesn't check the subscription id matches the
-  company's.
+- ☑ H4 (2026-10-23): self-deletion is refused (409) while the user is the only administrator of a
+  company with other members; the Clerk `user.deleted` webhook promotes the longest-standing member
+  instead. A sole member with an active subscription is reported to Sentry for manual cancel
+  (`src/lib/accountDeletion.ts`). Not exercised against a database.
+- ☑ H5 (2026-10-23): `viewpdf` regeneration uses `content.templateId` and the same field mapping as
+  signing (shared `src/lib/signedTemplateData.ts`).
+- ☑ Schema drift (2026-10-23): index and `@db.Timestamptz` added to `schema.prisma`.
+- ☐ M1: send limit is check-then-act (race) and deleting an expired NDA frees a FREE slot. Lower
+  priority while the free beta removes the FREE limit.
+- ☑ M2 (2026-10-23): Stripe webhook ignores repeated events (new `stripe_events` table, migration
+  `20260707000000_add_stripe_events`) and skips subscription events for a subscription the company
+  doesn't own; an unknown price no longer grants PRO. ☐ **The migration must run on production
+  (`prisma migrate deploy`) before this code deploys**, or every webhook call fails.
 - ☐ M3: retention cleanup can delete without the 30-day notice, leaves `NdaRevision` content behind,
   and skips completed NDAs with no `completedAt` (backfill on production).
 - ☐ M4/M5/M6: lowercase emails on write + `lower(email)` unique index; set `isSigner` for every new
@@ -141,18 +155,32 @@ Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above),
 
 ## Open decisions (2026-10-08)
 
-- ☐ **Free-only launch (no Stripe at launch) — decide later; judged too big a change for now.** Feasible,
-  ~2-3h: a `PAID_PLANS_ENABLED` switch like `FORMI_ENABLED`; pricing section shows "Coming soon" for Pro
-  and Team; billing/team/dashboard upgrade prompts hidden; the limit notice's "See plans" becomes a
-  "contact us" link; the 8 Stripe API routes refuse while off; FAQ/Help copy adjusted. **Must also make
-  `src/lib/stripe.ts` lazy:** `new Stripe(process.env.STRIPE_SECRET_KEY!)` throws on import when the key
-  is missing (verified), which would crash those routes in a Stripe-less production. Needs a product call
-  on the FREE cap, which dead-ends after 3 NDAs with nothing to buy: raise it temporarily, keep 3 with a
-  contact-us route, or add a waitlist. Only worth doing if Stripe activation would otherwise set the
-  launch date.
-- ☐ **How to open the site:** gate switch (`PRIVATE_BETA` env var, merge early, open later) vs one merge
-  at launch. Today `main` gates the public site behind `/coming-soon` and the launch branch removes
-  the gate, so merging PR #18 as-is opens signups. `/signup` is public on both.
+- ☑ **Free-only launch — decided 2026-10-23: yes**, as a free beta with the FREE 3-NDA limit
+  removed, behind a `NEXT_PUBLIC_PAID_PLANS_ENABLED` switch (unset = free beta). ☐ Plan awaiting
+  review: [2026-10-23-free-beta-design.md](../superpowers/specs/2026-10-23-free-beta-design.md). The
+  lazy Stripe client it needs is done.
+- ☑ **How to open the site — decided 2026-10-23: a gate switch** (`PRIVATE_BETA`, unset = closed in
+  production builds, with an invite list `PRIVATE_BETA_EMAILS`). ☐ Plan awaiting review:
+  [2026-10-23-site-gate-design.md](../superpowers/specs/2026-10-23-site-gate-design.md).
+
+## Merge plan (2026-10-23)
+
+PR #18 (`feat/todolistimpl-2` → `main`) hasn't been merged since the September lifecycle rework;
+the branch is far ahead of `main`. Merge it as soon as the site gate exists, not at launch:
+merging opens nothing once the gate defaults to closed, and every week of drift makes the merge
+riskier. Order:
+
+1. ☐ Commit any open work in the main checkout, then merge branch `launch-fixes` into
+   `feat/todolistimpl-2`.
+2. ☐ Build the site gate and the free-beta switch (both default to the safe state when unset).
+3. ☐ Vercel Production env vars: `PRIVATE_BETA=on`, `PRIVATE_BETA_EMAILS=<you, testers>`,
+   `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
+4. ☐ `prisma migrate deploy` against the production database (adds `stripe_events`). Also run the
+   two read-only checks: in-flight NDAs with more than one SignRequest, and
+   `select billing_plan, count(*) from organizations group by 1`.
+5. ☐ Check the Vercel Preview deployment of the PR, then merge PR #18. Production deploys closed.
+6. ☐ Test on production as an invited user (Phase 4: full flow, email round trip, cron run).
+7. ☐ Open: `PRIVATE_BETA=off`, redeploy.
 
 ## Post-MVP tasks (decided during launch setup)
 
