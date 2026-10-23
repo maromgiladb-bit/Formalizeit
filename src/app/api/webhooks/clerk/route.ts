@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Webhook } from 'svix'
 import { prisma } from '@/lib/prisma'
+import { assessDeparture } from '@/lib/accountDeletion'
 
 interface ClerkUserDeletedEvent {
     type: 'user.deleted'
@@ -61,6 +62,55 @@ async function handleUserDeleted(clerkUserId: string) {
     if (!user) {
         // User might not exist if they never completed onboarding
         return
+    }
+
+    // 0. Companies where this user is the sole administrator of other active
+    //    members: hand administration to the longest-standing member so the
+    //    company is never left without an administrator (the webhook cannot refuse).
+    const memberships = await prisma.membership.findMany({
+        where: { userId: user.id, status: 'ACTIVE' },
+        include: {
+            organization: {
+                include: {
+                    memberships: {
+                        select: { userId: true, role: true, status: true, createdAt: true },
+                    },
+                },
+            },
+        },
+    })
+
+    const promotions: { organizationId: string; promoteUserId: string }[] = []
+    for (const m of memberships) {
+        const assessment = assessDeparture(m.organization.memberships, user.id)
+        if (assessment.strandsCompany && assessment.promoteUserId) {
+            promotions.push({
+                organizationId: m.organizationId,
+                promoteUserId: assessment.promoteUserId,
+            })
+        }
+    }
+
+    for (const p of promotions) {
+        // Keep the promoted member's isSigner as-is; only role and ownerUserId change.
+        await prisma.$transaction([
+            prisma.membership.update({
+                where: {
+                    userId_organizationId: {
+                        userId: p.promoteUserId,
+                        organizationId: p.organizationId,
+                    },
+                },
+                data: { role: 'ADMINISTRATOR' },
+            }),
+            prisma.organization.update({
+                where: { id: p.organizationId },
+                data: { ownerUserId: p.promoteUserId },
+            }),
+        ])
+        console.log(
+            `[user.deleted] Promoted ${p.promoteUserId} to ADMINISTRATOR of org ${p.organizationId}`,
+        )
     }
 
     // 1. Soft-delete: mark for pending deletion (30-day grace period)
