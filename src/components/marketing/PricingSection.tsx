@@ -6,6 +6,7 @@ import { Check } from 'lucide-react'
 import { Pricing } from '@/components/ui/pricing'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
 import { Reveal } from '@/components/ui/reveal'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 
 const pricingPlans = [
   {
@@ -113,7 +114,40 @@ export default function PricingSection() {
     }
   }
 
-  const plans = pricingPlans.map(plan => {
+  // Free beta: Free is the headline plan with every feature; Pro/Team show prices but can't be bought yet.
+  const betaPlans = pricingPlans.map(plan => {
+    if (plan.name === 'Free') {
+      return {
+        ...plan,
+        features: [
+          'Unlimited NDAs',
+          'Up to 10 users',
+          'Send, review & e-sign NDAs',
+          'Receive & sign NDAs free (no account needed)',
+          'Dashboard, search & full audit trail',
+          '5-year document storage',
+        ],
+        isPopular: true,
+        badge: 'Free in beta',
+        buttonText: 'Get Started Free',
+        href: userId ? '/dashboard' : '/signup',
+      }
+    }
+    const alreadyPaying =
+      (plan.name === 'Pro' && (currentPlan === 'PRO' || currentPlan === 'TEAM')) ||
+      (plan.name === 'Team' && currentPlan === 'TEAM')
+    if (alreadyPaying) {
+      return {
+        ...plan,
+        isPopular: false,
+        buttonText: plan.name === 'Pro' && currentPlan === 'TEAM' ? 'Manage plan' : 'Current plan',
+        href: '/settings/billing',
+      }
+    }
+    return { ...plan, isPopular: false, comingSoon: true, buttonText: 'Coming soon' }
+  })
+
+  const plans = !PAID_PLANS_ENABLED ? betaPlans : pricingPlans.map(plan => {
     if (plan.name === 'Pro') {
       if (!userId) return { ...plan, href: '/signup' }
       if (currentPlan === 'PRO') return { ...plan, buttonText: 'Current plan', href: '/settings/billing' }
@@ -141,11 +175,12 @@ export default function PricingSection() {
       <Reveal className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Pricing</p>
         <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
-          Simple, honest pricing
+          {PAID_PLANS_ENABLED ? 'Simple, honest pricing' : "Free while we're in beta"}
         </h2>
         <p className="text-base text-gray-500 leading-relaxed mt-3 max-w-xl mx-auto">
-          Start free — no credit card, no setup. Upgrade when your team needs
-          more NDAs or members.
+          {PAID_PLANS_ENABLED
+            ? 'Start free — no credit card, no setup. Upgrade when your team needs more NDAs or members.'
+            : "Every feature, unlimited NDAs, no credit card. Paid plans come later — we'll give you plenty of notice first."}
         </p>
       </Reveal>
 
@@ -162,12 +197,14 @@ export default function PricingSection() {
         </div>
       </Reveal>
 
-      <CheckoutModal
-        isOpen={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        billingCycle={billingCycle}
-        plan={checkoutPlan}
-      />
+      {PAID_PLANS_ENABLED && (
+        <CheckoutModal
+          isOpen={checkoutOpen}
+          onClose={() => setCheckoutOpen(false)}
+          billingCycle={billingCycle}
+          plan={checkoutPlan}
+        />
+      )}
     </div>
   )
 }
