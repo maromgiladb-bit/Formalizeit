@@ -47,6 +47,12 @@ export default function SignUpPage() {
             }}
           />
         </div>
+        <p className="text-center text-xs text-gray-500">
+          By creating an account you agree to the{' '}
+          <Link href="/terms" target="_blank" className="font-semibold text-teal-800 hover:text-teal-700">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" target="_blank" className="font-semibold text-teal-800 hover:text-teal-700">Privacy Policy</Link>.
+        </p>
         <p className="text-center text-sm text-gray-500">
           Already have an account?{' '}
           <Link href="/sign-in" className="font-semibold text-teal-800 hover:text-teal-700">

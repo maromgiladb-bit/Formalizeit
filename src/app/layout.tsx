@@ -8,6 +8,8 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { auth } from '@clerk/nextjs/server'
 import { ensureDbUser } from '@/lib/db-user'
+import TermsGate from '@/components/TermsGate'
+import { hasAcceptedCurrentTerms } from '@/lib/legalVersions'
 import { getSiteUrl } from '@/lib/siteUrl'
 
 const geistSans = Geist({
@@ -53,9 +55,11 @@ export default async function RootLayout({
   const { userId } = await auth()
 
   // Provision the DB user and run pending signer claims on every signed-in visit.
+  let needsTerms = false
   if (userId) {
     try {
-      await ensureDbUser(userId)
+      const dbUser = await ensureDbUser(userId)
+      needsTerms = !!dbUser && !hasAcceptedCurrentTerms(dbUser)
     } catch (error) {
       console.error('Database unavailable, skipping user sync:', error)
     }
@@ -65,6 +69,7 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
+          <TermsGate needsTerms={needsTerms} />
           <FormiProvider>
             <ToolbarSwitcher />
             <div className="flex-1">
