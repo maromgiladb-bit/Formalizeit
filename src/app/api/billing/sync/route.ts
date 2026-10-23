@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { stripe } from '@/lib/stripe'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
-import { subscriptionToOrgData } from '@/billing/reconcileSubscription'
+import * as Sentry from '@sentry/nextjs'
+import { subscriptionToOrgData, hasUnknownPlanPrice } from '@/billing/reconcileSubscription'
 
 /**
  * Reconcile the active organization's billing columns with its live Stripe
@@ -43,6 +44,14 @@ export async function POST() {
     // A canceled subscription is still retrievable and maps to FREE/CANCELLED,
     // so this also self-heals a missed deletion webhook.
     const subscription = await stripe.subscriptions.retrieve(organization.stripeSubscriptionId)
+    if (hasUnknownPlanPrice(subscription)) {
+      console.error('Billing sync: subscription price maps to no plan', subscription.id)
+      Sentry.captureMessage('Stripe subscription price maps to no plan (plan left unchanged)', {
+        level: 'error',
+        tags: { area: 'stripe-webhook' },
+        extra: { subscriptionId: subscription.id, organizationId: organization.id },
+      })
+    }
     await prisma.organization.update({
       where: { id: organization.id },
       data: subscriptionToOrgData(subscription),
