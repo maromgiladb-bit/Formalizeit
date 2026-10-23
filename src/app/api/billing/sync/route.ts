@@ -46,8 +46,7 @@ export async function POST() {
 
     // A canceled subscription is still retrievable and maps to FREE/CANCELLED,
     // so this also self-heals a missed deletion webhook.
-<<<<<<< HEAD
-    const subscription = await stripe.subscriptions.retrieve(organization.stripeSubscriptionId)
+    const subscription = await getStripe().subscriptions.retrieve(organization.stripeSubscriptionId)
     if (hasUnknownPlanPrice(subscription)) {
       console.error('Billing sync: subscription price maps to no plan', subscription.id)
       Sentry.captureMessage('Stripe subscription price maps to no plan (plan left unchanged)', {
@@ -56,9 +55,6 @@ export async function POST() {
         extra: { subscriptionId: subscription.id, organizationId: organization.id },
       })
     }
-=======
-    const subscription = await getStripe().subscriptions.retrieve(organization.stripeSubscriptionId)
->>>>>>> wt/stripe
     await prisma.organization.update({
       where: { id: organization.id },
       data: subscriptionToOrgData(subscription),
