@@ -7,7 +7,7 @@ import { sendEmail, getAppUrl } from '@/lib/email';
 import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
-import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent, termsConsent } from '@/lib/signatureEvidence';
 import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink';
 import * as Sentry from '@sentry/nextjs';
 import { produceSignedPdf, type SignedPdfStatus } from '@/lib/signedPdf';
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         if (!limit.ok) return tooManyRequests(limit);
 
         const body = await request.json();
-        const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
+        const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed, termsAccepted } = body;
 
         if (!signerId || !signerName || !signerTitle || !signatureImage) {
             return NextResponse.json(
@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
         if (authorityConfirmed !== true) {
             return NextResponse.json(
                 { error: 'You must confirm you are authorized to sign on behalf of your company.' },
+                { status: 400 }
+            );
+        }
+
+        // Terms / Privacy / E-Signature consent is required before any signature is applied.
+        if (termsAccepted !== true) {
+            return NextResponse.json(
+                { error: 'You must agree to the Terms of Service and Privacy Policy and consent to sign electronically.' },
                 { status: 400 }
             );
         }
@@ -261,6 +269,7 @@ export async function POST(request: NextRequest) {
                 templateSnapshot: templateSnapshot((formData.templateId as string) || draft.templateId || 'professional_mutual_nda_v1'),
                 parties: partiesSnapshot(updatedContent as Record<string, unknown>),
                 authority: authorityConsent(true),
+                termsConsent: termsConsent(true),
             };
             const signedEvent = await tx.auditEvent.create({
                 data: {
@@ -436,7 +445,7 @@ export async function POST(request: NextRequest) {
                     html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(signer.id)),
                     attachments: pdfAttachment || undefined
                 });
-                console.log('📧 Congratulations email sent to current signer:', signer.email, pdfAttachment ? 'with PDF attachment' : '');
+                console.log('📧 Congratulations email sent to current signer', pdfAttachment ? '(with PDF attachment)' : '');
 
                 // Email Other Signer (or use fallback email)
                 const otherRecipientEmail = otherSigner?.email || otherPartyEmail;
@@ -447,7 +456,7 @@ export async function POST(request: NextRequest) {
                         html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(otherSigner?.id ?? signer.id)),
                         attachments: pdfAttachment || undefined
                     });
-                    console.log('📧 Congratulations email sent to other signer:', otherRecipientEmail, pdfAttachment ? 'with PDF attachment' : '');
+                    console.log('📧 Congratulations email sent to other signer', pdfAttachment ? '(with PDF attachment)' : '');
                 } else {
                     console.warn('⚠️  Could not send congratulations email to other party - no email found');
                 }
@@ -458,7 +467,7 @@ export async function POST(request: NextRequest) {
                 const recipientName = otherSigner?.name || otherPartyName;
                 let recipientSignerId = otherSigner?.id;
 
-                console.log('📧 Preparing to send email to:', recipientEmail);
+                console.log('📧 Preparing to send email to the other party');
 
                 // If Party B signed and no Party A signer record exists, create one
                 if (!otherSigner && !isPartyA && recipientEmail) {
@@ -493,7 +502,7 @@ export async function POST(request: NextRequest) {
                             signerName
                         ),
                     });
-                    console.log('📧 "Time to Sign" email sent to:', recipientEmail, 'with link:', signPageLink);
+                    console.log('📧 "Time to Sign" email sent to the other party');
                 } else if (recipientEmail) {
                     // Fallback: If we couldn't create a signer record, send to dashboard
                     const dashboardLink = `${appUrl}/dashboard`;
@@ -509,7 +518,7 @@ export async function POST(request: NextRequest) {
                             signerName
                         ),
                     });
-                    console.log('📧 "Time to Sign" email sent to:', recipientEmail, '(fallback to dashboard)');
+                    console.log('📧 "Time to Sign" email sent to the other party (fallback to dashboard)');
                 } else {
                     console.warn('⚠️ Could not find email address for the other party');
                 }

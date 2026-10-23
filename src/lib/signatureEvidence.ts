@@ -1,8 +1,8 @@
 import { createHash } from 'crypto';
 import { getTemplateById } from './templateManager';
-import { AUTHORITY_CONSENT_TEXT } from './authorityConsentText';
+import { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT } from './authorityConsentText';
 
-export { AUTHORITY_CONSENT_TEXT };
+export { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT };
 
 /**
  * Signature evidence helpers — shared by the signing UIs and the sign API routes so the
@@ -112,4 +112,17 @@ export interface AuthorityConsent {
 /** Build the authority-consent record stored in the audit event. */
 export function authorityConsent(confirmed: boolean): AuthorityConsent {
 	return { confirmed, text: AUTHORITY_CONSENT_TEXT, at: new Date().toISOString() };
+}
+
+export interface TermsConsent {
+	accepted: boolean;
+	text: string;
+	at: string;
+	// Index signature keeps the shape assignable to Prisma's JSON input type.
+	[key: string]: string | boolean;
+}
+
+/** Build the Terms / Privacy / E-Signature consent record stored in the audit event. */
+export function termsConsent(accepted: boolean): TermsConsent {
+	return { accepted, text: TERMS_CONSENT_TEXT, at: new Date().toISOString() };
 }

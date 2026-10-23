@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
 import { StatusPill } from '@/components/ui/status-pill';
 import { getWorkflowStatusInfo } from '@/lib/workflowStatus';
 

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Great_Vibes } from 'next/font/google';
 import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
-import { AUTHORITY_CONSENT_TEXT } from '@/lib/authorityConsentText';
+import { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT } from '@/lib/authorityConsentText';
 
 const greatVibes = Great_Vibes({
     weight: '400',
@@ -47,6 +47,7 @@ export default function SignNDAPublicClient({
     const [isDrawing, setIsDrawing] = useState(false);
     const [typedSignature, setTypedSignature] = useState('');
     const [authorityConfirmed, setAuthorityConfirmed] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -308,6 +309,14 @@ export default function SignNDAPublicClient({
             return;
         }
 
+        if (!termsAccepted) {
+
+            setError('Please agree to the Terms of Service and Privacy Policy and consent to sign electronically');
+
+            return;
+
+        }
+
         setLoading(true);
         setError('');
 
@@ -322,6 +331,7 @@ export default function SignNDAPublicClient({
                     signatureImage,
                     signatureDate: signature.date,
                     authorityConfirmed,
+                    termsAccepted,
                 }),
             });
 
@@ -539,6 +549,31 @@ export default function SignNDAPublicClient({
                                 <span className="text-sm text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
                             </label>
 
+                            {/* Terms / Privacy / E-Signature consent */}
+                            <div className="flex items-start gap-3 mb-4">
+                                <input
+                                    id="terms-consent"
+                                    type="checkbox"
+                                    checked={termsAccepted}
+                                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
+                                    data-testid="terms-checkbox"
+                                />
+                                <div className="text-sm text-gray-500 leading-snug">
+                                    <label htmlFor="terms-consent" className="cursor-pointer">{TERMS_CONSENT_TEXT}</label>
+                                    <p className="mt-1 text-xs">
+                                        Read:{' '}
+                                        <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Terms of Service</a>
+                                        {' · '}
+                                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Privacy Policy</a>
+                                        {' · '}
+                                        <a href="/esignature-consent" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">E-Signature Consent</a>
+                                        {' · '}
+                                        <a href="/standard-nda" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Standard NDA</a>
+                                    </p>
+                                </div>
+                            </div>
+
                             {!hasScrolledToBottom && (
                                 <p className="mb-3 text-xs font-medium text-amber-700" role="status">
                                     <span className="lg:hidden">Open &ldquo;Read the full NDA&rdquo; above and scroll to the end to sign.</span>
@@ -546,10 +581,12 @@ export default function SignNDAPublicClient({
                                 </p>
                             )}
 
+                            <LegalDisclaimer className="mb-4" />
+
                             {/* Submit Button */}
                             <button
                                 onClick={handleSubmit}
-                                disabled={loading || !authorityConfirmed || !hasScrolledToBottom}
+                                disabled={loading || !authorityConfirmed || !termsAccepted || !hasScrolledToBottom}
                                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                             >
                                 {loading ? 'Submitting...' : 'Submit Signature'}

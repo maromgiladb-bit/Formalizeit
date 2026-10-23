@@ -50,6 +50,11 @@ export const faqs: Faq[] = [
 			"There are three roles: Administrator (manages the workspace, billing, and members), Signer (can create, send, and sign NDAs on behalf of the company), and Contributor (can create, edit, and send NDAs — everything except signing for the company). Administrators can also be granted signing authority via a toggle in team settings.",
 	},
 	{
+		question: "What does the signer have to confirm before signing?",
+		answer:
+			"Two things, both recorded with the signature: that they are authorized to sign in their company's name, and that they have read and agree to the Terms of Service and Privacy Policy and consent to sign electronically. The Sign button stays disabled until both boxes are ticked. FormalizeIt does not verify who signs or their authority, and is not a party to the NDA.",
+	},
+	{
 		question: "How do I invite team members?",
 		answer:
 			"Go to My account → Team. Enter the person's email address and select their role. They will receive an invitation email with a link to join your workspace.",
@@ -77,7 +82,7 @@ export const faqs: Faq[] = [
 	{
 		question: "What happens after I upgrade?",
 		answer:
-			"Your workspace immediately gets access to the features included in your new plan — Pro unlocks unlimited NDAs, search, and a full audit trail for a single user; Team adds up to 10 users, a shared workspace, a centralized repository, and role-based permissions. Billing is handled by Stripe and you can cancel anytime from My account → Subscription.",
+			"Your workspace immediately gets access to the features included in your new plan — Pro unlocks unlimited NDAs, dashboard search and activity history for a single user; Team adds up to 10 users, a shared workspace, a centralized repository, and role-based permissions. Billing is handled by Stripe and you can cancel anytime from My account → Subscription.",
 	},
 	{
 		question: "Can I cancel later?",

@@ -69,6 +69,12 @@ export default function ESignatureConsentPage() {
 						<li>
 							<strong>Authority affirmation</strong> — your confirmation (below) that
 							you are authorized to sign, stored with its exact wording and time.
+							</li>
+							<li>
+								<strong>Terms and e-signature consent</strong> — your confirmation
+								(below) that you have read and agree to the Terms of Service and
+								Privacy Policy and consent to sign electronically, stored with its
+								exact wording and time.
 						</li>
 					</ul>
 
@@ -87,6 +93,15 @@ export default function ESignatureConsentPage() {
 						company&apos;s responsibility. FormalizeIt does not verify signing
 						authority.
 					</p>
+
+					<p>
+						You must also tick a second box, and the Sign button stays disabled
+						until you do. It reads:
+					</p>
+					<blockquote>
+						&ldquo;I have read and agree to the Terms of Service and Privacy
+						Policy, and I consent to sign electronically (E-Signature Consent).&rdquo;
+					</blockquote>
 
 					<h2>4. Hardware and Software Requirements</h2>
 					<p>
