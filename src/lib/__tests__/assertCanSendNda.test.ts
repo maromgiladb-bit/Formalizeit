@@ -11,6 +11,19 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+const flags = vi.hoisted(() => ({ paid: true, from: null as Date | null }))
+
+vi.mock('@/lib/featureFlags', () => ({
+  get PAID_PLANS_ENABLED() { return flags.paid },
+  BETA_LABEL: true,
+  FORMI_ENABLED: false,
+}))
+
+vi.mock('@/billing/planLimits', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/billing/planLimits')>()
+  return { ...actual, get FREE_ALLOWANCE_COUNTS_FROM() { return flags.from } }
+})
+
 import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { prisma } from '@/lib/prisma'
 
@@ -32,6 +45,8 @@ const proOrg = {
 describe('assertCanSendNda', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    flags.paid = true
+    flags.from = null
   })
 
   it('throws when org is not found', async () => {
@@ -93,5 +108,46 @@ describe('assertCanSendNda', () => {
     mockFindOrg.mockResolvedValue({ id: 'org-3', billingPlan: 'TEAM' as const, settings: null } as any)
     mockCountDrafts.mockResolvedValue(9999)
     await expect(assertCanSendNda('org-3')).resolves.toBeUndefined()
+  })
+})
+
+describe('assertCanSendNda in the free beta', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    flags.paid = false
+    flags.from = null
+  })
+
+  it('allows a FREE org that is past the old 3-NDA limit', async () => {
+    mockFindOrg.mockResolvedValue(freeOrg as any)
+    mockCountDrafts.mockResolvedValue(50)
+    await expect(assertCanSendNda('org-1')).resolves.toBeUndefined()
+  })
+
+  it('still honours a per-company maxActiveDrafts override', async () => {
+    mockFindOrg.mockResolvedValue({ ...freeOrg, settings: { maxActiveDrafts: 5 } } as any)
+    mockCountDrafts.mockResolvedValue(5)
+    await expect(assertCanSendNda('org-1')).rejects.toThrow('maximum number of NDAs')
+  })
+
+  it('counts FREE NDAs only from FREE_ALLOWANCE_COUNTS_FROM when set (paid plans on)', async () => {
+    flags.paid = true
+    flags.from = new Date('2027-01-01T00:00:00Z')
+    mockFindOrg.mockResolvedValue(freeOrg as any)
+    mockCountDrafts.mockResolvedValue(0)
+    await assertCanSendNda('org-1')
+    expect(mockCountDrafts).toHaveBeenCalledWith({
+      where: expect.objectContaining({ organizationId: 'org-1', sentAt: { gte: flags.from } }),
+    })
+  })
+
+  it('does not apply FREE_ALLOWANCE_COUNTS_FROM to paid plans', async () => {
+    flags.paid = true
+    flags.from = new Date('2027-01-01T00:00:00Z')
+    mockFindOrg.mockResolvedValue(proOrg as any)
+    mockCountDrafts.mockResolvedValue(0)
+    await assertCanSendNda('org-2')
+    const where = mockCountDrafts.mock.calls[0][0]?.where as Record<string, unknown>
+    expect(where).not.toHaveProperty('sentAt')
   })
 })
