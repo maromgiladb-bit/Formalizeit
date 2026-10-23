@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PAID_PLANS_ENABLED } from "@/lib/featureFlags";
 import { motion } from "framer-motion";
 import {
 	BookOpen,
@@ -197,18 +198,22 @@ const sections: Section[] = [
 		content: [
 			{
 				heading: null,
-				body: "Billing is managed from My account → Subscription. You can see your current plan, usage, and upgrade or cancel from there.",
+				body: PAID_PLANS_ENABLED
+					? "Billing is managed from My account → Subscription. You can see your current plan, usage, and upgrade or cancel from there."
+					: "FormalizeIt is in a free beta, so there is nothing to pay and no card is needed. You can see your current plan under My account → Subscription.",
 			},
 			{
 				heading: "Plans",
-				body: "FormalizeIt offers three plans:",
-				list: [
+				body: PAID_PLANS_ENABLED ? "FormalizeIt offers three plans:" : "During the beta every company gets the full product for free. Paid plans are coming later, and we'll give you plenty of notice before anything changes:",
+				list: PAID_PLANS_ENABLED ? [
 					"Free — up to 3 NDAs total, 1 user, 5-year document storage. Receiving and signing NDAs is always free.",
 					"Pro ($9/month or $7.65/month billed annually) — unlimited NDAs for a single user, search, full audit trail",
 					"Team ($50/month or $42.50/month billed annually) — everything in Pro for up to 10 users, shared workspace, centralized repository, role-based permissions",
-					
+				] : [
+					"Free (beta) — unlimited NDAs, up to 10 users, 5-year document storage. Receiving and signing NDAs is always free.",
+					"Pro and Team — coming soon. Prices are shown in the Pricing section of the home page.",
 				],
-				listNote: "You can cancel a paid plan at any time. Your plan stays active until the end of the billing period.",
+				listNote: PAID_PLANS_ENABLED ? "You can cancel a paid plan at any time. Your plan stays active until the end of the billing period." : "Need a bigger team or have a question? Contact us at support@formalizeit.com.",
 			},
 		],
 	},
