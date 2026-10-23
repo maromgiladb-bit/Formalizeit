@@ -39,6 +39,11 @@ Required in **every** environment: `DATABASE_URL`, Clerk keys + `CLERK_WEBHOOK_S
 `GEMINI_API_KEY`, `S3_*` (4), `CRON_SECRET`, `APP_URL` / `NEXT_PUBLIC_APP_URL` /
 `NEXT_PUBLIC_BASE_URL`, `CONTACT_INBOX`. Full list + descriptions in `.env.example`.
 
+Optional: `NEXT_PUBLIC_PAID_PLANS_ENABLED` — only the exact value `true` turns paid plans on (Stripe
+checkout/upgrade/downgrade, Pro/Team buyable, Free limited to 3 NDAs / 1 user). Unset or anything
+else = free beta (unlimited NDAs, 10 users, paid plans shown as "Coming soon"). `.env.example` is
+gitignored, so add this line there by hand: `# NEXT_PUBLIC_PAID_PLANS_ENABLED=true  # unset = free beta`.
+
 ## Production data hygiene (one-time, before launch)
 
 Use `scripts/cleanup-test-data.mjs` to purge test organizations from a database. It is **dry-run
