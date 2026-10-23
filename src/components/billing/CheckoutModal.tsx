@@ -36,7 +36,8 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
         body: JSON.stringify({ billingCycle, plan, embedded: false }),
       })
       if (!res.ok) {
-        setError('Could not start checkout. Please try again.')
+        const errData = await res.json().catch(() => null)
+        setError(errData?.error || 'Could not start checkout. Please try again.')
         return
       }
       const data = await res.json()
