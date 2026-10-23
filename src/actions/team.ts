@@ -63,7 +63,7 @@ export async function inviteMember(formData: FormData) {
             const inviterName = org.owner?.name || org.owner?.email || 'Your administrator'
             await sendEmail({
                 to: email,
-                subject: `You've been invited to ${org.name} on Formalize It`,
+                subject: `You've been invited to ${org.name} on FormalizeIt`,
                 html: inviteEmailHtml(org.name, inviterName, role, `${getAppUrl()}/sign-in`),
             })
         } catch (emailError) {

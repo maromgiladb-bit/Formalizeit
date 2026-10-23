@@ -115,7 +115,7 @@ export default function SettingsPage() {
 
         <div className="px-6 py-5 bg-red-50/30">
           <p className="text-sm text-gray-600 leading-relaxed mb-5">
-            Deleting your account removes your access immediately. Your signed NDAs are preserved for 30 days, after which your personal data is anonymized.
+            Deleting your account removes your access immediately. Your personal profile data is anonymized after 30 days. Signed NDAs are not deleted then: they are kept for 5 years from execution so the other party keeps their copy, as described in our Privacy Policy.
           </p>
 
           {!showDeleteConfirm ? (

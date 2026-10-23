@@ -15,6 +15,21 @@ const MAIL_FROM = process.env.MAIL_FROM || 'FormalizeIt <noreply@mail.formalizei
 // Replies to automated emails reach a person (forwarded to the founder's inbox).
 const SUPPORT_EMAIL = 'support@formalizeit.com'
 
+export const LEGAL_NOTICE =
+  'FormalizeIt provides software for sending standard NDAs. It is not a law firm, does not give legal advice, and is not a party to any agreement.'
+
+/**
+ * Legal entity name and postal address for the footer. Read from COMPANY_LEGAL_NAME /
+ * COMPANY_ADDRESS (the entity is not decided yet) - renders nothing until set.
+ */
+function companyIdentityHtml(): string {
+  const name = sanitizeForHtml(process.env.COMPANY_LEGAL_NAME)
+  const address = sanitizeForHtml(process.env.COMPANY_ADDRESS)
+  const parts = [name, address].filter(Boolean)
+  if (!parts.length) return ''
+  return `<p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">${parts.join(' &middot; ')}</p>`
+}
+
 export interface EmailAttachment {
   filename: string
   content: string // Base64 string
@@ -76,7 +91,7 @@ export function getAppUrl(): string {
 // Email templates
 
 // Helper for consistent email layout — Stitch design style
-function getBaseEmailHtml(title: string, content: string): string {
+function getBaseEmailHtml(title: string, content: string, footerExtra = ''): string {
   return `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -92,7 +107,7 @@ function getBaseEmailHtml(title: string, content: string): string {
             <!-- Logo -->
             <tr>
               <td style="padding-bottom: 32px; text-align: center;">
-                <span style="font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em;">Formalize It</span>
+                <span style="font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em;">FormalizeIt</span>
               </td>
             </tr>
             <!-- Card -->
@@ -113,8 +128,12 @@ function getBaseEmailHtml(title: string, content: string): string {
             <!-- Footer -->
             <tr>
               <td style="padding-top: 24px; text-align: center;">
-                <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">\u00a9 ${new Date().getFullYear()} Formalize It &middot; Secure NDA workflows</p>
-                <p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af;">You received this email because an NDA was shared with you or your team through Formalize It.</p>
+                <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">© ${new Date().getFullYear()} FormalizeIt &middot; Secure NDA workflows</p>
+                <p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af;">You received this email because an NDA was shared with you or your team through FormalizeIt.</p>
+                <p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af; line-height: 1.5;">${LEGAL_NOTICE}</p>
+                ${footerExtra}
+                <p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af;"><a href="${APP_URL}/terms" style="color: #6b7280; text-decoration: underline;">Terms</a> &middot; <a href="${APP_URL}/privacy" style="color: #6b7280; text-decoration: underline;">Privacy</a></p>
+                ${companyIdentityHtml()}
               </td>
             </tr>
           </table>
@@ -353,7 +372,8 @@ export function signReminderEmailHtml(
   signLink: string,
   senderName?: string,
   secondReminder = false,
-  mode: 'sign' | 'review' = 'sign'
+  mode: 'sign' | 'review' = 'sign',
+  stopRemindersUrl?: string
 ): string {
   const safeDraftTitle = sanitizeForHtml(draftTitle)
   const safeSenderName = sanitizeForHtml(senderName)
@@ -377,7 +397,10 @@ export function signReminderEmailHtml(
     ${emailButton(isReview ? 'Review the NDA' : 'Review and Sign', signLink)}
     ${emailSubtext('Secure link &middot; No account needed &middot; Expires after 14 days of inactivity')}
   `
-  return getBaseEmailHtml(isReview ? 'Reminder: NDA awaiting your review' : 'Reminder: NDA awaiting your signature', content)
+  const stopLine = stopRemindersUrl
+    ? `<p style="margin: 6px 0 0; font-size: 12px; color: #9ca3af;"><a href="${stopRemindersUrl}" style="color: #6b7280; text-decoration: underline;">Stop these reminders</a></p>`
+    : ''
+  return getBaseEmailHtml(isReview ? 'Reminder: NDA awaiting your review' : 'Reminder: NDA awaiting your signature', content, stopLine)
 }
 
 export function timeToSignEmailHtml(
@@ -554,7 +577,7 @@ export function inviteEmailHtml(
   const content = `
     ${emailAccentLabel('Team invitation')}
     <h2 style="margin: 0 0 12px; font-size: 20px; font-weight: 800; color: #111827; line-height: 1.3;">${safeInviterName} invited you to ${safeOrgName}</h2>
-    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">You have been invited to join the team on Formalize It. Here is what you will be able to do:</p>
+    <p style="margin: 0 0 4px; font-size: 15px; color: #6b7280; line-height: 1.5;">You have been invited to join the team on FormalizeIt. Here is what you will be able to do:</p>
     ${emailInfoBox(`
       <p style="margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em;">Your role: ${roleLabel}</p>
       <p style="margin: 0; font-size: 13px; color: #115e59; line-height: 1.5;">${roleDesc}</p>
@@ -562,7 +585,7 @@ export function inviteEmailHtml(
     <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280; line-height: 1.5;">If you already have an account, just sign in and you will be added to the organization automatically.</p>
     ${emailButton('Accept Invitation', signUpLink)}
   `
-  return getBaseEmailHtml(`Join ${safeOrgName} on Formalize It`, content)
+  return getBaseEmailHtml(`Join ${safeOrgName} on FormalizeIt`, content)
 }
 
 export function subscriptionCancelledEmailHtml(
@@ -581,7 +604,7 @@ export function subscriptionCancelledEmailHtml(
     <p style="margin: 20px 0 0; font-size: 14px; color: #6b7280; line-height: 1.5;">Changed your mind? You can pick up right where you left off.</p>
     ${emailButton('Resubscribe', resubscribeLink)}
   `
-  return getBaseEmailHtml(`Your Formalize It subscription has ended`, content)
+  return getBaseEmailHtml(`Your FormalizeIt subscription has ended`, content)
 }
 
 export function paymentFailedEmailHtml(

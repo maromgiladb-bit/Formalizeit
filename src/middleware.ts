@@ -28,6 +28,9 @@ const isPublicRoute = createRouteMatcher([
   '/contact',
   '/api/contact',                   // public contact form (honeypot-protected)
   '/security',
+  '/accessibility',
+  '/subprocessors',
+  '/.well-known/security.txt',
 
   // Legal / compliance pages
   '/terms',
@@ -47,7 +50,9 @@ const isPublicRoute = createRouteMatcher([
   '/api/ndas/preview-html-public',
   '/api/ndas/activity-public',      // public activity feed (signerId bearer)
   '/api/ndas/viewpdf',              // signed-copy link in the completion email (signerId bearer); the draftId path checks the session itself
-  '/api/claim',                     // counterparty claim entry → sets cookie, redirects to signup
+  '/api/reminders/stop',            // signed one-click "stop reminders" link in reminder emails (HMAC token)
+  '/reminders-stopped(.*)',         // incl. /reminders-stopped/confirm (GET-only confirmation page)
+  '/api/claim',                    // counterparty claim entry → sets cookie, redirects to signup
 
   // Verified/secret-protected server-to-server endpoints
   '/api/webhooks/clerk',            // Clerk webhook (verified by svix)

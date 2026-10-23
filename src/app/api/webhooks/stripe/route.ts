@@ -173,7 +173,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     if (owner?.email) {
       await sendEmail({
         to: owner.email,
-        subject: 'Your Formalize It subscription has ended',
+        subject: 'Your FormalizeIt subscription has ended',
         html: subscriptionCancelledEmailHtml(organization.name, `${getAppUrl()}/settings/billing`),
       })
     }
@@ -214,7 +214,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     if (owner?.email) {
       await sendEmail({
         to: owner.email,
-        subject: 'Action needed: your Formalize It payment failed',
+        subject: 'Action needed: your FormalizeIt payment failed',
         html: paymentFailedEmailHtml(organization.name, `${getAppUrl()}/settings/billing`),
       })
     }

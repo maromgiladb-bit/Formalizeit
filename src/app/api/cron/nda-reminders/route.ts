@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail, getAppUrl, signReminderEmailHtml } from '@/lib/email'
+import { reminderStopUrl } from "@/lib/reminderOptOut"
 import { REMINDER_STATES, reminderMode, reminderLinkPath } from '@/lib/reminders'
 
 export const runtime = 'nodejs'
@@ -59,6 +60,7 @@ export async function GET(req: Request) {
         where: {
             workflowState: { in: [...AWAITING_STATES] },
             reminder48hSentAt: null,
+            remindersStoppedAt: null,
             sentAt: { not: null, lte: cutoff48h },
         },
         select: { id: true, title: true, workflowState: true, createdBy: { select: { name: true } } },
@@ -72,7 +74,7 @@ export async function GET(req: Request) {
             await sendEmail({
                 to: target.email,
                 subject: `Reminder: please ${reminderMode(draft.workflowState) === 'review' ? 'review' : 'sign'} ${draft.title || 'your NDA'}`,
-                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, false, reminderMode(draft.workflowState)),
+                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, false, reminderMode(draft.workflowState), reminderStopUrl(getAppUrl(), draft.id) ?? undefined),
             })
             await prisma.ndaDraft.update({
                 where: { id: draft.id },
@@ -89,6 +91,7 @@ export async function GET(req: Request) {
         where: {
             workflowState: { in: [...AWAITING_STATES] },
             reminder5dSentAt: null,
+            remindersStoppedAt: null,
             sentAt: { not: null, lte: cutoff5d },
         },
         select: { id: true, title: true, workflowState: true, createdBy: { select: { name: true } } },
@@ -102,7 +105,7 @@ export async function GET(req: Request) {
             await sendEmail({
                 to: target.email,
                 subject: `Second reminder: please ${reminderMode(draft.workflowState) === 'review' ? 'review' : 'sign'} ${draft.title || 'your NDA'}`,
-                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, true, reminderMode(draft.workflowState)),
+                html: signReminderEmailHtml(draft.title || 'Untitled NDA', target.signLink, draft.createdBy?.name ?? undefined, true, reminderMode(draft.workflowState), reminderStopUrl(getAppUrl(), draft.id) ?? undefined),
             })
             await prisma.ndaDraft.update({
                 where: { id: draft.id },

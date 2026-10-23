@@ -29,7 +29,7 @@ export default function SignInPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-ink tracking-tight">
-            Sign in to Formalize It
+            Sign in to FormalizeIt
           </h2>
           <p className="mt-2 text-center text-sm text-gray-500">
             Access your NDA drafts and manage agreements
