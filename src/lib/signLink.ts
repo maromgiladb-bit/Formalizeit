@@ -13,6 +13,13 @@ import { prisma } from '@/lib/prisma';
  */
 export const SIGN_LINK_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** `Signer.id` is a Postgres uuid — querying with anything else throws instead of returning null. */
+export function isValidSignLinkToken(token: string): boolean {
+    return UUID_RE.test(token);
+}
+
 /** A fresh expiry timestamp, `SIGN_LINK_TTL_MS` from now. */
 export function newSignLinkExpiry(from: Date = new Date()): Date {
   return new Date(from.getTime() + SIGN_LINK_TTL_MS);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { NdaStatus, NdaWorkflowState, Prisma } from '@prisma/client';
@@ -6,15 +7,23 @@ import { sendEmail, getAppUrl } from '@/lib/email';
 import { createNotification, createNotificationsForOrgSigners, createNotificationsForAllOrgMembers } from '@/lib/notifications';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { linkSignerToUser } from '@/lib/linkSignerToUser';
-import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent } from '@/lib/signatureEvidence';
+import { getClientIp, sha256Hex, templateSnapshot, partiesSnapshot, authorityConsent, termsConsent } from '@/lib/signatureEvidence';
 import { newSignLinkExpiry, refreshSignLinkExpiryForRequest } from '@/lib/signLink';
+import * as Sentry from '@sentry/nextjs';
+import { produceSignedPdf, type SignedPdfStatus } from '@/lib/signedPdf';
+import { signerLinkBlockedReason } from '@/lib/ndaTransitions';
+import { isNdaFinalized } from '@/lib/ndaLifecycle';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
 export async function POST(request: NextRequest) {
     try {
+        // The signer id is the only credential on this route, so throttle guessing.
+        const limit = rateLimitRequest(request, 'sign-public', 20, MINUTE);
+        if (!limit.ok) return tooManyRequests(limit);
+
         const body = await request.json();
-        const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed } = body;
+        const { signerId, signerName, signerTitle, signatureImage, signatureDate, authorityConfirmed, termsAccepted } = body;
 
         if (!signerId || !signerName || !signerTitle || !signatureImage) {
             return NextResponse.json(
@@ -27,6 +36,14 @@ export async function POST(request: NextRequest) {
         if (authorityConfirmed !== true) {
             return NextResponse.json(
                 { error: 'You must confirm you are authorized to sign on behalf of your company.' },
+                { status: 400 }
+            );
+        }
+
+        // Terms / Privacy / E-Signature consent is required before any signature is applied.
+        if (termsAccepted !== true) {
+            return NextResponse.json(
+                { error: 'You must agree to the Terms of Service and Privacy Policy and consent to sign electronically.' },
                 { status: 400 }
             );
         }
@@ -74,6 +91,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Replaced links (recipient changed, NDA re-sent) and closed NDAs can't sign.
+        const latestSignRequest = await prisma.signRequest.findFirst({
+            where: { draftId: signer.signRequest.draftId },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+        });
+        const linkBlocked = signerLinkBlockedReason(signer, latestSignRequest?.id, signer.signRequest.draft);
+        if (linkBlocked) {
+            return NextResponse.json({ error: linkBlocked, status: 'INACTIVE' }, { status: 410 });
+        }
+        if (isNdaFinalized(signer.signRequest.draft)) {
+            return NextResponse.json({ error: 'This NDA has already been completed.', status: 'COMPLETE' }, { status: 409 });
+        }
+
         // Activity: signing in progress — keep the counterparty's link alive too.
         try { await refreshSignLinkExpiryForRequest(signer.signRequestId) } catch (e) { console.error('refresh expiry failed:', e) }
 
@@ -114,135 +145,169 @@ export async function POST(request: NextRequest) {
             authSigner = { id: authUser.id, email: authUser.email };
         }
 
-        // Extract form data from draft
         const draft = signer.signRequest.draft;
-        const formData = (draft.content as Prisma.JsonObject) || {};
 
-        // Update draft content with signature
-        let updatedContent = { ...formData };
-        if (isPartyA) {
-            updatedContent = {
-                ...updatedContent,
-                party_1_signatory_name: signerName,
-                party_1_signatory_title: signerTitle,
-                party_1_signature_date: signatureDate,
-                party_1_signature_image: signatureImage, // Save signature image
-            };
-        } else {
-            updatedContent = {
-                ...updatedContent,
-                party_2_signatory_name: signerName,
-                party_2_signatory_title: signerTitle,
-                party_2_signature_date: signatureDate,
-                party_2_signature_image: signatureImage, // Save signature image
-            };
+        // Sign-gating: a signature may only be applied once the NDA is agreed. While
+        // there are open suggestions/changes to review or input, block signing — a
+        // party can't unilaterally sign a version the other side hasn't agreed to.
+        const blockedForSigning = ['AWAITING_PARTY_A_REVIEW', 'AWAITING_PARTY_B_REVIEW', 'AWAITING_INPUT'];
+        const reviewPendingResponse = () => NextResponse.json(
+            { error: 'This NDA has open changes to review. Resolve the suggestions before signing.', code: 'REVIEW_PENDING' },
+            { status: 409 }
+        );
+        if (blockedForSigning.includes(draft.workflowState as string)) {
+            return reviewPendingResponse();
         }
 
-        // Determine next state
-        let newWorkflowState: NdaWorkflowState = NdaWorkflowState.COMPLETE;
-        let newStatus: NdaStatus = NdaStatus.SIGNED;
+        // Record the signature atomically. The draft row is locked first, so two
+        // signatures on the same NDA (both parties at once, or a double click)
+        // run one after the other: the second sees the first and either completes
+        // the NDA or is recognised as a repeat. Everything is re-read inside the
+        // lock — the content especially, or the second signer would overwrite the
+        // first one's signature with a stale copy. The SIGNED evidence row is part
+        // of the same transaction, so a signature can never exist without it.
+        const commit = await prisma.$transaction(async (tx) => {
+            await tx.$queryRaw`SELECT id FROM nda_drafts WHERE id = ${draft.id}::uuid FOR UPDATE`;
 
-        // Find the OTHER signer
-        const otherSignerRole = isPartyA ? 'SIGNER' : 'SENDER';
-        // First try to find a SIGNED record (any version)
-        let otherSigner = await prisma.signer.findFirst({
-            where: {
-                signRequestId: signer.signRequestId,
-                role: otherSignerRole,
-                status: 'SIGNED'
-            },
-            orderBy: { createdAt: 'desc' }
-        });
+            const current = await tx.signer.findUnique({ where: { id: signerId }, select: { status: true } });
+            if (!current || current.status === 'SIGNED') return { kind: 'already_signed' as const };
 
-        // If no signed record, get the latest one (likely PENDING)
-        if (!otherSigner) {
-            otherSigner = await prisma.signer.findFirst({
-                where: {
-                    signRequestId: signer.signRequestId,
-                    role: otherSignerRole
-                },
-                orderBy: { createdAt: 'desc' }
-            });
-        }
+            const freshDraft = await tx.ndaDraft.findUniqueOrThrow({ where: { id: draft.id } });
+            if (isNdaFinalized(freshDraft)) return { kind: 'complete' as const };
+            if (blockedForSigning.includes(freshDraft.workflowState as string)) return { kind: 'review_pending' as const };
 
-        if (process.env.NODE_ENV === 'development') {
-            console.log('🔍 Looking for other signer with role:', otherSignerRole);
-            console.log('🔍 Other signer found:', otherSigner ? otherSigner.email : 'NOT FOUND');
-        }
+            const formData = (freshDraft.content as Prisma.JsonObject) || {};
 
-        // Fallback: If Party B signed but no SENDER record exists, get Party A email from draft content
-        let otherPartyEmail: string | null = null;
-        let otherPartyName: string | null = null;
-
-        if (process.env.NODE_ENV === 'development') {
-            console.log('📧 Debug: isPartyA =', isPartyA);
-            console.log(
-                '📧 Debug: otherSigner =',
-                otherSigner ? { email: otherSigner.email, status: otherSigner.status } : 'null'
-            );
-            console.log('📧 Debug: formData.party_a_email =', formData.party_a_email);
-            console.log('📧 Debug: formData keys =', Object.keys(formData));
-        }
-
-        if (otherSigner) {
-            // Use the signer record if it exists
-            otherPartyEmail = otherSigner.email;
-            otherPartyName = otherSigner.name;
-        } else if (!isPartyA) {
-            // Party B signed, but Party A signer record doesn't exist
-            // Try to get Party A's email from the draft content
-            otherPartyEmail = (formData.party_a_email as string) || null;
-            otherPartyName =
-                (formData.party_a_signatory_name as string) ||
-                (formData.party_a_name as string) ||
-                null;
-            if (process.env.NODE_ENV === 'development') {
-                console.log('🔍 Fallback: Getting Party A email from draft content:', otherPartyEmail);
+            // Update draft content with signature
+            let updatedContent = { ...formData };
+            if (isPartyA) {
+                updatedContent = {
+                    ...updatedContent,
+                    party_1_signatory_name: signerName,
+                    party_1_signatory_title: signerTitle,
+                    party_1_signature_date: signatureDate,
+                    party_1_signature_image: signatureImage, // Save signature image
+                };
+            } else {
+                updatedContent = {
+                    ...updatedContent,
+                    party_2_signatory_name: signerName,
+                    party_2_signatory_title: signerTitle,
+                    party_2_signature_date: signatureDate,
+                    party_2_signature_image: signatureImage, // Save signature image
+                };
             }
+
+            // Find the OTHER signer: a SIGNED record if there is one, else the latest.
+            const otherSignerRole = isPartyA ? 'SIGNER' : 'SENDER';
+            const otherSigner =
+                (await tx.signer.findFirst({
+                    where: { signRequestId: signer.signRequestId, role: otherSignerRole, status: 'SIGNED' },
+                    orderBy: { createdAt: 'desc' },
+                })) ??
+                (await tx.signer.findFirst({
+                    where: { signRequestId: signer.signRequestId, role: otherSignerRole },
+                    orderBy: { createdAt: 'desc' },
+                }));
+
+            // Fallback: If Party B signed but no SENDER record exists, get Party A from draft content
+            let otherPartyEmail: string | null = null;
+            let otherPartyName: string | null = null;
+            if (otherSigner) {
+                otherPartyEmail = otherSigner.email;
+                otherPartyName = otherSigner.name;
+            } else if (!isPartyA) {
+                otherPartyEmail = (formData.party_a_email as string) || null;
+                otherPartyName =
+                    (formData.party_a_signatory_name as string) ||
+                    (formData.party_a_name as string) ||
+                    null;
+            }
+
+            const otherPartyHasSigned = otherSigner?.status === 'SIGNED';
+            const newWorkflowState: NdaWorkflowState = otherPartyHasSigned
+                ? NdaWorkflowState.COMPLETE
+                : isPartyA ? NdaWorkflowState.AWAITING_PARTY_B_SIGNATURE : NdaWorkflowState.AWAITING_PARTY_A_SIGNATURE;
+            const newStatus: NdaStatus = otherPartyHasSigned ? NdaStatus.SIGNED : NdaStatus.SENT;
+
+            await tx.ndaDraft.update({
+                where: { id: draft.id },
+                data: {
+                    content: updatedContent,
+                    status: newStatus,
+                    workflowState: newWorkflowState,
+                    sentAt: freshDraft.sentAt ?? new Date(),
+                    completedAt: newWorkflowState === 'COMPLETE' ? new Date() : undefined,
+                },
+            });
+
+            await tx.signRequest.update({
+                where: { id: signer.signRequestId },
+                data: { status: newWorkflowState === 'COMPLETE' ? 'SIGNED' : 'SENT' },
+            });
+
+            // For the company side, stamp the AUTHENTICATED user's identity so the record
+            // shows who actually signed (never trust the pre-existing SENDER record's email).
+            await tx.signer.update({
+                where: { id: signerId },
+                data: {
+                    status: 'SIGNED',
+                    name: signerName,
+                    ...(authSigner ? { email: authSigner.email, userId: authSigner.id } : {}),
+                },
+            });
+
+            // Signature evidence (IP, template version snapshot, authority affirmation).
+            // The agreement hash is added once the final PDF exists, after commit.
+            const evidence: Prisma.JsonObject = {
+                // For the company side, the authenticated user is the authoritative signatory.
+                signer_email: authSigner?.email ?? signer.email,
+                signer_name: signerName,
+                action: 'public_signature_submitted',
+                party: isPartyA ? 'party_a' : 'party_b',
+                new_state: newWorkflowState,
+                templateSnapshot: templateSnapshot((formData.templateId as string) || draft.templateId || 'professional_mutual_nda_v1'),
+                parties: partiesSnapshot(updatedContent as Record<string, unknown>),
+                authority: authorityConsent(true),
+                termsConsent: termsConsent(true),
+            };
+            const signedEvent = await tx.auditEvent.create({
+                data: {
+                    organizationId: signer.signRequest.organizationId,
+                    draftId: draft.id,
+                    signRequestId: signer.signRequestId,
+                    signerId,
+                    eventType: 'SIGNED',
+                    ipAddress: clientIp,
+                    metadata: evidence,
+                },
+                select: { id: true },
+            });
+
+            return {
+                kind: 'committed' as const,
+                formData,
+                updatedContent,
+                newWorkflowState,
+                otherSigner,
+                otherPartyEmail,
+                otherPartyName,
+                evidence,
+                signedEventId: signedEvent.id,
+            };
+        }, { timeout: 15000 });
+
+        if (commit.kind === 'already_signed') {
+            return NextResponse.json({ message: 'Signature already submitted', status: 'SIGNED' }, { status: 200 });
+        }
+        if (commit.kind === 'complete') {
+            return NextResponse.json({ error: 'This NDA has already been completed.', status: 'COMPLETE' }, { status: 409 });
+        }
+        if (commit.kind === 'review_pending') {
+            return reviewPendingResponse();
         }
 
-        const otherPartyHasSigned = otherSigner?.status === 'SIGNED';
-
-        if (otherPartyHasSigned) {
-            newWorkflowState = NdaWorkflowState.COMPLETE;
-            newStatus = NdaStatus.SIGNED;
-        } else {
-            // Other party hasn't signed yet
-            newStatus = NdaStatus.SENT;
-            newWorkflowState = isPartyA ? NdaWorkflowState.AWAITING_PARTY_B_SIGNATURE : NdaWorkflowState.AWAITING_PARTY_A_SIGNATURE;
-        }
-
-        // Update draft
-        await prisma.ndaDraft.update({
-            where: { id: draft.id },
-            data: {
-                content: updatedContent,
-                status: newStatus,
-                workflowState: newWorkflowState,
-                sentAt: draft.sentAt ?? new Date(),
-                completedAt: newWorkflowState === 'COMPLETE' ? new Date() : undefined,
-            },
-        });
-
-        // Update sign request status
-        const newSignRequestStatus = newWorkflowState === 'COMPLETE' ? 'SIGNED' : 'SENT';
-
-        await prisma.signRequest.update({
-            where: { id: signer.signRequestId },
-            data: { status: newSignRequestStatus },
-        });
-
-        // Update current signer status. For the company side, stamp the AUTHENTICATED
-        // user's identity so the record shows who actually signed (never trust the
-        // pre-existing SENDER record's email).
-        await prisma.signer.update({
-            where: { id: signerId },
-            data: {
-                status: 'SIGNED',
-                name: signerName,
-                ...(authSigner ? { email: authSigner.email, userId: authSigner.id } : {}),
-            },
-        });
+        const { formData, updatedContent, newWorkflowState, otherSigner, otherPartyEmail, otherPartyName } = commit;
 
         // Link signer to user account. Party A's identity is already stamped above from
         // the authenticated session; for the counterparty, link by email if a matching
@@ -267,68 +332,98 @@ export async function POST(request: NextRequest) {
         // Kept OUT of the email try/catch so an email failure can never drop the hash.
         let agreementHash: string | null = null;
         let pdfAttachment: { filename: string; content: string; contentType: string }[] | null = null;
+        let pdfStatus: SignedPdfStatus | null = null;
 
         if (newWorkflowState === 'COMPLETE') {
-                console.log('📄 Both parties signed - generating final PDF with signatures...');
-                try {
+            console.log('📄 Both parties signed - generating final PDF with signatures...');
+
+            // Prepare template data with both signatures
+            const templateData = {
+                ...updatedContent,
+                party_1_name: formData.party_a_name || '',
+                party_1_address: formData.party_a_address || '',
+                party_1_signatory_name: formData.party_a_signatory_name || updatedContent.party_1_signatory_name || '',
+                party_1_signatory_title: formData.party_a_title || updatedContent.party_1_signatory_title || '',
+                party_1_phone: formData.party_a_phone || '',
+                party_1_emails_joined: formData.party_a_email || '',
+                party_1_signature_image: updatedContent.party_1_signature_image || '',
+                party_1_signature_date: updatedContent.party_1_signature_date || '',
+                party_2_name: formData.party_b_name || '',
+                party_2_address: formData.party_b_address || '',
+                party_2_signatory_name: formData.party_b_signatory_name || updatedContent.party_2_signatory_name || '',
+                party_2_signatory_title: formData.party_b_title || updatedContent.party_2_signatory_title || '',
+                party_2_phone: formData.party_b_phone || '',
+                party_2_emails_joined: formData.party_b_email || '',
+                party_2_signature_image: updatedContent.party_2_signature_image || '',
+                party_2_signature_date: updatedContent.party_2_signature_date || '',
+            };
+
+            // Signing is already committed at this point, so this never throws: a failure
+            // comes back as a status that is recorded on the audit event and sent to Sentry.
+            const signedPdf = await produceSignedPdf({
+                render: async () => {
                     const { renderNdaHtml } = await import('@/lib/renderNdaHtml');
                     const { renderHtmlToPdf } = await import('@/lib/htmlToPdf');
-
-                    // Prepare template data with both signatures
-                    const templateData = {
-                        ...updatedContent,
-                        party_1_name: formData.party_a_name || '',
-                        party_1_address: formData.party_a_address || '',
-                        party_1_signatory_name: formData.party_a_signatory_name || updatedContent.party_1_signatory_name || '',
-                        party_1_signatory_title: formData.party_a_title || updatedContent.party_1_signatory_title || '',
-                        party_1_phone: formData.party_a_phone || '',
-                        party_1_emails_joined: formData.party_a_email || '',
-                        party_1_signature_image: updatedContent.party_1_signature_image || '',
-                        party_1_signature_date: updatedContent.party_1_signature_date || '',
-                        party_2_name: formData.party_b_name || '',
-                        party_2_address: formData.party_b_address || '',
-                        party_2_signatory_name: formData.party_b_signatory_name || updatedContent.party_2_signatory_name || '',
-                        party_2_signatory_title: formData.party_b_title || updatedContent.party_2_signatory_title || '',
-                        party_2_phone: formData.party_b_phone || '',
-                        party_2_emails_joined: formData.party_b_email || '',
-                        party_2_signature_image: updatedContent.party_2_signature_image || '',
-                        party_2_signature_date: updatedContent.party_2_signature_date || '',
-                    };
-
                     const html = await renderNdaHtml(templateData, (formData.templateId as string) || 'professional_mutual_nda_v1');
-                    const pdfBuffer = await renderHtmlToPdf(html, {
+                    return renderHtmlToPdf(html, {
                         pageWidthPx: 900,
                         baseUrl: getAppUrl(),
                         isA4: true,
                     });
+                },
+                store: async (pdfBuffer) => {
+                    const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
+                    await storeNdaPdf({
+                        signRequestId: signer.signRequestId,
+                        kind: 'SIGNED',
+                        pdfBuffer,
+                    });
+                },
+                hash: sha256Hex,
+            });
 
-                    agreementHash = sha256Hex(pdfBuffer);
+            pdfStatus = signedPdf.status;
+            agreementHash = signedPdf.agreementHash;
 
-                    const pdfBase64 = pdfBuffer.toString('base64');
-                    pdfAttachment = [{
-                        filename: `${draft.title || 'NDA'}_Signed.pdf`,
-                        content: pdfBase64,
-                        contentType: 'application/pdf'
-                    }];
+            if (signedPdf.pdfBuffer) {
+                pdfAttachment = [{
+                    filename: `${draft.title || 'NDA'}_Signed.pdf`,
+                    content: signedPdf.pdfBuffer.toString('base64'),
+                    contentType: 'application/pdf'
+                }];
+            }
 
-                    console.log('✅ Final PDF generated with both signatures');
+            if (signedPdf.status === 'stored') {
+                console.log('✅ Final PDF generated and stored');
+            } else {
+                console.error(`❌ Signed PDF ${signedPdf.status} for draft ${draft.id}:`, signedPdf.error);
+                Sentry.captureException(signedPdf.error, {
+                    tags: { area: 'signed-pdf', pdfStatus: signedPdf.status },
+                    extra: { draftId: draft.id, signRequestId: signer.signRequestId },
+                });
+            }
 
-                    // Store SIGNED PDF to S3
-                    try {
-                        const { storeNdaPdf } = await import('@/lib/storeNdaPdf');
-                        await storeNdaPdf({
-                            signRequestId: signer.signRequestId,
-                            kind: 'SIGNED',
-                            pdfBuffer: pdfBuffer,
-                        });
-                        console.log('✅ SIGNED PDF stored in S3');
-                    } catch (s3Error) {
-                        console.error('❌ Failed to store PDF to S3:', s3Error);
-                        // Continue - S3 storage failure shouldn't block completion
-                    }
-                } catch (pdfError) {
-                    console.error('❌ Failed to generate final signed PDF:', pdfError);
-                }
+            // Put the fingerprint (or the failure) on the SIGNED evidence row written
+            // in the transaction. Only the request that completed the NDA gets here —
+            // the row lock guarantees one — so the hash matches the one stored PDF.
+            try {
+                await prisma.auditEvent.update({
+                    where: { id: commit.signedEventId },
+                    data: {
+                        metadata: {
+                            ...commit.evidence,
+                            ...(agreementHash ? { agreementHash } : {}),
+                            ...(pdfStatus ? { pdfStatus } : {}),
+                        },
+                    },
+                });
+            } catch (hashError) {
+                console.error(`❌ Failed to record agreement hash for draft ${draft.id}:`, hashError);
+                Sentry.captureException(hashError, {
+                    tags: { area: 'signed-pdf', step: 'record-hash' },
+                    extra: { draftId: draft.id, auditEventId: commit.signedEventId, agreementHash },
+                });
+            }
         }
 
         // Send Email Notifications
@@ -350,7 +445,7 @@ export async function POST(request: NextRequest) {
                     html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(signer.id)),
                     attachments: pdfAttachment || undefined
                 });
-                console.log('📧 Congratulations email sent to current signer:', signer.email, pdfAttachment ? 'with PDF attachment' : '');
+                console.log('📧 Congratulations email sent to current signer', pdfAttachment ? '(with PDF attachment)' : '');
 
                 // Email Other Signer (or use fallback email)
                 const otherRecipientEmail = otherSigner?.email || otherPartyEmail;
@@ -361,7 +456,7 @@ export async function POST(request: NextRequest) {
                         html: congratulationsEmailHtml(draft.title || 'NDA', viewPdfLink(otherSigner?.id ?? signer.id)),
                         attachments: pdfAttachment || undefined
                     });
-                    console.log('📧 Congratulations email sent to other signer:', otherRecipientEmail, pdfAttachment ? 'with PDF attachment' : '');
+                    console.log('📧 Congratulations email sent to other signer', pdfAttachment ? '(with PDF attachment)' : '');
                 } else {
                     console.warn('⚠️  Could not send congratulations email to other party - no email found');
                 }
@@ -372,7 +467,7 @@ export async function POST(request: NextRequest) {
                 const recipientName = otherSigner?.name || otherPartyName;
                 let recipientSignerId = otherSigner?.id;
 
-                console.log('📧 Preparing to send email to:', recipientEmail);
+                console.log('📧 Preparing to send email to the other party');
 
                 // If Party B signed and no Party A signer record exists, create one
                 if (!otherSigner && !isPartyA && recipientEmail) {
@@ -407,7 +502,7 @@ export async function POST(request: NextRequest) {
                             signerName
                         ),
                     });
-                    console.log('📧 "Time to Sign" email sent to:', recipientEmail, 'with link:', signPageLink);
+                    console.log('📧 "Time to Sign" email sent to the other party');
                 } else if (recipientEmail) {
                     // Fallback: If we couldn't create a signer record, send to dashboard
                     const dashboardLink = `${appUrl}/dashboard`;
@@ -423,7 +518,7 @@ export async function POST(request: NextRequest) {
                             signerName
                         ),
                     });
-                    console.log('📧 "Time to Sign" email sent to:', recipientEmail, '(fallback to dashboard)');
+                    console.log('📧 "Time to Sign" email sent to the other party (fallback to dashboard)');
                 } else {
                     console.warn('⚠️ Could not find email address for the other party');
                 }
@@ -493,29 +588,6 @@ export async function POST(request: NextRequest) {
         } catch (e) {
             console.error('Failed to create sign notification:', e)
         }
-
-        // Create audit event with signature evidence (IP, template version snapshot, authority
-        // affirmation, and — once fully executed — the agreement hash).
-        await prisma.auditEvent.create({
-            data: {
-                organizationId: signer.signRequest.organizationId,
-                draftId: draft.id,
-                eventType: 'SIGNED',
-                ipAddress: clientIp,
-                metadata: {
-                    // For the company side, the authenticated user is the authoritative signatory.
-                    signer_email: authSigner?.email ?? signer.email,
-                    signer_name: signerName,
-                    action: 'public_signature_submitted',
-                    party: isPartyA ? 'party_a' : 'party_b',
-                    new_state: newWorkflowState,
-                    templateSnapshot: templateSnapshot((formData.templateId as string) || draft.templateId || 'professional_mutual_nda_v1'),
-                    parties: partiesSnapshot(updatedContent as Record<string, unknown>),
-                    authority: authorityConsent(true),
-                    ...(agreementHash ? { agreementHash } : {}),
-                },
-            },
-        });
 
         return NextResponse.json({
             success: true,

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canContributeToDrafts, canSignNDA, isOrganizationOwner } from '@/lib/organizationRoles'
 import { isDraftExpired } from '@/lib/signLink'
-import { canHardDeleteNda } from '@/lib/ndaLifecycle'
+import { canHardDeleteNda, canEditNdaContent, NDA_LOCKED_MESSAGE } from '@/lib/ndaLifecycle'
 
 export async function GET(
   request: NextRequest,
@@ -106,15 +106,19 @@ export async function PUT(
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    const draft = await prisma.ndaDraft.update({
-      where: {
-        id
-      },
+    // Conditional on still being an unsent draft, so a save racing a send
+    // can't change terms the receiver already has (see canEditNdaContent).
+    const { count } = await prisma.ndaDraft.updateMany({
+      where: { id, status: 'DRAFT', workflowState: 'DRAFT' },
       data: {
         title,
         content: data
       }
     })
+    if (count === 0 || !canEditNdaContent(existingDraft)) {
+      return NextResponse.json({ error: NDA_LOCKED_MESSAGE, code: 'NDA_LOCKED' }, { status: 409 })
+    }
+    const draft = await prisma.ndaDraft.findUniqueOrThrow({ where: { id } })
 
     return NextResponse.json({ draft })
   } catch (error) {

@@ -21,9 +21,11 @@ export function LegalDisclaimer({ className = '' }: { className?: string }) {
         <span className="font-semibold text-ink">
           FormalizeIt is not a law firm and does not provide legal advice.
         </span>{' '}
-        This is a document workflow tool. Review the NDA before accepting or
-        signing; consult a qualified attorney for high-stakes or unusual
-        situations.
+        FormalizeIt is a document workflow tool: it is not a party to
+        your NDA, does not verify the identity or authority of signers, and does
+        not monitor or enforce the agreement. Using it does not create an
+        attorney-client relationship. If you are unsure about anything in the
+        NDA, consult a qualified lawyer before signing.
       </p>
     </div>
   );

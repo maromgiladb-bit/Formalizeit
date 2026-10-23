@@ -3,6 +3,7 @@
 import { SignIn, useAuth } from '@clerk/nextjs'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function SignInPage() {
   const { isLoaded, userId } = useAuth()
@@ -28,7 +29,7 @@ export default function SignInPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-ink tracking-tight">
-            Sign in to Formalize It
+            Sign in to FormalizeIt
           </h2>
           <p className="mt-2 text-center text-sm text-gray-500">
             Access your NDA drafts and manage agreements
@@ -37,7 +38,7 @@ export default function SignInPage() {
         <div className="bg-white py-8 px-6 rounded-2xl border border-gray-100 shadow-card">
           <SignIn
             routing="hash"
-            redirectUrl="/"
+            fallbackRedirectUrl="/dashboard"
             appearance={{
               elements: {
                 footerAction: { display: 'none' },
@@ -46,6 +47,12 @@ export default function SignInPage() {
             }}
           />
         </div>
+        <p className="text-center text-sm text-gray-500">
+          New here?{' '}
+          <Link href="/signup" className="font-semibold text-teal-800 hover:text-teal-700">
+            Create a free account
+          </Link>
+        </p>
       </div>
     </div>
   )

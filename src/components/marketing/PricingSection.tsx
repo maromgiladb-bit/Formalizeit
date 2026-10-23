@@ -33,7 +33,7 @@ const pricingPlans = [
     features: [
       "Unlimited NDA generation",
       "NDA dashboard & search",
-      "Full audit trail",
+      "Search & activity history",
     ],
     description: "For consultants, freelancers & founders",
     buttonText: "Upgrade to Pro",

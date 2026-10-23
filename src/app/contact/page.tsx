@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Send, ArrowRight, CheckCircle } from "lucide-react";
+import { Mail, Send, ArrowRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 const fadeUp = {
@@ -20,26 +20,12 @@ const contactCards = [
     icon: Mail,
     title: "Email Us",
     description: "For general inquiries and support",
-    link: "mailto:maromgiladb@gmail.com",
-    linkLabel: "maromgiladb@gmail.com",
-  },
-  {
-    icon: Phone,
-    title: "Call Us",
-    description: "Mon-Fri from 9am to 6pm EST",
-    link: "tel:+15551234567",
-    linkLabel: "+1 (555) 123-4567",
-  },
-  {
-    icon: MapPin,
-    title: "Visit Us",
-    description: "123 Legal Tech Blvd\nSan Francisco, CA 94105",
-    link: null,
-    linkLabel: null,
+    link: "mailto:support@formalizeit.com",
+    linkLabel: "support@formalizeit.com",
   },
 ];
 
-const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "" };
+const emptyForm = { firstName: "", lastName: "", email: "", subject: "", message: "", company: "" };
 
 export default function Contact() {
   const [form, setForm] = useState(emptyForm);
@@ -156,6 +142,17 @@ export default function Contact() {
                   </div>
                 ) : (
                 <form className="space-y-5" onSubmit={handleSubmit}>
+                  {/* Honeypot — hidden from real users; bots that fill it are dropped server-side. */}
+                  <input
+                    type="text"
+                    name="company"
+                    value={form.company}
+                    onChange={update("company")}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="hidden"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>

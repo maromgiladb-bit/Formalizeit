@@ -48,7 +48,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
     'Unlimited NDA generation',
     '1 user',
     'NDA dashboard & search',
-    'Full audit trail',
+    'Search & activity history',
   ],
   TEAM: [
     'Everything in Pro',
@@ -395,7 +395,7 @@ export default function BillingSettingsPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               ) : (
-                <p className="text-sm text-gray-500">Only the organization owner can upgrade the plan.</p>
+                <p className="text-sm text-gray-500">Only an administrator can upgrade the plan.</p>
               )}
               <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
                 View all plans

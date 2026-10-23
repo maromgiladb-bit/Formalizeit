@@ -145,9 +145,13 @@ model User {
   acknowledgedNdaVersion   String?   @map("acknowledged_nda_version")
   acknowledgedNdaVersionAt DateTime? @map("acknowledged_nda_version_at")
 
+  // Terms of Service / Privacy Policy acceptance evidence (see src/lib/legalVersions.ts)
+  termsAcceptedAt DateTime? @map("terms_accepted_at")
+  termsVersion    String?   @map("terms_version")
+
   // Relations
   memberships         Membership[]
-  ownedOrganizations  Organization[] @relation("OwnedOrganizations")
+  ownedOrganizations Organization[] @relation("OwnedOrganizations")
   createdTemplates    NdaTemplate[]  @relation("TemplateCreator")
   createdDrafts       NdaDraft[]     @relation("DraftCreator")
   createdSignRequests SignRequest[]  @relation("SignRequestCreator")
@@ -273,6 +277,7 @@ model NdaDraft {
   retentionNoticeSentAt DateTime? @map("retention_notice_sent_at") // Advance-deletion notice sent (free-plan 5y retention)
   reminder48hSentAt DateTime? @map("reminder_48h_sent_at") // First unsigned-NDA reminder to receiver (48h after sent)
   reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
+  remindersStoppedAt DateTime? @map("reminders_stopped_at") // Receiver clicked "Stop these reminders" - cron skips this NDA
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   archivedAt      DateTime? @map("archived_at") // Finalized NDA moved to the dashboard Archived list

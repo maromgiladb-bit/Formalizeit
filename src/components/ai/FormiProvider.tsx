@@ -13,6 +13,7 @@ import NdaAgentAvatar, {
 	type NdaAgentHandle,
 } from "@/components/ai/NdaAgentAvatar";
 import type { Finding, NdaContext } from "@/ai/types";
+import { FORMI_ENABLED } from "@/lib/featureFlags";
 
 interface FormiContextValue {
 	/** Publish the current page's NDA draft snapshot (pass null to clear). */
@@ -61,13 +62,15 @@ export function FormiProvider({ children }: { children: React.ReactNode }) {
 	return (
 		<FormiContext.Provider value={value}>
 			{children}
-			<SignedIn>
-				<NdaAgentAvatar
-					ref={avatarRef}
-					nda={nda ?? undefined}
-					onFindingsChange={setFindings}
-				/>
-			</SignedIn>
+			{FORMI_ENABLED && (
+				<SignedIn>
+					<NdaAgentAvatar
+						ref={avatarRef}
+						nda={nda ?? undefined}
+						onFindingsChange={setFindings}
+					/>
+				</SignedIn>
+			)}
 		</FormiContext.Provider>
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,6 @@ interface Template {
 export default function TemplateSelectionPage() {
   const { isLoaded, user } = useUser();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode"); // Check for mode=html
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -35,6 +33,12 @@ export default function TemplateSelectionPage() {
       const res = await fetch("/api/templates");
       const data = await res.json();
       if (data.templates) {
+        // MVP: one standard NDA. With a single template there is nothing to
+        // choose, so skip the picker and open the form directly.
+        if (data.templates.length === 1) {
+          router.replace(`/fillndahtml?templateId=${data.templates[0].id}&new=true`);
+          return;
+        }
         setTemplates(data.templates);
       }
     } catch (error) {
@@ -74,13 +78,12 @@ export default function TemplateSelectionPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Step 1 of 2</p>
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Get started</p>
           <h1 className="text-4xl font-extrabold tracking-tight text-ink mb-4">
-            Choose Your NDA Template {mode === "html" && <span className="text-teal-700">(HTML Editor)</span>}
+            Choose your NDA
           </h1>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Select the template that best fits your needs. Each template is professionally designed and legally sound.
-            {mode === "html" && <span className="block mt-2 text-teal-700 font-medium">You&apos;ll be redirected to the HTML-based editor with live preview.</span>}
+            Pick the agreement that fits this deal. The legal text is fixed — you only fill in what&apos;s different.
           </p>
         </div>
 
@@ -181,17 +184,6 @@ export default function TemplateSelectionPage() {
                 </div>
               </div>
             ))}
-            
-            {/* Placeholder for future templates */}
-            <div className="bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-8 text-center w-full md:w-[calc(50%-2rem)] lg:w-[380px]">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-500 mb-2">More Templates Coming Soon</h3>
-              <p className="text-gray-400 text-sm">We are working hard to bring you more legally sound templates.</p>
-            </div>
           </div>
         )}
 
