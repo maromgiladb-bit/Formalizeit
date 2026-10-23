@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe, priceIdFor, type PaidPlan } from '@/lib/stripe'
+import { getStripe, isStripeConfigured, priceIdFor, type PaidPlan } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 import { getAppUrl } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
         select: { email: true, name: true },
       })
 
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: owner?.email ?? undefined,
         name: owner?.name ?? organization.name,
         metadata: { organizationId: organization.id },
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (embedded) {
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         ...commonParams,
         ui_mode: 'embedded_page',
         return_url: `${resolvedAppUrl}/dashboard?checkout=success`,
@@ -96,7 +99,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ clientSecret: session.client_secret })
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       ...commonParams,
       ui_mode: 'hosted_page',
       success_url: `${resolvedAppUrl}/dashboard?checkout=success`,

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 import { subscriptionToOrgData } from '@/billing/reconcileSubscription'
 
@@ -17,6 +18,8 @@ import { subscriptionToOrgData } from '@/billing/reconcileSubscription'
  * POST /api/billing/sync
  */
 export async function POST() {
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -42,7 +45,7 @@ export async function POST() {
 
     // A canceled subscription is still retrievable and maps to FREE/CANCELLED,
     // so this also self-heals a missed deletion webhook.
-    const subscription = await stripe.subscriptions.retrieve(organization.stripeSubscriptionId)
+    const subscription = await getStripe().subscriptions.retrieve(organization.stripeSubscriptionId)
     await prisma.organization.update({
       where: { id: organization.id },
       data: subscriptionToOrgData(subscription),

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { stripe, planFromPriceId } from '@/lib/stripe'
+import { getStripe, isStripeConfigured, planFromPriceId } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { sendEmail, subscriptionCancelledEmailHtml, paymentFailedEmailHtml, getAppUrl } from '@/lib/email'
 import {
   SUBSCRIPTION_STATUS_MAP,
@@ -13,6 +14,11 @@ import {
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Billing is not set up (e.g. free beta): nothing legitimate can reach us and we cannot
+  // verify signatures. Answer 503 (not 200) so a misconfigured production deploy is loud
+  // and Stripe retries the events once the env vars are in place.
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
 
@@ -27,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
+    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     console.error('Stripe webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
@@ -78,7 +84,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
   const periodEnd = getCurrentPeriodEnd(subscription)

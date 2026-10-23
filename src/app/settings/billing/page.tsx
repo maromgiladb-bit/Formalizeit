@@ -176,7 +176,8 @@ export default function BillingSettingsPage() {
       const res = await fetch('/api/billing/portal', { method: 'POST' })
       if (!res.ok) {
         portalTab?.close()
-        setPortalError('Failed to open billing portal. Please try again.')
+        const errData = await res.json().catch(() => null)
+        setPortalError(errData?.error || 'Failed to open billing portal. Please try again.')
         return
       }
       const data = await res.json()
