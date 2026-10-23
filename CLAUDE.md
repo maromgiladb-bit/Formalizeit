@@ -179,6 +179,9 @@ only signers/administrators apply the company signature at the `signed` step.
   `assertCanSendNda` in `src/organizations/limits.ts`. Stripe price→plan map in
   `src/lib/stripe-price-ids.ts` (`priceIdFor`/`planFromPriceId`); checkout takes a `plan` arg and the
   webhook maps the subscription price → plan. Receivers are always free/no-account.
+- **Free beta (current, Oct 2026):** while paid plans are switched off (see "Launch switches"),
+  `effectivePlanLimits()` gives FREE unlimited NDAs and up to 10 users. `PLAN_LIMITS` above still
+  holds the paid-launch numbers and is never edited for the beta.
 - **Retention**: signed NDAs kept **5 years from execution** (free included); advance notice before
   any deletion. Enforced by `src/app/api/cron/retention-cleanup` (notice at 5y−30d, delete at 5y
   keeping the draft row + a `RETENTION_DELETED` audit stub) using `NdaDraft.completedAt` /
@@ -203,6 +206,26 @@ v1.0, E-Signature Consent mirrors `src/lib/signatureEvidence.ts`).
 and a prominent disclaimer. They **must still be reviewed by qualified legal counsel** — do this
 in parallel with launch and before scaling / removing any beta framing. Keep each page in sync
 with the behavior it describes when the underlying code changes.
+
+---
+
+## Launch switches — flip these to open the site
+
+The MVP launches as a **free beta with sign-up closed**. Every switch lives in
+`src/lib/featureFlags.ts`. `NEXT_PUBLIC_` values are baked in at build time, so after changing one in
+Vercel (Production scope) you must **redeploy**. The order to flip them is tracked in
+`docs/launch/README.md` → "Go-live switches".
+
+| Switch | Now | What it does | To turn it on / open |
+|---|---|---|---|
+| `NEXT_PUBLIC_PRIVATE_BETA` (env) | `on` (unset = closed in production) | Sign-up closed: `/signup` and every "Get started" button go to the `/coming-soon` request-access form. Sign-in, receiver links, webhooks and crons are unaffected. | Set `off`, redeploy. That opens sign-ups. |
+| `NEXT_PUBLIC_PAID_PLANS_ENABLED` (env) | unset = free beta | Off: Pro/Team show "Coming soon", checkout/upgrade/downgrade return 403, FREE is unlimited. | Only once Stripe is live. Email users 30 days ahead (Terms §7), set `FREE_ALLOWANCE_COUNTS_FROM` in `src/billing/planLimits.ts` to the launch date (free companies get a fresh 3 NDAs), then set `true` and redeploy. |
+| `BETA_LABEL` (code) | `true` | "Beta" pill next to the logo. | Set `false` only after legal counsel has reviewed the legal pages. |
+| `FORMI_ENABLED` (code) | `false` | AI assistant hidden (see Formi section). | Set `true` after its prerequisites. |
+
+Known gap while sign-up is closed: a brand-new user signing in with Google on `/sign-in` can still
+get a Clerk account. If that becomes a problem, set Clerk → Restrictions → sign-up mode to
+"Restricted" until launch.
 
 ---
 

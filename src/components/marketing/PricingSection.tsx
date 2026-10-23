@@ -7,6 +7,7 @@ import { Pricing } from '@/components/ui/pricing'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
 import { Reveal } from '@/components/ui/reveal'
 import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
+import { signupHref } from '@/lib/signupGate'
 
 const pricingPlans = [
   {
@@ -130,7 +131,7 @@ export default function PricingSection() {
         isPopular: true,
         badge: 'Free in beta',
         buttonText: 'Get Started Free',
-        href: userId ? '/dashboard' : '/signup',
+        href: userId ? '/dashboard' : signupHref(),
       }
     }
     const alreadyPaying =
@@ -149,13 +150,13 @@ export default function PricingSection() {
 
   const plans = !PAID_PLANS_ENABLED ? betaPlans : pricingPlans.map(plan => {
     if (plan.name === 'Pro') {
-      if (!userId) return { ...plan, href: '/signup' }
+      if (!userId) return { ...plan, href: signupHref() }
       if (currentPlan === 'PRO') return { ...plan, buttonText: 'Current plan', href: '/settings/billing' }
       if (currentPlan === 'TEAM') return { ...plan, buttonText: 'Manage plan', href: '/settings/billing' }
       return { ...plan, onClickAction: (isMonthly: boolean) => openCheckout('PRO', isMonthly) }
     }
     if (plan.name === 'Team') {
-      if (!userId) return { ...plan, href: '/signup' }
+      if (!userId) return { ...plan, href: signupHref() }
       if (currentPlan === 'TEAM') return { ...plan, buttonText: 'Current plan', href: '/settings/billing' }
       if (currentPlan === 'PRO') return {
         ...plan,
@@ -165,7 +166,7 @@ export default function PricingSection() {
       return { ...plan, onClickAction: (isMonthly: boolean) => openCheckout('TEAM', isMonthly) }
     }
     if (plan.name === 'Free' && !userId) {
-      return { ...plan, href: '/signup' }
+      return { ...plan, href: signupHref() }
     }
     return plan
   })

@@ -1,5 +1,6 @@
 "use client";
-import { SignUpButton, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import SignupButton from "@/components/SignupButton";
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
@@ -230,12 +231,12 @@ export default function Home() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
-                <SignUpButton mode="modal">
+                <SignupButton>
                   <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm cursor-pointer">
                     Send Your First NDA Free
                     <ArrowRight className="w-4 h-4" />
                   </button>
-                </SignUpButton>
+                </SignupButton>
               )}
               <a
                 href="#pricing"
@@ -416,12 +417,12 @@ export default function Home() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
-              <SignUpButton mode="modal">
+              <SignupButton>
                 <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm cursor-pointer">
                   Start in seconds
                   <ArrowRight className="w-4 h-4" />
                 </button>
-              </SignUpButton>
+              </SignupButton>
             )}
           </Reveal>
         </div>

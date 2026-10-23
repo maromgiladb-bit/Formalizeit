@@ -44,6 +44,14 @@ checkout/upgrade/downgrade, Pro/Team buyable, Free limited to 3 NDAs / 1 user). 
 else = free beta (unlimited NDAs, 10 users, paid plans shown as "Coming soon"). `.env.example` is
 gitignored, so add this line there by hand: `# NEXT_PUBLIC_PAID_PLANS_ENABLED=true  # unset = free beta`.
 
+Optional: `NEXT_PUBLIC_PRIVATE_BETA` — sign-up gate. `on` = sign-up closed (`/signup` and every
+"Get started" button go to the `/coming-soon` request-access form; existing accounts still sign
+in). `off` = sign-up open. Unset = closed in production builds, open in local `next dev`. Add by
+hand to `.env.example`: `# NEXT_PUBLIC_PRIVATE_BETA=on  # off = sign-up open`.
+
+Both are `NEXT_PUBLIC_` values baked in at build time: change them in Vercel, then **redeploy**.
+See "Launch switches" in CLAUDE.md for when to flip each.
+
 ## Production data hygiene (one-time, before launch)
 
 Use `scripts/cleanup-test-data.mjs` to purge test organizations from a database. It is **dry-run

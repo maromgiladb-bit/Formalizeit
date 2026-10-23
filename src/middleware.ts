@@ -1,5 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import { SIGNUP_OPEN } from '@/lib/featureFlags'
+import { signupGateRedirect } from '@/lib/signupGate'
 
 // 1. Public routes — reachable without signing in.
 //    Everything NOT matched here requires an authenticated Clerk session.
@@ -79,6 +81,12 @@ export default clerkMiddleware(async (auth, req) => {
   // 1. Dev-only routes: 404 in production, pass through in dev.
   if (process.env.NODE_ENV === 'production' && isDevOnlyRoute(req)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // 1b. Private beta: while sign-up is closed, /signup goes to the waitlist page.
+  const gateTarget = signupGateRedirect(req.nextUrl.pathname, SIGNUP_OPEN)
+  if (gateTarget) {
+    return NextResponse.redirect(new URL(gateTarget, req.url))
   }
 
   // 2. Public routes always pass through.

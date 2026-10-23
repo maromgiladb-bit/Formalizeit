@@ -26,21 +26,32 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 ### Resume here (updated 2026-10-23)
 
 Launch plan changed 2026-10-23: Stripe can't be activated yet, so the MVP launches as a **free
-beta** (paid plans off, no 3-NDA limit), behind a **site gate** so production can be tested closed
-before signups open. Both are switches. Plans to review:
-[free beta](../superpowers/specs/2026-10-23-free-beta-design.md) ·
-[site gate](../superpowers/specs/2026-10-23-site-gate-design.md).
+beta** (paid plans off, no 3-NDA limit) with **sign-up closed** until production has been tested.
+Both are built (2026-10-24, branch `launch-fixes`) as switches — see "Launch switches" in
+CLAUDE.md.
 
-1. ☐ **You — review both plans** and answer their questions.
-2. ☐ **You — Clerk dashboard:** add `{"email": "{{user.primary_email_address}}"}` to the session
-   token on both instances (needed by the site gate).
-3. ☐ **Claude — build** the free-beta switch and the site gate once the plans are approved.
-4. ☐ **Merge, in this order** (see [Merge plan](#merge-plan-2026-10-23)): integrate branch
-   `launch-fixes` → `feat/todolistimpl-2`; build both switches; set Vercel Production env vars; run
-   `prisma migrate deploy` on production; merge PR #18 (site stays closed); test on production;
-   flip `PRIVATE_BETA=off`.
-5. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on closed production.
-6. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
+1. ☑ Both plans approved and built: free beta (`NEXT_PUBLIC_PAID_PLANS_ENABLED`, unset = free beta;
+   FREE unlimited NDAs + 10 users; Pro/Team "Coming soon"; FAQ/Help/Terms §7/Formi updated) and a
+   lightweight sign-up gate (`NEXT_PUBLIC_PRIVATE_BETA`, unset = closed in production; `/signup`
+   and "Get started" go to a request-access form on `/coming-soon`). The full invite-list gate was
+   dropped in favor of this; no Clerk setup is needed.
+2. ☐ **Merge, in this order** (see [Merge plan](#merge-plan-2026-10-23)).
+3. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on production with sign-up
+   closed.
+4. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
+
+### Go-live switches (in this order)
+
+1. ☐ **Open sign-up:** after Phase 4 passes on production, set `NEXT_PUBLIC_PRIVATE_BETA=off` in
+   Vercel Production and redeploy. Check: `/signup` loads and "Get started" opens sign-up. To close
+   again: set `on`, redeploy.
+2. ☐ **Turn paid plans on** (later, once Stripe is live): email users at least 30 days ahead (Terms
+   §7 promises it); set `FREE_ALLOWANCE_COUNTS_FROM` in `src/billing/planLimits.ts` to the launch
+   date (merge that); set `NEXT_PUBLIC_PAID_PLANS_ENABLED=true` in Production; redeploy. Check:
+   prices and upgrade buttons are back, a live checkout reaches PRO, a Free company's 4th send
+   (counted from launch day) shows the upgrade notice. Roll back: set it to `false`, redeploy.
+3. ☐ **Remove the Beta label:** set `BETA_LABEL = false` in `src/lib/featureFlags.ts`, only after
+   legal counsel has reviewed the legal pages.
 
 Done since the last update: Clerk, Resend, Gemini, S3, Sentry, staging DB, domain move to the root
 `formalizeit.com` · launch-readiness audit blockers fixed (2026-10-06) · security headers and an
@@ -156,31 +167,32 @@ Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above),
 ## Open decisions (2026-10-08)
 
 - ☑ **Free-only launch — decided 2026-10-23: yes**, as a free beta with the FREE 3-NDA limit
-  removed, behind a `NEXT_PUBLIC_PAID_PLANS_ENABLED` switch (unset = free beta). ☐ Plan awaiting
-  review: [2026-10-23-free-beta-design.md](../superpowers/specs/2026-10-23-free-beta-design.md). The
-  lazy Stripe client it needs is done.
-- ☑ **How to open the site — decided 2026-10-23: a gate switch** (`PRIVATE_BETA`, unset = closed in
-  production builds, with an invite list `PRIVATE_BETA_EMAILS`). ☐ Plan awaiting review:
-  [2026-10-23-site-gate-design.md](../superpowers/specs/2026-10-23-site-gate-design.md).
+  removed, behind a `NEXT_PUBLIC_PAID_PLANS_ENABLED` switch (unset = free beta). ☑ Built
+  2026-10-24 ([design](../superpowers/specs/2026-10-23-free-beta-design.md); answers: 10 users,
+  fresh 3 NDAs from the paid-launch day, Pro/Team prices shown, Beta label tied to legal review).
+- ☑ **How to open the site — decided 2026-10-23: a lightweight sign-up gate**
+  (`NEXT_PUBLIC_PRIVATE_BETA`, unset = closed in production builds). Only sign-up closes; existing
+  accounts sign in and test production. ☑ Built 2026-10-24. The invite-list design in
+  [2026-10-23-site-gate-design.md](../superpowers/specs/2026-10-23-site-gate-design.md) was
+  superseded by this.
 
 ## Merge plan (2026-10-23)
 
 PR #18 (`feat/todolistimpl-2` → `main`) hasn't been merged since the September lifecycle rework;
-the branch is far ahead of `main`. Merge it as soon as the site gate exists, not at launch:
-merging opens nothing once the gate defaults to closed, and every week of drift makes the merge
-riskier. Order:
+the branch is far ahead of `main`. Merge it now, not at launch: with sign-up closed by default,
+merging opens nothing, and every week of drift makes the merge riskier. Order:
 
 1. ☐ Commit any open work in the main checkout, then merge branch `launch-fixes` into
-   `feat/todolistimpl-2`.
-2. ☐ Build the site gate and the free-beta switch (both default to the safe state when unset).
-3. ☐ Vercel Production env vars: `PRIVATE_BETA=on`, `PRIVATE_BETA_EMAILS=<you, testers>`,
-   `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
+   `feat/todolistimpl-2` (then remove the `C:\Users\marom\Projects\nda-saas-wt\` worktrees).
+2. ☑ Sign-up gate and free-beta switch built (2026-10-24), both safe when unset.
+3. ☐ Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
 4. ☐ `prisma migrate deploy` against the production database (adds `stripe_events`). Also run the
    two read-only checks: in-flight NDAs with more than one SignRequest, and
    `select billing_plan, count(*) from organizations group by 1`.
-5. ☐ Check the Vercel Preview deployment of the PR, then merge PR #18. Production deploys closed.
-6. ☐ Test on production as an invited user (Phase 4: full flow, email round trip, cron run).
-7. ☐ Open: `PRIVATE_BETA=off`, redeploy.
+5. ☐ Check the Vercel Preview deployment of the PR, then merge PR #18. Production deploys with
+   sign-up closed.
+6. ☐ Test on production with your existing account (Phase 4: full flow, email round trip, cron run).
+7. ☐ Open sign-up: see "Go-live switches" above.
 
 ## Post-MVP tasks (decided during launch setup)
 
