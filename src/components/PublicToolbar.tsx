@@ -1,5 +1,7 @@
 'use client'
 
+import { BETA_LABEL } from '@/lib/featureFlags'
+import { StatusPill } from '@/components/ui/status-pill'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, SignInButton, SignUpButton } from '@clerk/nextjs'
@@ -58,6 +60,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                   priority
                 />
               </Link>
+              {BETA_LABEL && <StatusPill tone="progress" label="Beta" className="ml-2" />}
 
               {/* Desktop navigation — centered in the bar */}
               <div className="hidden md:flex md:items-center md:gap-1 absolute left-1/2 -translate-x-1/2">

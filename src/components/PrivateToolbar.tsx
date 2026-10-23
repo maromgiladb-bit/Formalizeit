@@ -1,5 +1,7 @@
 'use client'
 
+import { BETA_LABEL } from '@/lib/featureFlags'
+import { StatusPill } from '@/components/ui/status-pill'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, UserButton } from '@clerk/nextjs'
@@ -117,6 +119,7 @@ export default function PrivateToolbar() {
                   priority
                 />
               </Link>
+              {BETA_LABEL && <StatusPill tone="progress" label="Beta" className="ml-2" />}
 
               {/* Desktop navigation — centered in the bar */}
               <div className="hidden lg:flex lg:items-center lg:gap-1 absolute left-1/2 -translate-x-1/2">
