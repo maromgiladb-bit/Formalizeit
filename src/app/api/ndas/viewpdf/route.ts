@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
 import { isValidSignLinkToken } from '@/lib/signLink'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 import { sha256Hex } from '@/lib/signatureEvidence'
 import { buildSignedTemplateData } from '@/lib/signedTemplateData'
 
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
         // Resolve + authorize the target draft before doing any work.
         let draftId: string
         if (signerIdParam) {
+            // The signer id is the only credential on this path, so throttle guessing.
+            const limit = rateLimitRequest(request, 'viewpdf', 60, MINUTE)
+            if (!limit.ok) return tooManyRequests(limit)
+
             if (!isValidSignLinkToken(signerIdParam)) {
                 return NextResponse.json({ error: 'NDA not found' }, { status: 404 })
             }
