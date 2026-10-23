@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { getStripe, isStripeConfigured, priceIdFor } from '@/lib/stripe'
+import { paidPlansDisabledResponse } from '@/billing/paidPlansGate'
 import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 import { getAppUrl } from '@/lib/email'
@@ -11,6 +12,9 @@ import { getAppUrl } from '@/lib/email'
 // This upgrades PRO â†’ TEAM in-place (proration), keeps PRO access until payment
 // confirms, and opens Stripe's hosted payment UI.
 export async function POST(req: NextRequest) {
+  const betaBlock = paidPlansDisabledResponse()
+  if (betaBlock) return betaBlock
+
   if (!isStripeConfigured()) return billingUnavailableResponse()
 
   try {

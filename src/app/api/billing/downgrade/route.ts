@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { getStripe, isStripeConfigured, priceIdFor } from '@/lib/stripe'
+import { paidPlansDisabledResponse } from '@/billing/paidPlansGate'
 import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { STRIPE_PRICE_IDS } from '@/lib/stripe-price-ids'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
@@ -12,6 +13,9 @@ import { getAppUrl } from '@/lib/email'
 // flow to downgrade TEAM → PRO in-place. Mirrors the PRO → TEAM upgrade flow in
 // upgrade-session/route.ts. Administrator-only.
 export async function POST(req: NextRequest) {
+  const betaBlock = paidPlansDisabledResponse()
+  if (betaBlock) return betaBlock
+
   if (!isStripeConfigured()) return billingUnavailableResponse()
 
   try {

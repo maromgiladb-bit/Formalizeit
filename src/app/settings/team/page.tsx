@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import InviteMemberForm from '@/app/team/InviteMemberForm'
 import TeamUpgradeBanner from '@/app/team/TeamUpgradeBanner'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 import CreateOrganizationForm from '@/app/team/CreateOrganizationForm'
 import MemberRoleDropdown from '@/app/team/MemberRoleDropdown'
 import { getActiveOrganization } from '@/lib/db-organization'
@@ -231,7 +232,7 @@ export default async function TeamSettingsPage() {
                 {/* Invite form */}
                 {isOwner && (
                     <div className="px-6 py-5 border-t border-gray-100 bg-gray-50 space-y-4">
-                        {organizationData.billingPlan === 'PRO' && <TeamUpgradeBanner />}
+                        {PAID_PLANS_ENABLED && organizationData.billingPlan === 'PRO' && <TeamUpgradeBanner />}
                         <InviteMemberForm />
                     </div>
                 )}

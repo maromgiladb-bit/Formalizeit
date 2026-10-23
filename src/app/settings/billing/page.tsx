@@ -8,6 +8,7 @@ import {
   CreditCard, ArrowRight, AlertTriangle,
   Check, Download, ExternalLink, FileText, Zap,
 } from 'lucide-react'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
 import { CancelSubscriptionModal } from '@/components/billing/CancelSubscriptionModal'
 import { Button } from '@/components/ui/button'
@@ -205,7 +206,7 @@ export default function BillingSettingsPage() {
 
   const getPlanDisplayName = (plan: string) => {
     switch (plan) {
-      case 'FREE': return 'Free'
+      case 'FREE': return PAID_PLANS_ENABLED ? 'Free' : 'Free (beta)'
       case 'PRO': return 'Pro'
       case 'TEAM': return 'Team'
       case 'ENTERPRISE': return 'Enterprise'
@@ -216,7 +217,7 @@ export default function BillingSettingsPage() {
 
   const getPlanPrice = (plan: string, billingCycle: 'monthly' | 'annual' | null) => {
     switch (plan) {
-      case 'FREE': return '$0 / month'
+      case 'FREE': return PAID_PLANS_ENABLED ? '$0 / month' : '$0 during beta'
       case 'PRO': return billingCycle === 'annual'
         ? '$7.65 / month, billed annually'
         : '$9 / month'
@@ -339,6 +340,15 @@ export default function BillingSettingsPage() {
           </div>
         </div>
 
+        {!PAID_PLANS_ENABLED && subscription.plan === 'FREE' && (
+          <div className="px-6 pb-5">
+            <p className="text-sm text-gray-500">
+              Everything&apos;s unlocked while we&apos;re in beta. Paid plans are coming soon — we&apos;ll email you well before anything changes.{' '}
+              <Link href="/contact" className="text-teal-800 underline underline-offset-2">Contact us</Link>
+            </p>
+          </div>
+        )}
+
         {/* Usage bar — Free plan */}
         {subscription.plan === 'FREE' && subscription.limit && (
           <div className="px-6 pb-5 border-t border-gray-100 pt-4">
@@ -377,7 +387,12 @@ export default function BillingSettingsPage() {
 
         {/* Action */}
         <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-4 flex-wrap">
-          {subscription.billingStatus === 'CANCELLED' && isOwner ? (
+          {!PAID_PLANS_ENABLED && subscription.plan === 'FREE' ? (
+            /* Free beta: nothing to upgrade to yet */
+            <Button variant="outline" disabled>
+              Current Plan Active
+            </Button>
+          ) : subscription.billingStatus === 'CANCELLED' && isOwner && PAID_PLANS_ENABLED ? (
             /* Subscription was cancelled — allow re-subscribing */
             <>
               <Button onClick={() => openCheckoutFor(subscription.plan === 'TEAM' ? 'TEAM' : 'PRO')}>
@@ -410,9 +425,11 @@ export default function BillingSettingsPage() {
                 </Button>
                 {portalError && <p className="text-xs text-red-600">{portalError}</p>}
               </div>
-              <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                Upgrade to Team
-              </Link>
+              {PAID_PLANS_ENABLED && (
+                <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                  Upgrade to Team
+                </Link>
+              )}
               {!subscription.cancelAtPeriodEnd && (
                 <button
                   onClick={() => setCancelOpen(true)}
