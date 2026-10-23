@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { SignUpButton } from '@clerk/nextjs'
+import SignupButton from '@/components/SignupButton'
 import { motion, useScroll, useTransform, useInView, useReducedMotion } from 'framer-motion'
 import { BookOpenCheck, PenLine, Users, ShieldCheck, ArrowRight } from 'lucide-react'
 import { Reveal, RevealGroup, RevealItem } from '@/components/ui/reveal'
@@ -341,12 +341,12 @@ export default function About() {
                   Review the standard once. Send your first NDA in minutes.
                 </p>
               </div>
-              <SignUpButton mode="modal">
+              <SignupButton>
                 <Button size="lg" className="flex-shrink-0">
                   Get Started Free
                   <ArrowRight aria-hidden="true" />
                 </Button>
-              </SignUpButton>
+              </SignupButton>
             </div>
           </Reveal>
         </div>

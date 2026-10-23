@@ -4,6 +4,7 @@ import { SignIn, useAuth } from '@clerk/nextjs'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signupHref } from '@/lib/signupGate'
 
 export default function SignInPage() {
   const { isLoaded, userId } = useAuth()
@@ -49,7 +50,7 @@ export default function SignInPage() {
         </div>
         <p className="text-center text-sm text-gray-500">
           New here?{' '}
-          <Link href="/signup" className="font-semibold text-teal-800 hover:text-teal-700">
+          <Link href={signupHref()} className="font-semibold text-teal-800 hover:text-teal-700">
             Create a free account
           </Link>
         </p>

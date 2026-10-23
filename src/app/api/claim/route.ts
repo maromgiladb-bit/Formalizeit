@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { SIGNUP_OPEN } from '@/lib/featureFlags'
 import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 
 /**
@@ -34,5 +35,9 @@ export async function GET(req: NextRequest) {
         })
     }
 
+    // While sign-up is closed (private beta) the cookie above is still kept for later.
+    if (!SIGNUP_OPEN) {
+        return NextResponse.redirect(new URL('/coming-soon?from=claim', req.url))
+    }
     return NextResponse.redirect(new URL('/signup', req.url))
 }
