@@ -110,6 +110,15 @@ export default function SecurityPage() {
 					<p className="text-gray-600 mb-6">
 						If you discover a security vulnerability, please report it to us immediately.
 					</p>
+					<p className="text-gray-600 mb-6 text-sm max-w-2xl mx-auto">
+						We welcome good-faith reports. Please email the details and steps to reproduce,
+						give us a reasonable chance to fix the issue before sharing it publicly, and avoid
+						accessing other people&apos;s data, disrupting the service, or running automated
+						attacks. We will acknowledge your report and keep you updated. We do not currently
+						run a paid bug bounty. Our{" "}
+						<a href="/.well-known/security.txt" className="text-teal-800 underline">security.txt</a>{" "}
+						file has the machine-readable details.
+					</p>
 					<a
 						href="mailto:support@formalizeit.com?subject=Security%20issue"
 						className="inline-block px-6 py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"

@@ -68,6 +68,7 @@ export default function PrivacyPage() {
 						<li><strong>ImprovMX</strong> — forwarding of emails sent to our support address</li>
 						<li><strong>Sentry</strong> — error monitoring; receives technical details when something goes wrong in the app. It is configured not to collect cookies or store IP addresses, and it does not record your screen or sessions</li>
 					</ul>
+					<p>A table of these providers, with what each does and the data involved, is on our <a href="/subprocessors">Sub-processors</a> page.</p>
 					<p>We do not sell, rent, or trade your personal information to any third party for marketing purposes.</p>
 
 					<h2>5. Data Security</h2>

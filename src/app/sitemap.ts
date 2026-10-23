@@ -21,6 +21,8 @@ const ROUTES: Array<{ path: string; priority: number; changeFrequency: MetadataR
   { path: '/compliance', priority: 0.4, changeFrequency: 'yearly' },
   { path: '/terms', priority: 0.4, changeFrequency: 'yearly' },
   { path: '/privacy', priority: 0.4, changeFrequency: 'yearly' },
+  { path: '/accessibility', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/subprocessors', priority: 0.3, changeFrequency: 'yearly' },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

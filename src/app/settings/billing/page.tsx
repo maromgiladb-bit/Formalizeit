@@ -48,7 +48,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
     'Unlimited NDA generation',
     '1 user',
     'NDA dashboard & search',
-    'Full audit trail',
+    'Search & activity history',
   ],
   TEAM: [
     'Everything in Pro',

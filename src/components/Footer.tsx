@@ -30,6 +30,8 @@ const columns = [
 			{ name: "E-Signature Consent", href: "/esignature-consent" },
 			{ name: "Security", href: "/security" },
 			{ name: "Compliance", href: "/compliance" },
+			{ name: "Sub-processors", href: "/subprocessors" },
+			{ name: "Accessibility", href: "/accessibility" },
 		],
 	},
 	{

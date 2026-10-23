@@ -65,9 +65,9 @@ const FEATURES = [
   },
   {
     icon: Shield,
-    title: "Secure & audit-trailed",
+    title: "Signature evidence, recorded",
     description:
-      "Encrypted storage, a full audit trail, and e-signatures with recorded evidence on every agreement.",
+      "Encrypted storage and e-signatures. Every signed NDA records the signer, timestamp, IP address and NDA version.",
   },
   {
     icon: Users,
@@ -302,7 +302,7 @@ export default function Home() {
             {[
               { value: "< 5 min", label: "from template to sent" },
               { value: "0", label: "recipient accounts needed" },
-              { value: "100%", label: "audit-trailed & e-signed" },
+              { value: "Every", label: "signed NDA records signature evidence" },
             ].map((s) => (
               <AnimatedStat key={s.label} value={s.value} label={s.label} />
             ))}
@@ -320,7 +320,7 @@ export default function Home() {
               Capabilities
             </p>
             <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
-              Fast by design. Secure by default.
+              Fast by design. Built with security in mind.
             </h2>
           </Reveal>
 

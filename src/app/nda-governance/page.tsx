@@ -5,8 +5,8 @@ import PageHero from "@/components/ui/page-hero";
 
 // Founder-drafted NDA Governance Policy. Describes how the single standard NDA
 // is versioned and maintained. Ties to the changelog (src/lib/ndaChangelog.ts,
-// surfaced at /nda-changelog) and the version-acknowledgement popup shown on
-// first sign-in after a version bump.
+// surfaced at /nda-changelog) and the version-acknowledgement prompt shown on the
+// dashboard after a version bump (signed-in users only).
 export default function NdaGovernancePage() {
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -72,10 +72,11 @@ export default function NdaGovernancePage() {
 						Every change is recorded in a human-readable{" "}
 						<a href="/nda-changelog">NDA Changelog</a>, which lists each version, its
 						date, and a plain-language summary of what was added, changed, or removed.
-						When the standard NDA is updated, signed-in users are shown a summary of
-						the change and asked to acknowledge the current version before creating or
-						signing a new agreement, so no one signs an updated standard without
-						seeing what changed.
+						When the standard NDA is updated, signed-in users see a summary of the
+						change on their dashboard and are asked to acknowledge the current version.
+						Receivers who sign through a secure link without an account do not see this
+						prompt; they always see the full text of the version they are signing before
+						they sign it.
 					</p>
 
 					<h2>6. Reviewing the Standard</h2>

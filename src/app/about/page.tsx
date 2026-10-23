@@ -25,7 +25,7 @@ const TIMELINE_STEPS = [
     number: '01',
     title: 'Read the standard once',
     description:
-      'One balanced mutual NDA — the same legal text for every deal. You or your lawyer review it a single time, and that review holds forever.',
+      'One balanced mutual NDA — the same legal text for every deal. Review it once, and consult a lawyer if you want one. The text never changes under you without a new, published version.',
     icon: BookOpenCheck,
     Mockup: ReadOnceMockup,
   },
@@ -49,7 +49,7 @@ const TIMELINE_STEPS = [
     number: '04',
     title: 'Signed, sealed, tracked',
     description:
-      'Signed with a full audit trail — signer email, timestamp, and an agreement hash recorded on every executed NDA.',
+      'Signed with recorded evidence — signer email, timestamp, IP address, NDA version and an agreement hash on every executed NDA.',
     icon: ShieldCheck,
     Mockup: SignedTrackedMockup,
   },
@@ -129,10 +129,10 @@ const TRUST_CARDS = [
   },
   {
     title: 'Evidence built in',
-    body: 'Every executed NDA records the signer, timestamp, template version, and an agreement hash — a full audit trail with e-signature.',
+    body: 'Every executed NDA records the signer, timestamp, template version, and an agreement hash — recorded as signature evidence with e-signature.',
   },
   {
-    title: 'Secure by default',
+    title: 'Security built in',
     body: 'Signed documents are stored encrypted and retained for five years from execution, with advance notice before any deletion.',
   },
 ]
