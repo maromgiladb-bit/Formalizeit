@@ -139,7 +139,46 @@ Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above),
 - ☐ Before deploy: on production, count in-flight NDAs with more than one SignRequest (the new
   "latest link only" check would refuse an active link on an older one).
 
+## Legal and compliance readiness (2026-10-23)
+
+Five-way research review; full plan, priorities and counsel tags in
+[legal-readiness-plan.md](legal-readiness-plan.md). Tier 1 blockers, all ☐:
+
+- ◑ Signing-step consent (Terms, Privacy, e-signature consent) recorded in the evidence and enforced
+  by `sign-public`; disclaimer above Submit, on `view-nda`, stronger "not a party" wording (done
+  2026-10-23, uncommitted). Account-level Terms acceptance built (2026-10-23, uncommitted):
+  `users.terms_accepted_at/terms_version`, `/accept-terms` gate, Clerk `legalAcceptedAt` mirrored,
+  migration `20260708000000` applied to dev. FAQ, E-Signature Consent page and Formi updated.
+  ☐ **You:** turn on Clerk legal acceptance in the dashboard (see phase-0 doc); apply both new
+  migrations (`20260707000000`, `20260708000000`) to **production**; set `REMINDER_LINK_SECRET` in
+  Vercel. ☐ `LEGAL_VERSION` (`src/lib/legalVersions.ts`) must be bumped when the Terms/Privacy text
+  changes, to re-ask users. ☐ The gate is client-side (brief flash before redirect); consider a
+  server-side check.
+- ☐ Terms rewrite (missing clauses, liability carve-outs, retention section, refunds, signature tier)
+  and Privacy additions (roles, bases, transfers, Google, cookies) — after counsel comments.
+- ☑ Email footer (entity/address from `COMPANY_LEGAL_NAME`/`COMPANY_ADDRESS`, blank until the entity
+  is decided), "stop reminders" link (`reminders_stopped_at` migration `20260707000000`, must be
+  applied in production), `sign-public` log cleanup, 30-day vs 5-year settings copy, overclaims
+  softened, "Formalize It" spellings fixed (2026-10-23, uncommitted). Migration applied to the
+  development/staging DB 2026-10-23. ☐ Apply `prisma migrate deploy` to **production** at launch.
+- ☐ NDA template v1.1 (truly mutual, remedies, survival, compelled-disclosure fix) — counsel first.
+- ◑ `/accessibility`, `/subprocessors`, `security.txt` added (2026-10-23, uncommitted). ☐ Skip link;
+  confirm sub-processor regions marked "to be confirmed" (Clerk, Stripe, Resend, ImprovMX, Vercel
+  Analytics). `.env.example` S3_REGION corrected to eu-central-1.
+- ☐ **You:** legal entity details everywhere and on Stripe; Israeli VAT/invoicing; auto-renewal
+  consent and refund policy; counsel review (add Israeli Bar Law and Standard Contracts Law to the
+  brief); cyber/E&O insurance; breach-response runbook; verify S3/vendor settings and DPAs; upgrade
+  Neon and run a restore drill.
+- ☐ Tier 2 (first month): DPA template, 2FA status (Clerk Pro), CSP/HSTS, legal-hold flag, data
+  export, Amendment 13 registration question.
+
 ## Open decisions (2026-10-08)
+
+- ☐ **Where the business is based: Israel or US (raised 2026-10-23).** It decides governing law and
+  venue in the Terms, tax setup (Israeli VAT vs US sales tax), Stripe activation and which privacy
+  regulator applies. Decide before Stripe activation and before the Terms rewrite. If the company is
+  US-registered but run from Israel, ask a cross-border accountant whether it is still Israeli tax
+  resident (where it is managed and controlled). See [legal-readiness-plan.md](legal-readiness-plan.md).
 
 - ☐ **Free-only launch (no Stripe at launch) — decide later; judged too big a change for now.** Feasible,
   ~2-3h: a `PAID_PLANS_ENABLED` switch like `FORMI_ENABLED`; pricing section shows "Coming soon" for Pro

@@ -444,6 +444,7 @@ value for every row marked ★.
 | `GEMINI_API_KEY` | ★ | ☐ |
 | `S3_BUCKET_NAME` / `S3_REGION` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | ★ | ☐ |
 | `CRON_SECRET` | ★ | ☐ |
+| `REMINDER_LINK_SECRET` (signs "Stop reminders" links; generate with `openssl rand -hex 32`) | **Production + Preview** | ☐ |
 | `APP_URL` / `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_BASE_URL` | **Production only** | ☐ |
 | `NEXT_PUBLIC_SENTRY_DSN` | Prod + Preview | ☐ |
 | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Production only | ☐ |
@@ -455,3 +456,9 @@ changes do not apply to a running deployment).
 
 Tell Claude "Phase 0 is done" and paste anything that failed or looked wrong. Next up is the
 Phase 1 manual verification matrix on the staging URL, then Phase 4.
+
+## Clerk: require Terms / Privacy acceptance at sign-up (added 2026-10-23)
+
+- [ ] Clerk dashboard, Configure -> Legal (path unverified, the menu name may differ): set Terms URL `https://formalizeit.com/terms` and Privacy URL `https://formalizeit.com/privacy`, and turn on "require acceptance at sign-up".
+- [ ] Run `prisma migrate deploy` for `20260708000000_add_user_terms_acceptance` (adds `users.terms_accepted_at`, `users.terms_version`).
+- Our own record is the evidence: `ensureDbUser` mirrors Clerk `legalAcceptedAt`; otherwise `/accept-terms` (client gate in `src/components/TermsGate.tsx`) asks once per `LEGAL_VERSION` (`src/lib/legalVersions.ts`). Bump `LEGAL_VERSION` when Terms or Privacy change materially.
