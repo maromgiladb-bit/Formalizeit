@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
+import * as Sentry from '@sentry/nextjs'
 import { prisma } from '@/lib/prisma'
+import { assessDeparture } from '@/lib/accountDeletion'
 
 /**
  * DELETE /api/user/account
@@ -31,6 +33,50 @@ export async function DELETE() {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // 1b. Refuse if deleting would leave a company with members but no administrator.
+    const memberships = await prisma.membership.findMany({
+        where: { userId: user.id, status: 'ACTIVE' },
+        include: {
+            organization: {
+                include: {
+                    memberships: {
+                        select: { userId: true, role: true, status: true, createdAt: true },
+                    },
+                },
+            },
+        },
+    })
+
+    const blockedCompanies: string[] = []
+    const soleMemberSubscriptions: { organizationId: string; subscriptionId: string }[] = []
+    for (const m of memberships) {
+        const org = m.organization
+        const assessment = assessDeparture(org.memberships, user.id)
+        if (assessment.strandsCompany) {
+            blockedCompanies.push(org.name)
+        } else if (
+            assessment.isSoleAdmin &&
+            org.stripeSubscriptionId &&
+            org.billingStatus !== 'CANCELLED'
+        ) {
+            soleMemberSubscriptions.push({
+                organizationId: org.id,
+                subscriptionId: org.stripeSubscriptionId,
+            })
+        }
+    }
+
+    if (blockedCompanies.length > 0) {
+        const names = blockedCompanies.map((n) => `"${n}"`).join(', ')
+        return NextResponse.json(
+            {
+                error: `You are the only administrator of ${names}, which still has other members. Make another member an administrator first (Settings → Team), then delete your account.`,
+                companies: blockedCompanies,
+            },
+            { status: 409 },
+        )
+    }
+
     // 2. Delete from Clerk FIRST — this invalidates all sessions immediately.
     //    If this fails we have not yet touched the DB, so there is nothing to
     //    roll back and the user's account remains intact.
@@ -44,6 +90,20 @@ export async function DELETE() {
     if (!clerkRes.ok) {
         console.error('Clerk user deletion failed:', await clerkRes.json().catch(() => ({})))
         return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
+    }
+
+    // 2b. Sole member of a company with a live Stripe subscription: we do NOT call
+    //     Stripe from here. Flag it so the founder cancels the subscription manually.
+    // TODO: cancel the Stripe subscription automatically (then drop this alert).
+    for (const sub of soleMemberSubscriptions) {
+        console.error(
+            `[account-delete] MANUAL ACTION: cancel Stripe subscription ${sub.subscriptionId} (org ${sub.organizationId}); sole member ${user.id} deleted their account`,
+        )
+        Sentry.captureMessage('Account deleted with active Stripe subscription: cancel manually', {
+            level: 'error',
+            tags: { area: 'account-deletion' },
+            extra: { organizationId: sub.organizationId, subscriptionId: sub.subscriptionId },
+        })
     }
 
     // 3. Clerk deletion succeeded — now update the DB atomically.
