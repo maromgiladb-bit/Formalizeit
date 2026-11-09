@@ -37,6 +37,17 @@ interface Invoice {
   hostedUrl: string | null
 }
 
+// During the free beta (paid plans off) FREE is lifted to unlimited NDAs and 10 users;
+// keep this list in step with the Free card in src/components/marketing/PricingSection.tsx.
+const BETA_FREE_FEATURES = [
+  'Unlimited NDAs',
+  'Up to 10 users',
+  'Send, review & e-sign NDAs',
+  'Receive & sign NDAs free (no account needed)',
+  'Dashboard, search & full audit trail',
+  '5-year document storage',
+]
+
 const PLAN_FEATURES: Record<string, string[]> = {
   FREE: [
     'Up to 3 NDAs total',
@@ -244,7 +255,10 @@ export default function BillingSettingsPage() {
     return <p className="text-sm text-gray-500">Unable to load billing info.</p>
   }
 
-  const features = PLAN_FEATURES[subscription.plan] ?? []
+  const features =
+    !PAID_PLANS_ENABLED && subscription.plan === 'FREE'
+      ? BETA_FREE_FEATURES
+      : PLAN_FEATURES[subscription.plan] ?? []
 
   const pendingCancel =
     subscription.cancelAtPeriodEnd &&
