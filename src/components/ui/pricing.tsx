@@ -1,6 +1,7 @@
 "use client";
 
 import { buttonVariants } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,10 @@ interface PricingPlan {
     buttonText: string;
     href: string;
     isPopular: boolean;
+    /** Replaces the "Most popular" badge text on the highlighted plan. */
+    badge?: string;
+    /** Plan isn't purchasable yet: neutral "Coming soon" pill and a disabled button. Prices stay visible. */
+    comingSoon?: boolean;
     onClickAction?: (isMonthly: boolean) => void;
 }
 
@@ -87,16 +92,25 @@ export function Pricing({
                     >
                         {plan.isPopular && (
                             <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
-                                <div className="bg-amber-500 text-ink py-1 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-card">
-                                    <Star className="h-3.5 w-3.5 fill-current" />
-                                    Most popular
-                                </div>
+                                {plan.badge ? (
+                                    <div className="bg-teal-800 text-white py-1 px-3.5 rounded-full text-xs font-bold shadow-card">
+                                        {plan.badge}
+                                    </div>
+                                ) : (
+                                    <div className="bg-amber-500 text-ink py-1 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-card">
+                                        <Star className="h-3.5 w-3.5 fill-current" />
+                                        Most popular
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="flex-1 flex flex-col">
-                            <p className="text-xs font-bold uppercase tracking-widest text-teal-700">
-                                {plan.name}
-                            </p>
+                            <div className="flex items-center justify-center gap-2">
+                                <p className="text-xs font-bold uppercase tracking-widest text-teal-700">
+                                    {plan.name}
+                                </p>
+                                {plan.comingSoon && <StatusPill tone="neutral" label="Coming soon" />}
+                            </div>
                             <div className="mt-4 flex items-baseline justify-center gap-x-1">
                                 <span className="text-5xl font-extrabold tracking-tight text-ink">
                                     {plan.price === "Custom" ? (
@@ -144,7 +158,15 @@ export function Pricing({
                             </ul>
 
                             <div className="mt-8">
-                                {plan.onClickAction ? (
+                                {plan.comingSoon ? (
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+                                    >
+                                        {plan.buttonText}
+                                    </button>
+                                ) : plan.onClickAction ? (
                                     <button
                                         type="button"
                                         onClick={() => plan.onClickAction!(isMonthly)}

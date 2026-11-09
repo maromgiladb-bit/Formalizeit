@@ -1,5 +1,6 @@
 import type { NdaContext, FormiUserContext } from "@/ai/types";
-import { PLAN_LIMITS } from "@/billing/planLimits";
+import { effectivePlanLimits } from "@/billing/planLimits";
+import { PAID_PLANS_ENABLED } from "@/lib/featureFlags";
 
 // Single source of truth for Formi's persona/rules. Two modes:
 //  - "chat": lean prompt, NO tools — pure fast text streaming for live messages.
@@ -29,14 +30,17 @@ function ndaFacts(nda: NdaContext): string {
 }
 
 // Plan facts generated from real code (PLAN_LIMITS) so they stay accurate.
-function planFacts(): string {
+export function planFacts(paidPlansEnabled: boolean = PAID_PLANS_ENABLED): string {
 	const n = (v: number) => (v >= 9999 ? "unlimited" : String(v));
-	const f = PLAN_LIMITS.FREE;
-	const p = PLAN_LIMITS.PRO;
-	const t = PLAN_LIMITS.TEAM;
-	return `Free — ${n(f.maxUsers)} user, ${n(
+	const f = effectivePlanLimits("FREE", paidPlansEnabled);
+	const p = effectivePlanLimits("PRO", paidPlansEnabled);
+	const t = effectivePlanLimits("TEAM", paidPlansEnabled);
+	const beta = paidPlansEnabled
+		? ""
+		: "FormalizeIt is in a free beta: unlimited NDAs and up to 10 users at no cost. Pro and Team are coming soon. Don't quote prices. ";
+	return `${beta}Free — up to ${n(f.maxUsers)} user(s), ${n(
 		f.maxActiveDrafts
-	)} NDAs total. Pro — ${n(p.maxUsers)} user, ${n(
+	)} NDAs total. Pro — up to ${n(p.maxUsers)} user(s), ${n(
 		p.maxActiveDrafts
 	)} NDAs. Team — up to ${n(t.maxUsers)} users, ${n(
 		t.maxActiveDrafts

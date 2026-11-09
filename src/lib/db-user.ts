@@ -73,7 +73,9 @@ async function ensureDbUserInner(clerkUserId: string) {
 
   // --- Account Recovery ---
   // If this user deleted their account within the last 30 days and is re-registering
-  // with the same email, restore their account (all NDAs, signers, memberships intact).
+  // with the same email, restore their account (NDAs and signers stay intact).
+  // Company memberships are NOT restored: they are removed at deletion time, so the
+  // user must be re-invited to any company they belonged to.
   if (placeholder?.status === 'pending_deletion') {
     const restored = await prisma.user.update({
       where: { id: placeholder.id },

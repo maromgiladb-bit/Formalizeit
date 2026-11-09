@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { SIGNUP_OPEN } from '@/lib/featureFlags'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 
 /**
  * GET /api/claim?signerId=<id>
@@ -17,6 +19,10 @@ import { cookies } from 'next/headers'
  * third party could capture it (referrers, logs, analytics) and the cookie TTL bounded.
  */
 export async function GET(req: NextRequest) {
+    // Public and keyed by a bearer id, so throttle like the other token routes.
+    const limit = rateLimitRequest(req, 'claim', 20, MINUTE)
+    if (!limit.ok) return tooManyRequests(limit)
+
     const signerId = req.nextUrl.searchParams.get('signerId')
 
     if (signerId) {
@@ -29,5 +35,9 @@ export async function GET(req: NextRequest) {
         })
     }
 
+    // While sign-up is closed (private beta) the cookie above is still kept for later.
+    if (!SIGNUP_OPEN) {
+        return NextResponse.redirect(new URL('/coming-soon?from=claim', req.url))
+    }
     return NextResponse.redirect(new URL('/signup', req.url))
 }

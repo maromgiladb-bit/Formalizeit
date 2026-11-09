@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 
 /**
@@ -13,6 +14,8 @@ import { isOrganizationOwner } from '@/lib/organizationRoles'
  * POST /api/billing/cancel
  */
 export async function POST() {
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -38,7 +41,7 @@ export async function POST() {
       return NextResponse.json({ error: 'No active subscription to cancel' }, { status: 400 })
     }
 
-    const subscription = await stripe.subscriptions.update(organization.stripeSubscriptionId, {
+    const subscription = await getStripe().subscriptions.update(organization.stripeSubscriptionId, {
       cancel_at_period_end: true,
     })
 

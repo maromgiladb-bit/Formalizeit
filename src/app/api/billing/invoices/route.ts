@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 
 export async function GET() {
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -23,7 +26,7 @@ export async function GET() {
 
     if (!organization?.stripeCustomerId) return NextResponse.json({ invoices: [] })
 
-    const result = await stripe.invoices.list({
+    const result = await getStripe().invoices.list({
       customer: organization.stripeCustomerId,
       limit: 12,
     })

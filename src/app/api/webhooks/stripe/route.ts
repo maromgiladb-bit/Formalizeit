@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import * as Sentry from '@sentry/nextjs'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { stripe, planFromPriceId } from '@/lib/stripe'
+import { getStripe, isStripeConfigured, planFromPriceId } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { sendEmail, subscriptionCancelledEmailHtml, paymentFailedEmailHtml, getAppUrl } from '@/lib/email'
 import {
   SUBSCRIPTION_STATUS_MAP,
   getCurrentPeriodEnd,
   subscriptionToOrgData,
+  hasUnknownPlanPrice,
   type DbBillingStatus,
 } from '@/billing/reconcileSubscription'
+import { shouldApplySubscriptionEvent } from '@/billing/subscriptionGuards'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Billing is not set up (e.g. free beta): nothing legitimate can reach us and we cannot
+  // verify signatures. Answer 503 (not 200) so a misconfigured production deploy is loud
+  // and Stripe retries the events once the env vars are in place.
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
 
@@ -27,10 +37,23 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
+    event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     console.error('Stripe webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+  }
+
+  // Idempotency: claim the event id before handling it. A redelivery hits the
+  // primary key (P2002) and is acknowledged without being processed again.
+  try {
+    await prisma.stripeEvent.create({ data: { id: event.id, type: event.type } })
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      console.log(`Stripe event ${event.id} already processed, skipping`)
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+    console.error('Failed to record Stripe event:', err)
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 
   try {
@@ -53,6 +76,12 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error(`Error handling Stripe event ${event.type}:`, err)
+    // Release the claim so Stripe's retry is processed rather than skipped as a
+    // duplicate. (Simpler than a transaction: handlers also call Stripe and send
+    // email, which a DB transaction could not roll back anyway.)
+    await prisma.stripeEvent.delete({ where: { id: event.id } }).catch((delErr) => {
+      console.error('Failed to release Stripe event claim:', delErr)
+    })
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 
@@ -78,7 +107,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
 
   const billingStatus: DbBillingStatus = SUBSCRIPTION_STATUS_MAP[subscription.status] ?? 'PAST_DUE'
   const periodEnd = getCurrentPeriodEnd(subscription)
@@ -107,6 +136,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   })
 }
 
+function reportSubscriptionMismatch(
+  eventType: string,
+  subscriptionId: string,
+  organization: { id: string; stripeSubscriptionId: string | null }
+) {
+  console.warn(
+    `${eventType}: subscription ${subscriptionId} does not match org ${organization.id} stored subscription ${organization.stripeSubscriptionId}; ignoring`
+  )
+  Sentry.captureMessage('Stripe subscription event for a non-current subscription ignored', {
+    level: 'warning',
+    tags: { area: 'stripe-webhook', eventType },
+    extra: { subscriptionId, organizationId: organization.id, storedSubscriptionId: organization.stripeSubscriptionId },
+  })
+}
+
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const organizationId = subscription.metadata?.organizationId
 
@@ -117,6 +161,20 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   if (!organization) {
     console.error('customer.subscription.updated: no org found for subscription', subscription.id)
     return
+  }
+
+  if (!shouldApplySubscriptionEvent(organization.stripeSubscriptionId, subscription.id)) {
+    reportSubscriptionMismatch('customer.subscription.updated', subscription.id, organization)
+    return
+  }
+
+  if (hasUnknownPlanPrice(subscription)) {
+    console.error('customer.subscription.updated: price maps to no plan, keeping current plan', subscription.id)
+    Sentry.captureMessage('Stripe subscription price maps to no plan (plan left unchanged)', {
+      level: 'error',
+      tags: { area: 'stripe-webhook' },
+      extra: { subscriptionId: subscription.id, organizationId: organization.id },
+    })
   }
 
   // Shared with the on-load reconcile route so cancel/resume/plan changes map
@@ -137,6 +195,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   if (!organization) {
     // May have already been cleaned up by customer.subscription.updated on terminal status
     console.warn('customer.subscription.deleted: no org found for subscription', subscription.id)
+    return
+  }
+
+  if (!shouldApplySubscriptionEvent(organization.stripeSubscriptionId, subscription.id)) {
+    reportSubscriptionMismatch('customer.subscription.deleted', subscription.id, organization)
     return
   }
 

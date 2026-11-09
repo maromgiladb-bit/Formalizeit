@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe, priceIdFor } from '@/lib/stripe'
+import { getStripe, isStripeConfigured, priceIdFor } from '@/lib/stripe'
+import { paidPlansDisabledResponse } from '@/billing/paidPlansGate'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { STRIPE_PRICE_IDS } from '@/lib/stripe-price-ids'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
 import { getAppUrl } from '@/lib/email'
@@ -11,6 +13,11 @@ import { getAppUrl } from '@/lib/email'
 // flow to downgrade TEAM → PRO in-place. Mirrors the PRO → TEAM upgrade flow in
 // upgrade-session/route.ts. Administrator-only.
 export async function POST(req: NextRequest) {
+  const betaBlock = paidPlansDisabledResponse()
+  if (betaBlock) return betaBlock
+
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -43,13 +50,13 @@ export async function POST(req: NextRequest) {
       : currentCycle
     const proPriceId = priceIdFor('PRO', billingCycle)
 
-    const subscription = await stripe.subscriptions.retrieve(organization.stripeSubscriptionId)
+    const subscription = await getStripe().subscriptions.retrieve(organization.stripeSubscriptionId)
     const item = subscription.items.data[0]
     if (!item) return NextResponse.json({ error: 'No subscription item found' }, { status: 400 })
 
     const appUrl = getAppUrl()
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: organization.stripeCustomerId,
       return_url: `${appUrl}/settings/billing`,
       flow_data: {

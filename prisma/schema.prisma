@@ -172,7 +172,7 @@ model Organization {
   stripeCustomerId       String?       @unique @map("stripe_customer_id")
   stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
   stripePriceId          String?       @map("stripe_price_id")
-  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end")
+  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end") @db.Timestamptz
   cancelAtPeriodEnd      Boolean       @default(false) @map("cancel_at_period_end")
   settings               Json?         @default("{}")
   createdAt     DateTime      @default(now()) @map("created_at")
@@ -294,6 +294,7 @@ model NdaDraft {
   @@index([createdByUserId])
   @@index([organizationId])
   @@index([templateId])
+  @@index([organizationId, status, sentAt], map: "nda_drafts_org_status_sent_at_idx")
   @@map("nda_drafts")
 }
 
@@ -426,4 +427,14 @@ model Notification {
   @@index([userId, read])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// Stripe webhook idempotency: one row per processed event id. A duplicate delivery
+// hits the primary key (P2002) and is acknowledged without being handled again.
+model StripeEvent {
+  id         String   @id // Stripe event id (evt_...)
+  type       String
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  @@map("stripe_events")
 }

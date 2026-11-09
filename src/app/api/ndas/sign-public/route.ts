@@ -13,6 +13,7 @@ import * as Sentry from '@sentry/nextjs';
 import { produceSignedPdf, type SignedPdfStatus } from '@/lib/signedPdf';
 import { signerLinkBlockedReason } from '@/lib/ndaTransitions';
 import { isNdaFinalized } from '@/lib/ndaLifecycle';
+import { buildSignedTemplateData } from '@/lib/signedTemplateData';
 
 export const runtime = 'nodejs'; // Required for Puppeteer
 
@@ -338,25 +339,7 @@ export async function POST(request: NextRequest) {
             console.log('📄 Both parties signed - generating final PDF with signatures...');
 
             // Prepare template data with both signatures
-            const templateData = {
-                ...updatedContent,
-                party_1_name: formData.party_a_name || '',
-                party_1_address: formData.party_a_address || '',
-                party_1_signatory_name: formData.party_a_signatory_name || updatedContent.party_1_signatory_name || '',
-                party_1_signatory_title: formData.party_a_title || updatedContent.party_1_signatory_title || '',
-                party_1_phone: formData.party_a_phone || '',
-                party_1_emails_joined: formData.party_a_email || '',
-                party_1_signature_image: updatedContent.party_1_signature_image || '',
-                party_1_signature_date: updatedContent.party_1_signature_date || '',
-                party_2_name: formData.party_b_name || '',
-                party_2_address: formData.party_b_address || '',
-                party_2_signatory_name: formData.party_b_signatory_name || updatedContent.party_2_signatory_name || '',
-                party_2_signatory_title: formData.party_b_title || updatedContent.party_2_signatory_title || '',
-                party_2_phone: formData.party_b_phone || '',
-                party_2_emails_joined: formData.party_b_email || '',
-                party_2_signature_image: updatedContent.party_2_signature_image || '',
-                party_2_signature_date: updatedContent.party_2_signature_date || '',
-            };
+            const templateData = buildSignedTemplateData(formData, updatedContent);
 
             // Signing is already committed at this point, so this never throws: a failure
             // comes back as a status that is recorded on the audit event and sent to Sentry.

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { addMemberToOrganization } from '@/organizations/limits'
 import { getActiveOrganization } from '@/lib/db-organization'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 import { isOrganizationOwner, toDbMembershipRole } from '@/lib/organizationRoles'
 import { sendEmail, inviteEmailHtml, getAppUrl } from '@/lib/email'
 
@@ -54,7 +55,9 @@ export async function inviteMember(formData: FormData) {
             await addMemberToOrganization(activeMembership.organizationId, user.id, role, 'PENDING_INVITE')
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Failed to invite member'
-            if (msg.includes('maximum number of users')) return { error: msg }
+            if (msg.includes('maximum number of users')) {
+                return { error: PAID_PLANS_ENABLED ? msg : `${msg} Contact us at support@formalizeit.com for a bigger team.` }
+            }
             throw err
         }
 

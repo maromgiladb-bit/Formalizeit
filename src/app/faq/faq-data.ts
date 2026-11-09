@@ -3,7 +3,29 @@ export interface Faq {
 	answer: string;
 }
 
-export const faqs: Faq[] = [
+import { PAID_PLANS_ENABLED } from "@/lib/featureFlags";
+
+/**
+ * FAQ list. While the free beta is on (paid plans off) the billing answers are swapped in place,
+ * so the list length and order never change (the home-page teaser uses fixed indexes).
+ */
+export function getFaqs(paidPlansEnabled: boolean = PAID_PLANS_ENABLED): Faq[] {
+	return paidPlansEnabled ? paidFaqs : paidFaqs.map((faq) => betaOverrides[faq.question] ? { question: faq.question, answer: betaOverrides[faq.question] } : faq);
+}
+
+/** Beta replacements for the answers that talk about plans and billing, keyed by question. */
+const betaOverrides: Record<string, string> = {
+	"Can multiple people review the same document?":
+		"Yes. You can add up to 10 team members to your company workspace during the beta and assign them roles — they can draft, review, and comment on documents together.",
+	"What is included in the free plan?":
+		"FormalizeIt is in a free beta, so everything is included at no cost: unlimited NDAs, up to 10 users, send, review, and e-sign, and receiving and signing an NDA is always free with no account needed. Signed documents are stored for 5 years.",
+	"What happens after I upgrade?":
+		"Paid plans (Pro and Team) are coming later and aren't available during the beta. We'll give you plenty of notice before anything changes, and you won't be charged for anything in the meantime.",
+	"Can I cancel later?":
+		"There's nothing to cancel during the beta — no card, no subscription. You can delete your account at any time.",
+};
+
+const paidFaqs: Faq[] = [
 	{
 		question: "What is FormalizeIt?",
 		answer:
@@ -95,3 +117,5 @@ export const faqs: Faq[] = [
 			"FormalizeIt is built for founders, operators, legal ops teams, and anyone who sends NDAs repeatedly and wants a faster, cleaner process. If you send more than a handful of NDAs a year and are tired of copy-pasting Word documents, this is for you.",
 	},
 ];
+
+export const faqs: Faq[] = getFaqs();

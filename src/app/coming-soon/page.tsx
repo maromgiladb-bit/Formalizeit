@@ -1,104 +1,141 @@
 'use client';
 
-import { SignInButton } from '@clerk/nextjs';
-import { ArrowRight, FileText, Shield, Zap, Users } from 'lucide-react';
+import { Suspense, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { CheckCircle, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input, Textarea } from '@/components/ui/input';
+
+const emptyForm = { name: '', email: '', company: '', message: '' };
+
+function ClaimNote() {
+  const from = useSearchParams().get('from');
+  if (from !== 'claim') return null;
+  return (
+    <p className="mb-6 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600" role="note">
+      Your signed copy is in your email. You&apos;ll be able to create an account to keep it here when we open.
+    </p>
+  );
+}
 
 export default function ComingSoonPage() {
+  const [form, setForm] = useState(emptyForm);
+  const [trap, setTrap] = useState('');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [error, setError] = useState('');
+
+  const update = (field: keyof typeof emptyForm) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('submitting');
+    setError('');
+    const [firstName, ...rest] = form.name.trim().split(/\s+/);
+    const message = [
+      form.company.trim() && `Company: ${form.company.trim()}`,
+      form.message.trim() || 'Please add me to the private beta.',
+    ].filter(Boolean).join('\n\n');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // The API's honeypot field is named "company", so the real company
+        // goes in the message body and `company` carries the hidden trap.
+        body: JSON.stringify({
+          firstName,
+          lastName: rest.join(' '),
+          email: form.email,
+          subject: 'Beta access request',
+          message,
+          company: trap,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to send your request.');
+      }
+      setStatus('success');
+      setForm(emptyForm);
+    } catch (err) {
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full flex flex-col bg-white">
-      {/* Top accent bar */}
-      <div className="h-1 w-full flex-shrink-0 bg-gradient-to-r from-teal-800 via-teal-600 to-amber-400" />
+    <div className="min-h-screen bg-gray-50 py-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-800">
+            <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+            Private beta
+          </span>
+          <p className="mt-6 text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Early access</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">NDA in minutes, almost here.</h1>
+          <p className="mt-4 text-base text-gray-500 leading-relaxed max-w-md">
+            Pick the standard NDA, fill in what&apos;s different, send. We&apos;re letting teams in
+            gradually. Request access and we&apos;ll email you when your spot opens.
+          </p>
+          <p className="mt-6 text-sm text-gray-500">
+            Already have an account?{' '}
+            <Link href="/sign-in" className="font-semibold text-teal-800 hover:text-teal-700">
+              Sign in
+            </Link>
+          </p>
+        </div>
 
-      {/* Body: stacks on mobile, two columns on lg+ */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 sm:p-8">
+          <Suspense fallback={null}>
+            <ClaimNote />
+          </Suspense>
+          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Request access</p>
+          <h2 className="text-2xl font-extrabold text-ink mb-6">Join the private beta</h2>
 
-        {/* ── Left: Branding ───────────────────────────────────── */}
-        <div className="flex flex-col justify-center px-8 py-12 sm:px-12 lg:px-16 xl:px-24 bg-white lg:border-r border-b lg:border-b-0 border-gray-100">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-10">
-            <div className="relative">
-              <div className="w-12 h-12 bg-teal-800 rounded-xl flex items-center justify-center shadow-md">
-                <FileText className="w-6 h-6 text-white" />
+          {status === 'success' ? (
+            <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4" role="status">
+              <CheckCircle className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-semibold text-ink">Request received</p>
+                <p className="text-sm text-gray-500">Thanks. We&apos;ll email you as soon as we open your spot.</p>
               </div>
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-white" />
             </div>
-            <span className="text-lg font-extrabold text-gray-900 tracking-tight">FormalizeIt</span>
-          </div>
-
-          {/* Label */}
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">
-            Private Beta
-          </p>
-
-          {/* Big heading */}
-          <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight mb-5">
-            NDAs without<br />
-            the{' '}
-            <span className="relative inline-block">
-              <span className="relative z-10">blank page.</span>
-              <span className="absolute inset-x-0 bottom-1 h-3 bg-amber-200 rounded -z-0" />
-            </span>
-          </h1>
-
-          {/* Description */}
-          <p className="text-lg text-gray-500 leading-relaxed mb-8 max-w-md">
-            Start from trusted templates. Customize key details. Review only the terms that actually changed — not the whole document.
-          </p>
-
-          {/* Feature pills */}
-          <div className="flex flex-wrap gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 border border-teal-200 text-teal-800 text-xs font-semibold rounded-full">
-              <Shield className="w-3.5 h-3.5" />
-              Trusted templates
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold rounded-full">
-              <Zap className="w-3.5 h-3.5" />
-              Review only what changed
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 border border-gray-200 text-gray-600 text-xs font-semibold rounded-full">
-              <Users className="w-3.5 h-3.5" />
-              Team collaboration
-            </span>
-          </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Honeypot: hidden from people, filled by bots. */}
+              <div className="hidden" aria-hidden="true">
+                <label htmlFor="beta-trap">Leave this empty</label>
+                <input id="beta-trap" tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
+              </div>
+              <div>
+                <label htmlFor="beta-name" className="block text-sm font-medium text-ink mb-1.5">Name</label>
+                <Input id="beta-name" required autoComplete="name" value={form.name} onChange={update('name')} />
+              </div>
+              <div>
+                <label htmlFor="beta-email" className="block text-sm font-medium text-ink mb-1.5">Work email</label>
+                <Input id="beta-email" type="email" required autoComplete="email" value={form.email} onChange={update('email')} />
+              </div>
+              <div>
+                <label htmlFor="beta-company" className="block text-sm font-medium text-ink mb-1.5">Company</label>
+                <Input id="beta-company" required autoComplete="organization" value={form.company} onChange={update('company')} />
+              </div>
+              <div>
+                <label htmlFor="beta-message" className="block text-sm font-medium text-ink mb-1.5">
+                  Message <span className="font-normal text-gray-500">(optional)</span>
+                </label>
+                <Textarea id="beta-message" rows={3} value={form.message} onChange={update('message')} />
+              </div>
+              {status === 'error' && (
+                <p className="text-sm text-red-600" role="alert">{error}</p>
+              )}
+              <Button type="submit" size="lg" className="w-full" disabled={status === 'submitting'}>
+                {status === 'submitting' ? 'Sending...' : 'Request access'}
+              </Button>
+            </form>
+          )}
         </div>
-
-        {/* ── Right: Sign-in ───────────────────────────────────── */}
-        <div className="flex flex-col justify-center items-center px-8 py-12 sm:px-12 lg:px-16 xl:px-24 bg-gray-50">
-          <div className="w-full max-w-sm">
-            {/* Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-6">
-              <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">
-                Access
-              </p>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
-                Already have access?
-              </h2>
-              <p className="text-sm text-gray-500 mb-7">
-                Sign in to continue to your dashboard and manage your NDAs.
-              </p>
-              <SignInButton mode="modal" forceRedirectUrl="/">
-                <button className="inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer">
-                  Sign In to FormalizeIt
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </SignInButton>
-            </div>
-
-            {/* Decorative status row */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl">
-              <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse flex-shrink-0" />
-              <p className="text-xs text-gray-500">
-                Platform is live — <span className="text-gray-900 font-medium">private testing in progress</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <p className="mt-8 text-xs text-gray-400">
-            © {new Date().getFullYear()} FormalizeIt. All rights reserved.
-          </p>
-        </div>
-
       </div>
     </div>
   );

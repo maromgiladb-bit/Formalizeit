@@ -3,7 +3,9 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
 import { isValidSignLinkToken } from '@/lib/signLink'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
 import { sha256Hex } from '@/lib/signatureEvidence'
+import { buildSignedTemplateData } from '@/lib/signedTemplateData'
 
 export const runtime = 'nodejs'
 
@@ -34,6 +36,10 @@ export async function GET(request: NextRequest) {
         // Resolve + authorize the target draft before doing any work.
         let draftId: string
         if (signerIdParam) {
+            // The signer id is the only credential on this path, so throttle guessing.
+            const limit = rateLimitRequest(request, 'viewpdf', 60, MINUTE)
+            if (!limit.ok) return tooManyRequests(limit)
+
             if (!isValidSignLinkToken(signerIdParam)) {
                 return NextResponse.json({ error: 'NDA not found' }, { status: 404 })
             }
@@ -117,9 +123,12 @@ export async function GET(request: NextRequest) {
                 const { storeNdaPdf } = await import('@/lib/storeNdaPdf')
                 const { getAppUrl } = await import('@/lib/email')
 
+                // Same mapping + template key as sign-public. draft.templateId is a DB id
+                // of a placeholder row, not the template file key, so don't use it here.
+                const content = signRequest.draft.content as Record<string, unknown>
                 const html = await renderNdaHtml(
-                    signRequest.draft.content as Record<string, unknown>,
-                    signRequest.draft.templateId || 'professional_mutual_nda_v1'
+                    buildSignedTemplateData(content),
+                    (content.templateId as string) || 'professional_mutual_nda_v1'
                 )
                 const pdfBuffer = await renderHtmlToPdf(html, {
                     pageWidthPx: 900,
