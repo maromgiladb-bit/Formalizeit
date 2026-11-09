@@ -23,7 +23,11 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
-### Resume here (updated 2026-10-23)
+### Resume here (updated 2026-11-09)
+
+Next: Vercel Production env vars and the Clerk Restricted sign-up mode, production migrations,
+then check the PR #18 Preview and merge it. The beta plan with steps and estimates is in the
+"FormalizeIt Beta Roadmap" artifact (2026-11-09).
 
 Launch plan changed 2026-10-23: Stripe can't be activated yet, so the MVP launches as a **free
 beta** (paid plans off, no 3-NDA limit) with **sign-up closed** until production has been tested.
@@ -34,8 +38,13 @@ CLAUDE.md.
    FREE unlimited NDAs + 10 users; Pro/Team "Coming soon"; FAQ/Help/Terms §7/Formi updated) and a
    lightweight sign-up gate (`NEXT_PUBLIC_PRIVATE_BETA`, unset = closed in production; `/signup`
    and "Get started" go to a request-access form on `/coming-soon`). The full invite-list gate was
-   dropped in favor of this; no Clerk setup is needed.
-2. ☐ **Merge, in this order** (see [Merge plan](#merge-plan-2026-10-23)).
+   dropped in favor of this. ☐ **You — Clerk still needs one setting** (found 2026-11-09): the gate
+   only hides our sign-up pages; Clerk itself still creates accounts (e.g. "Continue with Google" on
+   `/sign-in` for an unknown email, or a direct Clerk API call). In the **production** Clerk instance
+   set Restrictions → Sign-up mode to **Restricted** (or Waitlist) while sign-up is closed, and back
+   to Public when opening. Existing accounts keep signing in.
+2. ☑ **Merge** (2026-11-09): `launch-fixes` merged into `feat/todolistimpl-2` after testing; see
+   [Merge plan](#merge-plan-2026-10-23).
 3. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on production with sign-up
    closed.
 4. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
@@ -223,13 +232,30 @@ PR #18 (`feat/todolistimpl-2` → `main`) hasn't been merged since the September
 the branch is far ahead of `main`. Merge it now, not at launch: with sign-up closed by default,
 merging opens nothing, and every week of drift makes the merge riskier. Order:
 
-1. ☐ Commit any open work in the main checkout, then merge branch `launch-fixes` into
-   `feat/todolistimpl-2` (then remove the `C:\Users\marom\Projects\nda-saas-wt\` worktrees).
+1. ☑ Merged `launch-fixes` into `feat/todolistimpl-2` (2026-11-09) after a tested trial merge in a
+   separate worktree: typecheck, 239/239 tests, production build, route and rate-limit checks,
+   and a browser click-through (gate redirect, request-access form, beta pricing, sign-in,
+   accept-terms, dashboard, billing, team, five NDAs sent on FREE, receiver link opened signed-out).
+   Two bugs found and fixed: a SIGNER promoted to administrator lost signing rights; the
+   Subscription page listed "3 NDAs, 1 user" during the beta. The `stripe_events` migration was
+   renamed to `20260709000000` (it shared the `20260707000000` prefix). ☐ Remove the
+   `C:\Users\marom\Projects\nda-saas-wt\` worktrees once you no longer need them.
 2. ☑ Sign-up gate and free-beta switch built (2026-10-24), both safe when unset.
 3. ☐ Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
-4. ☐ `prisma migrate deploy` against the production database (adds `stripe_events`). Also run the
-   two read-only checks: in-flight NDAs with more than one SignRequest, and
-   `select billing_plan, count(*) from organizations group by 1`.
+   Plus the Clerk Restricted sign-up mode above.
+4. ☐ `prisma migrate deploy` against the production database. Three migrations are new there:
+   `20260707000000_add_nda_reminders_stopped_at`, `20260708000000_add_user_terms_acceptance`,
+   `20260709000000_add_stripe_events`. Take a Neon snapshot first. Also run the two read-only
+   checks: in-flight NDAs with more than one SignRequest, and
+   `select billing_plan, count(*) from organizations group by 1`. ☐ **Also on the development
+   (staging) branch:** `20260709000000_add_stripe_events` is not applied there yet (run
+   `npx prisma migrate deploy` from the laptop; `.env` points at development).
+   ☐ Purge test data on development before relying on it: Clerk dev user
+   `claude-verify+clerk_test@example.com` and its company "Claude Verify" with 5 test NDAs
+   (created 2026-11-09 during merge testing).
+   ☐ Decide: the Beta pill also shows in the header of receiver pages (`/fillndahtml-public`,
+   `/sign-nda-public`). The beta-scope review suggested keeping "beta" off pages the counterparty
+   signs on, so the NDA itself doesn't look provisional.
 5. ☐ Check the Vercel Preview deployment of the PR, then merge PR #18. Production deploys with
    sign-up closed.
 6. ☐ Test on production with your existing account (Phase 4: full flow, email round trip, cron run).
