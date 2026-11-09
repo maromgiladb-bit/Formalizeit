@@ -80,19 +80,22 @@ async function handleUserDeleted(clerkUserId: string) {
         },
     })
 
-    const promotions: { organizationId: string; promoteUserId: string }[] = []
+    const promotions: { organizationId: string; promoteUserId: string; wasSigner: boolean }[] = []
     for (const m of memberships) {
         const assessment = assessDeparture(m.organization.memberships, user.id)
         if (assessment.strandsCompany && assessment.promoteUserId) {
+            const promoted = m.organization.memberships.find((x) => x.userId === assessment.promoteUserId)
             promotions.push({
                 organizationId: m.organizationId,
                 promoteUserId: assessment.promoteUserId,
+                wasSigner: promoted?.role === 'SIGNER',
             })
         }
     }
 
     for (const p of promotions) {
-        // Keep the promoted member's isSigner as-is; only role and ownerUserId change.
+        // A SIGNER signs by role; an ADMINISTRATOR only with isSigner on (canSignNDA).
+        // Turn isSigner on for a promoted SIGNER so they keep signing; otherwise leave it.
         await prisma.$transaction([
             prisma.membership.update({
                 where: {
@@ -101,7 +104,7 @@ async function handleUserDeleted(clerkUserId: string) {
                         organizationId: p.organizationId,
                     },
                 },
-                data: { role: 'ADMINISTRATOR' },
+                data: { role: 'ADMINISTRATOR', ...(p.wasSigner ? { isSigner: true } : {}) },
             }),
             prisma.organization.update({
                 where: { id: p.organizationId },
