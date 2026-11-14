@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { getAppUrl, sendEmail, recipientEditEmailHtml } from '@/lib/email'
+import { getAppUrl } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
-import { assertCanSendNda } from '@/organizations/limits'
+import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { newSignLinkExpiry } from '@/lib/signLink'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 
 /**
  * Send NDA for Party B review
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
 
-        await assertCanSendNda(activeMembership.organizationId)
+        await assertCanSendNda(activeMembership.organizationId, draftId)
 
         // Get draft and verify organization access
         const draft = await prisma.ndaDraft.findFirst({
@@ -66,14 +67,31 @@ export async function POST(request: NextRequest) {
         // Check for existing SignRequest or create new one
         let signRequest = await prisma.signRequest.findFirst({
             where: { draftId: draftId },
-            include: { signers: true }
+            orderBy: { createdAt: 'desc' },
+            include: { signers: { orderBy: { createdAt: 'desc' } } }
         })
+
+        const blockedReason = transitionBlockedReason('send_for_review', {
+            status: draft.status,
+            workflowState: draft.workflowState,
+            signers: signRequest?.signers,
+        })
+        if (blockedReason) {
+            return NextResponse.json({ error: blockedReason, code: 'INVALID_STATE' }, { status: 409 })
+        }
 
         let signer
 
         if (signRequest) {
             // Update existing signer or create if not exists
-            signer = signRequest.signers.find(s => s.role === 'SIGNER')
+            signer = signRequest.signers.find(s => s.role === 'SIGNER' && s.status !== 'DECLINED')
+            if (signer && signer.email.toLowerCase() !== String(recipientEmail).trim().toLowerCase()) {
+                // Recipient changed: retire the old link (DECLINED is terminal and
+                // never reopened by resend/reminders) and issue a new one, so the
+                // first, wrong recipient can't act on this NDA.
+                await prisma.signer.update({ where: { id: signer.id }, data: { status: 'DECLINED' } })
+                signer = undefined
+            }
             if (signer) {
                 signer = await prisma.signer.update({
                     where: { id: signer.id },
@@ -188,31 +206,18 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // Generate the review link. The email is auto-sent below via Resend; the
-        // suggested subject/body are returned only as a manual-share fallback.
+        // Generate the review link. The initial invite is deliberately NOT emailed by
+        // the platform: a first-contact email from an unknown domain tends to land in
+        // spam, so the sender shares the link from their own mailbox (Gmail/Outlook/
+        // mailto/copy in the send modal) using the suggested subject/body below.
+        // Platform emails are reserved for follow-ups the receiver already expects:
+        // round notifications, 48h/5d reminders, and the signed copy.
         const reviewLink = `${getAppUrl()}/fillndahtml-public/${signer.id}`
         const senderName = (updatedContent.party_a_name as string) || user.name || user.email || 'Sender'
         const ndaTitle = draft.title || 'Untitled NDA'
         const suggestedSubject = `${senderName} sent you an NDA to review — ${ndaTitle}`
         const messageBlock = message ? `\n\nNote from ${senderName}:\n${message}` : ''
-        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link stays active while the NDA is in progress and expires after 2 weeks of inactivity. No account is needed.\n\nBest regards,\n${senderName}`
-
-        // Auto-send the review email via Resend, with reply-to set to the real sender so
-        // the receiver's replies reach them. Don't fail the request if the email errors —
-        // the returned link/suggested body remain as a manual-share fallback.
-        const senderReplyTo = (updatedContent.party_a_email as string) || user.email
-        let emailSent = false
-        try {
-            await sendEmail({
-                to: recipientEmail,
-                subject: suggestedSubject,
-                html: recipientEditEmailHtml(ndaTitle, reviewLink, message, senderName),
-                replyTo: senderReplyTo,
-            })
-            emailSent = true
-        } catch (e) {
-            console.error('Failed to auto-send review email (manual link still available):', e)
-        }
+        const suggestedBody = `Hi,\n\n${senderName} has sent you a Non-Disclosure Agreement to review and sign.${messageBlock}\n\nYou can open and review the document here:\n${reviewLink}\n\nThe link stays active while the NDA is in progress and expires after 14 days of inactivity. No account is needed.\n\nBest regards,\n${senderName}`
 
         // Notify the draft creator if they are different from the sender
         if (draft.createdByUserId !== user.id) {
@@ -255,12 +260,13 @@ export async function POST(request: NextRequest) {
             reviewLink,
             suggestedSubject,
             suggestedBody,
-            emailSent,
-            message: emailSent
-                ? `NDA emailed to ${recipientEmail}`
-                : `NDA link generated for ${recipientEmail}`
+            emailSent: false,
+            message: `NDA link generated for ${recipientEmail}`
         })
     } catch (error) {
+        if (error instanceof PlanLimitError) {
+            return NextResponse.json({ error: error.message, code: error.code }, { status: 403 })
+        }
         console.error('Send for review error:', error)
         return NextResponse.json({
             error: error instanceof Error ? error.message : 'Failed to send for review'

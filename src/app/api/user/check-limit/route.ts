@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { resolveLimits, getCurrentQuarterStart } from '@/billing/planLimits'
+import { resolveLimits } from '@/billing/planLimits'
+import { sentNdaCountWhere } from '@/organizations/limits'
 import { STRIPE_PRICE_IDS } from '@/lib/stripe-price-ids'
 
 export async function GET() {
@@ -28,10 +28,7 @@ export async function GET() {
 
     const limits = resolveLimits(organization)
 
-    const whereClause: Prisma.NdaDraftWhereInput =
-      limits.draftLimitPeriod === 'quarter'
-        ? { organizationId: organization.id, sentAt: { gte: getCurrentQuarterStart() }, status: { in: ['SENT', 'SIGNED'] } }
-        : { organizationId: organization.id, status: { in: ['SENT', 'SIGNED'] } }
+    const whereClause = sentNdaCountWhere(organization, limits.draftLimitPeriod)
 
     const ndaCount = await prisma.ndaDraft.count({ where: whereClause })
 

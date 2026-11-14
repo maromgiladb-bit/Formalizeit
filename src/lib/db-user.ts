@@ -2,6 +2,31 @@ import { prisma } from '@/lib/prisma'
 import { currentUser } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
 import { claimPendingSigners } from '@/lib/claimPendingSigners'
+import { LEGAL_VERSION } from '@/lib/legalVersions'
+
+/**
+ * Public entry point. Resolves/provisions the DB user, then mirrors Clerk's
+ * built-in legal acceptance (`legalAcceptedAt`) into our own durable record
+ * when we do not have one yet.
+ */
+export async function ensureDbUser(clerkUserId: string) {
+  const user = await ensureDbUserInner(clerkUserId)
+  if (!user || user.termsAcceptedAt) return user
+  try {
+    const clerkUser = await currentUser()
+    const legalAcceptedAt = clerkUser?.legalAcceptedAt
+    if (!legalAcceptedAt) return user
+    const at = new Date(legalAcceptedAt)
+    const updated = await prisma.user.updateMany({
+      where: { id: user.id, termsAcceptedAt: null },
+      data: { termsAcceptedAt: at, termsVersion: LEGAL_VERSION },
+    })
+    if (updated.count > 0) return { ...user, termsAcceptedAt: at, termsVersion: LEGAL_VERSION }
+  } catch (e) {
+    console.error('[ensureDbUser] legal acceptance mirror failed:', e)
+  }
+  return user
+}
 
 /**
  * Ensures the authenticated Clerk user has a corresponding database User record.
@@ -10,7 +35,7 @@ import { claimPendingSigners } from '@/lib/claimPendingSigners'
  *   2. Placeholder user exists by email (invited user merge)
  *   3. No user exists at all (create new)
  */
-export async function ensureDbUser(clerkUserId: string) {
+async function ensureDbUserInner(clerkUserId: string) {
   const include = {
     memberships: {
       include: { organization: true },
@@ -48,7 +73,9 @@ export async function ensureDbUser(clerkUserId: string) {
 
   // --- Account Recovery ---
   // If this user deleted their account within the last 30 days and is re-registering
-  // with the same email, restore their account (all NDAs, signers, memberships intact).
+  // with the same email, restore their account (NDAs and signers stay intact).
+  // Company memberships are NOT restored: they are removed at deletion time, so the
+  // user must be re-invited to any company they belonged to.
   if (placeholder?.status === 'pending_deletion') {
     const restored = await prisma.user.update({
       where: { id: placeholder.id },

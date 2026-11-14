@@ -39,12 +39,21 @@ export function subscriptionToOrgData(subscription: Stripe.Subscription): Prisma
   const periodEnd = getCurrentPeriodEnd(subscription)
   const priceId = subscription.items.data[0]?.price.id ?? null
 
+  // An unrecognised price on an active subscription must not silently grant PRO
+  // (it could be a TEAM customer, or misconfigured env). Leave billingPlan
+  // unchanged (undefined = no update); callers report it via hasUnknownPlanPrice.
   return {
-    billingPlan: isActivePlan ? (planFromPriceId(priceId) ?? 'PRO') : 'FREE',
+    billingPlan: isActivePlan ? (planFromPriceId(priceId) ?? undefined) : 'FREE',
     billingStatus,
     stripePriceId: isActivePlan ? priceId : null,
     stripeCurrentPeriodEnd: isActivePlan && periodEnd ? new Date(periodEnd * 1000) : null,
     stripeSubscriptionId: isActivePlan ? undefined : null,
     cancelAtPeriodEnd: isActivePlan ? (subscription.cancel_at_period_end ?? false) : false,
   }
+}
+
+/** True when an active subscription carries a price that maps to no plan. */
+export function hasUnknownPlanPrice(subscription: Stripe.Subscription): boolean {
+  if (!GRACE_PLAN_STATUSES.has(subscription.status)) return false
+  return !planFromPriceId(subscription.items.data[0]?.price.id ?? null)
 }

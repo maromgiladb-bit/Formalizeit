@@ -6,14 +6,16 @@ import { prisma } from '@/lib/prisma'
  * Anonymizes users who have been pending deletion for > 30 days.
  * Call this from a cron job (Vercel Cron, GitHub Actions, etc.) daily.
  *
- * Protect this endpoint with CRON_SECRET in production:
- * Authorization: Bearer <CRON_SECRET>
+ * Requires CRON_SECRET: Authorization: Bearer <CRON_SECRET>
  */
 export async function GET(req: Request) {
     const authHeader = req.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // Fail closed. This endpoint permanently anonymizes user records, so a
+    // missing secret must block it rather than wave it through — matching the
+    // other three crons.
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -87,7 +87,7 @@ export default function SupportPage() {
 							<div>
 								<h3 className="font-semibold text-ink mb-1">Create an Account</h3>
 								<p className="text-gray-600 text-sm">
-									Sign up for free and choose the plan that fits your needs
+									Sign up for free — everything is included while we're in beta
 								</p>
 							</div>
 						</div>

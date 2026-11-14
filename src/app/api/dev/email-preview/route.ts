@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
             case 'recipientEdit':
                 result = {
                     subject: `${sampleData.senderName} from ${sampleData.senderCompany} sent you an NDA to review`,
-                    from: `${sampleData.senderName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.senderName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `Party B (recipient) <partyb@example.com>`,
                     html: recipientEditEmailHtml(
                         sampleData.draftTitle,
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
             case 'recipientEditNoMessage':
                 result = {
                     subject: `${sampleData.senderName} from ${sampleData.senderCompany} sent you an NDA to review`,
-                    from: `${sampleData.senderName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.senderName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `Party B (recipient) <partyb@example.com>`,
                     html: recipientEditEmailHtml(
                         sampleData.draftTitle,
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
             case 'ownerReview':
                 result = {
                     subject: `Review requested – ${sampleData.signerName} from ${sampleData.signerCompany} made changes to the NDA`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.senderName} (Party A) <partya@example.com>`,
                     html: ownerReviewEmailHtml(
                         sampleData.draftTitle,
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
             case 'finalSigned':
                 result = {
                     subject: `Congratulations! Your NDA is complete`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `Both parties`,
                     html: finalSignedEmailHtml(
                         sampleData.draftTitle,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
             case 'recipientSignRequest':
                 result = {
                     subject: `${sampleData.senderName} from ${sampleData.senderCompany} sent you an NDA to sign`,
-                    from: `${sampleData.senderName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.senderName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `Party B (recipient) <partyb@example.com>`,
                     html: recipientSignRequestEmailHtml(
                         sampleData.draftTitle,
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
             case 'timeToSign':
                 result = {
                     subject: `Time to sign! ${sampleData.signerName} from ${sampleData.signerCompany} has already signed the NDA`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.senderName} (Party A) <partya@example.com>`,
                     html: timeToSignEmailHtml(
                         sampleData.draftTitle,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
             case 'congratulations':
                 result = {
                     subject: `Congratulations! Your NDA is complete`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `Both parties`,
                     html: congratulationsEmailHtml(
                         sampleData.draftTitle,
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
             case 'partyBSuggestions':
                 result = {
                     subject: `Review requested – ${sampleData.partyBName} from ${sampleData.signerCompany} made suggestions on the NDA`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.senderName} (Party A) <partya@example.com>`,
                     html: partyBSuggestionsEmailHtml(
                         sampleData.draftTitle,
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
             case 'partyARequestChanges':
                 result = {
                     subject: `${sampleData.senderName} from ${sampleData.senderCompany} requested changes on the NDA`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `Party B (recipient) <partyb@example.com>`,
                     html: partyARequestChangesEmailHtml(
                         sampleData.draftTitle,
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
             case 'recipientInputSubmitted':
                 result = {
                     subject: `${sampleData.partyBName} filled in their details – "${sampleData.draftTitle}" is ready`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.senderName} (Party A) <partya@example.com>`,
                     html: recipientInputSubmittedEmailHtml(
                         sampleData.draftTitle,
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
             case 'inputRequest':
                 result = {
                     subject: `${sampleData.senderName} from ${sampleData.senderCompany} needs your input on an NDA`,
-                    from: `${sampleData.senderName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.senderName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `Party B (recipient) <partyb@example.com>`,
                     html: inputRequestEmailHtml(
                         sampleData.draftTitle,
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
             case 'invite':
                 result = {
                     subject: `${sampleData.inviterName} invited you to join ${sampleData.orgName}`,
-                    from: `${sampleData.inviterName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.inviterName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `New team member <newmember@example.com>`,
                     html: inviteEmailHtml(
                         sampleData.orgName,
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
             case 'inviteContributor':
                 result = {
                     subject: `${sampleData.inviterName} invited you to join ${sampleData.orgName}`,
-                    from: `${sampleData.inviterName} via Formalize It <noreply@formalizeit.app>`,
+                    from: `${sampleData.inviterName} via FormalizeIt <noreply@formalizeit.app>`,
                     to: `New team member <newmember@example.com>`,
                     html: inviteEmailHtml(
                         sampleData.orgName,
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
             case 'approvalRequest':
                 result = {
                     subject: `Approval needed – ${sampleData.submitterName} submitted a draft for review`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.approverName} (Approver) <approver@example.com>`,
                     html: approvalRequestEmailHtml(
                         sampleData.draftTitle,
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
             case 'approvalApproved':
                 result = {
                     subject: `Your draft was approved – you can now send "${sampleData.draftTitle}"`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.submitterName} (Contributor) <contributor@example.com>`,
                     html: approvalApprovedEmailHtml(
                         sampleData.draftTitle,
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
             case 'approvalRejected':
                 result = {
                     subject: `Revisions needed on your draft – "${sampleData.draftTitle}"`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.submitterName} (Contributor) <contributor@example.com>`,
                     html: approvalRejectedEmailHtml(
                         sampleData.draftTitle,
@@ -284,8 +284,8 @@ export async function POST(request: NextRequest) {
 
             case 'subscriptionCancelled':
                 result = {
-                    subject: `Your Formalize It subscription has ended`,
-                    from: `Formalize It <noreply@formalizeit.app>`,
+                    subject: `Your FormalizeIt subscription has ended`,
+                    from: `FormalizeIt <noreply@formalizeit.app>`,
                     to: `${sampleData.senderName} (Administrator) <admin@example.com>`,
                     html: subscriptionCancelledEmailHtml(
                         sampleData.orgName,

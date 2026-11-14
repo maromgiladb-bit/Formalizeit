@@ -1,8 +1,11 @@
 'use client'
 
+import { BETA_LABEL } from '@/lib/featureFlags'
+import { StatusPill } from '@/components/ui/status-pill'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useAuth, SignInButton, SignUpButton } from '@clerk/nextjs'
+import { useAuth, SignInButton } from '@clerk/nextjs'
+import SignupButton from '@/components/SignupButton'
 import { useState } from 'react'
 import FloatingNavShell from './nav/FloatingNavShell'
 
@@ -58,6 +61,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                   priority
                 />
               </Link>
+              {BETA_LABEL && <StatusPill tone="progress" label="Beta" className="ml-2" />}
 
               {/* Desktop navigation — centered in the bar */}
               <div className="hidden md:flex md:items-center md:gap-1 absolute left-1/2 -translate-x-1/2">
@@ -88,11 +92,11 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                   Sign In
                 </button>
               </SignInButton>
-              <SignUpButton mode="modal">
+              <SignupButton>
                 <button className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer">
                   Get Started
                 </button>
-              </SignUpButton>
+              </SignupButton>
             </div>
 
             {/* Mobile menu button */}
@@ -140,14 +144,14 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                     Sign In
                   </button>
                 </SignInButton>
-                <SignUpButton mode="modal">
+                <SignupButton>
                   <button
                     className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started
                   </button>
-                </SignUpButton>
+                </SignupButton>
               </div>
             </div>
           )}

@@ -1,5 +1,8 @@
 import { createHash } from 'crypto';
 import { getTemplateById } from './templateManager';
+import { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT } from './authorityConsentText';
+
+export { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT };
 
 /**
  * Signature evidence helpers — shared by the signing UIs and the sign API routes so the
@@ -13,13 +16,6 @@ import { getTemplateById } from './templateManager';
  *  - agreementHash: SHA-256 fingerprint of the final signed PDF bytes (tamper-evidence)
  *  - authority: the signer's affirmation that they may sign in their company's name
  */
-
-/**
- * The exact authority-to-sign affirmation the signer ticks before signing. Imported by both the
- * UI (checkbox label) and the server (recorded consent text) so they can never drift apart.
- */
-export const AUTHORITY_CONSENT_TEXT =
-	'I confirm that I am authorized to sign this agreement on behalf of, and in the name of, the company I represent, and that doing so legally binds that company.';
 
 /**
  * Trusted client IP for signing evidence. Prefer platform-set headers (x-real-ip /
@@ -116,4 +112,17 @@ export interface AuthorityConsent {
 /** Build the authority-consent record stored in the audit event. */
 export function authorityConsent(confirmed: boolean): AuthorityConsent {
 	return { confirmed, text: AUTHORITY_CONSENT_TEXT, at: new Date().toISOString() };
+}
+
+export interface TermsConsent {
+	accepted: boolean;
+	text: string;
+	at: string;
+	// Index signature keeps the shape assignable to Prisma's JSON input type.
+	[key: string]: string | boolean;
+}
+
+/** Build the Terms / Privacy / E-Signature consent record stored in the audit event. */
+export function termsConsent(accepted: boolean): TermsConsent {
+	return { accepted, text: TERMS_CONSENT_TEXT, at: new Date().toISOString() };
 }

@@ -43,7 +43,7 @@ export default function TermsPage() {
 					</p>
 					<p>
 						The Service is organized around company workspaces. Documents, billing, and team access are
-						managed at the company level. The person who creates a company workspace becomes the Owner and
+						managed at the company level. The person who creates a company workspace becomes the Administrator and
 						is responsible for managing members and billing.
 					</p>
 
@@ -85,6 +85,13 @@ export default function TermsPage() {
 					</p>
 
 					<h2>7. Free Plans and Limits</h2>
+					{/* LEGAL REVIEW: founder-drafted beta clause. Have qualified legal counsel review the notice
+					    period and wording before scaling or removing the beta framing. */}
+					<p>
+						FormalizeIt is currently in a free beta. During the beta, the Service is provided at no
+						charge and the usual Free plan limits do not apply. We will give you at least 30 days&apos;
+						notice before paid plans begin or before the limits available on the Free plan are reduced.
+					</p>
 					<p>
 						Free plan features and usage limits are subject to change at any time. We will provide
 						reasonable notice before reducing the features available on a free plan.
@@ -163,7 +170,7 @@ export default function TermsPage() {
 					<h2>16. Contact</h2>
 					<p>
 						Questions about these Terms? Contact us at{" "}
-						<a href="mailto:support@formalizeit.app">support@formalizeit.app</a>.
+						<a href="mailto:support@formalizeit.com">support@formalizeit.com</a>.
 					</p>
 				</div>
 			</div>

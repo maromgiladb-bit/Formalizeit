@@ -145,9 +145,13 @@ model User {
   acknowledgedNdaVersion   String?   @map("acknowledged_nda_version")
   acknowledgedNdaVersionAt DateTime? @map("acknowledged_nda_version_at")
 
+  // Terms of Service / Privacy Policy acceptance evidence (see src/lib/legalVersions.ts)
+  termsAcceptedAt DateTime? @map("terms_accepted_at")
+  termsVersion    String?   @map("terms_version")
+
   // Relations
   memberships         Membership[]
-  ownedOrganizations  Organization[] @relation("OwnedOrganizations")
+  ownedOrganizations Organization[] @relation("OwnedOrganizations")
   createdTemplates    NdaTemplate[]  @relation("TemplateCreator")
   createdDrafts       NdaDraft[]     @relation("DraftCreator")
   createdSignRequests SignRequest[]  @relation("SignRequestCreator")
@@ -168,7 +172,7 @@ model Organization {
   stripeCustomerId       String?       @unique @map("stripe_customer_id")
   stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
   stripePriceId          String?       @map("stripe_price_id")
-  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end")
+  stripeCurrentPeriodEnd DateTime?     @map("stripe_current_period_end") @db.Timestamptz
   cancelAtPeriodEnd      Boolean       @default(false) @map("cancel_at_period_end")
   settings               Json?         @default("{}")
   createdAt     DateTime      @default(now()) @map("created_at")
@@ -273,6 +277,7 @@ model NdaDraft {
   retentionNoticeSentAt DateTime? @map("retention_notice_sent_at") // Advance-deletion notice sent (free-plan 5y retention)
   reminder48hSentAt DateTime? @map("reminder_48h_sent_at") // First unsigned-NDA reminder to receiver (48h after sent)
   reminder5dSentAt  DateTime? @map("reminder_5d_sent_at") // Second unsigned-NDA reminder to receiver (5 days after sent)
+  remindersStoppedAt DateTime? @map("reminders_stopped_at") // Receiver clicked "Stop these reminders" - cron skips this NDA
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   archivedAt      DateTime? @map("archived_at") // Finalized NDA moved to the dashboard Archived list
@@ -289,6 +294,7 @@ model NdaDraft {
   @@index([createdByUserId])
   @@index([organizationId])
   @@index([templateId])
+  @@index([organizationId, status, sentAt], map: "nda_drafts_org_status_sent_at_idx")
   @@map("nda_drafts")
 }
 
@@ -421,4 +427,14 @@ model Notification {
   @@index([userId, read])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// Stripe webhook idempotency: one row per processed event id. A duplicate delivery
+// hits the primary key (P2002) and is acknowledged without being handled again.
+model StripeEvent {
+  id         String   @id // Stripe event id (evt_...)
+  type       String
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  @@map("stripe_events")
 }

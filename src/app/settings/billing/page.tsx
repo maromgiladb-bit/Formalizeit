@@ -8,6 +8,7 @@ import {
   CreditCard, ArrowRight, AlertTriangle,
   Check, Download, ExternalLink, FileText, Zap,
 } from 'lucide-react'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 import { CheckoutModal } from '@/components/billing/CheckoutModal'
 import { CancelSubscriptionModal } from '@/components/billing/CancelSubscriptionModal'
 import { Button } from '@/components/ui/button'
@@ -36,6 +37,17 @@ interface Invoice {
   hostedUrl: string | null
 }
 
+// During the free beta (paid plans off) FREE is lifted to unlimited NDAs and 10 users;
+// keep this list in step with the Free card in src/components/marketing/PricingSection.tsx.
+const BETA_FREE_FEATURES = [
+  'Unlimited NDAs',
+  'Up to 10 users',
+  'Send, review & e-sign NDAs',
+  'Receive & sign NDAs free (no account needed)',
+  'Dashboard, search & full audit trail',
+  '5-year document storage',
+]
+
 const PLAN_FEATURES: Record<string, string[]> = {
   FREE: [
     'Up to 3 NDAs total',
@@ -48,7 +60,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
     'Unlimited NDA generation',
     '1 user',
     'NDA dashboard & search',
-    'Full audit trail',
+    'Search & activity history',
   ],
   TEAM: [
     'Everything in Pro',
@@ -176,7 +188,8 @@ export default function BillingSettingsPage() {
       const res = await fetch('/api/billing/portal', { method: 'POST' })
       if (!res.ok) {
         portalTab?.close()
-        setPortalError('Failed to open billing portal. Please try again.')
+        const errData = await res.json().catch(() => null)
+        setPortalError(errData?.error || 'Failed to open billing portal. Please try again.')
         return
       }
       const data = await res.json()
@@ -204,7 +217,7 @@ export default function BillingSettingsPage() {
 
   const getPlanDisplayName = (plan: string) => {
     switch (plan) {
-      case 'FREE': return 'Free'
+      case 'FREE': return PAID_PLANS_ENABLED ? 'Free' : 'Free (beta)'
       case 'PRO': return 'Pro'
       case 'TEAM': return 'Team'
       case 'ENTERPRISE': return 'Enterprise'
@@ -215,7 +228,7 @@ export default function BillingSettingsPage() {
 
   const getPlanPrice = (plan: string, billingCycle: 'monthly' | 'annual' | null) => {
     switch (plan) {
-      case 'FREE': return '$0 / month'
+      case 'FREE': return PAID_PLANS_ENABLED ? '$0 / month' : '$0 during beta'
       case 'PRO': return billingCycle === 'annual'
         ? '$7.65 / month, billed annually'
         : '$9 / month'
@@ -242,7 +255,10 @@ export default function BillingSettingsPage() {
     return <p className="text-sm text-gray-500">Unable to load billing info.</p>
   }
 
-  const features = PLAN_FEATURES[subscription.plan] ?? []
+  const features =
+    !PAID_PLANS_ENABLED && subscription.plan === 'FREE'
+      ? BETA_FREE_FEATURES
+      : PLAN_FEATURES[subscription.plan] ?? []
 
   const pendingCancel =
     subscription.cancelAtPeriodEnd &&
@@ -338,6 +354,15 @@ export default function BillingSettingsPage() {
           </div>
         </div>
 
+        {!PAID_PLANS_ENABLED && subscription.plan === 'FREE' && (
+          <div className="px-6 pb-5">
+            <p className="text-sm text-gray-500">
+              Everything&apos;s unlocked while we&apos;re in beta. Paid plans are coming soon — we&apos;ll email you well before anything changes.{' '}
+              <Link href="/contact" className="text-teal-800 underline underline-offset-2">Contact us</Link>
+            </p>
+          </div>
+        )}
+
         {/* Usage bar — Free plan */}
         {subscription.plan === 'FREE' && subscription.limit && (
           <div className="px-6 pb-5 border-t border-gray-100 pt-4">
@@ -376,7 +401,12 @@ export default function BillingSettingsPage() {
 
         {/* Action */}
         <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-4 flex-wrap">
-          {subscription.billingStatus === 'CANCELLED' && isOwner ? (
+          {!PAID_PLANS_ENABLED && subscription.plan === 'FREE' ? (
+            /* Free beta: nothing to upgrade to yet */
+            <Button variant="outline" disabled>
+              Current Plan Active
+            </Button>
+          ) : subscription.billingStatus === 'CANCELLED' && isOwner && PAID_PLANS_ENABLED ? (
             /* Subscription was cancelled — allow re-subscribing */
             <>
               <Button onClick={() => openCheckoutFor(subscription.plan === 'TEAM' ? 'TEAM' : 'PRO')}>
@@ -395,7 +425,7 @@ export default function BillingSettingsPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               ) : (
-                <p className="text-sm text-gray-500">Only the organization owner can upgrade the plan.</p>
+                <p className="text-sm text-gray-500">Only an administrator can upgrade the plan.</p>
               )}
               <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
                 View all plans
@@ -409,9 +439,11 @@ export default function BillingSettingsPage() {
                 </Button>
                 {portalError && <p className="text-xs text-red-600">{portalError}</p>}
               </div>
-              <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
-                Upgrade to Team
-              </Link>
+              {PAID_PLANS_ENABLED && (
+                <Link href="/#pricing" className="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                  Upgrade to Team
+                </Link>
+              )}
               {!subscription.cancelAtPeriodEnd && (
                 <button
                   onClick={() => setCancelOpen(true)}

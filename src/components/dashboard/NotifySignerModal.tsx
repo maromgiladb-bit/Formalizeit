@@ -123,7 +123,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
               <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Ask a teammate to sign</p>
               <h3 className="text-lg font-semibold text-ink mb-1">Who should sign this NDA?</h3>
               <p className="text-sm text-gray-500 mb-5">
-                Only approved signers can sign on behalf of your company. Choose who to notify — they&apos;ll get
+                Only Signers can sign on behalf of your company. Choose who to notify — they&apos;ll get
                 an email and an in-app notification.
               </p>
 

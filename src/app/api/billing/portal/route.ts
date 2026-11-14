@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getActiveOrganization } from '@/lib/db-organization'
-import { stripe } from '@/lib/stripe'
+import { getStripe, isStripeConfigured } from '@/lib/stripe'
+import { billingUnavailableResponse } from '@/lib/billing-unavailable'
 import { isOrganizationOwner } from '@/lib/organizationRoles'
+import { getAppUrl } from '@/lib/email'
 
 export async function POST() {
+  if (!isStripeConfigured()) return billingUnavailableResponse()
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -18,7 +22,7 @@ export async function POST() {
     }
 
     if (!isOrganizationOwner(activeMembership.role)) {
-      return NextResponse.json({ error: 'Only organization owners can manage billing' }, { status: 403 })
+      return NextResponse.json({ error: 'Only administrators can manage billing' }, { status: 403 })
     }
 
     const organization = await prisma.organization.findUnique({
@@ -33,18 +37,9 @@ export async function POST() {
       return NextResponse.json({ error: 'No Stripe customer found' }, { status: 400 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL
-    if (!appUrl) {
-      if (process.env.NODE_ENV === 'production') {
-        return NextResponse.json(
-          { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set' },
-          { status: 500 }
-        )
-      }
-    }
-    const resolvedAppUrl = appUrl ?? 'http://localhost:3000'
+    const resolvedAppUrl = getAppUrl()
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: organization.stripeCustomerId,
       return_url: `${resolvedAppUrl}/settings/billing`,
     })

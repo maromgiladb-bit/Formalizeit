@@ -54,14 +54,11 @@ AWAITING_PARTY_B_REVIEW
          AWAITING_PARTY_A_SIGNATURE
               ↓  Party A signs
            COMPLETE ✓
-
-[Alternative — Party A signs first, sends B the sign link in one action]
-  send-for-signature (requires Party A's signatureImage in request body)
-  → AWAITING_PARTY_B_SIGNATURE
-  Party B gets sign link → signs → COMPLETE ✓
-  ⚠ Only valid after review is complete. Party A's signature is embedded in formData
-    as part of this single request; it is not a "skip review" shortcut.
 ```
+
+Both parties sign through `sign-public` (`/sign-nda-public/{signerId}`). Party A (role `SENDER`)
+must be signed in and pass `canSignNDA`. The old `sign`, `send-for-signature` and
+`generate-and-save` routes were removed (Sept 2026).
 
 ---
 
@@ -71,13 +68,12 @@ AWAITING_PARTY_B_REVIEW
 |---------|-----------|----------------|-----------|
 | Send for review | `send-for-review` | `recipientEditEmailHtml` | Party B |
 | Send for input (fields) | `send-for-input` | `inputRequestEmailHtml` | Party B |
-| Party A signs + sends | `send-for-signature` | `recipientSignRequestEmailHtml` | Party B |
 | Party B suggests changes | `submit-input` (B, has suggestions) | `partyBSuggestionsEmailHtml` | Party A |
 | Party B submits, no changes | `submit-input` (B, no suggestions) | `recipientInputSubmittedEmailHtml` | Party A |
 | Party A counters B | `submit-input` (A, has counters) | `ownerReviewEmailHtml` | Party B |
 | Party A requests changes | `request-changes` | `partyARequestChangesEmailHtml` | Party B |
-| One party signs, other pending | `sign` / `sign-public` | `timeToSignEmailHtml` | Other party |
-| Both parties signed | `sign` / `sign-public` | `congratulationsEmailHtml` + PDF attachment | Both parties |
+| One party signs, other pending | `sign-public` | `timeToSignEmailHtml` | Other party |
+| Both parties signed | `sign-public` | `congratulationsEmailHtml` + PDF attachment | Both parties |
 
 All email functions live in `src/lib/email.ts`. Sender address is `MAIL_FROM` env var. Service: Resend.
 
@@ -88,7 +84,7 @@ All email functions live in `src/lib/email.ts`. Sender address is `MAIL_FROM` en
 | Purpose | URL pattern | Sent when |
 |---------|-------------|-----------|
 | Review, fill fields, suggest changes | `/fillndahtml-public/{signerId}` | send-for-review, send-for-input, request-changes |
-| Sign only | `/sign-nda-public/{signerId}` | send-for-signature, timeToSign email |
+| Sign only | `/sign-nda-public/{signerId}` | timeToSign email, dashboard sign button |
 
 Party A also receives a `/fillndahtml-public/{partyA_signerId}` link (via `partyBSuggestionsEmailHtml`) when Party B submits suggestions — so A can review without opening the dashboard.
 
@@ -104,9 +100,7 @@ Party A also receives a `/fillndahtml-public/{partyA_signerId}` link (via `party
 | `src/app/api/ndas/submit-input/route.ts` | Core bilateral state machine (B submits → A reviews → loop) |
 | `src/app/api/ndas/send-for-review/route.ts` | Creates Signer token, transitions to AWAITING_PARTY_B_REVIEW |
 | `src/app/api/ndas/send-for-input/route.ts` | Same as above but sets `pendingInputFields` |
-| `src/app/api/ndas/send-for-signature/route.ts` | Party A signs + sends B the sign link in one action |
-| `src/app/api/ndas/sign/route.ts` | Authenticated Party A signs from dashboard |
-| `src/app/api/ndas/sign-public/route.ts` | Public signature submission, PDF generation, COMPLETE transition |
+| `src/app/api/ndas/sign-public/route.ts` | All signing (Party A requires sign-in + `canSignNDA`), PDF generation, COMPLETE transition |
 | `src/app/api/ndas/approve-changes/route.ts` | A approves B suggestions → AWAITING_PARTY_A_SIGNATURE |
 | `src/app/api/ndas/request-changes/route.ts` | A sends B back for revision → AWAITING_PARTY_B_REVIEW |
 | `src/app/fillndahtml-public/[token]/page.tsx` | Party B (and A) review/fill/suggest UI |

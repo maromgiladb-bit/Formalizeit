@@ -5,8 +5,9 @@ import { sendEmail, getAppUrl, inputRequestEmailHtml } from '@/lib/email'
 import { getActiveOrganization } from '@/lib/db-organization'
 import { canSendNDA } from '@/lib/organizationRoles'
 import { createNotification } from '@/lib/notifications'
-import { assertCanSendNda } from '@/organizations/limits'
+import { assertCanSendNda, PlanLimitError } from '@/organizations/limits'
 import { newSignLinkExpiry } from '@/lib/signLink'
+import { transitionBlockedReason } from '@/lib/ndaTransitions'
 
 /**
  * Send NDA for Party B input (not signature)
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You do not have permission to send NDAs.' }, { status: 403 })
         }
 
-        await assertCanSendNda(activeMembership.organizationId)
+        await assertCanSendNda(activeMembership.organizationId, draftId)
 
         // Get draft in active organization
         const draft = await prisma.ndaDraft.findFirst({
@@ -199,6 +200,9 @@ export async function POST(request: NextRequest) {
             pendingFieldsCount: pendingInputFields.length
         })
     } catch (error) {
+        if (error instanceof PlanLimitError) {
+            return NextResponse.json({ error: error.message, code: error.code }, { status: 403 })
+        }
         console.error('Send for input error:', error)
         return NextResponse.json({
             error: error instanceof Error ? error.message : 'Failed to send for input'

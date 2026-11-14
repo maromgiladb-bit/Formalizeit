@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { addMemberToOrganization } from '@/organizations/limits'
 import { getActiveOrganization } from '@/lib/db-organization'
+import { PAID_PLANS_ENABLED } from '@/lib/featureFlags'
 import { isOrganizationOwner, toDbMembershipRole } from '@/lib/organizationRoles'
 import { sendEmail, inviteEmailHtml, getAppUrl } from '@/lib/email'
 
@@ -25,7 +26,7 @@ export async function inviteMember(formData: FormData) {
         if (!activeMembership) return { error: 'You do not belong to an organization' }
 
         if (!isOrganizationOwner(activeMembership.role)) {
-            return { error: 'Only the organization owner can invite members' }
+            return { error: 'Only an administrator can invite members' }
         }
 
         const org = await prisma.organization.findUnique({
@@ -54,16 +55,18 @@ export async function inviteMember(formData: FormData) {
             await addMemberToOrganization(activeMembership.organizationId, user.id, role, 'PENDING_INVITE')
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Failed to invite member'
-            if (msg.includes('maximum number of users')) return { error: msg }
+            if (msg.includes('maximum number of users')) {
+                return { error: PAID_PLANS_ENABLED ? msg : `${msg} Contact us at support@formalizeit.com for a bigger team.` }
+            }
             throw err
         }
 
         // Send invite email (best-effort)
         try {
-            const inviterName = org.owner?.name || org.owner?.email || 'The owner'
+            const inviterName = org.owner?.name || org.owner?.email || 'Your administrator'
             await sendEmail({
                 to: email,
-                subject: `You've been invited to ${org.name} on Formalize It`,
+                subject: `You've been invited to ${org.name} on FormalizeIt`,
                 html: inviteEmailHtml(org.name, inviterName, role, `${getAppUrl()}/sign-in`),
             })
         } catch (emailError) {
@@ -90,7 +93,7 @@ export async function removeMember(formData: FormData) {
         if (!activeMembership) return { error: 'No active organization found' }
 
         if (!isOrganizationOwner(activeMembership.role)) {
-            return { error: 'Only the organization owner can remove members' }
+            return { error: 'Only an administrator can remove members' }
         }
 
         const target = await prisma.membership.findUnique({
@@ -129,7 +132,7 @@ export async function updateMemberRole(_formData: FormData) {
         if (!activeMembership) return { error: 'No active organization found' }
 
         if (!isOrganizationOwner(activeMembership.role)) {
-            return { error: 'Only the owner can change member roles' }
+            return { error: 'Only an administrator can change member roles' }
         }
 
         const target = await prisma.membership.findUnique({

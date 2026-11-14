@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { getSignedS3Url } from '@/lib/s3'
+import { isValidSignLinkToken } from '@/lib/signLink'
+import { rateLimitRequest, tooManyRequests, MINUTE } from '@/lib/rateLimit'
+import { sha256Hex } from '@/lib/signatureEvidence'
+import { buildSignedTemplateData } from '@/lib/signedTemplateData'
 
 export const runtime = 'nodejs'
 
@@ -32,6 +36,13 @@ export async function GET(request: NextRequest) {
         // Resolve + authorize the target draft before doing any work.
         let draftId: string
         if (signerIdParam) {
+            // The signer id is the only credential on this path, so throttle guessing.
+            const limit = rateLimitRequest(request, 'viewpdf', 60, MINUTE)
+            if (!limit.ok) return tooManyRequests(limit)
+
+            if (!isValidSignLinkToken(signerIdParam)) {
+                return NextResponse.json({ error: 'NDA not found' }, { status: 404 })
+            }
             // Bearer-token path: a valid signer id grants access to its own NDA only.
             const signer = await prisma.signer.findUnique({
                 where: { id: signerIdParam },
@@ -112,9 +123,12 @@ export async function GET(request: NextRequest) {
                 const { storeNdaPdf } = await import('@/lib/storeNdaPdf')
                 const { getAppUrl } = await import('@/lib/email')
 
+                // Same mapping + template key as sign-public. draft.templateId is a DB id
+                // of a placeholder row, not the template file key, so don't use it here.
+                const content = signRequest.draft.content as Record<string, unknown>
                 const html = await renderNdaHtml(
-                    signRequest.draft.content as Record<string, unknown>,
-                    signRequest.draft.templateId || 'professional_mutual_nda_v1'
+                    buildSignedTemplateData(content),
+                    (content.templateId as string) || 'professional_mutual_nda_v1'
                 )
                 const pdfBuffer = await renderHtmlToPdf(html, {
                     pageWidthPx: 900,
@@ -128,6 +142,25 @@ export async function GET(request: NextRequest) {
                 pdf = (await prisma.ndaPdf.findUnique({
                     where: { signRequestId_kind: { signRequestId: signRequest.id, kind: 'SIGNED' } },
                 })) ?? undefined
+
+                // A rebuilt PDF is not byte-identical to the one fingerprinted at signing
+                // (or there was none), so put the hash of THIS copy on record.
+                try {
+                    await prisma.auditEvent.create({
+                        data: {
+                            organizationId: signRequest.organizationId,
+                            draftId,
+                            eventType: 'PDF_EXPORTED',
+                            metadata: {
+                                action: 'regenerated_signed_pdf',
+                                reason: 'signed PDF was missing from storage',
+                                agreementHash: sha256Hex(pdfBuffer),
+                            },
+                        },
+                    })
+                } catch (auditError) {
+                    console.error('❌ Failed to record regenerated PDF hash:', auditError)
+                }
             } catch (regenError) {
                 console.error('❌ Failed to regenerate SIGNED PDF:', regenError)
             }

@@ -19,76 +19,74 @@ export default async function DashboardPage({
     redirect('/');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { externalId: userId },
-    include: {
-      signers: {
-        // Include ALL signer roles — both SIGNER (received as Party B)
-        // and SENDER (received sign-back request as Party A)
-        include: {
-          signRequest: {
-            include: {
-              draft: {
-                include: {
-                  createdBy: true,
-                  organization: true,
-                }
-              },
-              ndaPdfs: true,
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      }
+  const receivedSignRequestInclude = {
+    signRequest: {
+      include: {
+        draft: { include: { createdBy: true, organization: true } },
+      },
     },
-  });
+  } as const;
 
-  // Also fetch any signers matched by email but not yet linked to userId
-  // (covers the case where user signed via public link before logging in)
-  const emailSigners = user ? await prisma.signer.findMany({
-    where: {
-      email: user.email,
-      userId: null,
-    },
-    include: {
-      signRequest: {
-        include: {
-          draft: { include: { createdBy: true, organization: true } },
-          ndaPdfs: true,
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  }) : [];
+  const [user, membership] = await Promise.all([
+    prisma.user.findUnique({
+      where: { externalId: userId },
+      include: {
+        signers: {
+          // Include ALL signer roles — both SIGNER (received as Party B)
+          // and SENDER (received sign-back request as Party A)
+          include: receivedSignRequestInclude,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    }),
+    // Fetch org-scoped drafts if user belongs to an organization
+    getActiveOrganization(),
+  ]);
 
   if (!user) {
     redirect('/settings/team');
   }
 
-  // Fetch org-scoped drafts if user belongs to an organization
-  const membership = await getActiveOrganization();
-
   if (!membership) {
     redirect('/onboarding');
   }
 
-  const draftSource = await prisma.ndaDraft.findMany({
-    where: { organizationId: membership.organizationId },
-    include: {
-      signRequests: {
-        // Only the latest send-out drives the dashboard row (expired flag,
-        // Party A sign token, sent PDF); match the DELETE guard's ordering so
-        // the two never disagree.
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        include: {
-          ndaPdfs: true,
-          signers: true,
+  const [emailSigners, draftSource, companyProfile, pendingInviteRows] = await Promise.all([
+    // Also fetch any signers matched by email but not yet linked to userId
+    // (covers the case where user signed via public link before logging in)
+    prisma.signer.findMany({
+      where: { email: user.email, userId: null },
+      include: receivedSignRequestInclude,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.ndaDraft.findMany({
+      where: { organizationId: membership.organizationId },
+      include: {
+        signRequests: {
+          // Only the latest send-out drives the dashboard row (expired flag,
+          // Party A sign token, sent PDF); match the DELETE guard's ordering so
+          // the two never disagree.
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            ndaPdfs: { where: { kind: 'SENT' }, select: { id: true, kind: true } },
+            signers: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.companyProfile.findUnique({
+      where: { organizationId: membership.organizationId },
+      select: { companyName: true },
+    }),
+    // Surface any pending team invites so they aren't missed after sign-in.
+    prisma.membership.findMany({
+      where: { userId: user.id, status: 'PENDING_INVITE' },
+      include: { organization: { select: { name: true } } },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
   // Transform created/sent NDAs
   const createdNdas = draftSource.map((draft) => {
@@ -164,18 +162,8 @@ export default async function DashboardPage({
     ...receivedNdas.filter((n) => !createdIds.has(n.id)),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  const companyProfile = await prisma.companyProfile.findUnique({
-    where: { organizationId: membership.organizationId },
-    select: { companyName: true },
-  });
   const hasCompanyProfile = !!(companyProfile?.companyName);
 
-  // Surface any pending team invites so they aren't missed after sign-in.
-  const pendingInviteRows = await prisma.membership.findMany({
-    where: { userId: user.id, status: 'PENDING_INVITE' },
-    include: { organization: { select: { name: true } } },
-    orderBy: { createdAt: 'asc' },
-  });
   const pendingInvites = pendingInviteRows.map((m) => ({
     membershipId: m.id,
     organizationName: m.organization?.name || 'a company',
