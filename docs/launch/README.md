@@ -251,9 +251,9 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    `20260707000000_add_nda_reminders_stopped_at`, `20260708000000_add_user_terms_acceptance`,
    `20260709000000_add_stripe_events`. Take a Neon snapshot first. Also run the two read-only
    checks: in-flight NDAs with more than one SignRequest, and
-   `select billing_plan, count(*) from organizations group by 1`. ☐ **Also on the development
-   (staging) branch:** `20260709000000_add_stripe_events` is not applied there yet (run
-   `npx prisma migrate deploy` from the laptop; `.env` points at development).
+   `select billing_plan, count(*) from organizations group by 1`. ☑ **Also on the development
+   (staging) branch:** `20260709000000_add_stripe_events` applied 2026-11-14 (`prisma migrate
+   deploy` from the laptop; schema up to date).
    ☐ Purge test data on development before relying on it: Clerk dev user
    `claude-verify+clerk_test@example.com` and its company "Claude Verify" with 5 test NDAs
    (created 2026-11-09 during merge testing).
