@@ -65,3 +65,4 @@ test-prisma.ts
 
 # Claude Local Settings
 .claude/settings.local.json
+.claude/worktrees/

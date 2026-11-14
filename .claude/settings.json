@@ -4,5 +4,17 @@
       "Bash(npm install:*)",
       "Bash(node -e \"require\\('stripe'\\)\")"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/task-list-context.js\""
+          }
+        ]
+      }
+    ]
   }
 }
