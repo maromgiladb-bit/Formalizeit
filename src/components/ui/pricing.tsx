@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, Star } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -40,7 +40,6 @@ export function Pricing({
     description = "Choose the plan that works for you.\nAll plans include secure e-signatures and PDF export.",
 }: PricingProps) {
     const [isMonthly, setIsMonthly] = useState(true);
-    const reduceMotion = useReducedMotion();
 
     return (
         <div className="container pt-6 pb-16">
@@ -79,7 +78,7 @@ export function Pricing({
                 {plans.map((plan, index) => (
                     <motion.div
                         key={index}
-                        initial={reduceMotion ? false : { y: 24, opacity: 0 }}
+                        initial={false}
                         whileInView={{ y: 0, opacity: 1 }}
                         viewport={{ once: true, margin: "-60px" }}
                         transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.08 }}
@@ -106,7 +105,7 @@ export function Pricing({
                         )}
                         <div className="flex-1 flex flex-col">
                             <div className="flex items-center justify-center gap-2">
-                                <p className="text-xs font-bold uppercase tracking-widest text-teal-700">
+                                <p className="text-sm font-semibold text-gray-700">
                                     {plan.name}
                                 </p>
                                 {plan.comingSoon && <StatusPill tone="neutral" label="Coming soon" />}

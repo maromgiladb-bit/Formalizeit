@@ -25,7 +25,6 @@ export default function SettingsLayout({
             {/* Header */}
             <section className="border-b border-gray-100">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
-                    <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Account</p>
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">My account</h1>
                     <p className="text-base text-gray-500 leading-relaxed mt-2 max-w-lg">
                         Manage your account, team, and billing preferences.
@@ -55,7 +54,7 @@ export default function SettingsLayout({
                                         `}
                                         aria-current={isCurrent ? 'page' : undefined}
                                     >
-                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-teal-700' : 'text-gray-400'}`} />
+                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-teal-700' : 'text-gray-500'}`} />
                                         <span className="truncate">{item.name}</span>
                                     </Link>
                                 )

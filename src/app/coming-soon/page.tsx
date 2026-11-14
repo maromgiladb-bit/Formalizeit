@@ -73,7 +73,6 @@ export default function ComingSoonPage() {
             <Lock className="w-3.5 h-3.5" aria-hidden="true" />
             Private beta
           </span>
-          <p className="mt-6 text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Early access</p>
           <h1 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">NDA in minutes, almost here.</h1>
           <p className="mt-4 text-base text-gray-500 leading-relaxed max-w-md">
             Pick the standard NDA, fill in what&apos;s different, send. We&apos;re letting teams in
@@ -91,7 +90,6 @@ export default function ComingSoonPage() {
           <Suspense fallback={null}>
             <ClaimNote />
           </Suspense>
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Request access</p>
           <h2 className="text-2xl font-extrabold text-ink mb-6">Join the private beta</h2>
 
           {status === 'success' ? (

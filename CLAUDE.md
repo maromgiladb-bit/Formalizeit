@@ -43,12 +43,14 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 Key rules to always apply:
 - Color discipline: teal-800 for CTAs/links ONLY, amber exclusively for "action needed" moments, no blue/purple/green/yellow utility colors
 - Primary buttons: use `@/components/ui/button` (never hand-roll; never teal-600)
-- Accent labels: `text-teal-700 text-xs font-bold uppercase tracking-widest`
+- No eyebrows above headings; labels are sentence case, untracked, never `uppercase` (panel title `text-sm font-semibold text-gray-700`, form label `text-xs font-semibold text-gray-500`) — changed Nov 2026 per the Hallmark audit
 - Cards: `bg-white border border-gray-100 rounded-2xl shadow-card`
 - Alternate section backgrounds: `bg-gray-50`
 - Body text: `text-ink` headings (not gray-900), `text-gray-500` descriptions
 - Status badges: `@/components/ui/status-pill` (neutral/progress/action/done tones)
-- Scroll animations: `@/components/ui/reveal` only; respect prefers-reduced-motion
+- Scroll animations: `@/components/ui/reveal` only (visible by default, hidden only when scripted); no framer `initial` opacity-0 on page content; respect prefers-reduced-motion
+- Never `transition-all`; never animate width/height/top/left; decorative icons `aria-hidden`, icon-only buttons `aria-label`; no emoji icons; gray text on white is `text-gray-500` or darker, smallest text 12px
+- Hallmark (`/hallmark audit`) is the design checker: its stamp and waivers sit at the top of `src/app/globals.css`; records in `.hallmark/` (git-ignored)
 
 ---
 

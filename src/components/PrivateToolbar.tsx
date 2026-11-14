@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { useAuth, UserButton } from '@clerk/nextjs'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Wrench } from 'lucide-react'
 
 import FloatingNavShell from './nav/FloatingNavShell'
 import { NotificationIcon } from './ui/notification-icon'
@@ -44,9 +44,9 @@ export default function PrivateToolbar() {
   ]
 
   const devLinks = [
-    { name: '✨ Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
-    { name: '🔓 Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
-    { name: '🏠 Homepage', href: '/' },
+    { name: 'Fill NDA (Professional)', href: '/fillndahtml?templateId=professional_mutual_nda_v1' },
+    { name: 'Sign NDA Public (Dev)', href: '/sign-nda-public/00000000-0000-0000-0000-000000000001' },
+    { name: 'Homepage', href: '/' },
   ]
 
   const isDev = process.env.NODE_ENV === 'development'
@@ -102,7 +102,7 @@ export default function PrivateToolbar() {
       {(scrolled) => (
         <>
           <div
-            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+            className={`relative flex items-center justify-between ${
               scrolled ? 'h-13' : 'h-16'
             }`}
           >
@@ -113,8 +113,8 @@ export default function PrivateToolbar() {
                   alt="FormalizeIt"
                   width={200}
                   height={50}
-                  className={`w-auto transition-all duration-300 ease-out motion-reduce:transition-none ${
-                    scrolled ? 'h-20' : 'h-28'
+                  className={`h-28 w-auto origin-left transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                    scrolled ? 'scale-[0.715]' : 'scale-100'
                   }`}
                   priority
                 />
@@ -139,7 +139,7 @@ export default function PrivateToolbar() {
                     }`}
                   >
                     More
-                    <svg className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <svg aria-hidden="true" className={`ml-1 h-4 w-4 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -168,18 +168,18 @@ export default function PrivateToolbar() {
                     <button
                       onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
                       className={`inline-flex items-center px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
-                        isDevMenuOpen ? 'bg-purple-50 text-purple-700' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                        isDevMenuOpen ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                       }`}
                     >
-                      🔧 Dev
-                      <svg className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <Wrench className="mr-1.5 h-4 w-4" aria-hidden="true" />Dev
+                      <svg aria-hidden="true" className={`ml-1 h-4 w-4 transition-transform ${isDevMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
 
                     {isDevMenuOpen && (
                       <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-purple-100 rounded-2xl shadow-float z-50 overflow-hidden">
-                        <div className="px-4 py-2.5 text-xs font-bold text-purple-700 uppercase tracking-wide bg-purple-50">
+                        <div className="px-4 py-2.5 text-xs font-bold text-gray-800 bg-gray-100">
                           Development Tools
                         </div>
                         <div className="py-1">
@@ -187,7 +187,7 @@ export default function PrivateToolbar() {
                             <Link
                               key={link.name}
                               href={link.href}
-                              className="block px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                              className="block px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-100 transition-colors"
                               onClick={() => setIsDevMenuOpen(false)}
                             >
                               {link.name}
@@ -211,7 +211,7 @@ export default function PrivateToolbar() {
                 >
                   <NotificationIcon size={22} active={unreadCount > 0} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none pointer-events-none">
+                    <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 leading-none pointer-events-none">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -241,11 +241,11 @@ export default function PrivateToolbar() {
               >
                 <span className="sr-only">Open main menu</span>
                 {!isMobileMenuOpen ? (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg aria-hidden="true" className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 ) : (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg aria-hidden="true" className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}
@@ -285,14 +285,14 @@ export default function PrivateToolbar() {
                 {isDev && (
                   <>
                     <div className="border-t border-gray-100 my-2"></div>
-                    <div className="px-4 py-2 text-xs font-bold text-purple-700 uppercase tracking-wide">
-                      🔧 Dev Tools
+                    <div className="px-4 py-2 text-xs font-bold text-gray-800">
+                      Dev tools
                     </div>
                     {devLinks.map((link) => (
                       <Link
                         key={link.name}
                         href={link.href}
-                        className="block px-4 py-3 rounded-xl text-base font-medium text-purple-700 hover:bg-purple-50 transition-colors"
+                        className="block px-4 py-3 rounded-xl text-base font-medium text-gray-800 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         {link.name}

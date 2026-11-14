@@ -67,7 +67,12 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Marks the page as scripted before first paint so scroll reveals
+              only hide content when they can also show it (globals.css). */}
+          <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        </head>
         <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
           <TermsGate needsTerms={needsTerms} />
           <FormiProvider>

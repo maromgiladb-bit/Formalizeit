@@ -46,7 +46,7 @@ export function FieldTooltip({ text, onAskFormi, label = 'More info' }: FieldToo
         aria-label={label}
         aria-expanded={open}
         aria-controls={open ? popId : undefined}
-        className="inline-flex items-center justify-center text-gray-400 hover:text-teal-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 rounded-full cursor-pointer"
+        className="inline-flex items-center justify-center text-gray-500 hover:text-teal-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 rounded-full cursor-pointer"
       >
         <Info className="w-4 h-4" />
       </button>

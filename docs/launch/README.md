@@ -207,6 +207,34 @@ Five-way research review; full plan, priorities and counsel tags in
 - ☐ Tier 2 (first month): DPA template, 2FA status (Clerk Pro), CSP/HSTS, legal-hold flag, data
   export, Amendment 13 registration question.
 
+## Site-wide design audit (2026-11-14)
+
+Hallmark audit of the whole site (17 public pages rendered, every app screen linted from source;
+records in `.hallmark/`, git-ignored). Source findings went from 339 hard-rule fails to 27. Design
+only, no behaviour changed. Calm Precision rules updated in CLAUDE.md and
+`.claude/skills/stitch-design.md` where Hallmark disagreed (user decision 2026-11-14).
+
+- ☑ Scroll-reveal content no longer invisible without JS (2026-11-14): `ui/reveal.tsx` renders
+  visible and only hides under `html.js`; page-load framer entrances set to `initial={false}`.
+- ☑ Eyebrows above headings removed (35, facts kept as plain labels); all tracked-caps labels now
+  sentence case, untracked; 10px text raised to 12px; `text-gray-400` text raised to gray-500.
+- ☑ Accessibility: 101 decorative SVGs `aria-hidden`, back link and signature canvas labelled,
+  site-wide `:focus-visible` ring, `:active` / `:disabled` states, form-field edges at 3:1.
+- ☑ Motion: every `transition-all` replaced; no width/height/right animations (progress bars use
+  scale, accordion fades, nav height snaps); global reduced-motion fallback.
+- ☑ Emoji icons → Lucide; purple-blue gradient on /viewpdf → gray; glued arrows and middle-dot
+  strings removed; hero mockup lost its fake window dots; landing hero is one screen with a
+  12-word sentence; section heads scaled up.
+- ☐ Copy: about 100 dashes (— / –) remain in UI copy (help, about, fill pages, dashboard…).
+  Hallmark wants them gone; left because the pass was design-only. Rewrite when doing a copy pass
+  (legal pages excluded).
+- ☐ Decide: confirm the landing "< 5 min" stat is a claim we stand behind; consider replacing the
+  hero's drawn document with a real screenshot of the fill page.
+- ☐ Follow-ups from the audit: form labels are still Title Case ("Email Address"); 5 font weights
+  in use (Hallmark suggests 3); landing order is the stock SaaS anatomy (hero, steps, stats,
+  features, pricing, FAQ, CTA band) — a full redesign question, not a fix; 19 old
+  `react/no-unescaped-entities` lint errors in `terms/page.tsx` and other legal pages.
+
 ## Browser e2e suite (2026-11-15)
 
 Playwright + `@clerk/testing` in `e2e/` so an agent can drive the app signed in (setup and

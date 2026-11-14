@@ -17,10 +17,10 @@ export default function StandardNdaPage() {
 				subtitle="Review the standard mutual NDA before you accept or sign"
 			/>
 
-			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch] space-y-6">
 				{/* Disclaimer — prominent, above the text */}
 				<div className="bg-white rounded-2xl shadow-card border border-amber-200 p-6">
-					<p className="text-amber-700 text-xs font-bold uppercase tracking-widest mb-2">
+					<p className="text-amber-700 text-sm font-semibold mb-2">
 						Please read
 					</p>
 					<p className="text-sm text-gray-600 leading-relaxed">
@@ -33,9 +33,7 @@ export default function StandardNdaPage() {
 				</div>
 
 				<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8 sm:p-10 prose prose-gray max-w-none">
-					<p className="text-teal-700 text-xs font-bold uppercase tracking-widest not-prose mb-2">
-						Standard template · Version 1.0
-					</p>
+					<p className="not-prose text-sm font-semibold text-gray-500 mb-2">Standard template, version 1.0</p>
 					<h2 className="not-prose text-2xl font-bold text-ink mb-6">
 						Mutual Confidentiality and Non-Disclosure Agreement
 					</h2>

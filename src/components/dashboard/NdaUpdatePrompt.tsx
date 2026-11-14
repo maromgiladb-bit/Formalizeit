@@ -54,7 +54,6 @@ export default function NdaUpdatePrompt({
           </div>
 
           <div className="text-center mb-5">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Standard NDA updated</p>
             <h3 className="text-lg font-semibold text-ink mb-2">
               The standard NDA was updated to v{version}
             </h3>
@@ -70,7 +69,7 @@ export default function NdaUpdatePrompt({
               <div key={entry.version}>
                 <p className="text-sm font-semibold text-ink">
                   v{entry.version}
-                  <span className="text-gray-400 font-normal"> · {entry.date}</span>
+                  <span className="text-gray-500 font-normal"> · {entry.date}</span>
                 </p>
                 <p className="text-sm text-gray-500 mt-0.5">{entry.summary}</p>
                 {entry.added && entry.added.length > 0 && <ChangeList label="Added" items={entry.added} />}
@@ -85,7 +84,7 @@ export default function NdaUpdatePrompt({
             target="_blank"
             className="text-sm font-semibold text-teal-800 hover:text-teal-700 underline underline-offset-2"
           >
-            View full changelog →
+            View full changelog
           </Link>
 
           {/* Acknowledgement */}
@@ -115,7 +114,7 @@ export default function NdaUpdatePrompt({
 function ChangeList({ label, items }: { label: string; items: string[] }) {
   return (
     <div className="mt-2">
-      <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">{label}</p>
+      <p className="text-gray-700 text-sm font-semibold">{label}</p>
       <ul className="mt-1 space-y-1">
         {items.map((item, i) => (
           <li key={i} className="text-sm text-gray-600 flex gap-2">

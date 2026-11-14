@@ -44,9 +44,12 @@ Tokens are defined in `src/app/globals.css` (`@theme`). Never invent new colors.
 
 - **Display (home hero):** `text-5xl sm:text-6xl lg:text-7xl font-extrabold text-ink tracking-tight leading-[1.05]`
 - **Page H1:** `text-4xl md:text-5xl font-extrabold text-ink tracking-tight`
-- **Section H2:** `text-3xl md:text-4xl font-extrabold text-ink tracking-tight`
-- **Card H3:** `text-sm font-semibold text-ink` (drop pervasive `font-bold` — use semibold/medium)
-- **Eyebrow label:** `text-teal-700 text-xs font-bold uppercase tracking-widest mb-2`
+- **Section H2 (marketing):** `text-4xl md:text-5xl font-extrabold text-ink tracking-tight` (about half the hero display, never a third)
+- **Card H3:** `text-base font-semibold text-ink` (drop pervasive `font-bold` — use semibold/medium)
+- **No eyebrows.** Never put a small label above a heading that only names what the heading says. Small type before a heading stays only when it carries a fact the heading lacks (a step number, "Error 404", a version), and then it is a plain label.
+- **Labels** (form labels, table heads, panel titles, tags, nav): sentence case in the body face, a step smaller, untracked. Panel title: `text-sm font-semibold text-gray-700`. Form label / table head: `text-xs font-semibold text-gray-500`. **Never `uppercase`, never `tracking-wide/wider/widest`.**
+- **Smallest text:** 12px (`text-xs`). Never `text-[10px]`.
+- **Gray text on white:** `text-gray-500` or darker. `text-gray-400` fails contrast (about 2.6:1) and is for icons and placeholders only.
 - **Body:** `text-base text-gray-500 leading-relaxed`
 
 ---
@@ -60,7 +63,7 @@ Tokens are defined in `src/app/globals.css` (`@theme`). Never invent new colors.
   - `progress` (teal-50/teal-700 ring) — SENT, AWAITING_*  on the other side
   - `action` (amber, pulsing dot) — SIGN NOW, CHANGES TO REVIEW
   - `done` (solid teal-700 + check) — SIGNED, COMPLETE
-- **Scroll reveals:** `@/components/ui/reveal` — `<Reveal>`, `<RevealGroup>` + `<RevealItem>`. The ONLY scroll-animation mechanism. Honors `prefers-reduced-motion` automatically.
+- **Scroll reveals:** `@/components/ui/reveal` — `<Reveal>`, `<RevealGroup>` + `<RevealItem>`. The ONLY scroll-animation mechanism. Content is visible by default: it only hides once the `js` class (set in the root layout) is on `<html>`, so it shows with scripting off, in link previews and under `prefers-reduced-motion`. Never use framer `initial={{ opacity: 0 }}` / `initial="hidden"` on page content; it is server-rendered invisible. Page-load entrance animations are not used (one reveal per page at most).
 - **Cards:** `@/components/ui/card` or the card classes above.
 
 ---
@@ -80,9 +83,11 @@ Light: `bg-gray-50 border-t border-gray-200`, brand blurb + 3 link columns, link
 
 ## Layout
 
-- Container: `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8` (home uses 6xl, footer/nav 7xl)
-- Marketing sections: `py-20` with alternating white / gray-50 + `border-y border-gray-100`
-- App pages: `py-8`–`py-12`, compact headers with eyebrow + H1 + description
+- Container: `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8` (home uses 6xl for every section except the FAQ's reading column, footer/nav 7xl)
+- Marketing sections: `py-24 lg:py-32` with alternating white / gray-50 + `border-y border-gray-100`
+- Home hero: one screen at desktop (`lg:min-h-[calc(100svh-4rem)]`), headline + one sentence (about 12 words) + actions; nothing else above the fold
+- Long documents (legal pages, help): cap running text at 70ch (`[&_p]:max-w-[70ch]` on the content wrapper)
+- App pages: `py-8`–`py-12`, compact headers with H1 + description
 
 ---
 
@@ -90,17 +95,21 @@ Light: `bg-gray-50 border-t border-gray-200`, brand blurb + 3 link columns, link
 
 - Reveals: once-only, fade-up 24px, 0.4–0.5s easeOut, stagger 0.08 — via `<Reveal>` only.
 - Hovers: color/shadow transitions (`transition-colors` / `transition-shadow`), 200–300ms. No scale bounces, no translate lifts, no confetti.
+- **Never `transition-all`.** Name the properties (`transition-colors`, `transition-shadow`, `transition-transform`, or Tailwind's `transition`). Never animate `width`, `height`, `top`, `left`, `right` or `max-width`: progress bars use `origin-left scale-x-*` + `transition-transform`; the nav's height change snaps and only its colours/shadow fade; accordions fade (opacity + transform), never animate height.
+- **States:** `globals.css` gives every control a 2px teal focus ring on `:focus-visible` (instant), 1px press on `:active` and `not-allowed` on `:disabled`. Components may add their own `focus-visible:ring-*`; never `outline-none` without a replacement ring.
+- **Icons:** decorative SVG and Lucide icons carry `aria-hidden="true"`; icon-only buttons and links carry an `aria-label`. Never an emoji as an icon; use Lucide.
+- **Punctuation:** no arrows glued to link text ("Learn more →"), no middle-dot meta strings ("A · B · C"), no decorative status dots.
 - `prefers-reduced-motion` is mandatory: framer components use `useReducedMotion()`, CSS uses `motion-reduce:` / `motion-safe:` variants.
 
 ---
 
 ## Page recipes
 
-- **Marketing section:** eyebrow label → H2 → description → `RevealGroup` of rounded-2xl cards.
-- **App page header:** eyebrow → `text-2xl font-extrabold text-ink` H1 → `text-sm text-gray-500` description → primary action button on the right.
+- **Marketing section:** H2 → description → `RevealGroup` of rounded-2xl cards.
+- **App page header:** `text-2xl font-extrabold text-ink` H1 → `text-sm text-gray-500` description → primary action button on the right.
 - **List rows (dashboard pattern):** `rounded-2xl border-gray-100 bg-white px-5 py-4 hover:shadow-card` — icon chip + semibold name + gray-500 counterparty | StatusPill | date + small actions. Stacks on mobile, no horizontal scroll.
-- **Public token frame (external recipients):** gray-50 page, "Secure NDA link" lock badge (`bg-teal-50 text-teal-800 rounded-full`), white rounded-2xl card with shadow-float, single prominent CTA, trust line "Encrypted · Audit-trailed · Powered by FormalizeIt".
-- **Pricing:** lives on home at `/#pricing` (`/plans` redirects there). Popular card = white + `border-teal-600 ring-1` + amber badge.
+- **Public token frame (external recipients):** gray-50 page, "Secure NDA link" lock badge (`bg-teal-50 text-teal-800 rounded-full`), white rounded-2xl card with shadow-float, single prominent CTA, trust line "Encrypted and audit-trailed. Powered by FormalizeIt."
+- **Pricing:** lives on home at `/#pricing` (`/plans` redirects there). Popular card = white + `border-teal-700 ring-1` + amber badge.
 
 ---
 

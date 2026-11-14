@@ -45,7 +45,7 @@ export default function ProfilePrompt() {
               onClick={dismiss}
               className="inline-block mt-2.5 text-sm font-semibold text-black hover:text-gray-700 transition-colors"
             >
-              Set up profile →
+              Set up profile
             </Link>
             <label className="flex items-center gap-2 mt-2.5 cursor-pointer select-none">
               <input
@@ -54,13 +54,13 @@ export default function ProfilePrompt() {
                 onChange={e => setNeverShow(e.target.checked)}
                 className="w-3.5 h-3.5 rounded accent-gray-700 cursor-pointer"
               />
-              <span className="text-xs text-gray-400">Don&apos;t show again</span>
+              <span className="text-xs text-gray-500">Don&apos;t show again</span>
             </label>
           </div>
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="text-gray-400 hover:text-gray-600 leading-none shrink-0 cursor-pointer mt-0.5"
+            className="text-gray-500 hover:text-gray-600 leading-none shrink-0 cursor-pointer mt-0.5"
           >
             <X className="w-4 h-4" />
           </button>

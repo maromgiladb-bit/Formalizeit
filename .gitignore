@@ -73,3 +73,6 @@ test-prisma.ts
 # Claude Local Settings
 .claude/settings.local.json
 .claude/worktrees/
+
+# Hallmark design audit records and screenshots
+.hallmark/

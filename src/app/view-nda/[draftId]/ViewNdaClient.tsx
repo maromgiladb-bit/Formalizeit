@@ -61,7 +61,7 @@ export default function ViewNdaClient({ html, title, status, workflowState, reci
             </Link>
 
             <div className="flex items-center gap-3 min-w-0">
-              <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+              <FileText className="w-4 h-4 text-gray-500 shrink-0" />
               <h1 className="text-sm font-bold text-ink truncate max-w-[200px] sm:max-w-[400px]">
                 {title}
               </h1>

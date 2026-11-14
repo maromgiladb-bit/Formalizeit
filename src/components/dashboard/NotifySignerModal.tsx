@@ -115,12 +115,11 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
                 onClick={busy ? undefined : onClose}
                 aria-label="Close"
                 disabled={busy}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Ask a teammate to sign</p>
               <h3 className="text-lg font-semibold text-ink mb-1">Who should sign this NDA?</h3>
               <p className="text-sm text-gray-500 mb-5">
                 Only Signers can sign on behalf of your company. Choose who to notify — they&apos;ll get

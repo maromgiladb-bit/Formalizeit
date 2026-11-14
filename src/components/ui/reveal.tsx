@@ -1,41 +1,63 @@
 'use client';
 
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-};
+/*
+ * Site-wide scroll reveal, visible by default.
+ *
+ * The server renders every block fully visible. The root layout adds a `js`
+ * class to <html> before first paint; only then does globals.css hide
+ * `.reveal` / `.reveal-group > *` blocks that are not yet `.is-in`. An
+ * IntersectionObserver adds `.is-in` when the block enters the viewport.
+ * With scripting off, in link previews and under prefers-reduced-motion, the
+ * content is simply shown (see the reveal rules in globals.css).
+ */
+function useRevealRef<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      el.classList.add('is-in');
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -60px 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return ref;
+}
 
 interface RevealProps {
   children: ReactNode;
+  /** Delay in seconds before the block fades up. */
   delay?: number;
   className?: string;
 }
 
-/**
- * Site-wide scroll reveal. Wrap any section/block to fade it up once on
- * first viewport entry. Use inside server components as a client island.
- */
+/** Fades a block up once, on first viewport entry. */
 export function Reveal({ children, delay = 0, className }: RevealProps) {
-  const reduceMotion = useReducedMotion();
-
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
+  const ref = useRevealRef<HTMLDivElement>();
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
-      variants={fadeUp}
-      transition={{ duration: 0.5, ease: 'easeOut', delay }}
+    <div
+      ref={ref}
+      className={className ? `reveal ${className}` : 'reveal'}
+      style={delay ? { transitionDelay: `${delay}s` } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -44,39 +66,17 @@ interface RevealGroupProps {
   className?: string;
 }
 
-/**
- * Staggers direct <RevealItem> children as they enter the viewport.
- */
+/** Staggers its direct children as the group enters the viewport. */
 export function RevealGroup({ children, className }: RevealGroupProps) {
-  const reduceMotion = useReducedMotion();
-
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
+  const ref = useRevealRef<HTMLDivElement>();
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
-      variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
-    >
+    <div ref={ref} className={className ? `reveal-group ${className}` : 'reveal-group'}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
+/** A child of <RevealGroup>; the group's CSS handles its timing. */
 export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
-  const reduceMotion = useReducedMotion();
-
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
-  return (
-    <motion.div className={className} variants={fadeUp}>
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }

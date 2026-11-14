@@ -67,11 +67,10 @@ export default function Contact() {
           {/* Header */}
           <motion.div
             className="mb-8"
-            initial="initial"
+            initial={false}
             animate="animate"
             variants={stagger}
           >
-            <motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Contact</motion.p>
             <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight">Get in Touch</motion.h1>
             <motion.p variants={fadeUp} className="text-sm text-gray-500 leading-relaxed mt-1 max-w-lg">
               Have questions about our NDA platform? We&apos;re here to help!
@@ -83,7 +82,7 @@ export default function Contact() {
             {/* Contact info cards */}
             <motion.div
               className="lg:col-span-1 space-y-4"
-              initial="initial"
+              initial={false}
               whileInView="animate"
               viewport={{ once: true, margin: "-60px" }}
               variants={stagger}
@@ -114,14 +113,13 @@ export default function Contact() {
             {/* Contact form */}
             <motion.div
               className="lg:col-span-2"
-              initial="initial"
+              initial={false}
               whileInView="animate"
               viewport={{ once: true, margin: "-60px" }}
               variants={fadeUp}
             >
               <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 sm:p-8">
                 <div className="mb-6">
-                  <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Message</p>
                   <h2 className="text-2xl font-bold text-ink">Send us a Message</h2>
                 </div>
 
@@ -155,7 +153,7 @@ export default function Contact() {
                   />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">First Name</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5">First Name</label>
                       <input
                         type="text"
                         required
@@ -166,7 +164,7 @@ export default function Contact() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Last Name</label>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5">Last Name</label>
                       <input
                         type="text"
                         value={form.lastName}
@@ -178,7 +176,7 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email Address</label>
                     <input
                       type="email"
                       required
@@ -190,7 +188,7 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Subject</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Subject</label>
                     <select
                       value={form.subject}
                       onChange={update("subject")}
@@ -205,7 +203,7 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Message</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Message</label>
                     <textarea
                       rows={5}
                       required
@@ -250,7 +248,7 @@ export default function Contact() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
-            initial="initial"
+            initial={false}
             whileInView="animate"
             viewport={{ once: true, margin: "-60px" }}
             variants={fadeUp}

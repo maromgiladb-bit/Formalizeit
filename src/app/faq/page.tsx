@@ -31,13 +31,10 @@ export default function FAQPage() {
 				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
 					<motion.div
 						className="text-center max-w-2xl mx-auto"
-						initial="initial"
+						initial={false}
 						animate="animate"
 						variants={stagger}
 					>
-						<motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-							Support
-						</motion.p>
 						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
 							Frequently Asked Questions
 						</motion.h1>
@@ -52,7 +49,7 @@ export default function FAQPage() {
 			<section className="bg-white py-16">
 				<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 					<motion.div
-						initial="initial"
+						initial={false}
 						whileInView="animate"
 						viewport={{ once: true, margin: "-60px" }}
 						variants={stagger}
@@ -83,7 +80,7 @@ export default function FAQPage() {
 				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 					<motion.div
 						className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
-						initial="initial"
+						initial={false}
 						whileInView="animate"
 						viewport={{ once: true, margin: "-60px" }}
 						variants={fadeUp}

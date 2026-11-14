@@ -263,13 +263,10 @@ export default function HelpPage() {
 				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
 					<motion.div
 						className="text-center max-w-2xl mx-auto"
-						initial="initial"
+						initial={false}
 						animate="animate"
 						variants={stagger}
 					>
-						<motion.p variants={fadeUp} className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-							Help Center
-						</motion.p>
 						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
 							Need help using FormalizeIt?
 						</motion.h1>
@@ -282,13 +279,13 @@ export default function HelpPage() {
 
 			{/* Main Content */}
 			<section className="bg-white py-12">
-				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 [&_p]:max-w-[70ch]">
 					<div className="flex flex-col lg:flex-row gap-10">
 
 						{/* Sidebar Table of Contents */}
 						<aside className="lg:w-56 shrink-0">
 							<div className="sticky top-24">
-								<p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4 px-3">
+								<p className="text-gray-700 text-sm font-semibold mb-4 px-3">
 									Topics
 								</p>
 								<nav className="space-y-0.5">
@@ -310,7 +307,7 @@ export default function HelpPage() {
 						<main className="flex-1 min-w-0">
 							<motion.div
 								className="space-y-6"
-								initial="initial"
+								initial={false}
 								whileInView="animate"
 								viewport={{ once: true, margin: "-60px" }}
 								variants={stagger}
@@ -386,7 +383,7 @@ export default function HelpPage() {
 											</li>
 										))}
 									</ul>
-									<p className="text-xs text-gray-400 mb-5">
+									<p className="text-xs text-gray-500 mb-5">
 										This helps us resolve issues faster.
 									</p>
 									<div className="flex flex-col sm:flex-row gap-3">

@@ -24,9 +24,6 @@ export default function Error({
   return (
     <div className="min-h-screen bg-white font-sans flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
-        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">
-          Something went wrong
-        </p>
         <h1 className="text-3xl font-extrabold text-ink mb-3">We hit a snag</h1>
         <p className="text-sm text-gray-500 mb-8 leading-relaxed">
           This one is on us, not on you. Try again, and if it keeps happening
@@ -48,7 +45,7 @@ export default function Error({
           </Link>
         </div>
         {error.digest && (
-          <p className="mt-8 text-xs text-gray-400">
+          <p className="mt-8 text-xs text-gray-500">
             Reference: {error.digest}
           </p>
         )}

@@ -52,7 +52,7 @@ function NotificationTypeIcon({ type }: { type: string }) {
         case 'NDA_COMPLETED':
             return <div className={`${base} bg-teal-50`}><Trophy className="w-4 h-4 text-teal-700" /></div>
         default:
-            return <div className={`${base} bg-gray-50`}><Bell className="w-4 h-4 text-gray-400" /></div>
+            return <div className={`${base} bg-gray-50`}><Bell className="w-4 h-4 text-gray-500" /></div>
     }
 }
 
@@ -146,9 +146,9 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 bg-white">
                         <div className="flex items-center gap-2.5">
-                            <span className="text-teal-700 text-xs font-bold uppercase tracking-widest">Notifications</span>
+                            <span className="text-gray-700 text-sm font-semibold">Notifications</span>
                             {unread.length > 0 && (
-                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-white bg-teal-700 rounded-full">
+                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-teal-700 rounded-full">
                                     {unread.length}
                                 </span>
                             )}
@@ -156,7 +156,7 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                         {unread.length > 0 && (
                             <button
                                 onClick={handleMarkAllRead}
-                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 px-2.5 py-1 rounded-lg hover:text-white hover:bg-teal-800 transition-all duration-200 cursor-pointer"
+                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 px-2.5 py-1 rounded-lg hover:text-white hover:bg-teal-800 transition-colors duration-200 cursor-pointer"
                             >
                                 <CheckCheck className="w-3.5 h-3.5" />
                                 Mark all read
@@ -174,13 +174,13 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                                     <Bell className="w-6 h-6 text-teal-600" />
                                 </div>
                                 <p className="text-sm font-semibold text-gray-700">You&apos;re all caught up</p>
-                                <p className="text-xs text-gray-400 mt-1">No new notifications</p>
+                                <p className="text-xs text-gray-500 mt-1">No new notifications</p>
                             </div>
                         ) : (
                             <>
                                 {unread.length > 0 && (
                                     <div>
-                                        <div className="px-5 py-2 text-teal-700 text-[10px] font-bold uppercase tracking-widest bg-gray-50 border-b border-gray-100">
+                                        <div className="px-5 py-2 text-gray-700 text-sm font-semibold bg-gray-50 border-b border-gray-100">
                                             Unread
                                         </div>
                                         {unread.map(n => (
@@ -190,7 +190,7 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                                 )}
                                 {read.length > 0 && (
                                     <div>
-                                        <div className="px-5 py-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest bg-gray-50 border-b border-gray-100">
+                                        <div className="px-5 py-2 text-gray-500 text-xs font-bold bg-gray-50 border-b border-gray-100">
                                             Earlier
                                         </div>
                                         {read.map(n => (
@@ -211,7 +211,7 @@ function NotificationItem({ n, onClick }: { n: Notification; onClick: (n: Notifi
     return (
         <button
             onClick={() => onClick(n)}
-            className={`group w-full text-left px-5 py-3.5 flex gap-3 items-start transition-all duration-200 border-b border-gray-100 last:border-0 cursor-pointer
+            className={`group w-full text-left px-5 py-3.5 flex gap-3 items-start transition-colors duration-200 border-b border-gray-100 last:border-0 cursor-pointer
                 ${!n.read
                     ? 'bg-teal-50/30 border-l-2 border-l-teal-600 hover:bg-teal-50/60'
                     : 'hover:bg-gray-50 border-l-2 border-l-transparent'
@@ -223,12 +223,12 @@ function NotificationItem({ n, onClick }: { n: Notification; onClick: (n: Notifi
                     <p className={`text-sm leading-tight ${!n.read ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>
                         {n.title}
                     </p>
-                    <span className="text-[11px] text-gray-400 flex-shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
+                    <span className="text-[11px] text-gray-500 flex-shrink-0 mt-0.5">{timeAgo(n.createdAt)}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5 leading-snug line-clamp-2">{n.message}</p>
             </div>
             {n.link && (
-                <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:text-teal-600 transition-all duration-200" />
+                <ArrowRight className="w-4 h-4 text-gray-300 flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:text-teal-600 transition duration-200" />
             )}
         </button>
     )
