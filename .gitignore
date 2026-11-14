@@ -13,6 +13,13 @@
 # testing
 /coverage
 
+# playwright e2e (saved sign-in sessions, traces, screenshots, report)
+/e2e/.auth/
+/e2e/.results/
+/e2e/.report/
+/playwright/.cache/
+/.next-e2e/
+
 # next.js
 /.next/
 /out/

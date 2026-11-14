@@ -31,7 +31,7 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 - **File storage:** AWS S3 (`@aws-sdk/client-s3`) — stores signed NDA PDFs and documents
 - **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless); `pdf-lib` only in dev scripts
 - **Document templating:** Handlebars for HTML template rendering
-- **Testing:** Vitest
+- **Testing:** Vitest (unit) · Playwright + `@clerk/testing` (browser e2e, see "Browser testing")
 - **Payments:** Stripe — subscription billing, embedded checkout, webhooks, billing portal
 
 ---
@@ -320,6 +320,43 @@ launch status, open decisions, post-MVP tasks and deferred items. Specs for plan
 - **Next step changed → refresh the "Resume here" block.**
 - Read the tracker at the start of any planning conversation. A finished change that leaves the
   tracker stale is incomplete.
+
+## Browser testing (Playwright e2e) — agents can sign in
+
+A Playwright suite in `e2e/` lets an agent drive the real app **signed in**, past Clerk's sign-in
+and 2FA. Use it to test flows, take screenshots for UI review, or check a change end to end.
+
+- **Run:** `npm run e2e` (all) · `npx playwright test e2e/smoke.spec.ts` (one file) ·
+  `npm run e2e:ui` (interactive) · `npm run e2e:report` (last HTML report).
+- **Server:** by default it builds production into `.next-e2e` and serves it on **port 3100**
+  (`NEXT_DIST_DIR`, set only by the suite), so it never touches `npm run dev` on 3000. The build
+  takes a few minutes; pages then load in about a second. `E2E_DEV=1` uses `next dev` instead. That
+  skips the build but takes minutes per route on a cold start and is flaky. `E2E_BASE_URL` points it
+  at an existing server.
+- **How sign-in works** (`e2e/global.setup.ts`): it creates the test admin in the Clerk dev
+  instance if missing, signs in with a one-time Clerk ticket (no password, no 2FA), clicks through
+  accept-terms and onboarding on a fresh user, and saves the session to `e2e/.auth/admin.json`
+  (git-ignored). Every test in the `chromium` project starts signed in. A signed-out context
+  (`test.use({ storageState: { cookies: [], origins: [] } })`) plays the receiver.
+- **Test data:** user `e2e-admin+clerk_test@example.com` in company **"E2E Test Co"** on the
+  **development** database; receiver email `delivered+e2e@resend.dev` (Resend's test inbox, so
+  nothing bounces). Each flow run adds an NDA titled `E2E NDA <id>`.
+- **Safety guard** (`e2e/env.ts` → `assertSafeTarget`): refuses to run unless the Clerk keys are
+  `sk_test_`/`pk_test_`, `DATABASE_URL` is not the production Neon host (`ep-wild-sea-…`) and the
+  URL is not formalizeit.com. Never weaken it; never point the suite at production.
+- **Specs:** `smoke.spec.ts` (every signed-in and public page loads with no console errors;
+  screenshots in `e2e/.results/screens/`) · `nda-flow.spec.ts` (fill all wizard steps → "Send NDA"
+  → secure link from the `send-for-review` response → receiver opens it signed out).
+- **New specs:** import `test`/`expect` from `./fixtures` (not `@playwright/test`). It stubs
+  `/_vercel/insights/script.js`, which only exists on Vercel and otherwise 500s locally.
+- **Selectors:** fill-page labels aren't linked to their inputs, so the specs use placeholders and
+  button names. If you change a placeholder or button label on `/fillndahtml` or `/templates`,
+  update `e2e/nda-flow.spec.ts`. With one template, `/templates` redirects straight to the fill page.
+- Signing as the company needs the test admin's signer toggle (`isSigner`) on; it is off by
+  default for a new workspace. Planned extensions are in the tracker ("Browser e2e suite").
+- **Windows quirk (unit tests too):** if Vitest fails *every* file with "Cannot read properties
+  of undefined (reading 'config')", the shell's working directory has a lowercase drive letter
+  (`c:\…`). `cd C:/Users/marom/Projects/nda-saas` and rerun.
 
 ## Notes for Claude Code
 

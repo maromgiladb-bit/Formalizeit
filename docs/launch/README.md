@@ -46,7 +46,8 @@ CLAUDE.md.
 2. ☑ **Merge** (2026-11-09): `launch-fixes` merged into `feat/todolistimpl-2` after testing; see
    [Merge plan](#merge-plan-2026-10-23).
 3. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on production with sign-up
-   closed.
+   closed. The automated e2e suite (`npm run e2e`, see [Browser e2e suite](#browser-e2e-suite-2026-11-15))
+   now covers the sender flow up to the receiver opening the link; signing is still manual.
 4. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
 
 ### Go-live switches (in this order)
@@ -205,6 +206,29 @@ Five-way research review; full plan, priorities and counsel tags in
   Neon and run a restore drill.
 - ☐ Tier 2 (first month): DPA template, 2FA status (Clerk Pro), CSP/HSTS, legal-hold flag, data
   export, Amendment 13 registration question.
+
+## Browser e2e suite (2026-11-15)
+
+Playwright + `@clerk/testing` in `e2e/` so an agent can drive the app signed in (setup and
+usage: CLAUDE.md → "Browser testing"). Runs against a local production build on port 3100 with
+the development Clerk instance and database; refuses to run against production.
+
+- ☑ (2026-11-15) Sign-in bypass (Clerk ticket, no password or 2FA), saved session, safety guard.
+- ☑ (2026-11-15) `smoke.spec.ts`: 8 signed-in and 7 public pages load with no console errors,
+  plus the signed-out redirect. `nda-flow.spec.ts`: fill all 5 steps → secure link → dashboard
+  shows it → receiver opens the link signed out. 22/22 pass, about 2.5 min.
+- ☐ Extend the flow: receiver suggests a change → sender accepts → receiver signs → sender signs
+  (turn on `isSigner` for the test admin first) → signed PDF and evidence (IP, hash, template
+  version) recorded. Also: contributor cannot sign; expired link; reminder stop link.
+- ☐ Purge E2E test data on development when it piles up: Clerk user
+  `e2e-admin+clerk_test@example.com`, company "E2E Test Co", NDAs titled `E2E NDA <id>`.
+- ☐ Bug, local only (Vercel unaffected): `/_vercel/insights/script.js` 404s off Vercel, and the
+  not-found render calls Clerk `auth()` on a path the middleware matcher skips → 500 + "can't
+  detect clerkMiddleware" in the server log. Same for any missing `.js/.png/...` path. The suite
+  stubs the script. Fix if it shows in production logs: make the root layout tolerate a missing
+  middleware context.
+- ☐ Decide: run the suite in CI (GitHub Actions needs the dev Clerk keys and dev database URL as
+  secrets) or keep it local.
 
 ## Open decisions (2026-10-08)
 
