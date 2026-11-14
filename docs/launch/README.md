@@ -238,8 +238,12 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    accept-terms, dashboard, billing, team, five NDAs sent on FREE, receiver link opened signed-out).
    Two bugs found and fixed: a SIGNER promoted to administrator lost signing rights; the
    Subscription page listed "3 NDAs, 1 user" during the beta. The `stripe_events` migration was
-   renamed to `20260709000000` (it shared the `20260707000000` prefix). ☐ Remove the
-   `C:\Users\marom\Projects\nda-saas-wt\` worktrees once you no longer need them.
+   renamed to `20260709000000` (it shared the `20260707000000` prefix). ☑ Removed the
+   `C:\Users\marom\Projects\nda-saas-wt\` worktrees and their merged branches (2026-11-14).
+   Pre-merge re-check of PR #18 head `6f55697` (2026-11-14): typecheck clean, 239/239 tests,
+   production build OK, CI and Vercel Preview green. Lint has 82 pre-existing errors in 17 files
+   (CI does not run lint) — ☐ post-launch cleanup. Note: run `vitest` with
+   `--exclude ".claude/**"` while an agent worktree exists, or it also tests that copy.
 2. ☑ Sign-up gate and free-beta switch built (2026-10-24), both safe when unset.
 3. ☐ Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
    Plus the Clerk Restricted sign-up mode above.
