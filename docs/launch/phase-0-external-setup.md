@@ -79,7 +79,7 @@ billing checkout and all member management.
 > CLI reads `.env`, Next reads `.env.local`; both previously held the production URL, so the laptop no
 > longer has it) and in Vercel `DATABASE_URL` scoped to **Preview** only (Secret, no surrounding
 > quotes, must start with `postgresql://`; a pasted `psql '…'` snippet breaks it). Production's
-> `DATABASE_URL` is untouched. ☐ Acceptance: the next Preview deployment connects (env var changes only
+> `DATABASE_URL` is untouched. ☐ **T-041** Acceptance: the next Preview deployment connects (env var changes only
 > apply to new builds).
 
 ### Also: create the staging database
@@ -101,7 +101,7 @@ billing checkout and all member management.
 > saw the "coming soon" page, not a public home page, and because the Privacy Policy never described
 > Google sign-in data. Done so far: domain `formalizeit.com` verified in Google Search Console
 > (2026-10-08, via GoDaddy's one-click DNS flow); Privacy Policy now has a "Sign in with Google"
-> paragraph. ☐ **After the launch branch is live and the home page is public, and at least 24h after the
+> paragraph. ☐ **T-042** **After the launch branch is live and the home page is public, and at least 24h after the
 > domain verification, open Branding → View issues and click "I have fixed the issues".** Also ☑ Data Access checked
 > 2026-10-08: no non-sensitive or sensitive scopes are declared beyond the implicit openid/email/profile, matching the Privacy Policy. The
 > user support email stays the founder's Gmail: Google only offers an account's own address or a Google
@@ -161,7 +161,7 @@ Account security, sign out, sign in again through the TOTP challenge.
 
 ---
 
-## 0.3 ☐ Stripe live mode
+## 0.3 ⊘ Stripe live mode (T-043, deferred to after the free-beta launch)
 
 ### Steps
 
@@ -223,7 +223,7 @@ portal and refund yourself in Stripe.
 >   `src/lib/email.ts` falls back to `noreply@formalizeit.app`, a different domain.)
 > - ☑ `CONTACT_INBOX` = founder Gmail, Production (2026-09-29; company address is a post-MVP task).
 > - ☑ Production redeployed 2026-09-29.
-> - ☐ Acceptance below. Can't be tested from outside yet: production runs `main`, whose
+> - ☐ **T-007** Acceptance below. Can't be tested from outside yet: production runs `main`, whose
 >   private-beta middleware redirects every signed-out request, `/api/contact` included, to
 >   `/coming-soon`. Test while signed in, or after the launch branch is merged.
 > - Acceptance (updated): the first NDA invite is **links-only** (the sender shares it), so test
@@ -282,7 +282,7 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `forma
 >   four `S3_*` vars for **Preview** (Preview previously had none, so PDF storage failed there).
 > - Before this, production used the dev bucket and the laptop's key. Only test PDFs existed,
 >   so nothing was migrated.
-> - ☐ Acceptance (Phase 4): sign an NDA end to end on production, then confirm the PDF lands in
+> - ☐ **T-044** Acceptance (Phase 4): sign an NDA end to end on production, then confirm the PDF lands in
 >   `formalizeit-prod` and downloads from the dashboard.
 > - ☑ Function region moved from Washington DC (`iad1`) to **Frankfurt (`fra1`) only**
 >   (2026-09-29), so functions, the DB and the bucket are in one region. Verified: the
@@ -321,7 +321,7 @@ the inbox (not spam), the "from" shows your domain, and the link opens on `forma
 > no value:** Vercel doesn't run crons on Preview, and with no value the routes refuse every call.
 > That's the safe default until Preview's `DATABASE_URL` is confirmed to be a staging DB (§0.1),
 > because `nda-reminders` emails people and `retention-cleanup` deletes files.
-> `.env.local` keeps its own value for local testing. ☐ Acceptance (the curl below) needs the
+> `.env.local` keeps its own value for local testing. ☐ **T-008** Acceptance (the curl below) needs the
 > launch branch live, because `main`'s private-beta gate blocks outside calls.
 
 Four daily crons run from `vercel.json` (user cleanup 03:00, retention 04:00, reminders 05:00,
@@ -356,7 +356,7 @@ link point at production.
 - ☑ Defensive domains (2026-10-08): `formalizeit.net`, `formalizeit.co` and `formalizit.com` (typo) are
   forwarded to `https://formalizeit.com` with GoDaddy's Forward Domain (GoDaddy said up to 1h-48h to
   propagate; `formalizeit.net` still served GoDaddy's parking page at 11:36 UTC, recheck). Plain-http
-  visits redirect cleanly; https on these may show a certificate warning first. ☐ Confirm each has
+  visits redirect cleanly; https on these may show a certificate warning first. ☐ **T-045** Confirm each has
   auto-renew and Domain Lock on. Main domain `formalizeit.com`: auto-renew on, Domain Lock on, Domain
   Privacy on, renews Dec 3, 2026.
 - ☑ GoDaddy: root `A @` record repointed from GoDaddy's parking page to Vercel's `216.150.1.1`.
@@ -368,12 +368,12 @@ link point at production.
   responds correctly to an unsigned test call.
 - ☑ Google OAuth Branding links (home/privacy/terms) updated to `formalizeit.com`. Authorized
   domain was already the root domain, no change needed.
-- ☐ **Still to do when you reach Stripe (0.3 step 4): create/point the Stripe webhook at
+- ⊘ **T-043** **Still to do when you reach Stripe (0.3 step 4): create/point the Stripe webhook at
   `https://formalizeit.com/api/webhooks/stripe`, not `app.`.**
 - ☑ Production redeployed 2026-09-29. Checked from outside: `formalizeit.com` is served by Vercel
   (and redirects to `/coming-soon` while the private-beta gate is on), and `app.formalizeit.com`
   308-redirects to it. `www` fails its TLS certificate check (still GoDaddy parking).
-- ☐ Re-check email links and the contact form once the launch branch is live (private-beta code
+- ☐ **T-007** Re-check email links and the contact form once the launch branch is live (private-beta code
   currently blocks most pages).
 
 Also confirm in Vercel → **Settings → Domains** that `formalizeit.com` is attached to the
@@ -397,7 +397,7 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 > **organization token** (`vercel-sourcemaps`, kept in Bitwarden) is `SENTRY_AUTH_TOKEN` (Secret),
 > with `SENTRY_ORG` and `SENTRY_PROJECT` (Config), all Production only. Alert rule "high priority
 > issues" emails the account's primary address. No GitHub integration (deliberately skipped).
-> ☐ Acceptance: after the launch branch deploys, trigger one error and confirm it appears with a
+> ☐ **T-046** Acceptance: after the launch branch deploys, trigger one error and confirm it appears with a
 > readable file/line.
 
 1. sentry.io → **Create project** → platform **Next.js**, name `formalizeit`.
@@ -411,7 +411,7 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 
 ### Vercel Analytics
 
-> **Done 2026-10-08.** Enabled in the Vercel dashboard. ☐ Acceptance: page views appear after the
+> **Done 2026-10-08.** Enabled in the Vercel dashboard. ☐ **T-046** Acceptance: page views appear after the
 > launch branch deploys (`main` still serves the private-beta gate).
 
 1. Vercel → Project → **Analytics** tab → **Enable**. The `<Analytics />` component is already in
@@ -420,6 +420,8 @@ stale pre-fix email. Re-test with a brand-new send and reopen only if it recurs.
 ---
 
 ## Final checklist — Vercel Production env vars
+
+Ticket: **T-047**.
 
 Tick when the value is set and scoped to **Production**. Preview should have its own test-mode
 value for every row marked ★.
@@ -459,6 +461,6 @@ Phase 1 manual verification matrix on the staging URL, then Phase 4.
 
 ## Clerk: require Terms / Privacy acceptance at sign-up (added 2026-10-23)
 
-- [ ] Clerk dashboard, Configure -> Legal (path unverified, the menu name may differ): set Terms URL `https://formalizeit.com/terms` and Privacy URL `https://formalizeit.com/privacy`, and turn on "require acceptance at sign-up".
-- [ ] Run `prisma migrate deploy` for `20260708000000_add_user_terms_acceptance` (adds `users.terms_accepted_at`, `users.terms_version`).
+- [ ] **T-019** Clerk dashboard, Configure -> Legal (path unverified, the menu name may differ): set Terms URL `https://formalizeit.com/terms` and Privacy URL `https://formalizeit.com/privacy`, and turn on "require acceptance at sign-up".
+- [x] (2026-11-14, production) Run `prisma migrate deploy` for `20260708000000_add_user_terms_acceptance` (adds `users.terms_accepted_at`, `users.terms_version`).
 - Our own record is the evidence: `ensureDbUser` mirrors Clerk `legalAcceptedAt`; otherwise `/accept-terms` (client gate in `src/components/TermsGate.tsx`) asks once per `LEGAL_VERSION` (`src/lib/legalVersions.ts`). Bump `LEGAL_VERSION` when Terms or Privacy change materially.

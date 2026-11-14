@@ -22,7 +22,7 @@
 
 ---
 
-## 4.1 ☐ Full flow on staging
+## 4.1 ☐ Full flow on staging (T-005)
 
 Run the manual matrix in `phase-1-negotiation.md` against the staging deployment, not locally.
 Staging builds run with `NODE_ENV=production`, so dev-only routes 404 there exactly as they will in
@@ -32,21 +32,21 @@ The regression to guard hardest is the path that already works: send → counter
 requested fields → auto-advance to their signature → both parties sign → PDF generated, hashed,
 stored in S3 and emailed to both.
 
-## 4.2 ☐ Stripe live-mode checkout
+## 4.2 ⊘ Stripe live-mode checkout (T-006, deferred with Stripe)
 
 - [ ] All four prices: PRO monthly, PRO annual, TEAM monthly, TEAM annual.
 - [ ] Each writes the correct `billingPlan` on the organization.
 - [ ] Cancel one and confirm `cancelAtPeriodEnd` and the ended-subscription email.
 - [ ] Confirm the billing portal opens and returns to the right URL.
 
-## 4.3 ☐ Email round trip on the verified domain
+## 4.3 ☐ Email round trip on the verified domain (T-007)
 
 - [ ] Send to an external address. Confirm inbox placement, not spam.
 - [ ] Confirm every link carries the production origin. **Re-test the July `${VERCEL_URL}` issue
       with a brand-new send** before declaring it stale.
 - [ ] Check the completion email's PDF attachment opens.
 
-## 4.4 ☐ Cron dry run
+## 4.4 ☐ Cron dry run (T-008)
 
 Trigger each with the production `CRON_SECRET` and confirm it runs and is idempotent on a second
 call:
@@ -56,7 +56,7 @@ call:
 - [ ] `/api/cron/expire-sign-links`
 - [ ] `/api/cron/cleanup-deleted-users` — and confirm it now refuses without the secret.
 
-## 4.5 ☐ Production data hygiene
+## 4.5 ☐ Production data hygiene (T-009)
 
 - [ ] Purge test organizations with `scripts/cleanup-test-data.mjs`. It is dry-run by default and
       only deletes organizations you name explicitly. Deleting an org cascades to its members,
@@ -64,7 +64,7 @@ call:
       separately from `NdaPdf.s3Key`.
 - [ ] Verify the production database holds only real users afterwards.
 
-## 4.6 ☐ Open signups
+## 4.6 ☐ Open signups (T-010)
 
 - [ ] Confirm `/` and the signup route are reachable signed-out and that signup completes into
       onboarding, which asks only for a workspace name and creates the org plus an ADMINISTRATOR

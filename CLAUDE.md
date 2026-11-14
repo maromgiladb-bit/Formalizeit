@@ -305,23 +305,45 @@ Confidence signals come after the speed hook, never before:
 
 ---
 
-## Task list — keep it current
+## Work rules (this repo)
 
-The live task list is **`docs/launch/README.md`** (with `phase-0` … `phase-4` files beside it):
-launch status, open decisions, post-MVP tasks and deferred items. Specs for planned features live in
-`docs/superpowers/specs/`.
+General rules for tickets, branches, commits, checks and merges are in the user's global
+`~/.claude/CLAUDE.md`. This section adds what is specific to this repo. If that file isn't loaded
+(another machine or another person), the short version: one branch per ticket off `main`;
+conventional commits ending `(T-0NN)`; checks by risk tier; PR, then squash-merge only when the
+user says "merge".
 
-**Standing rule (every session):**
-- **New task → write it down immediately.** Whenever a session adds a task — the user asks for
-  something to be done later, a decision creates follow-up work, or a review/bug hunt finds
-  something not fixed right away — add it to the tracker in the right section (launch phase, open
-  decisions, post-MVP, or deferred) before the session ends, even if no code changed. Tasks that
-  live only in chat are lost.
-- **Task finished or changed → tick it** (☑ with the date) in the same commit as the change, or
-  mark it ⊘ deferred with the reason.
-- **Next step changed → refresh the "Resume here" block.**
-- Read the tracker at the start of any planning conversation. A finished change that leaves the
-  tracker stale is incomplete.
+**Tickets**
+- The ticket list is **`docs/TICKETS.md`**: Resume here, Now, Next, Waiting on you, Later, Open
+  decisions, Deferred, Done. `docs/launch/` keeps the launch plan and phase detail and refers to
+  tickets by ID. Specs for planned features live in `docs/superpowers/specs/`.
+- IDs are `T-NNN`. "Next ID" sits at the top of TICKETS.md; a new ticket takes it and bumps it in
+  the same edit. Each line: `☐ **T-0NN** [tier] [owner] one-line summary` + a link to detail.
+- **New task → write it down immediately.** Whenever the user or any agent comes up with a task
+  (a "do this later", follow-up work from a decision, a bug found but not fixed now), add it to
+  TICKETS.md in the same session, even if no code changed, and say "Added T-0NN". Tasks that live
+  only in chat are lost.
+- **Done → tick it** `☑ **T-0NN** … (YYYY-MM-DD, PR #N)` and move it to Done, in the ticket's own
+  PR; or `⊘` with the reason. **Next step changed → refresh "Resume here".** A finished change that
+  leaves TICKETS.md stale is incomplete.
+- Read TICKETS.md at the start of any planning conversation.
+
+**Branches and sessions**
+- Branch per ticket from an up-to-date `main`: `feat|fix|chore|docs|refactor|test/T-0NN-slug`.
+- One editing session at a time works in the main folder. If the main folder is on another ticket
+  branch or has uncommitted work this session didn't make, a second session moves to its own git
+  worktree under `.claude/worktrees/` (git-ignored). Never commit, stash or switch away the other
+  session's work. A new worktree needs `.env.local` copied from the main folder and `npm install`.
+- While an agent worktree exists, run `vitest` with `--exclude ".claude/**"` so it doesn't also
+  test that copy.
+
+**Risk tiers here**
+- **high:** signing and signature evidence, Clerk/auth, Stripe/billing, Prisma migrations, the
+  retention cron, legal page text, security headers and rate limits.
+- Commands: `npm run typecheck` · `npm run lint` (82 pre-existing errors, T-031: judge only new
+  ones) · `npm test` · `npm run build` · `npm run e2e` (see "Browser testing" below).
+- A PR with a Prisma migration lists it, and the migration runs on production **before** the
+  merge (as done for PR #18).
 
 ## Browser testing (Playwright e2e) — agents can sign in
 
