@@ -23,10 +23,10 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
-### Resume here (updated 2026-11-09)
+### Resume here (updated 2026-11-14)
 
-Next: Vercel Production env vars and the Clerk Restricted sign-up mode, production migrations,
-then check the PR #18 Preview and merge it. The beta plan with steps and estimates is in the
+PR #18 merged to `main` 2026-11-14 (production migrations run first). Next: confirm the Clerk
+Restricted sign-up mode, then Phase 4 on production with sign-up closed (Merge plan step 6). The beta plan with steps and estimates is in the
 "FormalizeIt Beta Roadmap" artifact (2026-11-09).
 
 Launch plan changed 2026-10-23: Stripe can't be activated yet, so the MVP launches as a **free
@@ -245,9 +245,9 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    (CI does not run lint) — ☐ post-launch cleanup. Note: run `vitest` with
    `--exclude ".claude/**"` while an agent worktree exists, or it also tests that copy.
 2. ☑ Sign-up gate and free-beta switch built (2026-10-24), both safe when unset.
-3. ☐ Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
+3. ☑ (2026-11-14, confirmed by founder) Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
    Plus the Clerk Restricted sign-up mode above.
-4. ☐ `prisma migrate deploy` against the production database. Three migrations are new there:
+4. ☑ (2026-11-14, run by founder) `prisma migrate deploy` against the production database. Three migrations are new there:
    `20260707000000_add_nda_reminders_stopped_at`, `20260708000000_add_user_terms_acceptance`,
    `20260709000000_add_stripe_events`. Take a Neon snapshot first. Also run the two read-only
    checks: in-flight NDAs with more than one SignRequest, and
@@ -260,7 +260,7 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    ☐ Decide: the Beta pill also shows in the header of receiver pages (`/fillndahtml-public`,
    `/sign-nda-public`). The beta-scope review suggested keeping "beta" off pages the counterparty
    signs on, so the NDA itself doesn't look provisional.
-5. ☐ Check the Vercel Preview deployment of the PR, then merge PR #18. Production deploys with
+5. ☑ (2026-11-14) Checked the Vercel Preview deployment of the PR, then merged PR #18. Production deploys with
    sign-up closed.
 6. ☐ Test on production with your existing account (Phase 4: full flow, email round trip, cron run).
 7. ☐ Open sign-up: see "Go-live switches" above.
