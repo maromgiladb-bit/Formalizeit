@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-048**
+**Next ID: T-058**
 
 ## Resume here (updated 2026-11-15)
 
@@ -15,7 +15,8 @@ Work rules adopted (T-001). `feat/todolistimpl-2` is the last old-style branch: 
 e2e suite (T-002), the design audit (T-003) and this ticket system, merged as one PR. After it
 merges, every ticket gets its own branch.
 
-Next: **T-004** (You, Clerk Restricted sign-up), then production testing with sign-up closed:
+Next: **T-004** (You, Clerk Restricted sign-up) and **T-048** (confirmed open redirect), then triage
+the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
 opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
 (2026-11-09).
@@ -43,6 +44,37 @@ opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap"
   file/line; page views appear in Vercel Analytics. [0.8](launch/phase-0-external-setup.md)
 - ☐ **T-010** [high] [Both] Open sign-up: `NEXT_PUBLIC_PRIVATE_BETA=off`, redeploy, Clerk sign-up
   mode back to Public, run 4.6 checks. [Go-live switches](launch/README.md#go-live-switches-in-this-order)
+
+### Bugs to triage (from `/code-review` of the branch, 2026-11-15)
+
+All in code already on `main` (PR #18), not in the T-001 PR. T-048 is confirmed; the rest are
+reviewer findings still to verify before fixing. Most touch the negotiation flow T-044 tests, so
+triage them before or alongside T-044.
+
+- ☐ **T-048** [high] [Claude] **Confirmed open redirect:** `safeNext` in
+  `src/app/accept-terms/page.tsx` accepts `/\evil.com` (browsers read `\` as `/`). Resolve against
+  the site origin or reject backslashes.
+- ☐ **T-049** [high] [Claude] `send-for-input` imports `transitionBlockedReason` but never calls
+  it: a SIGNED/COMPLETE draft can be reopened. Also: its error text points to the deleted
+  `send-for-signature` route, and it creates no Party A (SENDER) signer.
+- ☐ **T-050** [high] [Claude] Party B signer lookups (`approve-changes`, `submit-input`,
+  `request-changes`) are unordered with no status filter, so they can pick the DECLINED signer left
+  behind after a recipient change and reopen the wrong person's link.
+- ☐ **T-051** [high] [Claude] `approve-changes` / `submit-input` reset an EXPIRED signer to PENDING
+  without a new `expiresAt`, so the emailed link is dead on arrival (410).
+- ☐ **T-052** [high] [Claude] `nda-reminders` cron emails Party B "please sign" during
+  AWAITING_PARTY_A_SIGNATURE; reminder stamps aren't reset when a new round starts.
+- ☐ **T-053** [high] [Claude] `isFullyAccepted` (`src/lib/negotiation.ts`) treats unanswered
+  incoming suggestions as accepted, so an open counter-proposal can be silently dropped.
+- ☐ **T-054** [high] [Claude] `persistNegotiationRound` does 4 dependent writes with no
+  transaction or row lock (double-click → last writer wins, orphan revisions).
+- ☐ **T-055** [high] [Claude] Stripe webhook claims the event id before handling and only releases
+  it in `catch`, so a timeout loses the event forever. Fix before T-043.
+- ☐ **T-056** [normal] [Claude] `ensureDbUser` calls Clerk `currentUser()` on every render for
+  users without terms acceptance; mirrored Clerk acceptance stamps the current `LEGAL_VERSION`.
+  Related: T-021.
+- ☐ **T-057** [low] [Claude] Mojibake (`â†’`) in comments in `billing/checkout` and
+  `billing/upgrade-session` routes.
 
 ## Waiting on you
 
