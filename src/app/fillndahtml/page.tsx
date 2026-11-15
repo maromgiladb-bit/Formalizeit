@@ -82,48 +82,6 @@ const DEFAULTS: FormValues = {
 	party_b_email_ask_receiver: false,
 };
 
-/**
- * Channels the shared ShareSheet does not list (native email app, SMS, Telegram,
- * LinkedIn). Passed to ShareSheet's `extra` slot, so it sits inside the focus trap.
- */
-function ShareSheetMoreOptions({ expanded, onToggle, onShare }: { expanded: boolean; onToggle: () => void; onShare: (platform: string) => void }) {
-	const options: { id: string; label: string }[] = [
-		{ id: 'email', label: 'Email app' },
-		{ id: 'sms', label: 'SMS' },
-		{ id: 'telegram', label: 'Telegram' },
-		{ id: 'linkedin', label: 'LinkedIn' },
-	];
-	return (
-		<div>
-			<button
-				type="button"
-				onClick={onToggle}
-				aria-expanded={expanded}
-				className="flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-ink transition-colors hover:text-ink"
-			>
-				<svg aria-hidden="true" className={`h-3 w-3 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-				</svg>
-				More options
-			</button>
-			{expanded && (
-				<div role="group" aria-label="More ways to share" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-					{options.map(({ id, label }) => (
-						<button
-							key={id}
-							type="button"
-							onClick={() => onShare(id)}
-							className="cursor-pointer rounded-control border border-line bg-white px-2 py-2 text-[13px] font-medium text-ink transition-colors hover:border-gray-300 hover:bg-ground"
-						>
-							{label}
-						</button>
-					))}
-				</div>
-			)}
-		</div>
-	);
-}
-
 export default function FillNDAHTML() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -196,7 +154,6 @@ export default function FillNDAHTML() {
 	const [suggestedEmailBody, setSuggestedEmailBody] = useState("");
 	const [emailSent, setEmailSent] = useState(false);
 	// True when the server auto-sent the email via Resend (vs. only generating a link).
-	const [showMoreShareOptions, setShowMoreShareOptions] = useState(false);
 
 	// const [showExitWarningModal, setShowExitWarningModal] = useState(false); // Removed in favor of native warning
 	const [templateId, setTemplateId] = useState<string>("mutual_nda_v1"); // HTML template by default
@@ -1166,7 +1123,6 @@ export default function FillNDAHTML() {
 			setSuggestedEmailBody("");
 			setEmailSent(false);
 		}
-		setShowMoreShareOptions(false);
 		setVerifyRecipientEmail(values.party_b_email?.trim() || "");
 		setShowVerifyEmailModal(true);
 	};
@@ -1304,7 +1260,6 @@ export default function FillNDAHTML() {
 		setSuggestedEmailSubject("");
 		setSuggestedEmailBody("");
 		setEmailSent(false);
-		setShowMoreShareOptions(false);
 		if (emailSent) router.push('/dashboard');
 	};
 
@@ -2401,11 +2356,8 @@ export default function FillNDAHTML() {
 					onClose={closeSendModal}
 					link={generatedShareLink}
 					recipientName={values.party_b_signatory_name?.trim() || undefined}
-					subject={suggestedEmailSubject || `Please review and sign our NDA — ${values.docName || 'NDA'}`}
-					body={suggestedEmailBody || `Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${generatedShareLink}\n\nThank you!`}
 					onShare={handleShare}
 					reminderNote="The recipient opens a secure review page, no account needed. We’ll remind them if it sits unsigned."
-					extra={<ShareSheetMoreOptions expanded={showMoreShareOptions} onToggle={() => setShowMoreShareOptions((v) => !v)} onShare={handleShare} />}
 				/>
 
 				{/* Exit Warning Modal */}

@@ -32,8 +32,6 @@ export function ShareSheetDemo() {
         onClose={() => setOpen(false)}
         link="formalizeit.com/s/nda_7Kq2x9Lw4pRt"
         recipientName="Sam Okafor"
-        subject="NDA from Northwind Robotics Ltd, ready to sign."
-        body="Hi Sam, here is the mutual NDA for our warehouse-automation pilot. It takes about two minutes to read and sign, and the link needs no account."
         reminderNote="Reminders go out at 48h and 5 days."
         onShare={setLast}
       />
