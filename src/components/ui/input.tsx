@@ -8,6 +8,10 @@ import * as React from 'react';
 export const inputClasses =
   'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-gray-400 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400';
 
+/** Ink & Seal variant: 6px radius, hairline border, same focus ring rules. Opt-in. */
+export const inputClassesCrisp =
+  'w-full rounded-control border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500';
+
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (
     <input ref={ref} className={`${inputClasses} ${className || ''}`} {...props} />

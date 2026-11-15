@@ -20,8 +20,8 @@ T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
-opens sign-up. Design refresh (T-058) is specced; its rollout starts with **T-060** (tokens and
-primitives) and can run alongside the launch tickets. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
+opens sign-up. Design refresh (T-058) is specced; its rollout continues with **T-061** (app shell; T-060 foundations
+are in PR #24) and can run alongside the launch tickets. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
 (2026-11-09).
 
 ## Now (in progress)
@@ -85,9 +85,6 @@ triage them before or alongside T-044.
 
 ### Design refresh (T-058, in order; spec: [Ink & Seal](superpowers/specs/2026-11-15-ink-and-seal-design-system.md))
 
-- ◑ **T-060** [normal] [Claude] Tokens, fonts, primitives: add new tokens next to the old ones,
-  Schibsted Grotesk via next/font, new Sheet, EvidenceLine, Seal, ShareSheet and opt-in variants of
-  the existing primitives. No page changes yet. Supersedes T-029. Branch `feat/T-060-design-tokens`.
 - ☐ **T-061** [normal] [Claude] App shell: restyled top app bar, same links and functionality as
   today (one New NDA button), no marketing footer on app pages, mobile menu.
 - ☐ **T-062** [normal] [Claude] Home + marketing pages (about, FAQ, help, pricing): hero with the
@@ -203,6 +200,8 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-060** [normal] Ink & Seal tokens, Schibsted Grotesk, opt-in crisp variants, Sheet / EvidenceBlock /
+  Seal / ShareSheet, `/dev/design-system` preview; additive, no page changes (2026-11-15, PR #24).
 - ☑ **T-048** [high] Open redirect on `/accept-terms ?next=` fixed with `safeInternalPath()` (2026-11-15, PR #20).
 - ☑ **T-001** [low] Work rules, `docs/TICKETS.md`, T-IDs, session hook (2026-11-15, PR #19).
 - ☑ **T-003** [normal] Site-wide Hallmark design audit (2026-11-15, PR #19).

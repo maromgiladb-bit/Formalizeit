@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Scale } from 'lucide-react';
 
 /**
@@ -8,7 +9,23 @@ import { Scale } from 'lucide-react';
  * Follows the Calm Precision banner rule: white card + gray-200 border +
  * teal-800 icon chip (never teal-50/teal-600 tints in banners).
  */
-export function LegalDisclaimer({ className = '' }: { className?: string }) {
+export function LegalDisclaimer({
+  className = '',
+  variant = 'default',
+}: {
+  className?: string;
+  variant?: 'default' | 'compact';
+}) {
+  if (variant === 'compact') {
+    return (
+      <p role="note" className={`text-xs leading-relaxed text-gray-500 ${className}`}>
+        FormalizeIt is not a law firm and does not provide legal advice.{' '}
+        <Link href="/terms" className="font-semibold text-teal-800 underline underline-offset-2">
+          Learn more
+        </Link>
+      </p>
+    );
+  }
   return (
     <div
       role="note"
