@@ -363,20 +363,6 @@ export default function SignNDAPublicClient({
 
 
 
-    // Deal summary: only fields that are already on the client; rows with no value are skipped.
-    const asText = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : '');
-    const partyA = asText(formData.party_a_name);
-    const partyB = asText(formData.party_b_name);
-    const termMonths = asText(formData.term_months);
-    const confMonths = asText(formData.confidentiality_period_months);
-    const summaryRows: { label: string; value: string; mono?: boolean }[] = [
-        ...(partyA || partyB ? [{ label: 'Parties', value: [partyA, partyB].filter(Boolean).join(' and ') }] : []),
-        ...(asText(formData.effective_date) ? [{ label: 'Effective', value: asText(formData.effective_date), mono: true }] : []),
-        ...(termMonths ? [{ label: 'Term', value: `${termMonths} months`, mono: true }] : []),
-        ...(confMonths ? [{ label: 'Confidentiality', value: `${confMonths} months`, mono: true }] : []),
-        ...(asText(formData.governing_law) ? [{ label: 'Governing law', value: asText(formData.governing_law) }] : []),
-    ];
-
     const checkboxClasses =
         'mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer';
     const labelClasses = 'block text-xs font-semibold text-gray-500 mb-1.5';
@@ -468,21 +454,6 @@ export default function SignNDAPublicClient({
                             </div>
 
                             <div ref={signatureCardRef} className="bg-white lg:bg-transparent rounded-sheet lg:rounded-none border border-line lg:border-0 p-5 lg:p-0 flex flex-col">
-                                {/* Deal summary (only fields already on the client) */}
-                                {summaryRows.length > 0 && (
-                                    <section aria-label="Deal summary" className="mb-5">
-                                        <h2 className="font-display text-sm font-semibold text-gray-700 mb-2">Deal summary</h2>
-                                        <dl className="divide-y divide-line border-y border-line text-sm">
-                                            {summaryRows.map((row) => (
-                                                <div key={row.label} className="flex justify-between gap-4 py-2">
-                                                    <dt className="text-muted-ink shrink-0">{row.label}</dt>
-                                                    <dd className={`text-ink text-right [overflow-wrap:anywhere] ${row.mono ? 'font-doc-mono text-xs leading-5' : ''}`}>{row.value}</dd>
-                                                </div>
-                                            ))}
-                                        </dl>
-                                    </section>
-                                )}
-
                                 {/* Authority-to-sign affirmation */}
                                 <label className="flex items-start gap-3 mb-3 cursor-pointer">
                                     <input
@@ -648,7 +619,7 @@ export default function SignNDAPublicClient({
                                     </p>
                                 )}
 
-                                {/* Not-legal-advice notice stays in its full form, directly above the sign button */}
+                                {/* Not-legal-advice notice in full form, above and below the sign button (as before the redesign) */}
                                 <LegalDisclaimer className="mb-4 rounded-sheet! shadow-none! border-line!" />
 
                                 {/* Submit Button */}
@@ -661,6 +632,8 @@ export default function SignNDAPublicClient({
                                 >
                                     {loading ? 'Submitting...' : 'Submit Signature'}
                                 </Button>
+
+                                <LegalDisclaimer className="mt-4 rounded-sheet! shadow-none! border-line!" />
                             </div>
                         </div>
                     </aside>
