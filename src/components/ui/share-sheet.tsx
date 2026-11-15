@@ -44,15 +44,19 @@ const MORE: Channel[] = [
   { id: 'linkedin', label: 'LinkedIn', Icon: LinkedInLogo, tint: '#e6eff8', ring: '#93b9e2' },
 ];
 
-function ChannelTile({ channel, index, copied, onClick }: { channel: Channel; index: number; copied: boolean; onClick: () => void }) {
+type CopyState = 'idle' | 'copied' | 'failed';
+
+function ChannelTile({ channel, index, copyState = 'idle', disabled, onClick }: { channel: Channel; index: number; copyState?: CopyState; disabled?: boolean; onClick: () => void }) {
+  const copied = copyState === 'copied';
   const { label, Icon, tint, ring } = channel;
   const isCopy = channel.id === 'copy';
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       style={{ '--ring': ring, animationDelay: `${120 + index * 45}ms` } as CSSProperties}
-      className="group grid cursor-pointer justify-items-center gap-2 rounded-sheet border border-line bg-white px-2 pb-3 pt-3.5 text-[13px] font-medium text-ink transition-[border-color,background-color,transform] duration-150 hover:border-[var(--ring)] active:scale-[0.97] motion-safe:animate-[share-tile-in_320ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
+      className="group grid cursor-pointer justify-items-center gap-2 rounded-sheet border border-line bg-white px-2 pb-3 pt-3.5 text-[13px] font-medium text-ink transition-[border-color,background-color,transform] duration-150 hover:border-[var(--ring)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line motion-safe:animate-[share-tile-in_320ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
     >
       <span
         style={{ backgroundColor: tint }}
@@ -67,7 +71,7 @@ function ChannelTile({ channel, index, copied, onClick }: { channel: Channel; in
           <Icon className="h-5 w-5 text-ink" aria-hidden="true" />
         )}
       </span>
-      <span aria-live={isCopy ? 'polite' : undefined}>{isCopy && copied ? 'Copied' : label}</span>
+      <span aria-live={isCopy ? 'polite' : undefined}>{isCopy && copied ? 'Copied' : isCopy && copyState === 'failed' ? 'Copy failed' : label}</span>
     </button>
   );
 }
@@ -86,7 +90,7 @@ export function ShareSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
   const [showMore, setShowMore] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -127,6 +131,7 @@ export function ShareSheet({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
       setShowMore(false);
+      setCopyState('idle');
       const target = returnFocusRef.current;
       if (target?.isConnected) target.focus();
     };
@@ -140,11 +145,17 @@ export function ShareSheet({
 
   if (!open) return null;
 
-  const handleCopy = () => {
-    onShare('copy');
-    setCopied(true);
+  const handleCopy = async () => {
     if (copyTimer.current) clearTimeout(copyTimer.current);
-    copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopyState('copied');
+      copyTimer.current = setTimeout(() => setCopyState('idle'), 1500);
+    } catch {
+      // Clipboard blocked (non-HTTPS, in-app browser): say so here; the link above is selectable.
+      setCopyState('failed');
+      copyTimer.current = setTimeout(() => setCopyState('idle'), 3000);
+    }
   };
 
   return (
@@ -184,9 +195,15 @@ export function ShareSheet({
 
         <div className="mt-5 flex h-11 min-w-0 items-center gap-2 overflow-hidden rounded-control border border-line bg-ground px-3.5 font-doc-mono text-[13px] font-medium text-ink">
           <Lock className="h-4 w-4 shrink-0 text-muted-ink" aria-hidden="true" />
-          <span className="truncate" title={link}>
-            {link}
-          </span>
+          {link ? (
+            <span className="truncate select-all" title={link}>
+              {link}
+            </span>
+          ) : (
+            <span className="truncate font-sans text-amber-800" role="alert">
+              Something went wrong creating the link. Close this and try again.
+            </span>
+          )}
         </div>
 
         <div className="mt-5 flex items-center gap-3">
@@ -200,8 +217,9 @@ export function ShareSheet({
               key={channel.id}
               channel={channel}
               index={i}
-              copied={copied}
-              onClick={() => (channel.id === 'copy' ? handleCopy() : onShare(channel.id))}
+              copyState={channel.id === 'copy' ? copyState : 'idle'}
+              disabled={!link}
+              onClick={() => (channel.id === 'copy' ? void handleCopy() : onShare(channel.id))}
             />
           ))}
         </div>
@@ -219,7 +237,7 @@ export function ShareSheet({
           {showMore ? (
             <div role="group" aria-label="More ways to share" className="mt-2 grid grid-cols-3 gap-2.5">
               {MORE.map((channel, i) => (
-                <ChannelTile key={channel.id} channel={channel} index={i - 2} copied={false} onClick={() => onShare(channel.id)} />
+                <ChannelTile key={channel.id} channel={channel} index={i - 2} disabled={!link} onClick={() => onShare(channel.id)} />
               ))}
             </div>
           ) : null}
