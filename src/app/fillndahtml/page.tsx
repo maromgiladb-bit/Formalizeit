@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
@@ -85,30 +84,16 @@ const DEFAULTS: FormValues = {
 
 /**
  * Channels the shared ShareSheet does not list (native email app, SMS, Telegram,
- * LinkedIn). Rendered inside the sheet's dialog, above its footer, so it stays
- * within the sheet's focus trap. TODO: give ShareSheet an `extra` slot instead.
+ * LinkedIn). Passed to ShareSheet's `extra` slot, so it sits inside the focus trap.
  */
 function ShareSheetMoreOptions({ expanded, onToggle, onShare }: { expanded: boolean; onToggle: () => void; onShare: (platform: string) => void }) {
-	const [host, setHost] = useState<HTMLElement | null>(null);
-	useEffect(() => {
-		const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]');
-		if (!dialog) return;
-		const el = document.createElement('div');
-		el.className = 'mt-3';
-		dialog.insertBefore(el, dialog.lastElementChild);
-		setHost(el);
-		return () => {
-			el.remove();
-		};
-	}, []);
-	if (!host) return null;
 	const options: { id: string; label: string }[] = [
 		{ id: 'email', label: 'Email app' },
 		{ id: 'sms', label: 'SMS' },
 		{ id: 'telegram', label: 'Telegram' },
 		{ id: 'linkedin', label: 'LinkedIn' },
 	];
-	return createPortal(
+	return (
 		<div>
 			<button
 				type="button"
@@ -135,8 +120,7 @@ function ShareSheetMoreOptions({ expanded, onToggle, onShare }: { expanded: bool
 					))}
 				</div>
 			)}
-		</div>,
-		host,
+		</div>
 	);
 }
 
@@ -2421,10 +2405,8 @@ export default function FillNDAHTML() {
 					body={suggestedEmailBody || `Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${generatedShareLink}\n\nThank you!`}
 					onShare={handleShare}
 					reminderNote="The recipient opens a secure review page, no account needed. We’ll remind them if it sits unsigned."
+					extra={<ShareSheetMoreOptions expanded={showMoreShareOptions} onToggle={() => setShowMoreShareOptions((v) => !v)} onShare={handleShare} />}
 				/>
-				{showVerifyEmailModal && emailSent && (
-					<ShareSheetMoreOptions expanded={showMoreShareOptions} onToggle={() => setShowMoreShareOptions((v) => !v)} onShare={handleShare} />
-				)}
 
 				{/* Exit Warning Modal */}
 

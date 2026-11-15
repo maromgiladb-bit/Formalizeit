@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Check, Link2, Lock, Mail, MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
@@ -18,6 +18,8 @@ interface ShareSheetProps {
   reminderNote?: string;
   /** Status shown beside Done. Defaults to "Waiting on them"; pass null to hide. */
   status?: { tone: StatusTone; label: string } | null;
+  /** Extra content under the share buttons (e.g. a "More options" row), inside the focus trap. */
+  extra?: ReactNode;
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -40,6 +42,7 @@ export function ShareSheet({
   onShare,
   reminderNote,
   status = { tone: 'progress', label: 'Waiting on them' },
+  extra,
 }: ShareSheetProps) {
   const titleId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -176,6 +179,8 @@ export function ShareSheet({
             </button>
           ))}
         </div>
+
+        {extra ? <div className="mt-3">{extra}</div> : null}
 
         <div className="mt-4 rounded-control border border-line bg-white px-4 py-3 text-[13px] leading-relaxed text-gray-700">
           <p className="mb-1.5 text-xs font-semibold text-muted-ink">Message we pre-wrote for you</p>
