@@ -20,12 +20,16 @@ T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
-opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
+opens sign-up. Design refresh (T-058) is specced; its rollout starts with **T-060** (tokens and
+primitives) and can run alongside the launch tickets. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
 (2026-11-09).
 
 ## Now (in progress)
 
-- (nothing in progress)
+- ◑ **T-058** [high] [Both] Design refresh: direction picked 2026-11-15 (Ink & Seal in Calm colors,
+  top app bar, same nav links, compact-list dashboard). Spec + rollout tickets T-060–T-070 below.
+  [Spec](superpowers/specs/2026-11-15-ink-and-seal-design-system.md) ·
+  [Mockup](design/ink-and-seal/mockup.html)
 
 ## Next (launch path, in order)
 
@@ -78,6 +82,30 @@ triage them before or alongside T-044.
   Related: T-021.
 - ☐ **T-057** [low] [Claude] Mojibake (`â†’`) in comments in `billing/checkout` and
   `billing/upgrade-session` routes.
+
+### Design refresh (T-058, in order; spec: [Ink & Seal](superpowers/specs/2026-11-15-ink-and-seal-design-system.md))
+
+- ◑ **T-060** [normal] [Claude] Tokens, fonts, primitives: add new tokens next to the old ones,
+  Schibsted Grotesk via next/font, new Sheet, EvidenceLine, Seal, ShareSheet and opt-in variants of
+  the existing primitives. No page changes yet. Supersedes T-029. Branch `feat/T-060-design-tokens`.
+- ☐ **T-061** [normal] [Claude] App shell: restyled top app bar, same links and functionality as
+  today (one New NDA button), no marketing footer on app pages, mobile menu.
+- ☐ **T-062** [normal] [Claude] Home + marketing pages (about, FAQ, help, pricing): hero with the
+  NDA sheet whose blanks fill in.
+- ☐ **T-063** [normal] [Claude] Fill wizard restyle, compact disclaimer line, preview-only variable
+  highlight in the preview iframe (PDF unchanged). Update `e2e/nda-flow.spec.ts` if labels change.
+- ☐ **T-064** [normal] [Claude] Send success share sheet (links-only send).
+- ☐ **T-065** [high] [Claude] Receiver sign page: document-first layout, docked sign panel / phone
+  bottom panel, executed seal + evidence block from recorded evidence only. Consent text unchanged.
+- ☐ **T-066** [normal] [Claude] Dashboard compact list: filter tabs (All, Needs you, Waiting,
+  Received, Signed, Drafts, Archived) replace the 7 tiles; all row actions kept.
+- ☐ **T-067** [normal] [Claude] Settings pages, onboarding, accept-terms, coming-soon, errors.
+- ☐ **T-068** [high] [Claude] Legal pages restyle, text untouched.
+- ☐ **T-069** [low] [Claude] Docs sync: rewrite `.claude/skills/stitch-design.md`, CLAUDE.md
+  design section, Hallmark stamp in `globals.css`, Formi knowledge if routes/labels changed, memory;
+  remove old tokens once nothing uses them; publish the system in Claude's Design System type.
+- ☐ **T-070** [high] [Both] Decide whether the seal / evidence summary is printed on the signed PDF
+  (Nir: a seal can read as certification). UI-only until decided.
 
 ## Waiting on you
 
@@ -135,8 +163,10 @@ triage them before or alongside T-044.
   counsel review.
 - ☐ **T-027** [low] [Claude] Copy pass: remove ~100 dashes (— / –) from UI copy (legal pages
   excluded).
-- ☐ **T-029** [low] [Claude] Design follow-ups: form labels to sentence case; cut 5 font weights
-  to 3.
+- ⊘ **T-029** [low] [Claude] Design follow-ups: form labels to sentence case; cut 5 font weights
+  to 3. Superseded by T-060 (new type system).
+- ☐ **T-071** [low] [Claude] Dashboard alternatives parked 2026-11-15: split view (list + document)
+  and stages (needs-you first). Mockups in the T-058 design artifact; revisit after launch.
 - ☐ **T-031** [normal] [Claude] Lint cleanup: 82 pre-existing errors in 17 files (incl. 19
   `no-unescaped-entities` in legal pages), then add lint to CI.
 - ☐ **T-030** [low] [Claude] `scripts/generate-bundled-templates.mjs` writes a "Generated at"

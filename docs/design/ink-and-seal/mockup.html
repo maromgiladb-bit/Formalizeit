@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ink and Seal, Calm colors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Geist+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: the NDA sheet is the interface; one top app bar shell holds wizard, send and dashboard. */
+:root{
+  --ground:#f6f8f8;       /* page ground */
+  --sheet:#ffffff;        /* document sheets, panels */
+  --ink:#0d1f1e;          /* headings, primary text: 17:1 on white */
+  --body:#2c3f3d;         /* body text */
+  --muted:#5b6b69;        /* secondary text: 5.6:1 on white, 5.2:1 on ground */
+  --line:#e3e9e8;         /* hairlines */
+  --line-strong:#c9d4d3;
+  --field:#7f908e;        /* input borders, 3.3:1 on white */
+  --teal:#115e59;         /* the only action color: 7.6:1 with white */
+  --teal-h:#0f766e;       /* hover: 5.5:1 with white */
+  --teal-tint:#d9efec;    /* filled variable highlight */
+  --teal-tint-2:#b8e3de;  /* active variable highlight */
+  --teal-line:#7fc4bd;    /* variable underline */
+  --amber:#f59e0b;        /* dot, border: needs you only */
+  --amber-50:#fffbeb;
+  --amber-200:#fde68a;
+  --amber-800:#92400e;    /* needs-you text: 6.9:1 on amber-50 */
+  --neutral-pill:#eaf0ef;
+  --neutral-pill-ink:#3d4f4d;
+  --r-c:6px; --r-s:8px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --ui:'Schibsted Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --script:'Caveat','Segoe Script',cursive;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --sheet-shadow:0 1px 1px rgba(13,31,30,.04),0 14px 24px -18px rgba(13,31,30,.22);
+  --float:0 24px 48px -16px rgba(13,31,30,.4),0 0 0 1px rgba(13,31,30,.08);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--body);font:400 15px/1.5 var(--ui);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:var(--s8)}
+h1,h2,h3,h4,p,ul,ol,dl,dd{margin:0}
+ul,ol{padding:0;list-style:none}
+button,input{font:inherit;color:inherit}
+a{color:var(--teal);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--teal-h)}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1240px;margin:0 auto}
+
+/* ---------- presentation header ---------- */
+.top{padding:var(--s7) 0 var(--s5)}
+.tag{display:inline-flex;margin-bottom:var(--s4);font:500 13px/1 var(--mono);color:var(--muted)}
+.top h1{font-size:clamp(34px,5vw,52px);line-height:1;letter-spacing:-.035em;font-weight:700;color:var(--ink)}
+.top .thesis{margin-top:var(--s3);max-width:62ch;font-size:17px;line-height:1.5;color:var(--body)}
+.system{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r-s);padding:var(--s5);display:grid;gap:var(--s6)}
+.system h2{font-size:14px;font-weight:600;margin-bottom:var(--s3);color:var(--ink)}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--s3)}
+.sw{border:1px solid var(--line);border-radius:var(--r-c);overflow:hidden;background:#fff}
+.sw i{display:block;height:44px;border-bottom:1px solid var(--line)}
+.sw b{display:block;padding:var(--s2) var(--s3) 0;font:500 12px/1.4 var(--mono);color:var(--ink)}
+.sw span{display:block;padding:2px var(--s3) var(--s3);font-size:12px;line-height:1.4;color:var(--muted)}
+.sys-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--s6)}
+.spec-d{font-weight:700;font-size:34px;letter-spacing:-.03em;line-height:1.05;color:var(--ink)}
+.spec-s{font-family:var(--serif);font-size:15px;line-height:1.6;margin-top:var(--s3);color:var(--ink)}
+.spec-m{font:500 13px/1.5 var(--mono);margin-top:var(--s3);color:var(--ink)}
+.spec-sig{font:600 32px/1 var(--script);margin-top:var(--s3);color:var(--ink)}
+.spec-cap{font-size:12px;color:var(--muted);margin-top:2px}
+.row{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center}
+.shape-demo{display:flex;flex-wrap:wrap;gap:var(--s5);align-items:center}
+.shape-demo .a{width:72px;height:44px;border:1px solid var(--field);border-radius:var(--r-c);background:#fff}
+.shape-demo .b{width:72px;height:44px;border:1px solid var(--line);border-radius:var(--r-s);background:#fff;box-shadow:var(--sheet-shadow)}
+.shape-demo .c{width:72px;height:44px;margin:0 12px 12px 0;position:relative;isolation:isolate;background:#fff;border:1px solid var(--line);border-radius:var(--r-s)}
+.shape-demo .c::before,.shape-demo .c::after{content:"";position:absolute;inset:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-s);z-index:-1}
+.shape-demo .c::before{transform:translate(6px,6px)}
+.shape-demo .c::after{transform:translate(12px,12px);background:#fbfcfc}
+.seal-demo{display:flex;align-items:center;gap:var(--s4)}
+.seal-demo .seal{position:static;opacity:1;transform:rotate(-6deg);width:96px;height:96px}
+
+/* ---------- buttons, pills ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);height:40px;padding:0 var(--s4);border-radius:var(--r-c);border:1px solid transparent;font-weight:600;font-size:14px;line-height:1;letter-spacing:-.005em;text-decoration:none;cursor:pointer;white-space:nowrap;
+  transition:background-color 120ms ease-out,border-color 120ms ease-out,color 120ms ease-out,transform 120ms var(--ease)}
+.btn:active{transform:scale(.98)}
+.btn.lg{height:48px;padding:0 20px;font-size:15px}
+.btn.sm{height:32px;padding:0 var(--s3);font-size:13px}
+.btn.block{width:100%}
+.btn.primary{background:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-h);color:#fff}
+.btn.secondary{background:#fff;color:var(--ink);border-color:var(--line-strong)}
+.btn.secondary:hover{background:var(--ground);border-color:var(--field);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:rgba(13,31,30,.06);color:var(--ink)}
+.btn:disabled{background:#e9efee;color:var(--muted);border-color:transparent;cursor:not-allowed;transform:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 var(--s2);border-radius:4px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;border:1px solid transparent}
+.pill.draft{background:var(--neutral-pill);color:var(--neutral-pill-ink)}
+.pill.wait{background:#fff;color:var(--neutral-pill-ink);border-color:var(--line-strong)}
+.pill.need{background:var(--amber-50);color:var(--amber-800);border-color:var(--amber-200)}
+.pill.need::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amber)}
+.pill.done{background:var(--teal);color:#fff}
+.pill .i{width:12px;height:12px;stroke-width:2.4}
+.beta{font:600 12px/1 var(--ui);padding:3px 6px;border-radius:4px;border:1px solid var(--line-strong);color:var(--muted);background:#fff}
+.logo{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+.logo:hover{color:var(--ink)}
+.logo svg{width:24px;height:24px;flex:none}
+
+/* ---------- frames ---------- */
+.frame{margin-top:var(--s7)}
+.cap{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-bottom:var(--s3)}
+.cap .n{font:500 12px/1 var(--mono);color:var(--muted);padding:4px 6px;border:1px solid var(--line-strong);border-radius:4px;background:#fff}
+.cap h2{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.cap .note{font-size:13px;color:var(--muted);flex:1 1 280px}
+.cap .btn{margin-left:auto}
+.dev{background:var(--ground);border:1px solid var(--line);border-radius:var(--r-s);overflow:hidden;container-type:inline-size}
+.bar{display:flex;align-items:center;gap:var(--s5);min-height:56px;padding:0 var(--s5);background:var(--sheet);border-bottom:1px solid var(--line)}
+.bar .sp{flex:1}
+.bar nav{display:flex;gap:var(--s5);font-size:14px;font-weight:500}
+.bar nav a{color:var(--muted);text-decoration:none}
+.bar nav a:hover{color:var(--ink)}
+.bar .r{display:flex;align-items:center;gap:var(--s2)}
+.saved{font:400 12px/1 var(--mono);color:var(--muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+
+/* ---------- document sheet ---------- */
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r-s);box-shadow:var(--sheet-shadow)}
+.stack{position:relative;isolation:isolate}
+.stack::before,.stack::after{content:"";position:absolute;inset:0;background:#fff;border:1px solid var(--line);border-radius:var(--r-s);z-index:-1}
+.stack::before{transform:translate(6px,6px)}
+.stack::after{transform:translate(12px,12px);background:#fbfcfc}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap;padding:10px var(--s5);border-bottom:1px solid var(--line);background:#fff;font:400 12px/1.4 var(--mono);color:var(--muted)}
+.sheet-head .lk{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.doc{font-family:var(--serif);font-size:15px;line-height:1.65;color:var(--ink)}
+.doc p{margin:0 0 var(--s3)}
+.doc .doc-title{font:600 22px/1.25 var(--serif);letter-spacing:-.005em;margin:0 0 var(--s4)}
+.doc h4{font:600 15px/1.4 var(--serif);margin:var(--s5) 0 var(--s1);color:var(--ink)}
+.doc h4:first-of-type{margin-top:var(--s4)}
+.sheet-body{padding:var(--s6) 40px}
+.sheet-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s2);padding:10px var(--s5);border-top:1px solid var(--line);background:#fff;font:400 12px/1.4 var(--mono);color:var(--muted)}
+.var{border-bottom:1.5px solid #8fa09e;background:rgba(13,31,30,.05);padding:0 1px;border-radius:2px 2px 0 0;-webkit-box-decoration-break:clone;box-decoration-break:clone;
+  transition:color 280ms ease-out,background-color 280ms ease-out,border-color 280ms ease-out,box-shadow 120ms ease-out}
+.var.b{background:var(--teal-tint);border-bottom-color:var(--teal-line)}
+.var.def{border-bottom-style:dashed}
+.var.active{background:var(--teal-tint-2);border-bottom-color:var(--teal);box-shadow:0 0 0 2px rgba(17,94,89,.3);border-radius:2px}
+.var.empty{color:var(--body);font-style:italic}
+.script{font-family:var(--script);font-weight:600;font-size:34px;line-height:1;color:var(--ink)}
+
+/* ---------- 01 hero ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:var(--s7);align-items:center;padding:var(--s7) var(--s7) var(--s8)}
+.hero h1{font-size:clamp(48px,7.4cqw,76px);line-height:.98;letter-spacing:-.04em;font-weight:700;color:var(--ink)}
+.hero h1 u{text-decoration:none;background:linear-gradient(var(--teal-tint-2),var(--teal-tint-2)) 0 88%/100% 10px no-repeat}
+.hero .lede{margin-top:var(--s5);font-size:19px;line-height:1.45;color:var(--body);max-width:30ch}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:var(--s3);margin-top:var(--s6)}
+.hero .fine{margin-top:var(--s4);font:400 12px/1.4 var(--mono);color:var(--muted)}
+.hero-art{padding:0 12px 12px 0}
+.hero-sheet .doc{font-size:14.5px;line-height:1.62}
+.hero-sheet .sheet-body{padding:var(--s5) 36px 0;max-height:430px;overflow:hidden;position:relative}
+.hero-sheet .sheet-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(rgba(255,255,255,0),#fff 85%)}
+.hero-sheet .doc h4:first-of-type{margin-top:var(--s3)}
+.hero-sheet .var{background:var(--teal-tint);border-bottom-color:var(--teal-line)}
+.hero-sheet .var:not(.on){color:transparent;background:transparent;border-bottom-color:var(--line-strong)}
+.counter b{font-weight:500;color:var(--ink);display:inline-block;min-width:1ch}
+@container (max-width:900px){.hero{grid-template-columns:1fr;gap:var(--s6);padding:var(--s6) var(--s5) var(--s7)}.hero .lede{max-width:40ch}.bar nav{display:none}}
+@container (max-width:520px){.hero{padding:var(--s5) var(--s4) var(--s6)}.hero-sheet .sheet-body{padding:var(--s4) var(--s4) 0}.bar{padding:0 var(--s4);gap:var(--s3)}.bar .r .ghost{display:none}.hero .ctas .btn{flex:1 1 100%}.hero-art{padding:0 8px 8px 0}}
+
+/* ---------- top app bar (wizard, send, dashboard) ---------- */
+.app{background:var(--ground)}
+.appbar{background:#fff;border-bottom:1px solid var(--line)}
+.appbar-in{display:flex;align-items:center;gap:var(--s5);height:60px;padding:0 32px;min-width:0}
+.appbar .logo{flex:none}
+.appbar .logo svg{width:22px;height:22px}
+.tnav{display:flex;align-items:stretch;gap:var(--s5);height:100%;margin-left:var(--s3)}
+.tnav a{position:relative;display:flex;align-items:center;padding:0 2px;color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color 120ms ease-out}
+.tnav a:hover{color:var(--ink)}
+.tnav a[aria-current="page"]{color:var(--ink);font-weight:600}
+.tnav a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--teal)}
+.appbar .sp{flex:1}
+.appbar .acts{display:flex;align-items:center;gap:var(--s3);flex:none}
+.ib{width:40px;height:40px;border:0;border-radius:var(--r-c);background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none;transition:background-color 120ms ease-out,color 120ms ease-out}
+.ib:hover{background:rgba(13,31,30,.06);color:var(--ink)}
+.ib .i{width:20px;height:20px}
+.ib.menu{display:none}
+.av{width:32px;height:32px;border:0;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:600 12px var(--ui);cursor:pointer;flex:none;padding:0}
+.av:hover{background:var(--body)}
+.main{padding:28px 32px;min-width:0}
+@container (max-width:720px){
+  .appbar-in{padding:0 var(--s3);gap:var(--s2)}
+  .tnav{display:none}
+  .ib.menu{display:grid;margin-left:-4px}
+  .appbar .acts{gap:var(--s1)}
+  .appbar .acts .btn{width:32px;padding:0;margin:0 var(--s1)}
+  .appbar .acts .btn .txt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .main{padding:var(--s5) var(--s4)}
+}
+
+/* ---------- 02 wizard ---------- */
+.stepper{display:flex;align-items:center;margin-bottom:var(--s5);flex-wrap:wrap;row-gap:var(--s2)}
+.st{display:flex;align-items:center;gap:var(--s2);font-size:13px;font-weight:500;color:var(--muted)}
+.st i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line-strong);background:#fff;font:500 12px var(--mono);font-style:normal;color:var(--muted)}
+.st.done{color:var(--ink)}
+.st.done i{background:var(--teal);border-color:var(--teal);color:#fff}
+.st.done .i{width:13px;height:13px;stroke-width:3}
+.st.cur{color:var(--ink);font-weight:600}
+.st.cur i{border-color:var(--ink);border-width:2px;color:var(--ink)}
+.st-line{width:28px;height:1.5px;background:var(--line-strong);margin:0 10px;flex:none}
+.st-line.done{background:var(--teal)}
+.stepmeta{margin-left:auto;display:flex;align-items:center;gap:var(--s3)}
+.stepno{font:500 12px/1 var(--mono);color:var(--ink);background:#fff;border:1px solid var(--line-strong);border-radius:4px;padding:6px 8px;white-space:nowrap}
+.wiz{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:var(--s5);align-items:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-s)}
+.form-card{padding:var(--s5)}
+.form-card h2{font-size:26px;line-height:1.1;letter-spacing:-.03em;font-weight:700;color:var(--ink)}
+.form-card .sub{margin-top:var(--s2);color:var(--muted);font-size:14px}
+.fields{margin-top:var(--s5);display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+.fields .full{grid-column:1/-1}
+.f{min-width:0}
+.f label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.f input,.sig-input{width:100%;height:40px;padding:0 var(--s3);border:1px solid var(--field);border-radius:var(--r-c);background:#fff;font-size:14px;color:var(--ink);transition:border-color 120ms ease-out,box-shadow 120ms ease-out}
+.f input:hover{border-color:#5b6b69}
+.f input:focus,.sig-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(17,94,89,.2)}
+.f input::placeholder{color:var(--muted)}
+.actions{margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid var(--line);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.actions .sp{flex:1}
+.disc{display:flex;gap:var(--s2);align-items:flex-start;margin-top:var(--s4);font-size:12px;line-height:1.5;color:var(--muted)}
+.disc .i{margin-top:2px;width:14px;height:14px}
+.wiz-prev{padding:0 12px 12px 0;min-width:0}
+.wiz-scroll{max-height:540px;overflow:auto}
+.wiz-scroll .sheet-body{padding:var(--s5)}
+.wiz-scroll .doc{font-size:14px}
+.sigtable{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--ink);display:grid;grid-template-columns:1fr 1fr;gap:var(--s5);font-family:var(--ui);font-size:13px;line-height:1.7;color:var(--ink)}
+.sigtable b{display:block;font-size:14px;margin-bottom:var(--s1)}
+.sigtable .sl{height:28px;border-bottom:1px solid var(--muted);margin:var(--s2) 0 var(--s1)}
+.sigtable>div{min-width:0;overflow-wrap:anywhere}
+@container (max-width:1120px){.wiz{grid-template-columns:minmax(0,1fr)}}
+@container (max-width:700px){.stepper .st:not(.cur) .lab{display:none}.st-line{width:16px;margin:0 6px}.stepmeta .saved{display:none}}
+@container (max-width:560px){.fields{grid-template-columns:1fr}.form-card{padding:var(--s4)}.sigtable{grid-template-columns:1fr}.wiz-scroll .sheet-body{padding:var(--s4)}}
+
+/* ---------- 03 send ---------- */
+.stage{position:relative;min-height:660px;background:var(--ground);display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.ghost-ui{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:60px auto;column-gap:var(--s4);padding:0 var(--s4)}
+.ghost-ui .gb{grid-column:1/-1;display:flex;align-items:center;background:#fff;border-bottom:1px solid var(--line);margin:0 calc(var(--s4) * -1);padding:0 var(--s5)}
+.ghost-ui .gc{background:#fff;border:1px solid var(--line);border-radius:var(--r-s);padding:var(--s4)}
+.ghost-ui .gc{background:#fff;border:1px solid var(--line);border-radius:var(--r-s);height:420px;margin-top:var(--s5);padding:var(--s5)}
+.ghost-ui i{display:block;height:8px;border-radius:2px;background:#e3e9e8;margin-bottom:12px}
+.scrim{position:absolute;inset:0;background:rgba(13,31,30,.5)}
+.share-sheet{position:relative;width:min(560px,100%);background:#fff;border-radius:12px 12px 0 0;padding:var(--s5) var(--s5) var(--s5);box-shadow:var(--float);
+  transition:transform 280ms var(--ease),opacity 280ms var(--ease)}
+.share-sheet.pre{transform:translateY(40px);opacity:0;transition:none}
+.ss-top{display:flex;gap:14px;align-items:flex-start}
+.ok{width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;flex:none}
+.ok .i{width:20px;height:20px;stroke-width:2.6}
+.share-sheet h3{font-size:24px;line-height:1.15;letter-spacing:-.03em;font-weight:700;color:var(--ink)}
+.share-sheet .sub{font-size:14px;color:var(--muted);margin-top:4px}
+.x{margin-left:auto;width:36px;height:36px;border-radius:var(--r-c);border:0;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;flex:none;transition:background-color 120ms ease-out,color 120ms ease-out}
+.x:hover{background:var(--ground);color:var(--ink)}
+.linkrow{margin-top:var(--s5);display:flex;gap:var(--s2)}
+.linkrow .lv{flex:1;min-width:0;height:44px;border:1px solid var(--line-strong);border-radius:var(--r-c);padding:0 14px;display:flex;align-items:center;gap:var(--s2);background:var(--ground);font:500 13px var(--mono);color:var(--ink);overflow:hidden;white-space:nowrap}
+.linkrow .lv span{overflow:hidden;text-overflow:ellipsis}
+.copybtn{min-width:132px;height:44px}
+.copybtn .cs{display:inline-grid;width:16px;height:16px}
+.copybtn .cs .i{grid-area:1/1;transition:transform 200ms var(--ease),opacity 200ms var(--ease)}
+.copybtn .cs .c-ok{opacity:0;transform:scale(.5)}
+.copybtn.copied .cs .c-link{opacity:0;transform:scale(.5)}
+.copybtn.copied .cs .c-ok{opacity:1;transform:none}
+.c-ok path{stroke-dasharray:24;stroke-dashoffset:0;transition:stroke-dashoffset 260ms var(--ease) 80ms}
+.copybtn:not(.copied) .c-ok path{stroke-dashoffset:24}
+.via{margin-top:var(--s4);display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.via button{display:grid;justify-items:center;gap:var(--s2);padding:14px var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-s);background:#fff;cursor:pointer;font:500 13px var(--ui);color:var(--ink);transition:background-color 120ms ease-out,border-color 120ms ease-out,transform 120ms var(--ease)}
+.via button:hover{background:var(--ground);border-color:var(--line-strong)}
+.via button:active{transform:scale(.97)}
+.via i{width:40px;height:40px;border-radius:var(--r-c);background:var(--ground);display:grid;place-items:center;color:var(--ink)}
+.via .i{width:20px;height:20px}
+.msg{margin-top:var(--s4);border:1px solid var(--line);border-radius:var(--r-c);padding:var(--s3) var(--s4);background:#fff;font-size:13px;line-height:1.55;color:var(--body)}
+.msg small{display:block;font:600 12px var(--ui);color:var(--muted);margin-bottom:6px}
+.msg b{color:var(--ink);font-weight:600}
+.ss-foot{margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--line);display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.ss-foot p{flex:1;min-width:200px;font:400 12px/1.5 var(--mono);color:var(--muted)}
+@container (max-width:760px){.ghost-ui{grid-template-columns:minmax(0,1fr)}.ghost-ui .gc+.gc{display:none}.ghost-ui .gb{padding:0 var(--s4)}.ghost-ui .gc{margin-top:var(--s4)}.share-sheet{padding:var(--s4)}}
+@container (max-width:480px){.via{grid-template-columns:repeat(2,1fr)}.stage{min-height:760px}.linkrow{flex-wrap:wrap}.copybtn{width:100%}}
+
+/* ---------- 04 receiver ---------- */
+.rx-pair{display:grid;grid-template-columns:minmax(0,1fr) 375px;gap:var(--s5);align-items:start}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--r-c);background:#fff;padding:2px;margin-left:auto}
+.seg button{height:28px;padding:0 var(--s3);border:0;border-radius:4px;background:transparent;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:background-color 120ms ease-out,color 120ms ease-out}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button:not([aria-pressed="true"]):hover{background:var(--ground);color:var(--ink)}
+.cap .seg+.btn{margin-left:0}
+.rx-head{padding:var(--s5) var(--s5) var(--s4)}
+.rx-head h3{font-size:clamp(22px,3.4cqw,30px);line-height:1.12;letter-spacing:-.035em;font-weight:700;max-width:30ch;color:var(--ink)}
+.rx-head p{margin-top:var(--s2);font:400 12px/1.4 var(--mono);color:var(--muted)}
+.rx-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--s5);padding:0 var(--s5) var(--s5);align-items:start}
+.rx-doc{max-height:640px;overflow:auto;border:1px solid var(--line);border-radius:var(--r-s);background:#fff;box-shadow:var(--sheet-shadow)}
+.rx-doc .sheet{border:0;box-shadow:none;border-radius:0}
+.rx-doc .sheet-head{position:sticky;top:0;z-index:2}
+.rx-doc .sheet-body{padding:var(--s5)}
+.rx-doc .doc{font-size:14.5px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--r-s);padding:var(--s5);position:sticky;top:var(--s4)}
+.panel h4{font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.dl{margin-top:var(--s2);font-size:13px;line-height:1.45}
+.dl div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--s2);padding:7px 0;border-top:1px solid var(--line)}
+.dl dt{color:var(--muted)}
+.dl dd{font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.dl dd.m{font-family:var(--mono);font-size:12.5px;font-weight:400}
+.lbl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.chks{display:grid;gap:var(--s3);margin-top:var(--s4)}
+.chk{display:grid;grid-template-columns:20px 1fr;gap:var(--s3);font-size:13px;line-height:1.5;color:var(--body);cursor:pointer}
+.chk input{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:1px 0 0;border:1.5px solid var(--field);border-radius:4px;background:#fff;cursor:pointer;transition:background-color 120ms ease-out,border-color 120ms ease-out;display:grid;place-items:center}
+.chk input::after{content:"";width:10px;height:6px;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg) scale(0);margin-top:-2px;transition:transform 160ms var(--ease)}
+.chk input:checked{background:var(--teal);border-color:var(--teal)}
+.chk input:checked::after{transform:rotate(-45deg) scale(1)}
+.chk input:hover{border-color:var(--ink)}
+.sig-input{height:56px;font-family:var(--script);font-weight:600;font-size:32px;padding:0 var(--s3);letter-spacing:.01em}
+.hint{font-size:12px;color:var(--muted);margin-top:var(--s2);min-height:18px}
+.trust{display:flex;gap:var(--s2);align-items:center;margin-top:var(--s3);font-size:12px;color:var(--muted)}
+.signed-top{display:flex;align-items:center;gap:var(--s3)}
+.signed-top .tick{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;flex:none}
+.signed-top .tick .i{width:16px;height:16px;stroke-width:2.8}
+.panel .big{font-size:22px;line-height:1.15;letter-spacing:-.03em;font-weight:700;color:var(--ink)}
+.panel .p{font-size:14px;color:var(--muted);margin-top:var(--s3)}
+.panel .stack-btns{display:grid;gap:var(--s2);margin-top:var(--s5)}
+.sigblock{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--ink);display:grid;grid-template-columns:1fr 1fr;gap:var(--s5);font-family:var(--ui)}
+.sigblock>div{min-width:0}
+.sigblock .co{font-size:13px;font-weight:700;color:var(--ink)}
+.sigline{position:relative;height:64px;border-bottom:1px solid var(--muted);margin:var(--s2) 0;display:flex;align-items:flex-end;padding-bottom:6px}
+.sigline .script.pending{color:var(--muted)}
+.sigblock .meta{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.sigblock .meta b{color:var(--ink);font-weight:600}
+.sigblock .when{font:400 12px/1.4 var(--mono);color:var(--muted);margin-top:2px}
+.seal{position:absolute;right:-4px;bottom:-14px;width:120px;height:120px;color:var(--teal);opacity:0;transform:rotate(-6deg) scale(1.15);pointer-events:none}
+.stamped .seal{opacity:1;transform:rotate(-6deg) scale(1);transition:transform 220ms cubic-bezier(.2,.9,.3,1),opacity 220ms ease-out}
+.seal *{fill:none;stroke:currentColor}
+.seal .seal-bg{fill:#fff;fill-opacity:.8;stroke:none}
+.seal text{fill:currentColor;stroke:none;font-family:var(--mono);font-weight:500;font-size:12px}
+.evidence{margin-top:var(--s5);padding:var(--s3) var(--s4);background:var(--ground);border:1px solid var(--line);border-radius:var(--r-c);font:400 12.5px/1.6 var(--mono);color:var(--ink);min-height:86px;overflow-wrap:anywhere;white-space:pre-line}
+.evidence .note{color:var(--muted);white-space:normal}
+.rx-pair[data-state="ready"] [data-show="executed"],.rx-pair[data-state="executed"] [data-show="ready"]{display:none}
+@container (max-width:800px){.rx-grid{grid-template-columns:1fr}.panel{position:static}.rx-doc{max-height:420px}.rx-doc .sheet-body{padding:var(--s4)}.sigblock{grid-template-columns:1fr}}
+@container (max-width:520px){.rx-head{padding:var(--s4)}.rx-grid{padding:0 var(--s3) var(--s3)}.bar{padding:0 var(--s4)}}
+@media (max-width:1180px){.rx-pair{grid-template-columns:minmax(0,1fr)}.phone-col{justify-self:start}}
+/* phone */
+.phone-col{width:min(375px,100%)}
+.phone{width:100%;height:790px;display:flex;flex-direction:column;background:var(--ground);border:1px solid var(--line-strong);border-radius:24px;overflow:hidden;box-shadow:0 20px 40px -24px rgba(13,31,30,.35)}
+.ph-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);height:48px;padding:0 var(--s4);background:#fff;border-bottom:1px solid var(--line);flex:none}
+.ph-top .logo{font-size:15px;gap:8px}
+.ph-top .logo svg{width:20px;height:20px}
+.ph-top .sec{font:400 12px/1 var(--mono);color:var(--muted);display:flex;gap:6px;align-items:center}
+.ph-head{padding:var(--s4) var(--s4) var(--s3);flex:none}
+.ph-head h3{font-size:20px;line-height:1.15;letter-spacing:-.03em;font-weight:700;color:var(--ink)}
+.ph-head p{margin-top:6px;font:400 12px/1.4 var(--mono);color:var(--muted)}
+.ph-doc{flex:1;min-height:60px;overflow:auto;margin:0 var(--s3);border:1px solid var(--line);border-radius:var(--r-s) var(--r-s) 0 0;background:#fff}
+.ph-doc .sheet{border:0;box-shadow:none;border-radius:0}
+.ph-doc .sheet-head{position:sticky;top:0;z-index:2;padding:8px var(--s4)}
+.ph-doc .sheet-body{padding:var(--s4)}
+.ph-doc .doc{font-size:14px}
+.ph-sheet{flex:none;background:#fff;border-top:1px solid var(--line-strong);border-radius:14px 14px 0 0;margin-top:-1px;padding:var(--s2) var(--s4) var(--s4);box-shadow:0 -10px 24px -16px rgba(13,31,30,.3)}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line-strong);margin:0 auto var(--s3)}
+.ph-sum{display:flex;justify-content:space-between;gap:var(--s2);font-size:12px;color:var(--muted);margin-bottom:var(--s3)}
+.ph-sum b{color:var(--ink);font-weight:600}
+.ph-sheet .chk{font-size:12.5px;line-height:1.45}
+.ph-sheet .chks{gap:10px;margin-top:0}
+.ph-sheet .sig-input{height:48px;font-size:28px}
+.ph-sheet .lbl{margin-top:var(--s3)}
+.ph-sheet .btn{margin-top:var(--s3)}
+.ph-sheet .hint{margin-top:6px;min-height:0}
+.ph-exec{display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--s3);align-items:center}
+.ph-exec .sealwrap{position:relative;width:120px;height:120px}
+.ph-exec .seal{right:0;bottom:0}
+.ph-exec .evidence{margin-top:0;grid-column:1/-1}
+.ph-exec h4{font-size:20px;line-height:1.15;letter-spacing:-.03em;font-weight:700;color:var(--ink)}
+.ph-exec p{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* ---------- 05 dashboard ---------- */
+.dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--s4);flex-wrap:wrap}
+.dash-head h3{font-size:34px;line-height:1;letter-spacing:-.04em;font-weight:700;color:var(--ink)}
+.dash-head p{margin-top:var(--s2);font-size:14px;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:var(--s1);margin-top:var(--s5);border-bottom:1px solid var(--line)}
+.filters button{display:inline-flex;align-items:center;gap:var(--s2);height:40px;padding:0 var(--s3);border:0;background:none;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;margin-bottom:-1px;border-bottom:2px solid transparent;transition:color 120ms ease-out}
+.filters button:hover{color:var(--ink)}
+.filters button[aria-pressed="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+.filters .ct{font:500 12px/1 var(--mono);color:var(--muted);background:var(--neutral-pill);padding:3px 6px;border-radius:4px}
+.filters .ct.n{background:var(--amber-50);color:var(--amber-800);box-shadow:inset 0 0 0 1px var(--amber-200)}
+.list{margin-top:var(--s4);background:#fff;border:1px solid var(--line);border-radius:var(--r-s);overflow:hidden}
+.lh,.li{display:grid;grid-template-columns:minmax(0,1fr) 160px 80px 112px;gap:var(--s4);align-items:center;padding:0 var(--s5)}
+.lh{height:36px;font-size:12px;font-weight:600;color:var(--muted);background:var(--ground);border-bottom:1px solid var(--line)}
+.li{min-height:72px;border-bottom:1px solid var(--line);transition:background-color 120ms ease-out}
+.li:last-child{border-bottom:0}
+.li:hover{background:#fbfcfc}
+.li.need{background:var(--amber-50);box-shadow:inset 0 1px 0 var(--amber-200)}
+.li.need:hover{background:#fff7e0}
+.li .t{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);overflow-wrap:anywhere}
+.li .s{font-size:13px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.li .s .mono{font-size:12px}
+.li .d{font:400 12.5px/1.3 var(--mono);color:var(--muted)}
+.li .a{justify-self:end}
+.li[hidden]{display:none}
+.foot-note{margin-top:var(--s3);font-size:12px;color:var(--muted)}
+@container (max-width:960px){
+  .lh{display:none}
+  .li{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t st" "d a";gap:var(--s2) var(--s3);padding:var(--s4)}
+  .li>div:nth-child(1){grid-area:t}.li .st{grid-area:st;justify-self:end}.li .d{grid-area:d}.li .a{grid-area:a}
+}
+
+/* ---------- motion notes ---------- */
+.notes table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:14px}
+.notes th,.notes td{text-align:left;padding:var(--s3) var(--s4);border-bottom:1px solid var(--line);vertical-align:top;color:var(--body)}
+.notes th{font-size:12px;font-weight:600;color:var(--muted);background:var(--ground)}
+.notes tr:last-child td{border-bottom:0}
+.notes td:first-child{color:var(--ink);font-weight:600;min-width:150px}
+.notes td.mono{font-size:12.5px}
+.notes .tbl{border-radius:var(--r-s);overflow:hidden;border:1px solid var(--line)}
+.notes .tbl table{border:0}
+@media (max-width:760px){
+  .notes table,.notes tbody,.notes tr,.notes td{display:block}
+  .notes thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .notes tr{padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+  .notes tr:last-child{border-bottom:0}
+  .notes td{border:0;padding:3px var(--s4)}
+  .notes td::before{content:attr(data-l);display:block;font:600 12px var(--ui);color:var(--muted)}
+  .notes td:first-child::before{display:none}
+  .notes td:first-child{min-width:0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-replay" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 14h6" stroke="#115e59" stroke-width="2.4"/><path d="M9 17.5h3" stroke-width="1.6"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<!-- =============== PRESENTATION HEADER =============== -->
+<header class="top">
+  <span class="tag">Direction D &#183; merge of B and A</span>
+  <h1>Ink &amp; Seal, in Calm colors</h1>
+  <p class="thesis">Ink &amp; Seal&#8217;s document-first product in Calm Precision&#8217;s teal, ink and amber.</p>
+</header>
+
+<section class="system" aria-label="System">
+  <div>
+    <h2>Palette</h2>
+    <div class="sw-grid">
+      <div class="sw"><i style="background:#115e59"></i><b>#115e59</b><span>Teal: CTAs, links, focus, active field. 7.6:1 with white</span></div>
+      <div class="sw"><i style="background:#0f766e"></i><b>#0f766e</b><span>Teal hover, 5.5:1 with white</span></div>
+      <div class="sw"><i style="background:#0d1f1e"></i><b>#0d1f1e</b><span>Ink: headings, primary text</span></div>
+      <div class="sw"><i style="background:#5b6b69"></i><b>#5b6b69</b><span>Muted text, 5.6:1 on white</span></div>
+      <div class="sw"><i style="background:#f6f8f8"></i><b>#f6f8f8</b><span>Ground</span></div>
+      <div class="sw"><i style="background:#ffffff"></i><b>#ffffff</b><span>Sheets, panels</span></div>
+      <div class="sw"><i style="background:#e3e9e8"></i><b>#e3e9e8</b><span>Hairlines</span></div>
+      <div class="sw"><i style="background:#d9efec"></i><b>#d9efec</b><span>Filled variable highlight</span></div>
+      <div class="sw"><i style="background:#f59e0b"></i><b>#f59e0b</b><span>Amber: needs-you dot and border only</span></div>
+      <div class="sw"><i style="background:#fffbeb"></i><b>#fffbeb</b><span>Amber 50, needs-you surface</span></div>
+      <div class="sw"><i style="background:#92400e"></i><b>#92400e</b><span>Amber 800, needs-you text, 6.9:1</span></div>
+    </div>
+  </div>
+  <div class="sys-cols">
+    <div>
+      <h2>Type</h2>
+      <div class="spec-d">NDA in minutes</div>
+      <div class="spec-cap">Schibsted Grotesk 700, tight: UI and display</div>
+      <div class="spec-s">The Parties wish to exchange Confidential Information.</div>
+      <div class="spec-cap">Source Serif 4: NDA document text only</div>
+      <div class="spec-m">v1.0 &#183; 15 Nov 2026 &#183; 9f2c4e&#8230;a41e</div>
+      <div class="spec-cap">Geist Mono: evidence, hashes, counters, dates</div>
+      <div class="spec-sig">Sam Okafor</div>
+      <div class="spec-cap">Caveat 600: the typed signature</div>
+    </div>
+    <div>
+      <h2>Shape and elevation</h2>
+      <div class="shape-demo">
+        <div><div class="a"></div><div class="spec-cap">6px controls</div></div>
+        <div><div class="b"></div><div class="spec-cap">8px sheets</div></div>
+        <div><div class="c"></div><div class="spec-cap">stacked paper</div></div>
+      </div>
+      <p class="spec-cap" style="margin-top:12px;max-width:36ch">Crisp 1px rules and small radii. One soft float shadow, for overlays only.</p>
+      <h2 style="margin-top:24px">Teal seal</h2>
+      <div class="seal-demo">
+        <svg class="seal" viewBox="0 0 120 120" role="img" aria-label="Executed seal, teal">
+          <circle class="seal-bg" cx="60" cy="60" r="56"/>
+          <circle cx="60" cy="60" r="56" stroke-width="2"/><circle cx="60" cy="60" r="51" stroke-width="1"/><circle cx="60" cy="60" r="31" stroke-width="1"/>
+          <path id="sp0" d="M60,60 m-41,0 a41,41 0 1,1 82,0 a41,41 0 1,1 -82,0" stroke="none"/>
+          <text aria-hidden="true"><textPath href="#sp0" textLength="252" lengthAdjust="spacing">EXECUTED &#183; FORMALIZEIT &#183; V1.0 &#183; </textPath></text>
+          <path d="M47 52l8 8 17-17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="60" y="78" text-anchor="middle" aria-hidden="true">SIGNED</text>
+        </svg>
+        <p class="spec-cap" style="max-width:22ch">#115e59 ring and text on white. Stamps on at signing.</p>
+      </div>
+    </div>
+    <div>
+      <h2>Buttons</h2>
+      <div class="row">
+        <button class="btn primary" type="button">Send NDA</button>
+        <button class="btn secondary" type="button">Back</button>
+        <button class="btn ghost" type="button">Cancel</button>
+      </div>
+      <h2 style="margin-top:24px">Status pills</h2>
+      <div class="row">
+        <span class="pill draft">Draft</span>
+        <span class="pill wait"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Waiting on them</span>
+        <span class="pill need">Sign now</span>
+        <span class="pill done"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Signed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FRAME 1: HOME HERO =============== -->
+<section class="frame" aria-labelledby="f1">
+  <div class="cap">
+    <span class="n">01</span><h2 id="f1">Home hero</h2>
+    <span class="note">The blanks in the sheet fill in one by one; the counter ticks up; the legal text never moves.</span>
+    <button class="btn secondary sm" type="button" id="hero-replay"><svg class="i" aria-hidden="true"><use href="#i-replay"/></svg>Replay</button>
+  </div>
+  <div class="dev">
+    <header class="bar" style="min-height:64px">
+      <a class="logo" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" style="fill:none;stroke:#0d1f1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-mark"/></svg>FormalizeIt</a><span class="beta">Beta</span>
+      <nav aria-label="Primary"><a href="#">How it works</a><a href="#">Standard NDA</a><a href="#">Pricing</a><a href="#">FAQ</a></nav>
+      <span class="sp"></span>
+      <div class="r"><a class="btn ghost sm" href="#">Sign in</a><a class="btn primary sm" href="#">Get started</a></div>
+    </header>
+    <div class="hero">
+      <div>
+        <h1>NDA in <u>minutes</u>.</h1>
+        <p class="lede">Start from the standard NDA, fill in what&#8217;s different, and send.</p>
+        <div class="ctas">
+          <a class="btn primary lg" href="#f2">Send your NDA now<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="btn secondary lg" href="#">Read the standard NDA</a>
+        </div>
+        <p class="fine">Free during beta &#183; receivers never need an account</p>
+      </div>
+      <div class="hero-art">
+        <div class="sheet stack hero-sheet" id="hero-sheet">
+          <div class="sheet-head">
+            <span class="lk"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-lock"/></svg>Standard Mutual NDA v1.0</span>
+            <span class="counter" role="status" aria-live="off">Variables <b id="hero-count">7</b>/7 &#183; legal text unchanged</span>
+          </div>
+          <div class="sheet-body doc">
+            <h3 class="doc-title">Mutual Non-Disclosure Agreement</h3>
+            <p>This Mutual Non-Disclosure Agreement is entered into as of <span class="var on">15 November 2026</span> between <span class="var on">Northwind Robotics Ltd</span> and <span class="var on">Brightline Labs Inc.</span> (each a &#8220;Party&#8221;).</p>
+            <h4>1. Purpose</h4>
+            <p>The Parties wish to exchange Confidential Information for the purpose of <span class="var on">evaluating a joint warehouse-automation pilot</span>.</p>
+            <h4>2. Confidential Information</h4>
+            <p>&#8220;Confidential Information&#8221; means non-public information disclosed by one Party to the other, in any form, that is marked confidential or that a reasonable person would understand to be confidential.</p>
+            <h4>3. Term</h4>
+            <p>This Agreement lasts <span class="var on">12 months</span> from the effective date. Each Party&#8217;s duty of confidentiality continues for <span class="var on">24 months</span> after disclosure.</p>
+            <h4>4. Governing law</h4>
+            <p>This Agreement is governed by the laws of the <span class="var on">State of Delaware</span>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FRAME 2: WIZARD =============== -->
+<section class="frame" id="wizard-frame" aria-labelledby="f2">
+  <div class="cap">
+    <span class="n">02</span><h2 id="f2">Fill wizard, Party B step</h2>
+    <span class="note">Type in the form and the same words change in the document. Click a field to jump to where it lives.</span>
+  </div>
+  <div class="dev">
+    <div class="app">
+      <header class="appbar">
+        <div class="appbar-in">
+          <a class="logo" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" style="fill:none;stroke:#0d1f1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-mark"/></svg>FormalizeIt<span class="beta">Beta</span></a>
+          <nav class="tnav" aria-label="App">
+            <a href="#f5">Dashboard</a>
+            <a href="#">Settings</a>
+          </nav>
+          <span class="sp"></span>
+          <div class="acts">
+            <button class="ib menu" type="button" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+            <button class="ib" type="button" aria-label="Notifications"><svg class="i" aria-hidden="true"><use href="#i-bell"/></svg></button>
+            <a class="btn primary sm" href="#f2" aria-label="New NDA"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span class="txt">New NDA</span></a>
+            <button class="av" type="button" aria-label="Account, Dana Levi">DL</button>
+          </div>
+        </div>
+      </header>
+      <div class="main">
+        <ol class="stepper" aria-label="Progress">
+          <li class="st done"><i><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span class="lab">Document</span></li><li class="st-line done" aria-hidden="true"></li>
+          <li class="st done"><i><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span class="lab">Party A</span></li><li class="st-line done" aria-hidden="true"></li>
+          <li class="st cur" aria-current="step"><i>3</i><span class="lab">Party B</span></li><li class="st-line" aria-hidden="true"></li>
+          <li class="st"><i>4</i><span class="lab">Clauses</span></li><li class="st-line" aria-hidden="true"></li>
+          <li class="st"><i>5</i><span class="lab">Review</span></li>
+          <li class="stepmeta"><span class="saved"><svg class="i" aria-hidden="true" style="width:12px;height:12px"><use href="#i-check"/></svg>Draft saved 14:31</span><span class="stepno">Step 3 of 5</span></li>
+        </ol>
+        <div class="wiz">
+          <div>
+            <div class="card form-card">
+              <h2>Who are you sending it to?</h2>
+              <p class="sub">Their company and the person who signs. They get a secure link, no account needed.</p>
+              <form class="fields" onsubmit="return false" autocomplete="off">
+                <div class="f full"><label for="w-co">Company name</label><input id="w-co" data-bind="bName" data-ph="Company name" value="Brightline Labs Inc."></div>
+                <div class="f full"><label for="w-ad">Address</label><input id="w-ad" data-bind="bAddr" data-ph="Address" value="500 Congress Ave, Austin, TX 78701, USA"></div>
+                <div class="f"><label for="w-sn">Signatory name</label><input id="w-sn" data-bind="bSigner" data-ph="Signatory name" value="Sam Okafor"></div>
+                <div class="f"><label for="w-ti">Title</label><input id="w-ti" data-bind="bTitle" data-ph="Title" value="CTO"></div>
+                <div class="f full"><label for="w-em">Signatory email</label><input id="w-em" type="email" data-bind="bEmail" data-ph="Email" value="sam@brightline.dev"></div>
+              </form>
+              <div class="actions">
+                <button class="btn secondary" type="button">Back</button>
+                <button class="btn ghost" type="button">Save draft</button>
+                <span class="sp"></span>
+                <button class="btn primary" type="button">Continue<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+              </div>
+            </div>
+            <p class="disc"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>FormalizeIt is not a law firm and does not provide legal advice. <a href="#">Learn more</a></span></p>
+          </div>
+          <div class="wiz-prev">
+            <div class="sheet stack" id="wiz-sheet">
+              <div class="sheet-head">
+                <span class="lk"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-lock"/></svg>Standard Mutual NDA v1.0 &#183; legal text locked</span>
+                <span>Page 1 of 3</span>
+              </div>
+              <div class="wiz-scroll" id="wiz-scroll" tabindex="0" role="region" aria-label="NDA preview, scrollable">
+                <div class="sheet-body doc" id="wiz-doc">
+                  <div data-nda></div>
+                  <div class="sigtable">
+                    <div><b>Northwind Robotics Ltd</b><div class="sl"></div>
+                      Name: <span class="var" data-var="aSigner">Dana Levi</span><br>
+                      Title: <span class="var" data-var="aTitle">Head of Partnerships</span><br>
+                      Email: <span class="var" data-var="aEmail">dana@northwind.io</span></div>
+                    <div><b><span class="var b" data-grp="b" data-var="bName">Brightline Labs Inc.</span></b><div class="sl"></div>
+                      Name: <span class="var b" data-grp="b" data-var="bSigner">Sam Okafor</span><br>
+                      Title: <span class="var b" data-grp="b" data-var="bTitle">CTO</span><br>
+                      Email: <span class="var b" data-grp="b" data-var="bEmail">sam@brightline.dev</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="sheet-foot"><span>Variables <b id="wiz-count" style="font-weight:500;color:var(--ink)">12</b>/15 complete</span><span>Underlined = deal-specific &#183; dashed = step 4</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FRAME 3: SEND =============== -->
+<section class="frame" aria-labelledby="f3">
+  <div class="cap">
+    <span class="n">03</span><h2 id="f3">Send success, share sheet</h2>
+    <span class="note">The sheet rises, then the link copies and the icon morphs into a check. You send it from your own inbox.</span>
+    <button class="btn secondary sm" type="button" id="send-replay"><svg class="i" aria-hidden="true"><use href="#i-replay"/></svg>Replay</button>
+  </div>
+  <div class="dev">
+    <div class="stage" id="share">
+      <div class="ghost-ui" aria-hidden="true">
+        <div class="gb"><i style="width:96px;height:12px;background:#d4dcdb;margin:0"></i><i style="width:56px;margin:0 0 0 12px"></i><i style="width:56px;margin:0"></i><i style="width:72px;height:28px;margin:0 0 0 auto"></i><i style="width:28px;height:28px;border-radius:50%;margin:0 0 0 12px"></i></div>
+        <div class="gc"><i style="width:55%;height:14px;background:#d4dcdb"></i><i style="width:100%;height:36px;margin-top:20px"></i><i style="width:100%;height:36px"></i><i style="width:100%;height:36px"></i><i style="width:48%;height:36px"></i></div>
+        <div class="gc"><i style="width:40%;height:12px;background:#d4dcdb"></i><i style="width:100%"></i><i style="width:94%"></i><i style="width:97%"></i><i style="width:60%;margin-bottom:28px"></i><i style="width:36%;height:10px;background:#d4dcdb"></i><i style="width:96%"></i><i style="width:92%"></i></div>
+      </div>
+      <div class="scrim"></div>
+      <div class="share-sheet" role="dialog" aria-labelledby="sh-t">
+        <div class="ss-top">
+          <div class="ok"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></div>
+          <div><h3 id="sh-t">Your NDA is ready to share</h3><p class="sub">Send this secure link to Sam Okafor from your own inbox, so it lands where they will see it.</p></div>
+          <button class="x" type="button" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="linkrow">
+          <div class="lv" title="Secure link for Brightline Labs Inc."><svg class="i" aria-hidden="true" style="color:var(--muted)"><use href="#i-lock"/></svg><span>formalizeit.com/s/nda_7Kq2x9Lw4pRt</span></div>
+          <button class="btn primary copybtn" type="button" id="copybtn"><span class="cs"><svg class="i c-link" aria-hidden="true"><use href="#i-link"/></svg><svg class="i c-ok" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span id="copylbl" aria-live="polite">Copy link</span></button>
+        </div>
+        <div class="via" role="group" aria-label="Share via">
+          <button type="button"><i><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg></i>Gmail</button>
+          <button type="button"><i><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg></i>Outlook</button>
+          <button type="button"><i><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg></i>WhatsApp</button>
+          <button type="button"><i><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></i>Copy link</button>
+        </div>
+        <div class="msg"><small>Message we pre-wrote for you</small><b>NDA from Northwind Robotics Ltd, ready to sign.</b> Hi Sam, here is the mutual NDA for our warehouse-automation pilot. It takes about two minutes to read and sign, and the link needs no account.</div>
+        <div class="ss-foot">
+          <p>Reminders go out at 48h and 5 days.</p>
+          <span class="pill wait"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Waiting on them</span>
+          <button class="btn secondary sm" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FRAME 4: RECEIVER =============== -->
+<section class="frame" aria-labelledby="f4">
+  <div class="cap">
+    <span class="n">04</span><h2 id="f4">Receiver sign screen, desktop and phone</h2>
+    <span class="note">Signed-out, from the secure link. Tick both boxes and sign, or use the switch to see the executed state.</span>
+    <div class="seg" role="group" aria-label="Preview state">
+      <button type="button" id="st-ready" aria-pressed="true">Ready to sign</button>
+      <button type="button" id="st-exec" aria-pressed="false">Executed</button>
+    </div>
+    <button class="btn secondary sm" type="button" id="rx-replay"><svg class="i" aria-hidden="true"><use href="#i-replay"/></svg>Replay</button>
+  </div>
+  <div class="rx-pair" id="rx-pair" data-state="ready">
+    <!-- desktop -->
+    <div class="dev" id="rx-desk">
+      <header class="bar">
+        <a class="logo" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" style="fill:none;stroke:#0d1f1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-mark"/></svg>FormalizeIt</a><span class="beta">Beta</span>
+        <span class="sp"></span>
+        <span class="saved"><svg class="i" aria-hidden="true" style="width:12px;height:12px"><use href="#i-lock"/></svg>Secure link &#183; no account needed</span>
+      </header>
+      <div class="rx-head">
+        <h3>Dana Levi at Northwind Robotics Ltd sent you an NDA to sign.</h3>
+        <p>Standard Mutual NDA v1.0 &#183; 3 pages &#183; deal terms are underlined, everything else is the standard text</p>
+      </div>
+      <div class="rx-grid">
+        <div class="rx-doc" id="rx-scroll" tabindex="0" role="region" aria-label="NDA text, scrollable">
+          <div class="sheet">
+            <div class="sheet-head">
+              <span class="lk"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-lock"/></svg><span data-show="ready">Standard Mutual NDA v1.0</span><span data-show="executed">v1.0 &#183; 15 Nov 2026 &#183; 9f2c4e&#8230;a41e</span></span>
+              <span><span data-show="ready">Page 1 of 3</span><span data-show="executed">Executed</span></span>
+            </div>
+            <div class="sheet-body doc">
+              <div data-nda></div>
+              <div class="sigblock">
+                <div>
+                  <div class="co">Northwind Robotics Ltd</div>
+                  <div class="sigline"><span class="script">Dana Levi</span></div>
+                  <div class="meta"><b>Dana Levi</b>, Head of Partnerships</div>
+                  <div class="when">Signed 15 Nov 2026 13:58 UTC</div>
+                </div>
+                <div>
+                  <div class="co">Brightline Labs Inc.</div>
+                  <div class="sigline">
+                    <span class="script pending" id="sig-prev">Sam Okafor</span>
+                    <svg class="seal" viewBox="0 0 120 120" role="img" aria-label="Executed seal">
+                      <circle class="seal-bg" cx="60" cy="60" r="56"/>
+                      <circle cx="60" cy="60" r="56" stroke-width="2"/><circle cx="60" cy="60" r="51" stroke-width="1"/><circle cx="60" cy="60" r="31" stroke-width="1"/>
+                      <path id="sp1" d="M60,60 m-41,0 a41,41 0 1,1 82,0 a41,41 0 1,1 -82,0" stroke="none"/>
+                      <text aria-hidden="true"><textPath href="#sp1" textLength="252" lengthAdjust="spacing">EXECUTED &#183; FORMALIZEIT &#183; V1.0 &#183; </textPath></text>
+                      <path d="M47 52l8 8 17-17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <text x="60" y="78" text-anchor="middle" aria-hidden="true">SIGNED</text>
+                    </svg>
+                  </div>
+                  <div class="meta"><b id="sig-nm-meta">Sam Okafor</b>, CTO</div>
+                </div>
+              </div>
+              <div class="evidence" aria-live="polite">
+                <div data-show="ready" class="note">Evidence recorded when you sign: your email, timestamp, IP address, template version and a SHA-256 hash of the PDF.</div>
+                <div data-show="executed"><span id="ev-d" aria-hidden="true"></span><span class="sr-only" id="ev-d-sr"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="panel" aria-label="Sign this NDA">
+          <div data-show="ready">
+            <h4>Deal summary</h4>
+            <dl class="dl">
+              <div><dt>Parties</dt><dd>Northwind Robotics Ltd and Brightline Labs Inc.</dd></div>
+              <div><dt>Effective</dt><dd class="m">15 Nov 2026</dd></div>
+              <div><dt>Term</dt><dd>12 months</dd></div>
+              <div><dt>Confidentiality</dt><dd>24 months</dd></div>
+              <div><dt>Governing law</dt><dd>State of Delaware</dd></div>
+              <div><dt>Purpose</dt><dd>Evaluating a joint warehouse-automation pilot</dd></div>
+            </dl>
+            <div class="chks">
+              <label class="chk"><input type="checkbox" id="c1-d"><span>I confirm that I am authorized to sign this agreement on behalf of, and in the name of, the company I represent, and that doing so legally binds that company.</span></label>
+              <label class="chk"><input type="checkbox" id="c2-d"><span>I have read and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>, and I consent to sign electronically (<a href="#">E-Signature Consent</a>).</span></label>
+            </div>
+            <div style="margin-top:16px">
+              <label class="lbl" for="nm-d">Type your full name to sign</label>
+              <input class="sig-input" id="nm-d" value="Sam Okafor" autocomplete="off" spellcheck="false">
+            </div>
+            <button class="btn primary lg block" type="button" id="sign-d" style="margin-top:16px" disabled>Sign NDA</button>
+            <p class="hint" id="hint-d">Tick both boxes to sign.</p>
+            <p class="trust"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-shield"/></svg>Encrypted and audit-trailed. Powered by FormalizeIt.</p>
+            <p class="disc" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)"><svg class="i" aria-hidden="true"><use href="#i-info"/></svg><span>FormalizeIt is not a law firm and does not provide legal advice. <a href="#">Learn more</a></span></p>
+          </div>
+          <div data-show="executed">
+            <div class="signed-top"><span class="tick"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span class="pill done">Signed</span></div>
+            <p class="big" style="margin-top:16px">You signed the NDA.</p>
+            <p class="p">Northwind Robotics Ltd has been notified. The signed PDF goes to sam@brightline.dev, and the evidence record is attached to it.</p>
+            <div class="stack-btns">
+              <a class="btn primary block" href="#"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download signed PDF</a>
+              <a class="btn secondary block" href="#">Create an account to keep a copy</a>
+            </div>
+            <p class="trust" style="margin-top:20px"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-shield"/></svg>Encrypted and audit-trailed. Powered by FormalizeIt.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <!-- phone -->
+    <div class="phone-col">
+      <div class="phone" aria-label="Phone version of the sign screen">
+        <div class="ph-top"><a class="logo" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" style="fill:none;stroke:#0d1f1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-mark"/></svg>FormalizeIt</a><span class="sec"><svg class="i" aria-hidden="true" style="width:12px;height:12px"><use href="#i-lock"/></svg>Secure link</span></div>
+        <div class="ph-head"><h3>Dana Levi at Northwind Robotics Ltd sent you an NDA to sign.</h3><p>Standard Mutual NDA v1.0 &#183; 3 pages</p></div>
+        <div class="ph-doc" tabindex="0" role="region" aria-label="NDA text, scrollable"><div class="sheet"><div class="sheet-head"><span class="lk"><span data-show="ready">Standard Mutual NDA v1.0</span><span data-show="executed">v1.0 &#183; 15 Nov 2026 &#183; 9f2c4e&#8230;a41e</span></span></div><div class="sheet-body doc"><div data-nda></div></div></div></div>
+        <div class="ph-sheet">
+          <div class="grab" aria-hidden="true"></div>
+          <div data-show="ready">
+            <div class="ph-sum"><span><b>12 mo</b> term</span><span><b>24 mo</b> confidentiality</span><span><b>Delaware</b> law</span></div>
+            <div class="chks">
+              <label class="chk"><input type="checkbox" id="c1-p"><span>I confirm that I am authorized to sign this agreement on behalf of, and in the name of, the company I represent, and that doing so legally binds that company.</span></label>
+              <label class="chk"><input type="checkbox" id="c2-p"><span>I have read and agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>, and I consent to sign electronically (<a href="#">E-Signature Consent</a>).</span></label>
+            </div>
+            <label class="lbl" for="nm-p">Type your full name to sign</label>
+            <input class="sig-input" id="nm-p" value="Sam Okafor" autocomplete="off" spellcheck="false">
+            <button class="btn primary block" type="button" id="sign-p" disabled>Sign NDA</button>
+            <p class="hint" id="hint-p">Tick both boxes to sign.</p>
+            <p class="trust" style="margin-top:6px"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-shield"/></svg>Encrypted and audit-trailed. Powered by FormalizeIt.</p>
+            <p class="trust" style="margin-top:4px"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-info"/></svg><span>FormalizeIt is not a law firm and does not provide legal advice. <a href="#">Learn more</a></span></p>
+          </div>
+          <div data-show="executed">
+            <div class="ph-exec">
+              <div class="sealwrap">
+                <svg class="seal" viewBox="0 0 120 120" role="img" aria-label="Executed seal">
+                  <circle class="seal-bg" cx="60" cy="60" r="56"/>
+                  <circle cx="60" cy="60" r="56" stroke-width="2"/><circle cx="60" cy="60" r="51" stroke-width="1"/><circle cx="60" cy="60" r="31" stroke-width="1"/>
+                  <path id="sp2" d="M60,60 m-41,0 a41,41 0 1,1 82,0 a41,41 0 1,1 -82,0" stroke="none"/>
+                  <text aria-hidden="true"><textPath href="#sp2" textLength="252" lengthAdjust="spacing">EXECUTED &#183; FORMALIZEIT &#183; V1.0 &#183; </textPath></text>
+                  <path d="M47 52l8 8 17-17" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <text x="60" y="78" text-anchor="middle" aria-hidden="true">SIGNED</text>
+                </svg>
+              </div>
+              <div><h4>You signed the NDA.</h4><p>The signed PDF goes to sam@brightline.dev.</p></div>
+              <div class="evidence"><span id="ev-p" aria-hidden="true"></span><span class="sr-only" id="ev-p-sr"></span></div>
+            </div>
+            <a class="btn primary block" href="#" style="margin-top:12px"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download signed PDF</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== FRAME 5: DASHBOARD =============== -->
+<section class="frame" aria-labelledby="f5">
+  <div class="cap">
+    <span class="n">05</span><h2 id="f5">Dashboard</h2>
+    <span class="note">Same top app bar as the wizard. One compact filter replaces seven stat tiles; the row that needs you is the only warm thing on the page.</span>
+  </div>
+  <div class="dev">
+    <div class="app">
+      <header class="appbar">
+        <div class="appbar-in">
+          <a class="logo" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" style="fill:none;stroke:#0d1f1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><use href="#i-mark"/></svg>FormalizeIt<span class="beta">Beta</span></a>
+          <nav class="tnav" aria-label="App">
+            <a href="#f5" aria-current="page">Dashboard</a>
+            <a href="#">Settings</a>
+          </nav>
+          <span class="sp"></span>
+          <div class="acts">
+            <button class="ib menu" type="button" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+            <button class="ib" type="button" aria-label="Notifications"><svg class="i" aria-hidden="true"><use href="#i-bell"/></svg></button>
+            <a class="btn primary sm" href="#wizard-frame" aria-label="New NDA"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span class="txt">New NDA</span></a>
+            <button class="av" type="button" aria-label="Account, Dana Levi">DL</button>
+          </div>
+        </div>
+      </header>
+      <div class="main">
+        <div class="dash-head">
+          <div><h3>NDAs</h3><p>5 agreements &#183; Standard Mutual NDA v1.0</p></div>
+        </div>
+        <div class="filters" role="group" aria-label="Filter NDAs" id="filters">
+          <button type="button" data-f="all" aria-pressed="true">All <span class="ct">5</span></button>
+          <button type="button" data-f="need" aria-pressed="false">Needs you <span class="ct n">1</span></button>
+          <button type="button" data-f="wait" aria-pressed="false">Waiting <span class="ct">2</span></button>
+          <button type="button" data-f="signed" aria-pressed="false">Signed <span class="ct">1</span></button>
+          <button type="button" data-f="draft" aria-pressed="false">Drafts <span class="ct">1</span></button>
+        </div>
+        <div class="list" role="list" id="list">
+          <div class="lh" aria-hidden="true"><span>Name</span><span>Status</span><span>Updated</span><span></span></div>
+          <div class="li need" role="listitem" data-s="need">
+            <div><div class="t">Brightline pilot NDA</div><div class="s">Brightline Labs Inc. &#183; Sam Okafor signed, your countersignature is needed</div></div>
+            <div class="st"><span class="pill need">Sign now</span></div>
+            <div class="d">15 Nov</div>
+            <div class="a"><a class="btn primary sm" href="#f4">Sign now</a></div>
+          </div>
+          <div class="li" role="listitem" data-s="wait">
+            <div><div class="t">Kestrel Logistics NDA</div><div class="s">Kestrel Logistics &#183; sent 13 Nov</div></div>
+            <div class="st"><span class="pill wait"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Waiting on them</span></div>
+            <div class="d">14 Nov</div>
+            <div class="a"><a class="btn secondary sm" href="#">View</a></div>
+          </div>
+          <div class="li" role="listitem" data-s="signed">
+            <div><div class="t">Harbor &amp; Finch NDA</div><div class="s">Harbor &amp; Finch LLP &#183; signed 12 Nov 2026 &#183; <span class="mono">v1.0 &#183; 12 Nov 2026 &#183; 4b81c2&#8230;07de</span></div></div>
+            <div class="st"><span class="pill done"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Signed</span></div>
+            <div class="d">12 Nov</div>
+            <div class="a"><a class="btn secondary sm" href="#"><svg class="i" aria-hidden="true" style="width:14px;height:14px"><use href="#i-download"/></svg>PDF</a></div>
+          </div>
+          <div class="li" role="listitem" data-s="draft">
+            <div><div class="t">Untitled draft</div><div class="s">No counterparty yet &#183; step 1 of 5</div></div>
+            <div class="st"><span class="pill draft">Draft</span></div>
+            <div class="d">11 Nov</div>
+            <div class="a"><a class="btn secondary sm" href="#wizard-frame">Continue</a></div>
+          </div>
+          <div class="li" role="listitem" data-s="wait">
+            <div><div class="t">Orbital Foods NDA</div><div class="s">Orbital Foods GmbH &#183; sent 8 Nov &#183; 5-day reminder sent</div></div>
+            <div class="st"><span class="pill wait"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Waiting on them</span></div>
+            <div class="d">9 Nov</div>
+            <div class="a"><a class="btn secondary sm" href="#">View</a></div>
+          </div>
+        </div>
+        <p class="foot-note">Signed NDAs are kept for 5 years from signing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== MOTION NOTES =============== -->
+<section class="frame notes" aria-labelledby="f6">
+  <div class="cap"><span class="n">06</span><h2 id="f6">Motion notes</h2><span class="note">Quiet by default. Three crafted moments. Each runs once when scrolled into view and has a Replay.</span></div>
+  <div class="tbl">
+  <table>
+    <thead><tr><th>Moment</th><th>What moves</th><th>Duration</th><th>Easing</th></tr></thead>
+    <tbody>
+      <tr><td>1. Hero fields resolve</td><td data-l="What moves">Seven underlined blanks turn into values, one every 60ms. The Geist Mono counter ticks 0/7 to 7/7 in step. Only color and background change; layout never moves.</td><td class="mono" data-l="Duration">60ms stagger, 280ms each</td><td class="mono" data-l="Easing">ease-out</td></tr>
+      <tr><td>2. Wizard highlight</td><td data-l="What moves">Focusing a field turns the matching words in the document to the active teal tint with a teal underline, and scrolls them into view. Typing rewrites the text in place; the variable counter updates.</td><td class="mono" data-l="Duration">120ms ring, 280ms tint</td><td class="mono" data-l="Easing">ease-out</td></tr>
+      <tr><td>3. Share sheet rises, link copies</td><td data-l="What moves">Sheet translateY(40px) to 0 with opacity 0 to 1. After 1.2s the link copies: the link icon scales out, the check scales in and its stroke draws.</td><td class="mono" data-l="Duration">280ms rise; 200ms morph + 260ms draw</td><td class="mono" data-l="Easing">cubic-bezier(.2,.8,.2,1)</td></tr>
+      <tr><td>4. Teal seal stamps, evidence types</td><td data-l="What moves">The seal lands: scale 1.15 to 1 and opacity 0 to 1, resting at rotate(-6deg). After a short beat the three evidence lines type out in Geist Mono.</td><td class="mono" data-l="Duration">220ms stamp, 330ms beat, 14ms per character</td><td class="mono" data-l="Easing">cubic-bezier(.2,.9,.3,1); typing linear</td></tr>
+      <tr><td>5. Hover, press, checkbox</td><td data-l="What moves">Buttons change color, press scales to 0.98. Inputs gain a 3px teal ring. The checkbox tick scales and rotates in.</td><td class="mono" data-l="Duration">120ms; tick 160ms</td><td class="mono" data-l="Easing">ease-out; cubic-bezier(.2,.8,.2,1)</td></tr>
+      <tr><td>6. Everything else, reduced motion</td><td data-l="What moves">Static. Only transform, opacity and color ever animate; no transition: all. With prefers-reduced-motion all three moments show their final state at once: filled fields and 7/7, the sheet in place with the link copied, the seal and complete evidence.</td><td class="mono" data-l="Duration">0ms</td><td class="mono" data-l="Easing">n/a</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</div>
+
+<template id="nda-tpl">
+  <h3 class="doc-title">Mutual Non-Disclosure Agreement</h3>
+  <p>This Mutual Non-Disclosure Agreement is entered into as of <span class="var" data-var="date">15 November 2026</span> between <span class="var" data-var="aName">Northwind Robotics Ltd</span>, of <span class="var" data-var="aAddr">14 Quay Street, Manchester M3 4JB, United Kingdom</span>, and <span class="var" data-grp="b" data-var="bName">Brightline Labs Inc.</span>, of <span class="var" data-grp="b" data-var="bAddr">500 Congress Ave, Austin, TX 78701, USA</span> (each a &#8220;Party&#8221;).</p>
+  <h4>1. Purpose</h4>
+  <p>The Parties wish to exchange Confidential Information for the purpose of <span class="var" data-var="purpose">evaluating a joint warehouse-automation pilot</span>.</p>
+  <h4>2. Confidential Information</h4>
+  <p>&#8220;Confidential Information&#8221; means all non-public information that one Party (the &#8220;Discloser&#8221;) makes available to the other (the &#8220;Recipient&#8221;), in any form, that is marked confidential or that a reasonable person would understand to be confidential given its nature and the circumstances of disclosure. It does not include information that is or becomes public through no fault of the Recipient, was already known to the Recipient, or is independently developed without use of the Discloser&#8217;s information.</p>
+  <h4>3. Obligations</h4>
+  <p>The Recipient will use Confidential Information only for the Purpose, protect it with at least reasonable care, and disclose it only to personnel and advisers who need to know it and are bound by equivalent duties.</p>
+  <h4>4. Term and confidentiality period</h4>
+  <p>This Agreement lasts <span class="var" data-var="term">12 months</span> from the effective date. Each Party&#8217;s duty of confidentiality continues for <span class="var" data-var="conf">24 months</span> after disclosure.</p>
+  <h4>5. Governing law</h4>
+  <p>This Agreement is governed by the laws of the <span class="var" data-var="law">State of Delaware</span>.</p>
+  <h4>6. Additional terms</h4>
+  <p>None.</p>
+</template>
+
+<script>
+(function(){
+  var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function $(s,r){return (r||document).querySelector(s)}
+  function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+  function once(el,fn,thr){
+    if(!('IntersectionObserver' in window)){return}
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.disconnect();fn()}})},{threshold:thr||.3});
+    io.observe(el);
+  }
+  $$('a[href="#"]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault()})});
+
+  /* NDA body into every document target */
+  var tpl=$('#nda-tpl');
+  $$('[data-nda]').forEach(function(t){t.appendChild(tpl.content.cloneNode(true))});
+
+  /* ---- 1. hero ---- */
+  var hs=$('#hero-sheet'), hv=$$('.var',hs), hc=$('#hero-count'), ht=[];
+  function heroPlay(){
+    ht.forEach(clearTimeout); ht=[];
+    if(RM){hv.forEach(function(v){v.classList.add('on')});hc.textContent=hv.length;return}
+    hv.forEach(function(v){v.classList.remove('on')}); hc.textContent=0;
+    hv.forEach(function(v,i){ht.push(setTimeout(function(){v.classList.add('on');hc.textContent=i+1},500+i*60))});
+  }
+  $('#hero-replay').addEventListener('click',heroPlay);
+  once(hs,heroPlay,.5);
+
+  /* ---- 2. wizard live binding ---- */
+  var wdoc=$('#wiz-doc'), wsc=$('#wiz-scroll'), wcount=$('#wiz-count');
+  $$('[data-grp="b"]',wdoc).forEach(function(e){e.classList.add('b')});
+  ['term','conf','law'].forEach(function(k){$$('[data-var="'+k+'"]',wdoc).forEach(function(e){e.classList.add('def')})});
+  var binds=$$('[data-bind]');
+  function count(){
+    var n=7; binds.forEach(function(i){if(i.value.trim())n++});
+    wcount.textContent=n;
+  }
+  function reveal(el){
+    var r=el.getBoundingClientRect(), c=wsc.getBoundingClientRect();
+    if(r.top<c.top+24||r.bottom>c.bottom-24){wsc.scrollTop+=r.top-c.top-c.height/3}
+  }
+  binds.forEach(function(inp){
+    var k=inp.getAttribute('data-bind'), ph=inp.getAttribute('data-ph');
+    function els(){return $$('[data-var="'+k+'"]',wdoc)}
+    inp.addEventListener('input',function(){
+      var v=inp.value.trim();
+      els().forEach(function(e){e.textContent=v||ph;e.classList.toggle('empty',!v)});
+      count();
+    });
+    inp.addEventListener('focus',function(){var l=els();l.forEach(function(e){e.classList.add('active')});if(l[0])reveal(l[0])});
+    inp.addEventListener('blur',function(){els().forEach(function(e){e.classList.remove('active')})});
+  });
+  count();
+
+  /* ---- 3. send ---- */
+  var LINK='https://formalizeit.com/s/nda_7Kq2x9Lw4pRt';
+  var ssheet=$('#share .share-sheet'), cbtn=$('#copybtn'), clbl=$('#copylbl'), shTok=0, shTimer=null;
+  function setCopied(on){cbtn.classList.toggle('copied',on);clbl.textContent=on?'Copied':'Copy link'}
+  function writeClip(){try{var p=navigator.clipboard&&navigator.clipboard.writeText(LINK);if(p&&p.catch)p.catch(function(){})}catch(e){}}
+  function sendPlay(){
+    var tok=++shTok; clearTimeout(shTimer);
+    if(RM){setCopied(true);return}
+    setCopied(false); ssheet.classList.add('pre'); void ssheet.offsetWidth; ssheet.classList.remove('pre');
+    shTimer=setTimeout(function(){if(tok===shTok){setCopied(true)}},1200);
+  }
+  cbtn.addEventListener('click',function(){setCopied(true);writeClip()});
+  $('#send-replay').addEventListener('click',sendPlay);
+  if(RM){setCopied(true)}
+  once($('#share'),sendPlay,.5);
+
+  /* ---- 4. receiver ---- */
+  var pair=$('#rx-pair'), evTimer=null, evTok=0;
+  var c1d=$('#c1-d'),c2d=$('#c2-d'),c1p=$('#c1-p'),c2p=$('#c2-p'),nmd=$('#nm-d'),nmp=$('#nm-p');
+  function name(){return (nmd.value.trim()||'Sam Okafor')}
+  function evText(){return 'Signed by '+name()+', CTO\n15 Nov 2026 14:32 UTC \u00b7 IP 203.0.113.24\nTemplate v1.0 \u00b7 SHA-256 9f2c4e\u2026a41e'}
+  function refresh(){
+    var okd=c1d.checked&&c2d.checked&&nmd.value.trim(), okp=c1p.checked&&c2p.checked&&nmp.value.trim();
+    $('#sign-d').disabled=!okd; $('#hint-d').style.visibility=okd?'hidden':'visible';
+    $('#sign-p').disabled=!okp; $('#hint-p').style.visibility=okp?'hidden':'visible';
+    $('#sig-prev').textContent=nmd.value.trim()||'Your name';
+    $('#sig-nm-meta').textContent=name();
+  }
+  [c1d,c2d,c1p,c2p,nmd,nmp].forEach(function(e){e.addEventListener('input',refresh);e.addEventListener('change',refresh)});
+  function toggles(s){
+    $('#st-ready').setAttribute('aria-pressed',s==='ready');
+    $('#st-exec').setAttribute('aria-pressed',s==='executed');
+  }
+  function setEv(t){
+    $('#ev-d').textContent=t;$('#ev-p').textContent=t;
+    $('#ev-d-sr').textContent=t?evText():'';$('#ev-p-sr').textContent=t?evText():'';
+  }
+  function setState(s,animate){
+    evTok++; var tok=evTok; clearInterval(evTimer); clearTimeout(evTimer);
+    pair.classList.remove('stamped');
+    if(s==='ready'){
+      pair.setAttribute('data-state','ready');
+      c1d.checked=c2d.checked=c1p.checked=c2p.checked=false;
+      setEv('');refresh();toggles('ready');return;
+    }
+    c1d.checked=c2d.checked=c1p.checked=c2p.checked=true;
+    pair.setAttribute('data-state','executed');
+    refresh();toggles('executed');
+    var sc=$('#rx-scroll');sc.scrollTop=sc.scrollHeight;
+    var text=evText();
+    if(RM||!animate){pair.classList.add('stamped');setEv(text);return}
+    setEv('');
+    void pair.offsetWidth;
+    requestAnimationFrame(function(){
+      if(tok!==evTok)return;
+      pair.classList.add('stamped');
+      evTimer=setTimeout(function(){
+        var i=0;
+        evTimer=setInterval(function(){
+          if(tok!==evTok){clearInterval(evTimer);return}
+          i++;setEv(text.slice(0,i));
+          if(i>=text.length)clearInterval(evTimer);
+        },14);
+      },330);
+    });
+  }
+  $('#st-ready').addEventListener('click',function(){setState('ready')});
+  $('#st-exec').addEventListener('click',function(){setState('executed',true)});
+  $('#rx-replay').addEventListener('click',function(){setState('executed',true)});
+  $('#sign-d').addEventListener('click',function(){setState('executed',true)});
+  $('#sign-p').addEventListener('click',function(){setState('executed',true)});
+  refresh();
+  once($('#rx-desk'),function(){setState('executed',true)},.4);
+
+  /* ---- 5. dashboard filter ---- */
+  var fb=$$('#filters button'), rows=$$('#list .li');
+  fb.forEach(function(b){b.addEventListener('click',function(){
+    var f=b.getAttribute('data-f');
+    fb.forEach(function(x){x.setAttribute('aria-pressed',x===b)});
+    rows.forEach(function(r){r.hidden=!(f==='all'||r.getAttribute('data-s')===f)});
+  })});
+})();
+</script>
+</body>
+</html>
