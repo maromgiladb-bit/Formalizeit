@@ -11,9 +11,8 @@ Owner: [Claude] [You] [Both]
 
 ## Resume here (updated 2026-11-15)
 
-Work rules adopted (T-001). `feat/todolistimpl-2` is the last old-style branch: it carries the
-e2e suite (T-002), the design audit (T-003) and this ticket system, merged as one PR. After it
-merges, every ticket gets its own branch.
+Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
+landed the e2e suite (T-002) and the design audit (T-003).
 
 Next: **T-004** (You, Clerk Restricted sign-up) and **T-048** (confirmed open redirect), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
@@ -23,8 +22,7 @@ opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap"
 
 ## Now (in progress)
 
-- ◑ **T-001** [low] [Claude] Work rules, `docs/TICKETS.md`, T-IDs, session hook — branch
-  `feat/todolistimpl-2`.
+- ◑ **T-048** [high] [Claude] Open redirect fix — branch `fix/T-048-accept-terms-open-redirect`.
 
 ## Next (launch path, in order)
 
@@ -161,6 +159,7 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
-- ☑ **T-003** [normal] Site-wide Hallmark design audit (2026-11-14, `feat/todolistimpl-2`).
-- ☑ **T-002** [normal] Playwright e2e suite that signs in past Clerk (2026-11-15, `feat/todolistimpl-2`).
+- ☑ **T-001** [low] Work rules, `docs/TICKETS.md`, T-IDs, session hook (2026-11-15, PR #19).
+- ☑ **T-003** [normal] Site-wide Hallmark design audit (2026-11-15, PR #19).
+- ☑ **T-002** [normal] Playwright e2e suite that signs in past Clerk (2026-11-15, PR #19).
 - Earlier launch work (no IDs): see the ☑ items in [docs/launch/README.md](launch/README.md).
