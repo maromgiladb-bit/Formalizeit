@@ -516,8 +516,8 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
         )}
 
         {/* Filter tabs + search + sort */}
-        <div className="mt-6 flex flex-col lg:flex-row lg:items-end gap-3 lg:gap-3 border-b border-line">
-          <div role="group" aria-label="Filter NDAs" className="flex flex-wrap gap-x-0 flex-1 min-w-0">
+        <div className="mt-6 flex flex-col gap-4">
+          <div role="group" aria-label="Filter NDAs" className="flex flex-wrap gap-x-0 min-w-0 border-b border-line">
             {filterTabs.map((tab) => {
               const isActive = filter === tab.key;
               const needs = tab.urgent && tab.count > 0;
@@ -544,7 +544,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               );
             })}
           </div>
-          <div className="flex gap-2 pb-2 lg:w-[16rem] shrink-0">
+          <div className="flex w-full gap-2 sm:max-w-lg">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
               <input
