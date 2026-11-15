@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useDebouncedPreview } from "@/hooks/useDebouncedPreview";
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import LimitReachedNotice from "@/components/LimitReachedNotice";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Sheet } from "@/components/ui/sheet";
+import { ShareSheet } from "@/components/ui/share-sheet";
+import { inputClassesCrisp } from "@/components/ui/input";
 import { getWorkflowStatusInfo } from "@/lib/workflowStatus";
 import { ChevronLeft, ChevronRight, Send, Save, MessageSquare, AlertTriangle } from "lucide-react";
 
@@ -79,6 +82,63 @@ const DEFAULTS: FormValues = {
 	party_b_title_ask_receiver: false,
 	party_b_email_ask_receiver: false,
 };
+
+/**
+ * Channels the shared ShareSheet does not list (native email app, SMS, Telegram,
+ * LinkedIn). Rendered inside the sheet's dialog, above its footer, so it stays
+ * within the sheet's focus trap. TODO: give ShareSheet an `extra` slot instead.
+ */
+function ShareSheetMoreOptions({ expanded, onToggle, onShare }: { expanded: boolean; onToggle: () => void; onShare: (platform: string) => void }) {
+	const [host, setHost] = useState<HTMLElement | null>(null);
+	useEffect(() => {
+		const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]');
+		if (!dialog) return;
+		const el = document.createElement('div');
+		el.className = 'mt-3';
+		dialog.insertBefore(el, dialog.lastElementChild);
+		setHost(el);
+		return () => {
+			el.remove();
+		};
+	}, []);
+	if (!host) return null;
+	const options: { id: string; label: string }[] = [
+		{ id: 'email', label: 'Email app' },
+		{ id: 'sms', label: 'SMS' },
+		{ id: 'telegram', label: 'Telegram' },
+		{ id: 'linkedin', label: 'LinkedIn' },
+	];
+	return createPortal(
+		<div>
+			<button
+				type="button"
+				onClick={onToggle}
+				aria-expanded={expanded}
+				className="flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-ink transition-colors hover:text-ink"
+			>
+				<svg aria-hidden="true" className={`h-3 w-3 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+				</svg>
+				More options
+			</button>
+			{expanded && (
+				<div role="group" aria-label="More ways to share" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+					{options.map(({ id, label }) => (
+						<button
+							key={id}
+							type="button"
+							onClick={() => onShare(id)}
+							className="cursor-pointer rounded-control border border-line bg-white px-2 py-2 text-[13px] font-medium text-ink transition-colors hover:border-gray-300 hover:bg-ground"
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			)}
+		</div>,
+		host,
+	);
+}
 
 export default function FillNDAHTML() {
 	const router = useRouter();
@@ -1251,6 +1311,19 @@ export default function FillNDAHTML() {
 		}
 	};
 
+	// Close the Send NDA modal / share sheet and reset its state. After the link
+	// was created the NDA is in flight, so closing returns to the dashboard.
+	const closeSendModal = () => {
+		setShowVerifyEmailModal(false);
+		setPendingDraftId(null);
+		setGeneratedShareLink("");
+		setSuggestedEmailSubject("");
+		setSuggestedEmailBody("");
+		setEmailSent(false);
+		setShowMoreShareOptions(false);
+		if (emailSent) router.push('/dashboard');
+	};
+
 	// Share the review link via the sender's own channel (Gmail, Outlook, mailto,
 	// WhatsApp, copy…). Requires the link created by confirmAndSend.
 	const handleShare = (platform: string) => {
@@ -2258,258 +2331,99 @@ export default function FillNDAHTML() {
 					</div>
 				)}
 
-				{/* Verify Email Modal */}
-				{showVerifyEmailModal && (
+				{/* Send NDA modal, step 1: recipient email + "Create secure link" */}
+				{showVerifyEmailModal && !emailSent && (
 					<div
-						className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+						className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4"
 						onClick={(e) => {
-							if (e.target === e.currentTarget) {
-								setShowVerifyEmailModal(false);
-								setPendingDraftId(null);
-								setGeneratedShareLink("");
-								setSuggestedEmailSubject("");
-								setSuggestedEmailBody("");
-								setEmailSent(false);
-								setShowMoreShareOptions(false);
-								if (emailSent) router.push('/dashboard');
-							}
+							if (e.target === e.currentTarget) closeSendModal();
 						}}
 					>
-						<div className="bg-white rounded-2xl shadow-float border border-gray-100 w-full max-w-[480px] overflow-hidden">
-
-							{/* Header */}
-							<div className="px-6 py-5 flex items-center justify-between border-b border-gray-100">
-								<div className="flex items-center gap-3">
-									<div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
-										<svg aria-hidden="true" className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-										</svg>
-									</div>
-									<div>
-										<h3 className="text-ink font-semibold text-base leading-tight">Send NDA</h3>
-										<p className="text-gray-500 text-xs mt-0.5">Create a secure link, then send it from your own inbox</p>
-									</div>
+						<div className="w-full max-w-[480px] overflow-hidden rounded-sheet border border-line bg-white shadow-sheet">
+							<div className="flex items-center justify-between border-b border-line px-6 py-5">
+								<div>
+									<h3 className="font-display text-lg font-semibold leading-tight text-ink">Send NDA</h3>
+									<p className="mt-0.5 text-xs text-muted-ink">Create a secure link, then send it from your own inbox</p>
 								</div>
 								<button
-									onClick={() => {
-										setShowVerifyEmailModal(false);
-										setPendingDraftId(null);
-										setGeneratedShareLink("");
-										setSuggestedEmailSubject("");
-										setSuggestedEmailBody("");
-										setEmailSent(false);
-										if (emailSent) router.push('/dashboard');
-									}}
-									className="text-gray-500 hover:text-ink p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+									onClick={closeSendModal}
+									className="cursor-pointer rounded-control p-1.5 text-muted-ink transition-colors hover:bg-ground hover:text-ink"
 									aria-label="Close"
 								>
-									<svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 									</svg>
 								</button>
 							</div>
 
-							{/* Email section */}
-							<div className="px-6 pt-5 pb-4">
-								<label className="block text-xs font-semibold text-gray-500 mb-2">Recipient Email</label>
+							<div className="px-6 pb-5 pt-5">
+								<label className="mb-2 block text-xs font-semibold text-muted-ink">Recipient Email</label>
 								<input
 									type="email"
-									className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors placeholder:text-gray-400"
+									className={inputClassesCrisp}
 									value={verifyRecipientEmail}
 									onChange={(e) => setVerifyRecipientEmail(e.target.value)}
 									placeholder="recipient@example.com"
-									disabled={emailSent}
 									autoFocus
 								/>
-								<p className="text-xs text-gray-500 mt-2 leading-relaxed">
-									{emailSent
-										? 'Link ready. Pick Gmail, Outlook, or your email app below — the message is pre-written, you just hit send.'
-										: "Enter the recipient's email. We'll create a secure link and pre-write the email — you send it from your own inbox so it lands in their primary mail, not spam."}
+								<p className="mt-2 text-xs leading-relaxed text-muted-ink">
+									Enter the recipient&apos;s email. We&apos;ll create a secure link and pre-write the email — you send it from your own inbox so it lands in their primary mail, not spam.
 								</p>
 
-								{emailSent ? (
-									<div className="w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-teal-50 text-teal-800 border border-teal-100">
-										<svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-										</svg>
-										Secure link ready — choose how to send it
-									</div>
-								) : (
-									<button
-										onClick={confirmAndSend}
-										disabled={sendingForSignature || !verifyRecipientEmail?.trim()}
-										className="whitespace-nowrap w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 bg-teal-800 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-									>
-										{sendingForSignature ? (
-											<>
-												<div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-												Creating link…
-											</>
-										) : (
-											<>
-												<svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-												</svg>
-												Create secure link
-											</>
-										)}
-									</button>
-								)}
+								<Button
+									shape="crisp"
+									onClick={confirmAndSend}
+									disabled={sendingForSignature || !verifyRecipientEmail?.trim()}
+									className="mt-4 w-full"
+								>
+									{sendingForSignature ? (
+										<>
+											<div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+											Creating link…
+										</>
+									) : (
+										<>
+											<svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+											</svg>
+											Create secure link
+										</>
+									)}
+								</Button>
 
-								{limitReached && !emailSent ? (
+								{limitReached ? (
 									<LimitReachedNotice message={sendError} className="mt-4" />
-								) : sendError && !emailSent ? (
+								) : sendError ? (
 									<p role="alert" className="mt-3 text-sm text-red-700">{sendError}</p>
 								) : null}
 							</div>
 
-							{/* Divider */}
-							<div className="px-6 py-1 flex items-center gap-3">
-								<div className="flex-1 h-px bg-gray-100" />
-								<span className="text-xs text-gray-500 font-medium shrink-0">send via</span>
-								<div className="flex-1 h-px bg-gray-100" />
-							</div>
-
-							{/* Share options grid — brand colors are an intentional exception to the
-							    Calm Precision palette (Gmail/Outlook/WhatsApp) so channels are recognizable. */}
-							<div className="px-6 pt-3 pb-5 grid grid-cols-3 gap-2">
-								{/* Gmail */}
+							<div className="flex items-center justify-between border-t border-line bg-ground px-6 py-3">
+								<p className="text-xs text-muted-ink">Create the link first, then choose how to send it.</p>
 								<button
-									onClick={() => handleShare('gmail')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-red-200 hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
+									onClick={closeSendModal}
+									className="cursor-pointer text-xs font-medium text-muted-ink transition-colors hover:text-ink"
 								>
-									<svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-										<path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.364l-6.545-4.636v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.273l6.545-4.636 1.528-1.147C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Gmail</span>
-								</button>
-
-								{/* Outlook */}
-								<button
-									onClick={() => handleShare('outlook')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5" viewBox="0 0 24 24" fill="#0078D4" aria-hidden="true" focusable="false">
-										<path d="M7.88 12.04q0 .45-.11.87-.1.41-.33.74-.22.33-.58.52-.37.2-.87.2t-.85-.2q-.35-.21-.57-.55-.22-.33-.33-.75-.1-.42-.1-.86t.1-.87q.1-.43.34-.76.22-.34.59-.54.36-.2.87-.2t.86.2q.35.21.57.55.22.34.31.77.1.43.1.88zM24 12v9.38q0 .46-.33.8-.33.32-.8.32H7.13q-.46 0-.8-.33-.32-.33-.32-.8V18H1q-.41 0-.7-.3-.3-.29-.3-.7V7q0-.41.3-.7Q.58 6 1 6h6.5V2.55q0-.44.3-.75.3-.3.75-.3h12.9q.44 0 .75.3.3.3.3.75V10.85l1.24.72h.01q.24.14.29.38zM10.38 8H7.13q-.46 0-.8.33-.32.33-.32.8V16h4.37V8zm5.525 3.6q-.44-.06-.87.08-.43.16-.74.48L12.35 10v7.55h2.03l.01-4.35 3.09 2.28q.3.22.66.22.36 0 .65-.23l.01-.01q.28-.22.4-.55.13-.32.1-.65V6.45h-2.07V11.6q-.22.12-.26.4-.04.28.1.57zM24 12.8l-5-2.92v5.84l5-2.92z"/>
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Outlook</span>
-								</button>
-
-								{/* WhatsApp */}
-								<button
-									onClick={() => handleShare('whatsapp')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-whatsapp/40 hover:bg-whatsapp/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5 text-whatsapp" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-										<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">WhatsApp</span>
-								</button>
-
-								{/* Email (native) */}
-								<button
-									onClick={() => handleShare('email')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Email App</span>
-								</button>
-
-								{/* SMS */}
-								<button
-									onClick={() => handleShare('sms')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">SMS</span>
-								</button>
-
-								{/* Copy link */}
-								<button
-									onClick={() => handleShare('copy')}
-									disabled={!generatedShareLink}
-									className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-								>
-									<svg aria-hidden="true" className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-									</svg>
-									<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Copy Link</span>
-								</button>
-							</div>
-
-							{/* More options */}
-							<div className="px-6 pb-2">
-								<button
-									onClick={() => setShowMoreShareOptions(v => !v)}
-									disabled={!generatedShareLink}
-									className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-								>
-									<svg aria-hidden="true"
-										className={`w-3 h-3 transition-transform duration-150 ${showMoreShareOptions ? 'rotate-180' : ''}`}
-										fill="none" stroke="currentColor" viewBox="0 0 24 24"
-									>
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-									</svg>
-									More options
-								</button>
-
-								{showMoreShareOptions && (
-									<div className="mt-2 grid grid-cols-3 gap-2">
-										{/* Telegram */}
-										<button
-											onClick={() => handleShare('telegram')}
-											disabled={!generatedShareLink}
-											className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-telegram/40 hover:bg-telegram/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-										>
-											<svg aria-hidden="true" className="w-5 h-5 text-telegram" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" />
-											</svg>
-											<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">Telegram</span>
-										</button>
-										{/* LinkedIn */}
-										<button
-											onClick={() => handleShare('linkedin')}
-											disabled={!generatedShareLink}
-											className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border border-gray-100 hover:border-linkedin/40 hover:bg-linkedin/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed group"
-										>
-											<svg aria-hidden="true" className="w-5 h-5 text-linkedin" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-											</svg>
-											<span className="text-[11px] font-medium text-gray-600 group-hover:text-gray-800">LinkedIn</span>
-										</button>
-									</div>
-								)}
-							</div>
-
-							{/* Footer note */}
-							<div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-								<p className="text-xs text-gray-500">{emailSent ? 'The recipient opens a secure review page — no account needed. We’ll remind them if it sits unsigned.' : 'Create the link first, then choose how to send it.'}</p>
-								<button
-									onClick={() => {
-										setShowVerifyEmailModal(false);
-										setPendingDraftId(null);
-										setGeneratedShareLink("");
-										setSuggestedEmailSubject("");
-										setSuggestedEmailBody("");
-										setEmailSent(false);
-										if (emailSent) router.push('/dashboard');
-									}}
-									className="text-xs text-gray-500 hover:text-gray-600 font-medium transition-colors"
-								>
-									{emailSent ? 'Done' : 'Cancel'}
+									Cancel
 								</button>
 							</div>
 						</div>
 					</div>
+				)}
+
+				{/* Send NDA modal, step 2: secure link ready (Ink & Seal share sheet) */}
+				<ShareSheet
+					open={showVerifyEmailModal && emailSent}
+					onClose={closeSendModal}
+					link={generatedShareLink}
+					recipientName={values.party_b_signatory_name?.trim() || undefined}
+					subject={suggestedEmailSubject || `Please review and sign our NDA — ${values.docName || 'NDA'}`}
+					body={suggestedEmailBody || `Hi,\n\nPlease review and sign our Non-Disclosure Agreement:\n${generatedShareLink}\n\nThank you!`}
+					onShare={handleShare}
+					reminderNote="The recipient opens a secure review page, no account needed. We’ll remind them if it sits unsigned."
+				/>
+				{showVerifyEmailModal && emailSent && (
+					<ShareSheetMoreOptions expanded={showMoreShareOptions} onToggle={() => setShowMoreShareOptions((v) => !v)} onShare={handleShare} />
 				)}
 
 				{/* Exit Warning Modal */}
