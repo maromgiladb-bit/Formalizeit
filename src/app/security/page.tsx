@@ -5,7 +5,7 @@ import PageHero from "@/components/ui/page-hero";
 
 export default function SecurityPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 			<PageHero
 				icon={Lock}
 				title="Security"
@@ -15,54 +15,54 @@ export default function SecurityPage() {
 			{/* Security Features */}
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch]">
 				<div className="grid md:grid-cols-2 gap-8 mb-16">
-					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-						<div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+					<div className="bg-white rounded-sheet border border-line p-8">
+						<div className="w-12 h-12 bg-teal-50 rounded-control flex items-center justify-center mb-4">
 							<Key className="w-6 h-6 text-teal-700" />
 						</div>
-						<h3 className="text-xl font-bold text-ink mb-4">
+						<h3 className="font-display tracking-tight text-xl font-bold text-ink mb-4">
 							Encryption
 						</h3>
-						<p className="text-gray-600">
+						<p className="text-gray-700">
 							All data travels over HTTPS (TLS encryption in transit), and signed documents are
 							encrypted at rest in private storage.
 						</p>
 					</div>
 
-					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-						<div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+					<div className="bg-white rounded-sheet border border-line p-8">
+						<div className="w-12 h-12 bg-teal-50 rounded-control flex items-center justify-center mb-4">
 							<Server className="w-6 h-6 text-teal-700" />
 						</div>
-						<h3 className="text-xl font-bold text-ink mb-4">
+						<h3 className="font-display tracking-tight text-xl font-bold text-ink mb-4">
 							EU-Based Infrastructure
 						</h3>
-						<p className="text-gray-600">
+						<p className="text-gray-700">
 							Our application servers, database, and document storage run in the European Union
 							(Frankfurt, Germany) on established cloud providers.
 						</p>
 					</div>
 
-					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-						<div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+					<div className="bg-white rounded-sheet border border-line p-8">
+						<div className="w-12 h-12 bg-teal-50 rounded-control flex items-center justify-center mb-4">
 							<FileCheck className="w-6 h-6 text-teal-700" />
 						</div>
-						<h3 className="text-xl font-bold text-ink mb-4">
+						<h3 className="font-display tracking-tight text-xl font-bold text-ink mb-4">
 							Document Integrity
 						</h3>
-						<p className="text-gray-600">
+						<p className="text-gray-700">
 							Each executed NDA is fingerprinted with a SHA-256 hash and stored with the signer&apos;s
 							email, timestamp, IP address, and the exact NDA version signed, so any later change to
 							the document is detectable.
 						</p>
 					</div>
 
-					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-						<div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
+					<div className="bg-white rounded-sheet border border-line p-8">
+						<div className="w-12 h-12 bg-teal-50 rounded-control flex items-center justify-center mb-4">
 							<Lock className="w-6 h-6 text-teal-700" />
 						</div>
-						<h3 className="text-xl font-bold text-ink mb-4">
+						<h3 className="font-display tracking-tight text-xl font-bold text-ink mb-4">
 							Access Control
 						</h3>
-						<p className="text-gray-600">
+						<p className="text-gray-700">
 							Secure sign-in and role-based access control ensure only authorized users
 							can access your documents. Only designated signers can sign on behalf of a company.
 						</p>
@@ -70,11 +70,11 @@ export default function SecurityPage() {
 				</div>
 
 				{/* Security Practices */}
-				<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-					<h2 className="text-2xl font-bold text-ink mb-6">
+				<div className="bg-white rounded-sheet border border-line p-8">
+					<h2 className="font-display tracking-tight text-2xl font-bold text-ink mb-6">
 						Our Security Practices
 					</h2>
-					<div className="space-y-4 text-gray-600">
+					<div className="space-y-4 text-gray-700">
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
 								<Check className="w-3.5 h-3.5 text-teal-700" aria-hidden="true" />
@@ -103,14 +103,14 @@ export default function SecurityPage() {
 				</div>
 
 				{/* Contact */}
-				<div className="mt-16 text-center bg-white rounded-2xl shadow-card border border-gray-100 p-8">
-					<h2 className="text-2xl font-bold text-ink mb-4">
+				<div className="mt-16 text-center bg-white rounded-sheet border border-line p-8">
+					<h2 className="font-display tracking-tight text-2xl font-bold text-ink mb-4">
 						Report a Security Issue
 					</h2>
-					<p className="text-gray-600 mb-6">
+					<p className="text-gray-700 mb-6">
 						If you discover a security vulnerability, please report it to us immediately.
 					</p>
-					<p className="text-gray-600 mb-6 text-sm max-w-2xl mx-auto">
+					<p className="text-gray-700 mb-6 text-sm max-w-2xl mx-auto">
 						We welcome good-faith reports. Please email the details and steps to reproduce,
 						give us a reasonable chance to fix the issue before sharing it publicly, and avoid
 						accessing other people&apos;s data, disrupting the service, or running automated
@@ -121,7 +121,7 @@ export default function SecurityPage() {
 					</p>
 					<a
 						href="mailto:support@formalizeit.com?subject=Security%20issue"
-						className="inline-block px-6 py-3 bg-teal-800 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
+						className="inline-block px-6 py-3 bg-teal-800 text-white rounded-control font-semibold hover:bg-teal-700 transition-colors"
 					>
 						Report Issue
 					</a>

@@ -13,7 +13,7 @@ function ChangeGroup({ label, items }: { label: string; items: string[] }) {
 			<p className="text-gray-700 text-sm font-semibold">{label}</p>
 			<ul className="mt-2 space-y-1.5">
 				{items.map((item, i) => (
-					<li key={i} className="text-sm text-gray-600 flex gap-2 leading-relaxed">
+					<li key={i} className="text-sm text-gray-700 flex gap-2 leading-relaxed">
 						<span className="text-gray-300 shrink-0">•</span>
 						<span>{item}</span>
 					</li>
@@ -25,7 +25,7 @@ function ChangeGroup({ label, items }: { label: string; items: string[] }) {
 
 export default function NdaChangelogPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 			<PageHero
 				icon={History}
 				title="NDA Changelog"
@@ -37,13 +37,13 @@ export default function NdaChangelogPage() {
 					{NDA_CHANGELOG.map((entry) => (
 						<div
 							key={entry.version}
-							className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 sm:p-8"
+							className="bg-white rounded-sheet border border-line p-6 sm:p-8"
 						>
 							<div className="flex items-baseline justify-between flex-wrap gap-2">
-								<h2 className="text-xl font-extrabold text-ink tracking-tight">v{entry.version}</h2>
-								<span className="text-sm text-gray-500">{entry.date}</span>
+								<h2 className="font-display text-xl font-extrabold text-ink tracking-tight">v{entry.version}</h2>
+								<span className="font-doc-mono text-sm text-gray-500">{entry.date}</span>
 							</div>
-							<p className="text-base text-gray-500 leading-relaxed mt-2">{entry.summary}</p>
+							<p className="text-base text-gray-700 leading-relaxed mt-2">{entry.summary}</p>
 							{entry.added && entry.added.length > 0 && <ChangeGroup label="Added" items={entry.added} />}
 							{entry.changed && entry.changed.length > 0 && <ChangeGroup label="Changed" items={entry.changed} />}
 							{entry.removed && entry.removed.length > 0 && <ChangeGroup label="Removed" items={entry.removed} />}

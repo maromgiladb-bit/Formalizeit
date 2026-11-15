@@ -9,7 +9,7 @@ import PageHero from "@/components/ui/page-hero";
 // matches what is actually captured at signing.
 export default function ESignatureConsentPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 			<PageHero
 				icon={PenLine}
 				title="Electronic Signature Consent"
@@ -17,11 +17,11 @@ export default function ESignatureConsentPage() {
 			/>
 
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch] space-y-6">
-				<div className="bg-white rounded-2xl shadow-card border border-amber-200 p-6">
+				<div className="bg-white rounded-sheet border border-amber-200 p-6">
 					<p className="text-amber-700 text-sm font-semibold mb-2">
 						Please read
 					</p>
-					<p className="text-sm text-gray-600 leading-relaxed">
+					<p className="text-sm text-gray-700 leading-relaxed">
 						FormalizeIt is not a law firm and does not provide legal advice.
 						FormalizeIt is not a party to the agreements you create or sign. This
 						page explains your consent to sign electronically and what we record
@@ -29,7 +29,7 @@ export default function ESignatureConsentPage() {
 					</p>
 				</div>
 
-				<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8 sm:p-10 prose prose-gray max-w-none">
+				<div className="bg-white rounded-sheet border border-line p-8 sm:p-12 prose prose-gray max-w-none [&_h2]:font-display [&_h2]:text-ink [&_h2]:tracking-tight [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-3 [&_h2:first-child]:mt-0 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1.5 [&_hr]:my-8 [&_p]:text-gray-700 [&_li]:text-gray-700 [&_p]:leading-relaxed [&_a]:text-teal-800 [&_a]:underline [&_hr]:border-line">
 					<h2>1. Consent to Do Business Electronically</h2>
 					<p>
 						By signing an agreement through FormalizeIt, you consent to use

@@ -18,7 +18,7 @@ const rows = [
 
 export default function SubprocessorsPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 			<PageHero
 				icon={Network}
 				title="Sub-processors"
@@ -26,10 +26,10 @@ export default function SubprocessorsPage() {
 			/>
 
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
-				<div className="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+				<div className="bg-white rounded-sheet border border-line overflow-hidden">
 					<div className="overflow-x-auto">
 						<table className="w-full text-sm text-left">
-							<thead className="bg-gray-50 text-ink">
+							<thead className="bg-ground text-ink border-b border-line">
 								<tr>
 									<th scope="col" className="px-5 py-3 font-semibold">Provider</th>
 									<th scope="col" className="px-5 py-3 font-semibold">Purpose</th>
@@ -37,7 +37,7 @@ export default function SubprocessorsPage() {
 									<th scope="col" className="px-5 py-3 font-semibold">Region</th>
 								</tr>
 							</thead>
-							<tbody className="divide-y divide-gray-100 text-gray-500">
+							<tbody className="divide-y divide-line text-gray-700">
 								{rows.map((r) => (
 									<tr key={r.name}>
 										<th scope="row" className="px-5 py-3 font-semibold text-ink align-top">{r.name}</th>
@@ -51,7 +51,7 @@ export default function SubprocessorsPage() {
 					</div>
 				</div>
 
-				<p className="text-sm text-gray-500 leading-relaxed">
+				<p className="text-sm text-gray-700 leading-relaxed">
 					Regions marked &ldquo;to be confirmed&rdquo; are being verified with each provider.
 					Some of these providers may process data outside the EU, as described in our{" "}
 					<a href="/privacy" className="text-teal-800 underline">Privacy Policy</a>. Questions?
