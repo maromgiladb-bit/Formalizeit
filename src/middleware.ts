@@ -83,6 +83,9 @@ const isDevOnlyRoute = createRouteMatcher([
   '/dev/(.*)',             // dev preview pages, e.g. /dev/design-system
 ])
 
+// Design preview pages under /dev (pages only, not /api/dev). Static sample data, no user data.
+const isDevPreviewPage = createRouteMatcher(['/dev/(.*)'])
+
 export default clerkMiddleware(async (auth, req) => {
   // 1. Dev-only routes: 404 in production, pass through in dev.
   if (process.env.NODE_ENV === 'production' && isDevOnlyRoute(req)) {
@@ -95,8 +98,9 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL(gateTarget, req.url))
   }
 
-  // 2. Public routes always pass through.
-  if (isPublicRoute(req)) {
+  // 2. Public routes always pass through. Static /dev preview pages are viewable signed out in
+  //    development only (production already returned 404 for them in step 1).
+  if (isPublicRoute(req) || (process.env.NODE_ENV !== 'production' && isDevPreviewPage(req))) {
     return NextResponse.next()
   }
 
