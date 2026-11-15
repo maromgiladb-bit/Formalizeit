@@ -2,13 +2,10 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { ensureDbUser } from '@/lib/db-user'
 import { hasAcceptedCurrentTerms } from '@/lib/legalVersions'
+import { safeInternalPath } from '@/lib/safeRedirect'
 import AcceptTermsForm from './AcceptTermsForm'
 
 export const metadata = { title: 'Accept terms' }
-
-function safeNext(next: string | undefined): string {
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
-}
 
 export default async function AcceptTermsPage({
   searchParams,
@@ -18,7 +15,7 @@ export default async function AcceptTermsPage({
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
   const { next } = await searchParams
-  const target = safeNext(next)
+  const target = safeInternalPath(next)
 
   const user = await ensureDbUser(userId)
   if (hasAcceptedCurrentTerms(user)) redirect(target)
