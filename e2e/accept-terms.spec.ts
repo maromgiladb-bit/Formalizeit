@@ -11,7 +11,8 @@ test.describe('accept-terms ?next= redirect', () => {
   for (const next of ATTACKS) {
     test(`stays on site for next=${JSON.stringify(next)}`, async ({ page, baseURL }) => {
       // Never let the browser actually reach the attacker host.
-      await page.route(/evil\.example/, route => route.abort())
+      // Match on hostname: the query string of our own request also contains "evil.example".
+      await page.route(u => u.hostname === 'evil.example', route => route.abort())
       await page.goto(`/accept-terms?next=${encodeURIComponent(next)}`)
       await page.waitForLoadState('domcontentloaded')
       const url = new URL(page.url())
