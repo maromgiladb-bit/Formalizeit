@@ -13,6 +13,7 @@ import { FieldTooltip } from "@/components/ui/field-tooltip";
 import { Button } from "@/components/ui/button";
 import LimitReachedNotice from "@/components/LimitReachedNotice";
 import { StatusPill } from "@/components/ui/status-pill";
+import { Sheet } from "@/components/ui/sheet";
 import { getWorkflowStatusInfo } from "@/lib/workflowStatus";
 import { ChevronLeft, ChevronRight, Send, Save, MessageSquare, AlertTriangle } from "lucide-react";
 
@@ -625,13 +626,13 @@ export default function FillNDAHTML() {
 		}, 80);
 	};
 
-	const getFieldClass = (fieldName: string, baseClass: string = "p-2.5 border") => {
+	const getFieldClass = (fieldName: string, baseClass: string = "px-3 py-2 border") => {
 		const hasError = validationErrors.has(fieldName);
 		const hasSuggestion = incomingSuggestions[fieldName] && !suggestionResponses[fieldName];
 		if (hasSuggestion) {
 			return `${baseClass} border-amber-400 bg-amber-50`;
 		}
-		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-gray-200"}`;
+		return `${baseClass} ${hasError ? "border-red-500 bg-red-50" : "border-line"}`;
 	};
 
 	/**
@@ -1331,10 +1332,49 @@ export default function FillNDAHTML() {
 	if (!user) return <RedirectToSignIn />;
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 
 			{/* Main Container with Fixed Layout */}
-			<div className="flex h-[calc(100vh-64px)]">
+			<div className="flex h-[calc(100vh-64px)] flex-col">
+				{/* Stepper bar, under the top bar */}
+				<div className="shrink-0 border-b border-line bg-white px-4 py-3 sm:px-6">
+					<ol className="mx-auto flex max-w-5xl flex-wrap items-center gap-y-2" aria-label="Progress">
+						{steps.map((s, i) => {
+							const done = isStepComplete(i) && i !== step;
+							return (
+								<React.Fragment key={s}>
+									<li className="flex shrink-0 items-center" aria-current={i === step ? "step" : undefined}>
+										<button onClick={() => goToStep(i)} className={`flex cursor-pointer items-center gap-2 text-[13px] ${i === step ? "font-semibold text-ink" : done ? "font-medium text-ink" : "font-medium text-muted-ink"}`}>
+											<span className={`flex h-6 w-6 items-center justify-center rounded-full font-doc-mono text-xs ${
+												done
+													? "border-[1.5px] border-teal-800 bg-teal-800 text-white"
+													: i === step
+														? "border-2 border-ink bg-white text-ink"
+														: "border-[1.5px] border-gray-300 bg-white text-muted-ink"
+											}`}>
+												{done ? (
+													<svg aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+														<path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+													</svg>
+												) : (
+													<span>{i + 1}</span>
+												)}
+											</span>
+											<span className={i === step ? "" : "hidden sm:inline"}>{s}</span>
+										</button>
+									</li>
+									{i < steps.length - 1 && (
+										<li aria-hidden="true" className={`mx-2 h-[1.5px] w-4 shrink-0 sm:mx-2.5 sm:w-7 ${isStepComplete(i) ? "bg-teal-800" : "bg-gray-300"}`} />
+									)}
+								</React.Fragment>
+							);
+						})}
+						<li className="ml-auto pl-3">
+							<span className="whitespace-nowrap rounded-[4px] border border-gray-300 bg-white px-2 py-1.5 font-doc-mono text-xs leading-none text-ink">Step {step + 1} of {steps.length}</span>
+						</li>
+					</ol>
+				</div>
+				<div className="flex min-h-0 flex-1">
 				{/* LEFT SIDE: Form Content (Scrollable) */}
 				<div className={`${showLivePreview ? "w-full lg:w-[45%]" : "w-full"} overflow-y-auto`}>
 					<div
@@ -1346,48 +1386,32 @@ export default function FillNDAHTML() {
 						onBlurCapture={() => { if (showLivePreview) clearPreviewHighlight(); }}
 					>
 						{/* Header */}
-						<div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
-							<div className="flex items-center gap-3">
-								<div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
-									<svg aria-hidden="true" className="w-5 h-5 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-									</svg>
-								</div>
-								<div>
-									<h1 className="text-base font-bold text-ink">{draftId ? "Edit NDA draft" : "Fill out the form to generate your agreement"}</h1>
-									<p className="text-xs text-gray-500 mt-0.5">{draftId ? "Continue editing your agreement" : "Add the deal-specific details below"}</p>
-								</div>
+						<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+							<div className="min-w-0 basis-full sm:basis-auto">
+								<h1 className="font-display text-base font-semibold text-ink">{draftId ? "Edit NDA draft" : "Fill out the form to generate your agreement"}</h1>
+								<p className="mt-0.5 text-xs text-muted-ink">{draftId ? "Continue editing your agreement" : "Add the deal-specific details below"}</p>
 							</div>
-							<div className="flex items-center gap-2">
-								<button
-									onClick={() => setShowLivePreview(!showLivePreview)}
-									className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 hover:text-ink transition-colors flex items-center gap-1.5"
-								>
-									<svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<div className="flex shrink-0 items-center gap-2">
+								<Button type="button" variant="outline" size="sm" shape="crisp" onClick={() => setShowLivePreview(!showLivePreview)}>
+									<svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 									</svg>
 									Toggle Preview
-								</button>
+								</Button>
 								{isDev && (
-									<button
-										onClick={autoFillMockData}
-										className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
-									>
-										<svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<Button type="button" variant="outline" size="sm" shape="crisp" onClick={autoFillMockData}>
+										<svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
 										</svg>
 										Mock Data
-									</button>
+									</Button>
 								)}
 							</div>
 						</div>
 
-						{/* Legal disclaimer */}
-						<LegalDisclaimer className="mb-4" />
-
 						{/* Alerts */}
 						{loading && (
-							<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-xl border border-teal-200">
+							<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-control border border-teal-200">
 								<svg aria-hidden="true" className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 									<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 									<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1399,14 +1423,14 @@ export default function FillNDAHTML() {
 							<LimitReachedNotice message={warning} className="mb-4" />
 						) : warning && (
 							warning === "Draft saved successfully." ? (
-								<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-xl border border-teal-200">
+								<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-control border border-teal-200">
 									<svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 									{warning}
 								</div>
 							) : (
-								<div className="flex items-center gap-3 text-sm text-red-700 mb-4 bg-red-50 px-4 py-3 rounded-xl border border-red-200">
+								<div className="flex items-center gap-3 text-sm text-red-700 mb-4 bg-red-50 px-4 py-3 rounded-control border border-red-200">
 									<svg aria-hidden="true" className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
 										<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
 									</svg>
@@ -1417,7 +1441,7 @@ export default function FillNDAHTML() {
 
 						{/* Pending Suggestions Banner */}
 						{getPendingSuggestionsCount() > 0 && (
-							<div className="flex items-center gap-3 text-sm text-amber-800 mb-4 bg-amber-50 px-4 py-3 rounded-xl border border-amber-200">
+							<div className="flex items-center gap-3 text-sm text-amber-800 mb-4 bg-amber-50 px-4 py-3 rounded-control border border-amber-200">
 								<MessageSquare className="w-5 h-5 shrink-0 text-amber-700" aria-hidden="true" />
 								<div className="flex-1">
 									<strong>Party B suggested {getPendingSuggestionsCount()} change{getPendingSuggestionsCount() > 1 ? 's' : ''}</strong>
@@ -1427,53 +1451,15 @@ export default function FillNDAHTML() {
 						)}
 
 						{/* Form Card */}
-						<div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-							<div className="px-6 pt-5 pb-2">
-								{/* Compact Step Stepper */}
-								<div className="flex items-center">
-									{steps.map((s, i) => (
-										<React.Fragment key={s}>
-											<button onClick={() => goToStep(i)} className="flex items-center gap-1.5 shrink-0">
-												<div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
-													i === step
-														? 'bg-teal-800 text-white ring-2 ring-teal-800/25 ring-offset-2 scale-110'
-													: isStepComplete(i)
-														? 'bg-teal-800 text-white'
-														: 'bg-gray-100 text-gray-500'
-												}`}>
-													{isStepComplete(i) && i !== step ? (
-														<svg aria-hidden="true" className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-															<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-														</svg>
-													) : (
-														<span>{i + 1}</span>
-													)}
-												</div>
-												<span className={`hidden sm:inline text-xs font-medium whitespace-nowrap ${i === step ? 'text-teal-800 font-semibold' : isStepComplete(i) ? 'text-gray-600' : 'text-gray-500'}`}>{s}</span>
-											</button>
-											{i < steps.length - 1 && (
-												<div className="flex-1 mx-2 h-px bg-gray-200 min-w-2 relative overflow-hidden">
-													<div className={`absolute inset-y-0 left-0 bg-teal-800 right-0 origin-left transition-transform duration-500 ${isStepComplete(i) ? 'scale-x-100' : 'scale-x-0'}`} />
-												</div>
-											)}
-										</React.Fragment>
-									))}
-								</div>
-							</div>
-
+						<div className="overflow-hidden rounded-sheet border border-line bg-white">
 							{/* Form Content */}
-							<div className="p-6 pt-4">
+							<div className="p-5 sm:p-6">
 								{step === 0 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-												<svg aria-hidden="true" className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-												</svg>
-											</div>
 											<div>
-												<h2 className="text-xl font-bold text-ink">Document Details</h2>
-												<p className="text-sm text-gray-600">Basic information about your NDA</p>
+												<h2 className="font-display text-2xl font-bold tracking-tight text-ink">Document Details</h2>
+												<p className="text-sm text-muted-ink">Basic information about your NDA</p>
 											</div>
 										</div>
 
@@ -1488,7 +1474,7 @@ export default function FillNDAHTML() {
 													/>
 												</label>
 												<input
-													className={`${getFieldClass("docName")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
+													className={`${getFieldClass("docName")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.docName}
 													onChange={(e) => setField("docName", e.target.value)}
 													placeholder="e.g., Partnership NDA 2025"
@@ -1498,7 +1484,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Effective Date <span className="text-gray-700">*</span></label>
 												<input
 													type="date"
-													className={`${getFieldClass("effective_date", "p-3 border w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors")}`}
+													className={`${getFieldClass("effective_date", "px-3 py-2 border w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors")}`}
 													value={values.effective_date}
 													data-preview-field="effective_date" onChange={(e) => setField("effective_date", e.target.value)}
 													required
@@ -1515,7 +1501,7 @@ export default function FillNDAHTML() {
 												</label>
 												<input
 													type="number"
-													className={`${getFieldClass("term_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
+													className={`${getFieldClass("term_months")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.term_months}
 													data-preview-field="term_months" onChange={(e) => setField("term_months", e.target.value)}
 													placeholder="e.g., 12"
@@ -1531,7 +1517,7 @@ export default function FillNDAHTML() {
 												</label>
 												<input
 													type="number"
-													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
+													className={`${getFieldClass("confidentiality_period_months")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.confidentiality_period_months}
 													onChange={(e) => setField("confidentiality_period_months", e.target.value)}
 													placeholder="e.g., 24"
@@ -1550,20 +1536,15 @@ export default function FillNDAHTML() {
 								{step === 1 && (
 									<div className="space-y-4">
 										<div className="flex items-center gap-3 mb-3">
-											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-												<svg aria-hidden="true" className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-												</svg>
-											</div>
 											<div className="flex-1">
-												<h2 className="text-xl font-bold text-ink">Party A Information</h2>
-												<p className="text-sm text-gray-600">Details of the first party</p>
+												<h2 className="font-display text-2xl font-bold tracking-tight text-ink">Party A Information</h2>
+												<p className="text-sm text-muted-ink">Details of the first party</p>
 											</div>
 											<button
 												type="button"
 												onClick={loadCompanyProfile}
 												disabled={loadingCompanyProfile}
-												className="whitespace-nowrap px-4 py-2 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+												className="whitespace-nowrap px-4 py-2 bg-teal-800 text-white rounded-control font-semibold hover:bg-teal-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
 											>
 												{loadingCompanyProfile ? (
 													<>
@@ -1582,7 +1563,7 @@ export default function FillNDAHTML() {
 										</div>
 
 										{/* Info box about company profile */}
-										<div className="bg-teal-50 rounded-lg px-3 py-2 border border-teal-200">
+										<div className="bg-teal-50 rounded-control px-3 py-2 border border-teal-200">
 											<p className="text-xs text-teal-800 flex items-start gap-2">
 												<svg aria-hidden="true" className="w-4 h-4 text-teal-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1598,7 +1579,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Party Name *</label>
 												<input
-													className={`${getFieldClass("party_a_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
+													className={`${getFieldClass("party_a_name", "px-3 py-2 border")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_name}
 													data-preview-field="party_a_name" onChange={(e) => setField("party_a_name", e.target.value)}
 													placeholder="Enter party name"
@@ -1608,7 +1589,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.party_a_address}
 													data-preview-field="party_a_address" onChange={(e) => setField("party_a_address", e.target.value)}
@@ -1620,7 +1601,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-xs font-normal text-gray-500">(optional)</span></label>
 												<input
 													type="tel"
-													className={`${getFieldClass('party_a_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
+													className={`${getFieldClass('party_a_phone', 'px-3 py-2 border')} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors`}
 													value={values.party_a_phone}
 													onChange={(e) => setField("party_a_phone", filterPhoneChars(e.target.value))}
 													onBlur={(e) => validatePhoneOnBlur("party_a_phone", e.target.value)}
@@ -1647,7 +1628,7 @@ export default function FillNDAHTML() {
 														</label>
 													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+														className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_a_signatory_name}
 														onChange={(e) => setField("party_a_signatory_name", e.target.value)}
 														placeholder="Full name"
@@ -1658,7 +1639,7 @@ export default function FillNDAHTML() {
 												<div>
 													<label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+														className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 														value={values.party_a_title}
 														onChange={(e) => setField("party_a_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
@@ -1671,7 +1652,7 @@ export default function FillNDAHTML() {
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
 												<input
 													type="email"
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.party_a_email || ""}
 													onChange={(e) => setField("party_a_email", e.target.value)}
 													placeholder="email@example.com"
@@ -1685,14 +1666,9 @@ export default function FillNDAHTML() {
 								{step === 2 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-												<svg aria-hidden="true" className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-												</svg>
-											</div>
 											<div className="flex-1">
-												<h2 className="text-xl font-bold text-ink">Party B Information</h2>
-												<p className="text-sm text-gray-600">Details of the second party (check boxes to let receiver fill specific fields)</p>
+												<h2 className="font-display text-2xl font-bold tracking-tight text-ink">Party B Information</h2>
+												<p className="text-sm text-muted-ink">Details of the second party (check boxes to let receiver fill specific fields)</p>
 											</div>
 										</div>
 
@@ -1700,7 +1676,7 @@ export default function FillNDAHTML() {
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Party Name *</label>
-													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 														<input
 															type="checkbox"
 															checked={values.party_b_name_ask_receiver}
@@ -1711,7 +1687,7 @@ export default function FillNDAHTML() {
 													</label>
 												</div>
 												<input
-													className={`${getFieldClass("party_b_name", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													className={`${getFieldClass("party_b_name", "px-3 py-2 border")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_name}
 													data-preview-field="party_b_name" onChange={(e) => setField("party_b_name", e.target.value)}
 													placeholder="Enter party name"
@@ -1722,7 +1698,7 @@ export default function FillNDAHTML() {
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Address</label>
-													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 														<input
 															type="checkbox"
 															checked={values.party_b_address_ask_receiver}
@@ -1733,7 +1709,7 @@ export default function FillNDAHTML() {
 													</label>
 												</div>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 													rows={3}
 													value={values.party_b_address}
 													data-preview-field="party_b_address" onChange={(e) => setField("party_b_address", e.target.value)}
@@ -1745,7 +1721,7 @@ export default function FillNDAHTML() {
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Phone Number</label>
-													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 														<input
 															type="checkbox"
 															checked={values.party_b_phone_ask_receiver}
@@ -1757,7 +1733,7 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="tel"
-													className={`${getFieldClass('party_b_phone', 'p-3 border')} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													className={`${getFieldClass('party_b_phone', 'px-3 py-2 border')} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_phone}
 													onChange={(e) => setField("party_b_phone", filterPhoneChars(e.target.value))}
 													onBlur={(e) => validatePhoneOnBlur("party_b_phone", e.target.value)}
@@ -1786,7 +1762,7 @@ export default function FillNDAHTML() {
 																	Same as party name
 																</label>
 															)}
-															<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+															<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 																<input
 																	type="checkbox"
 																	checked={values.party_b_signatory_name_ask_receiver}
@@ -1798,7 +1774,7 @@ export default function FillNDAHTML() {
 														</div>
 													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+														className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_signatory_name}
 														onChange={(e) => setField("party_b_signatory_name", e.target.value)}
 														placeholder="Full name"
@@ -1809,7 +1785,7 @@ export default function FillNDAHTML() {
 												<div>
 													<div className="flex items-center justify-between mb-2">
 														<label className="block text-sm font-semibold text-gray-700">Title</label>
-														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+														<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 															<input
 																type="checkbox"
 																checked={values.party_b_title_ask_receiver}
@@ -1820,7 +1796,7 @@ export default function FillNDAHTML() {
 														</label>
 													</div>
 													<input
-														className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+														className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
 														value={values.party_b_title}
 														onChange={(e) => setField("party_b_title", e.target.value)}
 														placeholder="e.g., CEO, Director"
@@ -1832,7 +1808,7 @@ export default function FillNDAHTML() {
 											<div>
 												<div className="flex items-center justify-between mb-2">
 													<label className="block text-sm font-semibold text-gray-700">Email Address *</label>
-													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-lg border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
+													<label className="flex items-center gap-2 text-xs bg-teal-50 px-3 py-1 rounded-control border border-teal-200 cursor-pointer hover:bg-teal-50 transition-colors">
 														<input
 															type="checkbox"
 															checked={values.party_b_email_ask_receiver}
@@ -1844,7 +1820,7 @@ export default function FillNDAHTML() {
 												</div>
 												<input
 													type="email"
-													className={`${getFieldClass("party_b_email", "p-3 border")} w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
+													className={`${getFieldClass("party_b_email", "px-3 py-2 border")} w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed`}
 													value={values.party_b_email}
 													onChange={(e) => setField("party_b_email", e.target.value)}
 													placeholder="email@example.com"
@@ -1859,13 +1835,8 @@ export default function FillNDAHTML() {
 								{step === 3 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-												<svg aria-hidden="true" className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-												</svg>
-											</div>
 											<div>
-												<h2 className="text-xl font-bold text-ink">Deal details</h2>
+												<h2 className="font-display text-2xl font-bold tracking-tight text-ink">Deal details</h2>
 												<p className="text-sm text-gray-600">Deal-specific details for this NDA</p>
 											</div>
 										</div>
@@ -1874,7 +1845,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Purpose of Confidential Information Swap</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={2}
 													value={values.purpose}
 													data-preview-field="purpose" onChange={(e) => setField("purpose", e.target.value)}
@@ -1884,7 +1855,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Governing Law</label>
 												<input
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													value={values.governing_law}
 													data-preview-field="governing_law" onChange={(e) => setField("governing_law", e.target.value)}
 													placeholder="e.g., State of California"
@@ -1893,7 +1864,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">IP Ownership Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.ip_ownership}
 													onChange={(e) => setField("ip_ownership", e.target.value)}
@@ -1903,7 +1874,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Non-Solicitation Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.non_solicit}
 													onChange={(e) => setField("non_solicit", e.target.value)}
@@ -1913,7 +1884,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Exclusivity Clause</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.exclusivity}
 													onChange={(e) => setField("exclusivity", e.target.value)}
@@ -1923,7 +1894,7 @@ export default function FillNDAHTML() {
 											<div>
 												<label className="block text-sm font-semibold text-gray-700 mb-2">Additional Terms</label>
 												<textarea
-													className="p-3 border border-gray-300 w-full rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+													className="px-3 py-2 border border-line w-full rounded-control text-sm text-ink placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
 													rows={3}
 													value={values.additional_terms}
 													data-preview-field="additional_terms" onChange={(e) => setField("additional_terms", e.target.value)}
@@ -1937,23 +1908,18 @@ export default function FillNDAHTML() {
 								{step === 4 && (
 									<div className="space-y-6">
 										<div className="flex items-center gap-3 mb-6">
-											<div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-												<svg aria-hidden="true" className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-											</div>
 											<div>
-												<h2 className="text-xl font-bold text-ink">Review Your NDA</h2>
-												<p className="text-sm text-gray-600">Check all details before proceeding</p>
+												<h2 className="font-display text-2xl font-bold tracking-tight text-ink">Review Your NDA</h2>
+												<p className="text-sm text-muted-ink">Check all details before proceeding</p>
 											</div>
 										</div>
 
-										<div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-200">
+										<div className="bg-white rounded-sheet border border-line divide-y divide-line">
 											<div className="p-4 hover:bg-gray-50 transition-colors">
 												<div className="flex items-start justify-between">
 													<div className="flex-1">
 														<div className="text-xs font-semibold text-gray-500 mb-1">Document Name</div>
-														<div className="text-base font-medium text-gray-900">{values.docName || <span className="text-gray-500 italic">Not provided</span>}</div>
+														<div className="text-base font-medium text-ink">{values.docName || <span className="text-gray-500 italic">Not provided</span>}</div>
 													</div>
 													<button onClick={() => goToStep(0)} className="text-teal-700 hover:text-teal-700 text-sm font-medium">Edit</button>
 												</div>
@@ -1963,15 +1929,15 @@ export default function FillNDAHTML() {
 													<div className="flex-1 grid grid-cols-3 gap-4">
 														<div>
 															<div className="text-xs font-semibold text-gray-500 mb-1">Effective Date</div>
-															<div className="text-base font-medium text-gray-900">{values.effective_date || <span className="text-gray-500 italic">Not set</span>}</div>
+															<div className="text-base font-medium text-ink">{values.effective_date || <span className="text-gray-500 italic">Not set</span>}</div>
 														</div>
 														<div>
 															<div className="text-xs font-semibold text-gray-500 mb-1">Term</div>
-															<div className="text-base font-medium text-gray-900">{values.term_months ? `${values.term_months} months` : <span className="text-gray-500 italic">Not set</span>}</div>
+															<div className="text-base font-medium text-ink">{values.term_months ? `${values.term_months} months` : <span className="text-gray-500 italic">Not set</span>}</div>
 														</div>
 														<div>
 															<div className="text-xs font-semibold text-gray-500 mb-1">Confidentiality Period</div>
-															<div className="text-base font-medium text-gray-900">{values.confidentiality_period_months ? `${values.confidentiality_period_months} months` : <span className="text-gray-500 italic">Not set</span>}</div>
+															<div className="text-base font-medium text-ink">{values.confidentiality_period_months ? `${values.confidentiality_period_months} months` : <span className="text-gray-500 italic">Not set</span>}</div>
 														</div>
 													</div>
 													<button onClick={() => goToStep(0)} className="text-teal-700 hover:text-teal-700 text-sm font-medium ml-4">Edit</button>
@@ -1981,7 +1947,7 @@ export default function FillNDAHTML() {
 												<div className="flex items-start justify-between">
 													<div className="flex-1">
 														<div className="text-xs font-semibold text-gray-500 mb-1">Party A</div>
-														<div className="text-base font-medium text-gray-900">
+														<div className="text-base font-medium text-ink">
 															{values.party_a_name || <span className="text-gray-500 italic">Not provided</span>}
 															{values.party_a_ask_receiver_fill && <span className="ml-2 text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">Receiver will fill</span>}
 														</div>
@@ -1993,7 +1959,7 @@ export default function FillNDAHTML() {
 												<div className="flex items-start justify-between">
 													<div className="flex-1">
 														<div className="text-xs font-semibold text-gray-500 mb-1">Party B</div>
-														<div className="text-base font-medium text-gray-900">
+														<div className="text-base font-medium text-ink">
 															{values.party_b_name || <span className="text-gray-500 italic">Not provided</span>}
 															{(() => {
 																const fieldsToFill = [];
@@ -2020,7 +1986,11 @@ export default function FillNDAHTML() {
 							</div>
 
 							{/* Navigation Buttons */}
-							<div className="mt-6 mb-2 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-200">
+							<div className="border-t border-line px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+								<div className="mb-4 rounded-control border border-line bg-ground px-3 py-2.5 text-ink [&_p]:text-ink">
+									<LegalDisclaimer variant="compact" />
+								</div>
+								<div className="flex flex-wrap items-center justify-between gap-3">
 								<div className="flex flex-wrap items-center gap-2">
 									<Button
 										variant="secondary"
@@ -2031,7 +2001,7 @@ export default function FillNDAHTML() {
 										Back
 									</Button>
 									{step < steps.length - 1 && (
-										<Button onClick={goNext}>
+										<Button shape="crisp" onClick={goNext}>
 											Next<span className="hidden sm:inline"> · {steps[step + 1]}</span>
 											<ChevronRight />
 										</Button>
@@ -2047,7 +2017,7 @@ export default function FillNDAHTML() {
 									{/* Party A Review Buttons — shown when Party B has submitted changes */}
 									{workflowState === 'AWAITING_PARTY_A_REVIEW' && (
 										<>
-											<Button onClick={submitReviewResponse} disabled={processingChanges}>
+											<Button shape="crisp" onClick={submitReviewResponse} disabled={processingChanges}>
 												{processingChanges
 													? 'Processing...'
 													: Object.values(suggestionResponses).some((r) => r !== 'accepted')
@@ -2055,6 +2025,7 @@ export default function FillNDAHTML() {
 														: 'Accept Changes'}
 											</Button>
 											<Button
+												shape="crisp"
 												onClick={() => setShowRequestChangesModal(true)}
 												disabled={processingChanges}
 												className="bg-amber-500 text-white hover:bg-amber-600"
@@ -2069,7 +2040,7 @@ export default function FillNDAHTML() {
 
 									{/* Send Button — shown in DRAFT state or new (null) drafts */}
 									{(workflowState === 'DRAFT' || workflowState === null) && (
-										<Button onClick={sendForReview} disabled={sendingForSignature}>
+										<Button shape="crisp" onClick={sendForReview} disabled={sendingForSignature}>
 											{sendingForSignature ? (
 												<>
 													<svg aria-hidden="true" className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -2086,11 +2057,12 @@ export default function FillNDAHTML() {
 											)}
 										</Button>
 									)}
-									<Button variant="outline" onClick={saveDraft} disabled={saving}>
+									<Button shape="crisp" variant="outline" onClick={saveDraft} disabled={saving}>
 										<Save />
 										{saving ? "Saving..." : "Save"}
 									</Button>
 								</div>
+							</div>
 							</div>
 						</div>
 					</div>
@@ -2098,12 +2070,12 @@ export default function FillNDAHTML() {
 
 				{/* RIGHT SIDE: Live Preview (Fixed) */}
 				{showLivePreview && (
-					<div className="hidden lg:block w-[55%] bg-white border-l border-gray-200 overflow-y-auto">
-						<div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 z-10">
+					<div className="hidden lg:block w-[55%] border-l border-line bg-ground overflow-y-auto">
+						<div className="sticky top-0 z-10 border-b border-line bg-ground px-6 py-4">
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-semibold text-ink">Live Preview</h3>
-									<p className="text-xs text-gray-600">Updates as you type</p>
+									<h3 className="font-display font-semibold text-ink">Live Preview</h3>
+									<p className="text-xs text-muted-ink">Updates as you type</p>
 								</div>
 								<div className="flex gap-2">
 									{isDev && livePreviewHtml && (
@@ -2116,7 +2088,7 @@ export default function FillNDAHTML() {
 														newWindow.document.close();
 													}
 												}}
-												className="px-4 py-2 bg-teal-800 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors duration-200 shadow-card flex items-center gap-2"
+												className="px-4 py-2 bg-teal-800 text-white rounded-control text-sm font-semibold hover:bg-teal-700 transition-colors duration-200 flex items-center gap-2"
 												title="Open HTML preview in new tab"
 											>
 												<svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2127,7 +2099,7 @@ export default function FillNDAHTML() {
 											<button
 												onClick={previewPDF}
 												disabled={generatingPdf}
-												className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors duration-200 shadow-card flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+												className="px-4 py-2 bg-white border border-line text-gray-700 rounded-control text-sm font-semibold hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 												title="Generate and preview as PDF"
 											>
 												{generatingPdf ? (
@@ -2149,7 +2121,8 @@ export default function FillNDAHTML() {
 								</div>
 							</div>
 						</div>
-						<div className="p-6">
+						<div className="p-4 sm:p-6">
+							<Sheet meta="Standard Mutual NDA" className="overflow-hidden">
 							{previewLoading && !livePreviewHtml && (
 								<div className="text-center py-20">
 									<svg aria-hidden="true" className="animate-spin h-12 w-12 mx-auto mb-4 text-teal-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -2219,6 +2192,7 @@ export default function FillNDAHTML() {
 									<p className="text-sm">Start filling the fields to see the preview</p>
 								</div>
 							) : null}
+							</Sheet>
 						</div>
 					</div>
 				)}
@@ -2678,8 +2652,8 @@ export default function FillNDAHTML() {
 						</div>
 					</div>
 				)}
+				</div>
 			</div>
 		</div>
 	);
 }
-
