@@ -526,6 +526,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                   key={tab.key}
                   type="button"
                   aria-pressed={isActive}
+                  aria-label={`${tab.label}, ${tab.count}${needs ? ', needs your attention' : ''}`}
                   onClick={() => setFilter(tab.key)}
                   title={tab.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
                   className={`-mb-px inline-flex items-center gap-2 h-10 px-2.5 border-b-2 text-sm cursor-pointer transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 rounded-t-control ${
@@ -571,8 +572,10 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
         {/* List */}
         <div className="mt-4">
-          {searchQuery && (
+          {searchQuery ? (
             <h2 className="text-sm font-semibold text-muted-ink mb-2">Results for &quot;{searchQuery}&quot;</h2>
+          ) : (
+            <h2 className="sr-only">Recent activity</h2>
           )}
 
           {filteredNdas.length === 0 ? (
@@ -598,7 +601,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               </Button>
             </div>
           ) : (
-            <div className="bg-white rounded-sheet border border-line overflow-hidden" role="list">
+            <div className="bg-white rounded-sheet border border-line overflow-hidden">
               <div
                 aria-hidden="true"
                 className="hidden md:grid grid-cols-[minmax(0,1fr)_168px_88px_auto] gap-4 items-center px-5 h-9 bg-ground border-b border-line text-xs font-semibold text-muted-ink"
@@ -608,6 +611,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                 <span>Updated</span>
                 <span className="w-[1px]" />
               </div>
+              <div role="list">
               {filteredNdas.map((nda) => {
                 const statusInfo = getWorkflowStatusInfo(nda);
                 const needsYou = actionRequired(nda);
@@ -643,17 +647,18 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                         <StatusPill tone={statusInfo.tone} label={statusInfo.label} shape="crisp" />
                       </div>
 
-                      <span className="order-4 md:order-3 font-doc-mono text-xs text-muted-ink whitespace-nowrap">
+                      <span className="order-3 font-doc-mono text-xs text-muted-ink whitespace-nowrap">
                         {new Date(nda.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </span>
 
-                      <div className="order-3 md:order-4 col-span-2 md:col-span-1 flex flex-wrap items-center justify-start md:justify-end gap-2 empty:hidden">
+                      <div className="order-4 col-span-2 md:col-span-1 flex flex-wrap items-center justify-start md:justify-end gap-2 empty:hidden">
                         {renderActions(nda)}
                       </div>
                     </div>
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
