@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { isValidSignLinkToken } from '@/lib/signLink';
-import { Seal } from '@/components/ui/seal';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default async function SignSuccessPage({
@@ -30,7 +30,11 @@ export default async function SignSuccessPage({
         <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-sheet shadow-sheet border border-line p-8 text-center animate-appear-zoom">
                 <div className="flex justify-center mb-5">
-                    <Seal size={96} animate />
+                    {/* Plain check, not the Seal: this page shows after ONE party signs, and the
+                        seal reads "Executed". The seal is reserved for fully signed NDAs. */}
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-800 text-white">
+                        <Check className="h-7 w-7" strokeWidth={2.6} aria-hidden="true" />
+                    </div>
                 </div>
 
                 <h1 className="font-display text-2xl font-bold tracking-tight text-ink mb-2">
