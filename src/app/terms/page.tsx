@@ -5,7 +5,7 @@ import PageHero from "@/components/ui/page-hero";
 
 export default function TermsPage() {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-ground">
 			<PageHero
 				icon={Scale}
 				title="Terms of Service"
@@ -13,7 +13,7 @@ export default function TermsPage() {
 			/>
 
 			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch]">
-				<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8 sm:p-10 prose prose-gray max-w-none">
+				<div className="bg-white rounded-sheet border border-line p-8 sm:p-12 prose prose-gray max-w-none [&_h2]:font-display [&_h2]:text-ink [&_h2]:tracking-tight [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-3 [&_h2:first-child]:mt-0 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1.5 [&_hr]:my-8 [&_p]:text-gray-700 [&_li]:text-gray-700 [&_p]:leading-relaxed [&_a]:text-teal-800 [&_a]:underline [&_hr]:border-line">
 
 					<h2>1. Acceptance of Terms</h2>
 					<p>

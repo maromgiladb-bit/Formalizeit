@@ -113,10 +113,10 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease: 'easeOut' } }}
             exit={{ opacity: 0, y: 20, transition: { duration: 0.2 } }}
-            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[460px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl border border-gray-200 shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[460px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-sheet border border-line shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-line shrink-0">
               <div>
                 <p className="text-gray-700 text-sm font-semibold">{PLAN_PRICING[plan].label}</p>
                 <p className="text-sm text-gray-500 mt-0.5">
@@ -129,14 +129,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
                   disabled={fullPageLoading}
                   title="Open full page checkout"
                   aria-label="Open full page checkout"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-8 h-8 flex items-center justify-center rounded-control hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
                   aria-label="Close checkout"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-control hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -147,7 +147,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
             <div className="flex-1 overflow-y-auto">
               {loading && (
                 <div className="flex items-center justify-center py-20">
-                  <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-800 rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-line border-t-teal-800 rounded-full animate-spin" />
                 </div>
               )}
               {!stripePublishableKey && (
@@ -156,7 +156,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
                   <button
                     onClick={handleFullPage}
                     disabled={fullPageLoading}
-                    className="w-full bg-teal-800 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors cursor-pointer"
+                    className="w-full bg-teal-800 hover:bg-teal-700 disabled:opacity-50 text-white text-sm font-medium rounded-control px-4 py-2.5 transition-colors cursor-pointer"
                   >
                     {fullPageLoading ? 'Redirecting…' : 'Continue to checkout'}
                   </button>

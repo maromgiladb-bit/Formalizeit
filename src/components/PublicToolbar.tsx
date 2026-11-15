@@ -2,6 +2,8 @@
 
 import { BETA_LABEL } from '@/lib/featureFlags'
 import { StatusPill } from '@/components/ui/status-pill'
+import { Button } from '@/components/ui/button'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth, SignInButton } from '@clerk/nextjs'
@@ -25,6 +27,7 @@ const links = [
 
 export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
   const { userId } = useAuth()
+  const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Don't show public toolbar if user is signed in
@@ -61,7 +64,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                   priority
                 />
               </Link>
-              {BETA_LABEL && <StatusPill tone="progress" label="Beta" className="ml-2" />}
+              {BETA_LABEL && <StatusPill tone="progress" shape="crisp" label="Beta" className="ml-2" />}
 
               {/* Desktop navigation — centered in the bar */}
               <div className="hidden md:flex md:items-center md:gap-1 absolute left-1/2 -translate-x-1/2">
@@ -71,9 +74,10 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                     key={link.name}
                     href={link.href}
                     onClick={onLinkClick}
-                    className={`items-center px-3.5 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-ink hover:bg-gray-100 transition-colors ${
-                      scrolled && !link.core ? 'hidden' : 'inline-flex'
-                    }`}
+                    aria-current={link.href === pathname ? 'page' : undefined}
+                    className={`items-center px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      link.href === pathname ? 'text-ink border-teal-800' : 'text-muted-ink hover:text-ink border-transparent'
+                    } ${scrolled && !link.core ? 'hidden' : 'inline-flex'}`}
                   >
                     {link.name}
                   </Link>
@@ -85,7 +89,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
             <div className="hidden md:flex items-center gap-2">
               <SignInButton mode="modal">
                 <button
-                  className={`items-center px-4 py-2 rounded-full text-sm font-semibold text-gray-700 hover:text-ink hover:bg-gray-100 transition-colors cursor-pointer ${
+                  className={`items-center px-4 py-2 rounded-control text-sm font-display font-semibold text-muted-ink hover:text-ink transition-colors cursor-pointer ${
                     scrolled ? 'hidden' : 'inline-flex'
                   }`}
                 >
@@ -93,9 +97,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                 </button>
               </SignInButton>
               <SignupButton>
-                <button className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white bg-teal-800 hover:bg-teal-700 shadow-card transition-colors cursor-pointer">
-                  Get Started
-                </button>
+                <Button shape="crisp">Get Started</Button>
               </SignupButton>
             </div>
 
@@ -103,7 +105,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
             <div className="flex items-center md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-full text-gray-600 hover:text-ink hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 transition-colors"
+                className="inline-flex items-center justify-center p-2 rounded-control text-muted-ink hover:text-ink hover:bg-ground focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 transition-colors"
                 aria-expanded={isMobileMenuOpen}
               >
                 <span className="sr-only">Open main menu</span>
@@ -122,35 +124,36 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
 
           {/* Mobile menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-100 pb-4">
+            <div className="md:hidden border-t border-line pb-4">
               <div className="pt-2 pb-3 space-y-0.5">
                 {links.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
-                    className="block px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:text-ink hover:bg-gray-100 transition-colors"
+                    className="block px-4 py-3 rounded-control text-base font-medium text-muted-ink hover:text-ink hover:bg-ground transition-colors"
                     onClick={handleLinkClick}
                   >
                     {link.name}
                   </Link>
                 ))}
               </div>
-              <div className="pt-3 border-t border-gray-100 space-y-2 px-1">
+              <div className="pt-3 border-t border-line space-y-2 px-1">
                 <SignInButton mode="modal">
                   <button
-                    className="w-full flex items-center justify-center px-5 py-3 border border-gray-200 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-center px-5 py-3 border border-line text-base font-display font-semibold rounded-control text-ink bg-white hover:bg-ground transition-colors cursor-pointer"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Sign In
                   </button>
                 </SignInButton>
                 <SignupButton>
-                  <button
-                    className="w-full flex items-center justify-center px-5 py-3 text-base font-semibold rounded-xl text-white bg-teal-800 hover:bg-teal-700 transition-colors"
+                  <Button
+                    shape="crisp"
+                    className="w-full h-auto px-5 py-3 text-base"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Get Started
-                  </button>
+                  </Button>
                 </SignupButton>
               </div>
             </div>

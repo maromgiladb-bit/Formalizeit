@@ -65,9 +65,9 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
 
   const textBlock = (align: 'left' | 'right') => (
     <div className={`max-w-xs ${align === 'right' ? 'pr-12 text-right' : 'pl-12'}`}>
-      <p className="text-sm font-semibold text-gray-500 tabular-nums mb-2">{step.number}</p>
-      <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
+      <p className="font-doc-mono text-sm text-muted-ink mb-2">{step.number}</p>
+      <h3 className="text-2xl font-display font-bold text-ink mb-3">{step.title}</h3>
+      <p className="text-sm text-muted-ink leading-relaxed">{step.description}</p>
     </div>
   )
 
@@ -75,12 +75,12 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
     <div ref={ref} className="relative mb-14 lg:mb-20 last:mb-0">
       {/* Circle node */}
       <motion.div
-        className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-full bg-teal-800 border-4 border-white shadow-card flex items-center justify-center"
+        className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-control bg-white border border-line ring-4 ring-ground  flex items-center justify-center"
         initial={false}
         animate={isInView ? { scale: 1, opacity: 1 } : {}}
         transition={{ duration: 0.4, type: 'spring', stiffness: 220, damping: 18 }}
       >
-        <step.icon className="w-5 h-5 text-white" aria-hidden="true" />
+        <step.icon className="w-5 h-5 text-teal-800" aria-hidden="true" />
       </motion.div>
 
       {/* Mobile */}
@@ -90,9 +90,9 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
-          <p className="text-sm font-semibold text-gray-500 tabular-nums mb-1">{step.number}</p>
-          <h3 className="text-xl font-extrabold text-ink mb-2">{step.title}</h3>
-          <p className="text-sm text-gray-500 leading-relaxed mb-6">{step.description}</p>
+          <p className="font-doc-mono text-sm text-muted-ink mb-1">{step.number}</p>
+          <h3 className="text-xl font-display font-bold text-ink mb-2">{step.title}</h3>
+          <p className="text-sm text-muted-ink leading-relaxed mb-6">{step.description}</p>
         </motion.div>
         <Mockup />
       </div>
@@ -167,10 +167,10 @@ export default function About() {
       {/* ── 1. HERO ── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
         <Reveal className="text-center max-w-2xl mx-auto mb-10">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-ink leading-tight tracking-[-0.03em] mb-4">
             Review once, reuse forever.
           </h1>
-          <p className="text-base text-gray-500 leading-relaxed">
+          <p className="text-base text-muted-ink leading-relaxed">
             Stop re-reading NDAs. Approve one fair NDA once, then reuse it safely for
             every deal — NDA in minutes.
           </p>
@@ -181,23 +181,23 @@ export default function About() {
       </section>
 
       {/* ── 2. THE PROBLEM ── */}
-      <section className="border-y border-gray-100 bg-gray-50 py-20">
+      <section className="border-y border-line bg-ground py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-ink tracking-[-0.03em] mb-4">
               NDAs are repetitive, low-value to negotiate — and they still waste
               everyone&apos;s time.
             </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
+            <p className="text-base text-muted-ink leading-relaxed">
               The legal text barely changes between deals, yet every NDA restarts the
               same review loop.
             </p>
           </Reveal>
           <RevealGroup className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <RevealItem>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
-                <div className="px-5 py-3 border-b border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500">
+              <div className="bg-white border border-line rounded-sheet  h-full">
+                <div className="px-5 py-3 border-b border-line">
+                  <p className="text-xs font-semibold text-muted-ink">
                     The old way
                   </p>
                 </div>
@@ -205,8 +205,8 @@ export default function About() {
               </div>
             </RevealItem>
             <RevealItem>
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
-                <div className="px-5 py-3 border-b border-gray-100">
+              <div className="bg-white border border-line rounded-sheet  h-full">
+                <div className="px-5 py-3 border-b border-line">
                   <p className="text-xs font-semibold text-teal-700">
                     With FormalizeIt
                   </p>
@@ -222,10 +222,10 @@ export default function About() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-ink tracking-[-0.03em] mb-4">
               One NDA. One legal text. Infinite deals.
             </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
+            <p className="text-base text-muted-ink leading-relaxed">
               Fair by design — a single balanced mutual NDA that both sides can trust.
               Not &quot;pro-discloser&quot; or &quot;pro-recipient,&quot; and never customized to sneak in
               weird terms.
@@ -238,16 +238,16 @@ export default function About() {
       </section>
 
       {/* ── 4. HOW IT WORKS ── */}
-      <section className="border-y border-gray-100 bg-gray-50 py-20">
+      <section className="border-y border-line bg-ground py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="mb-8 text-center">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-ink tracking-[-0.03em]">
               From standard to signed
             </h2>
           </Reveal>
 
           <div ref={timelineRef} className="relative">
-            <div className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-gray-200" />
+            <div className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-line" />
             <motion.div
               className="absolute left-6 lg:left-1/2 lg:-translate-x-px top-0 bottom-0 w-px bg-teal-700 origin-top motion-reduce:hidden"
               style={{ scaleY: lineScaleY }}
@@ -265,10 +265,10 @@ export default function About() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-ink tracking-[-0.03em] mb-4">
               When they recognize the standard, they sign faster.
             </h2>
-            <p className="text-base text-gray-500 leading-relaxed">
+            <p className="text-base text-muted-ink leading-relaxed">
               A recognized standard is trust infrastructure — a basis for a frictionless
               relationship instead of legalities.
             </p>
@@ -276,9 +276,9 @@ export default function About() {
           <RevealGroup className="grid md:grid-cols-3 gap-6">
             {TRUST_CARDS.map((card) => (
               <RevealItem key={card.title}>
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 h-full">
+                <div className="bg-white border border-line rounded-sheet  p-6 h-full">
                   <h3 className="text-sm font-semibold text-ink mb-2">{card.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{card.body}</p>
+                  <p className="text-sm text-muted-ink leading-relaxed">{card.body}</p>
                 </div>
               </RevealItem>
             ))}
@@ -290,19 +290,19 @@ export default function About() {
       </section>
 
       {/* ── 6. BUILT FOR TEAMS ── */}
-      <section className="border-y border-gray-100 bg-gray-50 py-20">
+      <section className="border-y border-line bg-ground py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-ink tracking-[-0.03em]">
               Everyone moves the deal. One person signs.
             </h2>
           </Reveal>
           <RevealGroup className="grid md:grid-cols-3 gap-6">
             {TEAM_CARDS.map((card) => (
               <RevealItem key={card.title}>
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-card p-6 h-full">
+                <div className="bg-white border border-line rounded-sheet  p-6 h-full">
                   <h3 className="text-sm font-semibold text-ink mb-2">{card.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{card.body}</p>
+                  <p className="text-sm text-muted-ink leading-relaxed">{card.body}</p>
                 </div>
               </RevealItem>
             ))}
@@ -316,15 +316,15 @@ export default function About() {
           <Reveal>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div>
-                <h2 className="text-2xl font-extrabold text-ink mb-2">
+                <h2 className="text-2xl font-display font-bold text-ink mb-2">
                   Work on what&apos;s important, not on the standard legalities.
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-ink">
                   Review the standard once. Send your first NDA in minutes.
                 </p>
               </div>
               <SignupButton>
-                <Button size="lg" className="flex-shrink-0">
+                <Button size="lg" shape="crisp" className="flex-shrink-0">
                   Get Started Free
                   <ArrowRight aria-hidden="true" />
                 </Button>

@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { inputClassesCrisp } from '@/components/ui/input'
 import { useState, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createOrganization } from '@/actions/team'
@@ -8,13 +10,9 @@ import { useRouter } from 'next/navigation'
 function SubmitButton() {
     const { pending } = useFormStatus()
     return (
-        <button
-            type="submit"
-            disabled={pending}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-(--teal-600) hover:bg-(--teal-700) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--teal-600) disabled:opacity-50"
-        >
+        <Button shape="crisp" type="submit" disabled={pending}>
             {pending ? 'Creating...' : 'Create Organization'}
-        </button>
+        </Button>
     )
 }
 
@@ -38,9 +36,9 @@ export default function CreateOrganizationForm() {
     }
 
     return (
-        <div className="bg-white shadow sm:rounded-lg">
+        <div className="bg-white">
             <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Create your organization</h3>
+                <h3 className="text-lg leading-6 font-medium text-ink">Create your organization</h3>
                 <p className="mt-1 text-sm text-gray-500">
                     Set up a workspace to manage NDAs and invite team members.
                 </p>
@@ -61,7 +59,7 @@ export default function CreateOrganizationForm() {
                                 required
                                 minLength={2}
                                 maxLength={80}
-                                className="shadow-sm focus:ring-(--teal-600) focus:border-(--teal-600) block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                                className={inputClassesCrisp}
                                 placeholder="Acme Corp"
                             />
                         </div>
@@ -72,7 +70,7 @@ export default function CreateOrganizationForm() {
                     </div>
 
                     {message && (
-                        <div className={`mt-4 p-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        <div className={`mt-4 p-4 rounded-control text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                             {message.text}
                         </div>
                     )}

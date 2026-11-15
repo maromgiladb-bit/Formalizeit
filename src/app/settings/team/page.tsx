@@ -42,13 +42,13 @@ export default async function TeamSettingsPage() {
     const pendingInvitesSection = pendingInvites.length > 0 ? (
         <div className="space-y-3 mb-6">
             {pendingInvites.map(invite => (
-                <div key={invite.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-4">
+                <div key={invite.id} className="bg-white border border-line rounded-sheet p-4 flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-teal-50 rounded-control flex items-center justify-center shrink-0">
                             <Users className="w-4 h-4 text-teal-700" />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-gray-900">Pending Invitation</p>
+                            <p className="text-sm font-semibold text-ink">Pending Invitation</p>
                             <p className="text-sm text-gray-500 mt-0.5">
                                 You have been invited to join <strong className="text-gray-700">{invite.organization.name}</strong> as a {getOrganizationRoleLabel(invite.role)}.
                             </p>
@@ -64,14 +64,14 @@ export default async function TeamSettingsPage() {
         return (
             <div className="space-y-6">
                 {pendingInvitesSection}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-100">
+                <div className="bg-white rounded-sheet border border-line overflow-hidden">
+                    <div className="px-6 py-5 border-b border-line">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+                            <div className="w-9 h-9 bg-teal-50 rounded-control flex items-center justify-center">
                                 <Users className="w-5 h-5 text-teal-700" />
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-gray-900">Create a Team</h3>
+                                <h3 className="text-sm font-semibold text-gray-700">Create a Team</h3>
                                 <p className="text-sm text-gray-500">Set up your organization to collaborate on NDAs</p>
                             </div>
                         </div>
@@ -102,16 +102,16 @@ export default async function TeamSettingsPage() {
         <div className="space-y-6">
             {pendingInvitesSection}
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+            <div className="bg-white rounded-sheet border border-line overflow-hidden">
 
                 {/* Card Header */}
-                <div className="px-6 py-5 border-b border-gray-100">
+                <div className="px-6 py-5 border-b border-line">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+                        <div className="w-9 h-9 bg-teal-50 rounded-control flex items-center justify-center">
                             <Users className="w-5 h-5 text-teal-700" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-gray-900">Team Management</h3>
+                            <h3 className="text-sm font-semibold text-gray-700">Team Management</h3>
                             <p className="text-sm text-gray-500">Manage members for <strong className="text-gray-700">{organizationData.name}</strong></p>
                         </div>
                     </div>
@@ -120,8 +120,8 @@ export default async function TeamSettingsPage() {
                 <div className="px-6 pt-5 space-y-4">
                     {/* No-approver warning */}
                     {isOwner && signerCount === 0 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0 border border-amber-200">
+                        <div className="bg-amber-50 border border-amber-200 rounded-sheet p-4 flex items-start gap-3">
+                            <div className="w-8 h-8 bg-white rounded-control flex items-center justify-center shrink-0 border border-amber-200">
                                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                             </div>
                             <p className="text-sm text-amber-800">
@@ -133,12 +133,12 @@ export default async function TeamSettingsPage() {
                     )}
 
                     {/* Role guide */}
-                    <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                        <p className="text-xs font-bold text-gray-500 mb-3">Role Guide</p>
+                    <div className="bg-gray-50 rounded-sheet border border-line p-4">
+                        <p className="text-xs font-semibold text-gray-500 mb-3">Role Guide</p>
                         <ul className="space-y-2">
                             {(['ADMINISTRATOR', 'SIGNER', 'CONTRIBUTOR'] as const).map(r => (
                                 <li key={r} className="flex items-start gap-3">
-                                    <span className={`mt-0.5 shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold ${getOrganizationRoleBadgeClass(r)}`}>
+                                    <span className={`mt-0.5 shrink-0 px-2 py-0.5 rounded-control text-xs font-semibold ${getOrganizationRoleBadgeClass(r)}`}>
                                         {ROLE_DESCRIPTIONS[r].label}
                                     </span>
                                     <span className="text-sm text-gray-500 leading-relaxed">{ROLE_DESCRIPTIONS[r].description}</span>
@@ -149,7 +149,7 @@ export default async function TeamSettingsPage() {
                 </div>
 
                 {/* Member list */}
-                <ul role="list" className="divide-y divide-gray-100 mt-4">
+                <ul role="list" className="divide-y divide-line mt-4">
                     {members.map((member) => {
                         const memberForGuard = { role: member.role, isSigner: member.isSigner }
                         const isThisOwner = member.role === 'ADMINISTRATOR'
@@ -162,16 +162,16 @@ export default async function TeamSettingsPage() {
 
                                     {/* Avatar + info */}
                                     <div className="flex items-center min-w-0 gap-3">
-                                        <div className="shrink-0 h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm border border-gray-200">
+                                        <div className="shrink-0 h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-sm border border-line">
                                             {member.user.name?.[0]?.toUpperCase() || member.user.email[0]?.toUpperCase() || '?'}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-gray-900 truncate">
+                                            <p className="text-sm font-semibold text-ink truncate">
                                                 {member.user.name || 'Unnamed User'}
                                             </p>
                                             <p className="text-xs text-gray-500 truncate">{member.user.email}</p>
                                             {isPending && (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mt-1">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-control text-xs font-medium bg-amber-100 text-amber-800 mt-1">
                                                     Pending Invite
                                                 </span>
                                             )}
@@ -181,11 +181,11 @@ export default async function TeamSettingsPage() {
                                     {/* Controls */}
                                     <div className="shrink-0 flex flex-col items-end gap-2">
                                         <div className="flex items-center gap-1.5">
-                                            <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-full ${getOrganizationRoleBadgeClass(member.role)}`}>
+                                            <span className={`px-2 py-0.5 inline-flex text-xs font-semibold rounded-control ${getOrganizationRoleBadgeClass(member.role)}`}>
                                                 {getOrganizationRoleLabel(member.role)}
                                             </span>
                                             {canSign && (
-                                                <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                                                <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded-control bg-emerald-100 text-emerald-800">
                                                     Can sign
                                                 </span>
                                             )}
@@ -231,7 +231,7 @@ export default async function TeamSettingsPage() {
 
                 {/* Invite form */}
                 {isOwner && (
-                    <div className="px-6 py-5 border-t border-gray-100 bg-gray-50 space-y-4">
+                    <div className="px-6 py-5 border-t border-line bg-gray-50 space-y-4">
                         {PAID_PLANS_ENABLED && organizationData.billingPlan === 'PRO' && <TeamUpgradeBanner />}
                         <InviteMemberForm />
                     </div>

@@ -141,12 +141,12 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.98 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-96 bg-white rounded-sheet shadow-sheet border border-line z-50 overflow-hidden"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 bg-white">
+                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-line bg-white">
                         <div className="flex items-center gap-2.5">
-                            <span className="text-gray-700 text-sm font-semibold">Notifications</span>
+                            <span className="text-ink font-display text-sm font-semibold">Notifications</span>
                             {unread.length > 0 && (
                                 <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-teal-700 rounded-full">
                                     {unread.length}
@@ -156,7 +156,7 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                         {unread.length > 0 && (
                             <button
                                 onClick={handleMarkAllRead}
-                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 px-2.5 py-1 rounded-lg hover:text-white hover:bg-teal-800 transition-colors duration-200 cursor-pointer"
+                                className="flex items-center gap-1 text-xs font-semibold text-teal-700 px-2.5 py-1 rounded-control hover:text-white hover:bg-teal-800 transition-colors duration-200 cursor-pointer"
                             >
                                 <CheckCheck className="w-3.5 h-3.5" />
                                 Mark all read
@@ -180,7 +180,7 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                             <>
                                 {unread.length > 0 && (
                                     <div>
-                                        <div className="px-5 py-2 text-gray-700 text-sm font-semibold bg-gray-50 border-b border-gray-100">
+                                        <div className="px-5 py-2 text-ink text-sm font-semibold bg-ground border-b border-line">
                                             Unread
                                         </div>
                                         {unread.map(n => (
@@ -190,7 +190,7 @@ export default function NotificationPanel({ isOpen, onClose, onUnreadCountChange
                                 )}
                                 {read.length > 0 && (
                                     <div>
-                                        <div className="px-5 py-2 text-gray-500 text-xs font-bold bg-gray-50 border-b border-gray-100">
+                                        <div className="px-5 py-2 text-muted-ink text-xs font-bold bg-ground border-b border-line">
                                             Earlier
                                         </div>
                                         {read.map(n => (
@@ -211,7 +211,7 @@ function NotificationItem({ n, onClick }: { n: Notification; onClick: (n: Notifi
     return (
         <button
             onClick={() => onClick(n)}
-            className={`group w-full text-left px-5 py-3.5 flex gap-3 items-start transition-colors duration-200 border-b border-gray-100 last:border-0 cursor-pointer
+            className={`group w-full text-left px-5 py-3.5 flex gap-3 items-start transition-colors duration-200 border-b border-line last:border-0 cursor-pointer
                 ${!n.read
                     ? 'bg-teal-50/30 border-l-2 border-l-teal-600 hover:bg-teal-50/60'
                     : 'hover:bg-gray-50 border-l-2 border-l-transparent'

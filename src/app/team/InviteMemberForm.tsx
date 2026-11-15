@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { inputClassesCrisp } from '@/components/ui/input'
 import { useRef, useState } from 'react'
 import { inviteMember } from '@/actions/team'
 import { useFormStatus } from 'react-dom'
@@ -8,13 +10,9 @@ import { ORGANIZATION_ROLE_OPTIONS } from '@/lib/organizationRoles'
 function SubmitButton() {
     const { pending } = useFormStatus()
     return (
-        <button
-            type="submit"
-            disabled={pending}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-(--teal-600) hover:bg-(--teal-700) focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-(--teal-600) disabled:opacity-50"
-        >
+        <Button shape="crisp" type="submit" disabled={pending}>
             {pending ? 'Inviting...' : 'Invite Member'}
-        </button>
+        </Button>
     )
 }
 
@@ -35,8 +33,8 @@ export default function InviteMemberForm() {
     }
 
     return (
-        <form ref={formRef} action={clientAction} className="mt-6 bg-white shadow sm:rounded-lg p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Invite New Member</h3>
+        <form ref={formRef} action={clientAction} className="mt-6 bg-white border border-line rounded-sheet p-6">
+            <h3 className="text-lg font-medium leading-6 text-ink mb-4">Invite New Member</h3>
 
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div className="sm:col-span-4">
@@ -49,7 +47,7 @@ export default function InviteMemberForm() {
                             name="email"
                             id="email"
                             required
-                            className="shadow-sm focus:ring-(--teal-600) focus:border-(--teal-600) block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                            className={inputClassesCrisp}
                             placeholder="colleague@example.com"
                         />
                     </div>
@@ -65,7 +63,7 @@ export default function InviteMemberForm() {
                             name="role"
                             defaultValue="CONTRIBUTOR"
                             required
-                            className="shadow-sm focus:ring-(--teal-600) focus:border-(--teal-600) block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                            className={inputClassesCrisp}
                         >
                             {ORGANIZATION_ROLE_OPTIONS.map((roleOption) => (
                                 <option key={roleOption.value} value={roleOption.value}>
@@ -82,7 +80,7 @@ export default function InviteMemberForm() {
             </div>
 
             {message && (
-                <div className={`mt-4 p-4 rounded-md ${message.type === 'success' ? 'bg-gray-50 text-ink border border-gray-200' : 'bg-red-50 text-red-700'}`}>
+                <div className={`mt-4 p-4 rounded-control ${message.type === 'success' ? 'bg-gray-50 text-ink border border-line' : 'bg-red-50 text-red-700'}`}>
                     {message.text}
                 </div>
             )}

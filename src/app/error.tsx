@@ -22,9 +22,9 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-white font-sans flex items-center justify-center px-4">
+    <div className="min-h-screen bg-ground font-sans flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
-        <h1 className="text-3xl font-extrabold text-ink mb-3">We hit a snag</h1>
+        <h1 className="text-3xl font-display font-semibold tracking-tight text-ink mb-3">We hit a snag</h1>
         <p className="text-sm text-gray-500 mb-8 leading-relaxed">
           This one is on us, not on you. Try again, and if it keeps happening
           get in touch and we&apos;ll sort it out.
@@ -32,14 +32,14 @@ export default function Error({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-control transition-colors duration-200 text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             Try again
           </button>
           <Link
             href="/dashboard"
-            className="inline-flex items-center px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-ink font-semibold rounded-lg transition-colors duration-200 text-sm"
+            className="inline-flex items-center px-5 py-2.5 border border-line hover:bg-gray-50 text-ink font-semibold rounded-control transition-colors duration-200 text-sm"
           >
             Dashboard
           </Link>

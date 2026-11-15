@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Building2, Info, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { inputClasses } from '@/components/ui/input';
+import { inputClassesCrisp } from '@/components/ui/input';
 
 interface CompanyProfile {
   id: string;
@@ -128,7 +128,7 @@ export default function CompanyProfileSettingsPage() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+      <div className="bg-white rounded-sheet border border-line overflow-hidden">
         <div className="flex items-center justify-center py-16">
           <div className="flex flex-col items-center gap-3">
             <div className="w-7 h-7 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
@@ -140,16 +140,16 @@ export default function CompanyProfileSettingsPage() {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+    <div className="bg-white rounded-sheet border border-line overflow-hidden">
 
       {/* Card Header */}
-      <div className="px-6 py-5 border-b border-gray-100">
+      <div className="px-6 py-5 border-b border-line">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-teal-50 rounded-control flex items-center justify-center">
             <Building2 className="w-5 h-5 text-teal-700" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-ink">Company Profile</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Company Profile</h3>
             <p className="text-sm text-gray-500">Default company information for NDA generation</p>
           </div>
         </div>
@@ -158,8 +158,8 @@ export default function CompanyProfileSettingsPage() {
       <div className="px-6 py-5 space-y-5">
 
         {/* Info callout */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-3">
-          <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+        <div className="bg-gray-50 border border-line rounded-sheet p-4 flex items-start gap-3">
+          <div className="w-8 h-8 bg-teal-50 rounded-control flex items-center justify-center shrink-0">
             <Info className="w-4 h-4 text-teal-700" />
           </div>
           <div>
@@ -172,8 +172,8 @@ export default function CompanyProfileSettingsPage() {
 
         {/* Permission warning */}
         {!canEdit && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0 border border-amber-200">
+          <div className="bg-amber-50 border border-amber-200 rounded-sheet p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-white rounded-control flex items-center justify-center shrink-0 border border-amber-200">
               <Lock className="w-4 h-4 text-amber-600" />
             </div>
             <p className="text-sm text-amber-800 leading-relaxed">
@@ -184,12 +184,12 @@ export default function CompanyProfileSettingsPage() {
 
         {/* Save message */}
         {message && (
-          <div className={`rounded-xl p-4 flex items-start gap-3 ${
+          <div className={`rounded-sheet p-4 flex items-start gap-3 ${
             message.type === 'success'
               ? 'bg-teal-50 border border-teal-200'
               : 'bg-red-50 border border-red-200'
           }`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+            <div className={`w-8 h-8 rounded-control flex items-center justify-center shrink-0 ${
               message.type === 'success' ? 'bg-teal-100' : 'bg-red-100'
             }`}>
               {message.type === 'success'
@@ -209,7 +209,7 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 1: Company Information */}
           <div>
-            <p className="text-xs font-bold text-gray-500 mb-4">1. Company Information</p>
+            <p className="text-xs font-semibold text-gray-500 mb-4">1. Company Information</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">
@@ -222,7 +222,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="e.g., Acme Corp"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
                 <p className="mt-1 text-xs text-gray-500">Your workspace name — shown on your team page and in notifications.</p>
               </div>
@@ -238,7 +238,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="e.g., Acme Corporation Inc."
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
                 <p className="mt-1 text-xs text-gray-500">Used as Party A in NDA documents.</p>
               </div>
@@ -254,7 +254,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="contact@company.com"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -269,7 +269,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="+1 (555) 123-4567"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -284,7 +284,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="https://www.company.com"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
             </div>
@@ -294,7 +294,7 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 2: Address */}
           <div>
-            <p className="text-xs font-bold text-gray-500 mb-4">2. Address</p>
+            <p className="text-xs font-semibold text-gray-500 mb-4">2. Address</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">
@@ -307,7 +307,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="123 Main Street"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -322,7 +322,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="Suite 100"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -337,7 +337,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="San Francisco"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -352,7 +352,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="California"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -367,7 +367,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="94102"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -382,7 +382,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="United States"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
             </div>
@@ -392,7 +392,7 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 3: Authorized Signatory */}
           <div>
-            <p className="text-xs font-bold text-gray-500 mb-4">3. Authorized Signatory</p>
+            <p className="text-xs font-semibold text-gray-500 mb-4">3. Authorized Signatory</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5">
@@ -405,7 +405,7 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="John Smith"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
 
@@ -420,15 +420,15 @@ export default function CompanyProfileSettingsPage() {
                   onChange={handleChange}
                   disabled={!canEdit}
                   placeholder="CEO"
-                  className={inputClasses}
+                  className={inputClassesCrisp}
                 />
               </div>
             </div>
           </div>
 
           {canEdit && (
-            <div className="flex justify-end pt-4 border-t border-gray-100">
-              <Button type="submit" disabled={saving}>
+            <div className="flex justify-end pt-4 border-t border-line">
+              <Button shape="crisp" type="submit" disabled={saving}>
                 {saving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {saving ? 'Saving...' : 'Save Profile'}
               </Button>

@@ -21,9 +21,9 @@ export default async function AcceptTermsPage({
   if (hasAcceptedCurrentTerms(user)) redirect(target)
 
   return (
-    <main className="min-h-[70vh] flex items-center justify-center bg-gray-50 px-4 py-16">
-      <div className="max-w-md w-full bg-white border border-gray-100 rounded-2xl shadow-card p-8">
-        <h1 className="mt-2 text-2xl font-extrabold text-ink tracking-tight">Review our terms</h1>
+    <main className="min-h-[70vh] flex items-center justify-center bg-ground px-4 py-16">
+      <div className="max-w-md w-full bg-white border border-line rounded-sheet shadow-sheet p-8">
+        <h1 className="mt-2 text-2xl font-display font-semibold tracking-tight text-ink">Review our terms</h1>
         <p className="mt-2 text-sm text-gray-500">
           Please confirm you agree to our Terms of Service and Privacy Policy to keep using FormalizeIt.
         </p>

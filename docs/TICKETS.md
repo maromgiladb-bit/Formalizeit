@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-073**
+**Next ID: T-075**
 
 ## Resume here (updated 2026-11-15)
 
@@ -20,8 +20,8 @@ T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
-opens sign-up. Design refresh (T-058) is specced; its rollout continues with **T-061** (app shell; T-060 foundations
-are in PR #24) and can run alongside the launch tickets. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
+opens sign-up. Design refresh (T-058): spec PR #23, foundations PR #24 and the page rollout PR #25 (T-061–T-068)
+merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
 (2026-11-09).
 
 ## Now (in progress)
@@ -85,24 +85,16 @@ triage them before or alongside T-044.
 
 ### Design refresh (T-058, in order; spec: [Ink & Seal](superpowers/specs/2026-11-15-ink-and-seal-design-system.md))
 
-- ☐ **T-061** [normal] [Claude] App shell: restyled top app bar, same links and functionality as
-  today (one New NDA button), no marketing footer on app pages, mobile menu.
-- ☐ **T-062** [normal] [Claude] Home + marketing pages (about, FAQ, help, pricing): hero with the
-  NDA sheet whose blanks fill in.
-- ☐ **T-063** [normal] [Claude] Fill wizard restyle, compact disclaimer line, preview-only variable
-  highlight in the preview iframe (PDF unchanged). Update `e2e/nda-flow.spec.ts` if labels change.
-- ☐ **T-064** [normal] [Claude] Send success share sheet (links-only send).
-- ☐ **T-065** [high] [Claude] Receiver sign page: document-first layout, docked sign panel / phone
-  bottom panel, executed seal + evidence block from recorded evidence only. Consent text unchanged.
-- ☐ **T-066** [normal] [Claude] Dashboard compact list: filter tabs (All, Needs you, Waiting,
-  Received, Signed, Drafts, Archived) replace the 7 tiles; all row actions kept.
-- ☐ **T-067** [normal] [Claude] Settings pages, onboarding, accept-terms, coming-soon, errors.
-- ☐ **T-068** [high] [Claude] Legal pages restyle, text untouched.
 - ☐ **T-069** [low] [Claude] Docs sync: rewrite `.claude/skills/stitch-design.md`, CLAUDE.md
   design section, Hallmark stamp in `globals.css`, Formi knowledge if routes/labels changed, memory;
   remove old tokens once nothing uses them; publish the system in Claude's Design System type.
 - ☐ **T-070** [high] [Both] Decide whether the seal / evidence summary is printed on the signed PDF
   (Nir: a seal can read as certification). UI-only until decided.
+- ☐ **T-073** [normal] [Claude] Fill preview: highlight the filled-in variables in the preview iframe
+  only (PDF unchanged). Split out of T-063, which shipped the restyle without it.
+- ☐ **T-074** [low] [Claude] Seal: ring text is cramped at 96px and below; tune letter spacing / size
+  so "Executed · FormalizeIt · v1.0" reads cleanly. Also show the seal + evidence block on the
+  executed-NDA view once the client receives recorded evidence (T-065 shipped without it).
 
 ## Waiting on you
 
@@ -200,6 +192,14 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
+- ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
+- ☑ **T-063** [normal] Fill wizard restyle + compact disclaimer; variable highlight split to T-073 (2026-11-15, PR #25).
+- ☑ **T-064** [normal] Send share sheet: brand logos, Gmail/Outlook/WhatsApp/email/SMS/copy + Telegram/LinkedIn, no pre-written message box (2026-11-15, PR #25).
+- ☑ **T-065** [high] Receiver review/sign pages restyled, consent + disclaimer text unchanged; seal/evidence on executed view split to T-074 (2026-11-15, PR #25).
+- ☑ **T-066** [normal] Dashboard: filter tabs replace the 7 tiles (1:1 filters), search row under tabs (2026-11-15, PR #25).
+- ☑ **T-067** [normal] Settings, team, billing, onboarding, accept-terms, coming-soon, sign-in, errors restyled (2026-11-15, PR #25).
+- ☑ **T-068** [high] Legal pages restyled, visible text byte-identical on all 10 (2026-11-15, PR #25).
 - ☑ **T-060** [normal] Ink & Seal tokens, Schibsted Grotesk, opt-in crisp variants, Sheet / EvidenceBlock /
   Seal / ShareSheet, `/dev/design-system` preview; additive, no page changes (2026-11-15, PR #24).
 - ☑ **T-048** [high] Open redirect on `/accept-terms ?next=` fixed with `safeInternalPath()` (2026-11-15, PR #20).

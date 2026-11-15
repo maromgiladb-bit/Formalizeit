@@ -37,9 +37,9 @@ export default function FloatingNavShell({
 
   const pill = scrolled
     ? `mt-2 sm:mt-3 max-w-[calc(100%-1.25rem)] ${scrolledMaxWidth} ${
-        expanded ? 'rounded-2xl bg-white' : 'rounded-full bg-white/85 backdrop-blur-md'
-      } border border-gray-200/70 shadow-float`
-    : 'mt-0 max-w-full rounded-none border-b border-gray-100 bg-white'
+        expanded ? 'rounded-sheet bg-white' : 'rounded-sheet bg-white/90 backdrop-blur-md'
+      } border border-line shadow-sheet`
+    : 'mt-0 max-w-full rounded-none border-b border-line bg-white'
 
   return (
     <>

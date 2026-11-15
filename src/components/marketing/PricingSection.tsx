@@ -174,10 +174,10 @@ export default function PricingSection() {
   return (
     <div>
       <Reveal className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+        <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-ink md:text-5xl">
           {PAID_PLANS_ENABLED ? 'Simple, honest pricing' : "Free while we're in beta"}
         </h2>
-        <p className="text-base text-gray-500 leading-relaxed mt-3 max-w-xl mx-auto">
+        <p className="text-base text-muted-ink leading-relaxed mt-3 max-w-xl mx-auto">
           {PAID_PLANS_ENABLED
             ? 'Start free — no credit card, no setup. Upgrade when your team needs more NDAs or members.'
             : "Every feature, unlimited NDAs, no credit card. Paid plans come later — we'll give you plenty of notice first."}
@@ -189,8 +189,8 @@ export default function PricingSection() {
       <Reveal className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
           {coreFeatures.map((feature) => (
-            <span key={feature} className="inline-flex items-center gap-2 text-sm text-gray-500">
-              <Check className="w-4 h-4 text-teal-700" />
+            <span key={feature} className="inline-flex items-center gap-2 text-sm text-muted-ink">
+              <Check className="w-4 h-4 text-teal-800" aria-hidden="true" />
               {feature}
             </span>
           ))}

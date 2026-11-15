@@ -42,19 +42,19 @@ export default function NdaUpdatePrompt({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50 transition-opacity" />
+      <div className="fixed inset-0 bg-ink/50 transition-opacity" />
 
       <div className="flex min-h-full items-center justify-center p-4">
-        <div role="dialog" aria-modal="true" aria-label="Standard NDA updated" className="relative bg-white rounded-2xl shadow-float max-w-lg w-full p-6">
+        <div role="dialog" aria-modal="true" aria-label="Standard NDA updated" className="relative bg-white border border-line rounded-sheet shadow-sheet max-w-lg w-full p-6">
           {/* Icon */}
           <div className="mb-4 flex justify-center">
-            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-black">
+            <div className="flex items-center justify-center h-12 w-12 rounded-control bg-teal-800">
               <FileText className="h-6 w-6 text-white" />
             </div>
           </div>
 
           <div className="text-center mb-5">
-            <h3 className="text-lg font-semibold text-ink mb-2">
+            <h3 className="font-display text-lg font-semibold text-ink tracking-tight mb-2">
               The standard NDA was updated to v{version}
             </h3>
             <p className="text-gray-500">
@@ -64,7 +64,7 @@ export default function NdaUpdatePrompt({
           </div>
 
           {/* Changes summary */}
-          <div className="mb-5 max-h-64 overflow-y-auto rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-4">
+          <div className="mb-5 max-h-64 overflow-y-auto rounded-control bg-ground border border-line p-4 space-y-4">
             {entries.map((entry) => (
               <div key={entry.version}>
                 <p className="text-sm font-semibold text-ink">
@@ -101,7 +101,7 @@ export default function NdaUpdatePrompt({
           {error && <p role="alert" className="text-sm text-red-600 mt-3">{error}</p>}
 
           <div className="mt-5">
-            <Button className="w-full" onClick={handleConfirm} disabled={!reviewed || busy}>
+            <Button shape="crisp" className="w-full" onClick={handleConfirm} disabled={!reviewed || busy}>
               {busy ? 'Saving…' : 'Confirm'}
             </Button>
           </div>

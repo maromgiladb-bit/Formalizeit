@@ -11,17 +11,17 @@ export default async function RemindersStoppedPage({
   const { status } = await searchParams
   const invalid = status === 'invalid'
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-card max-w-md w-full p-8 text-center">
+    <main className="min-h-screen bg-ground flex items-center justify-center px-4">
+      <div className="bg-white border border-line rounded-sheet shadow-sheet max-w-md w-full p-8 text-center">
         {!invalid && (
-          <div className="mx-auto mb-5 w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
+          <div className="mx-auto mb-5 w-11 h-11 rounded-control bg-white border border-line flex items-center justify-center">
             <Check className="w-5 h-5 text-teal-800" aria-hidden="true" />
           </div>
         )}
-        <h1 className="text-2xl font-extrabold text-ink mb-3">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink mb-3">
           {invalid ? 'This link did not work' : 'No more reminders for this NDA'}
         </h1>
-        <p className="text-sm text-gray-500 leading-relaxed">
+        <p className="text-sm text-muted-ink leading-relaxed">
           {invalid
             ? 'The link is incomplete or has been altered. Reply to the email you received and we will help.'
             : 'We will not send you further reminder emails about this NDA. Your secure link still works if you want to open it later, and you may still receive the signed copy once the NDA is complete.'}

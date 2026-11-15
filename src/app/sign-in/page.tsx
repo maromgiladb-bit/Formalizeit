@@ -26,17 +26,17 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-ground">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-ink tracking-tight">
+          <h2 className="mt-6 text-center text-3xl font-display font-semibold tracking-tight text-ink">
             Sign in to FormalizeIt
           </h2>
           <p className="mt-2 text-center text-sm text-gray-500">
             Access your NDA drafts and manage agreements
           </p>
         </div>
-        <div className="bg-white py-8 px-6 rounded-2xl border border-gray-100 shadow-card">
+        <div className="bg-white py-8 px-6 rounded-sheet border border-line">
           <SignIn
             routing="hash"
             fallbackRedirectUrl="/dashboard"

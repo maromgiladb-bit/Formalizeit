@@ -6,6 +6,8 @@ import { Eye, Plus, FileText, Edit, Trash2, FileDown, CheckCircle, Search, Rotat
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StatusPill } from '@/components/ui/status-pill';
+import { Button } from '@/components/ui/button';
+import { inputClassesCrisp } from '@/components/ui/input';
 import { canSignNDA } from '@/lib/organizationRoles';
 import { canArchiveNda } from '@/lib/ndaLifecycle';
 import ProfilePrompt from './ProfilePrompt';
@@ -280,48 +282,18 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     archived: localNdas.filter((n) => n.archivedAt != null).length,
   };
 
-  const statCards: {
-    key: typeof filter;
-    label: string;
-    count: number;
-    iconColor: string;
-    countColor: string;
-    urgent?: boolean;
-  }[] = [
-    { key: 'all', label: 'All my NDAs', count: stats.total, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
-    { key: 'draft', label: 'Drafts', count: stats.draft, iconColor: 'text-gray-500 bg-gray-100', countColor: 'text-ink' },
-    { key: 'sent', label: 'Sent', count: stats.sent, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
-    { key: 'received', label: 'Received', count: stats.received, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
-    { key: 'action', label: 'Action Required', count: stats.action, iconColor: 'text-amber-600 bg-amber-50', countColor: stats.action > 0 ? 'text-amber-600' : 'text-ink', urgent: true },
-    { key: 'signed', label: 'Signed', count: stats.signed, iconColor: 'text-teal-700 bg-teal-50', countColor: 'text-ink' },
-    { key: 'archived', label: 'Archived', count: stats.archived, iconColor: 'text-gray-500 bg-gray-100', countColor: 'text-ink' },
+  const filterTabs: { key: typeof filter; label: string; count: number; urgent?: boolean }[] = [
+    { key: 'all', label: 'All', count: stats.total },
+    { key: 'action', label: 'Needs you', count: stats.action, urgent: true },
+    { key: 'sent', label: 'Waiting', count: stats.sent },
+    { key: 'received', label: 'Received', count: stats.received },
+    { key: 'signed', label: 'Signed', count: stats.signed },
+    { key: 'draft', label: 'Drafts', count: stats.draft },
+    { key: 'archived', label: 'Archived', count: stats.archived },
   ];
-
-  const statIcons: Record<string, React.ReactNode> = {
-    all: <FileText className="w-5 h-5" />,
-    draft: <Edit className="w-5 h-5" />,
-    sent: (
-      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-      </svg>
-    ),
-    received: (
-      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-      </svg>
-    ),
-    action: (
-      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    ),
-    signed: (
-      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    archived: <Archive className="w-5 h-5" />,
-  };
+  // Row action styling (Ink & Seal crisp buttons)
+  const secondaryBtn = 'shadow-none text-ink';
+  const dangerBtn = 'shadow-none text-muted-ink hover:border-red-200 hover:bg-red-50 hover:text-red-600';
 
   const getRecipient = (nda: NDA) => {
     if (nda.type === 'received') {
@@ -341,18 +313,23 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
       {/* DRAFT: Edit + Delete */}
       {nda.status === 'draft' && (
         <>
-          <Link href={`/fillndahtml?draftId=${nda.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-              <Edit className="w-3.5 h-3.5" />
+          <Button asChild variant="outline" size="sm" shape="crisp" className={secondaryBtn}>
+            <Link href={`/fillndahtml?draftId=${nda.id}`}>
+              <Edit className="w-3.5 h-3.5" aria-hidden="true" />
               Edit
-          </Link>
-          <button
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            shape="crisp"
             onClick={() => handleDelete(nda.id, nda.partyName, false)}
             disabled={deletingId === nda.id}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={dangerBtn}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
             {deletingId === nda.id ? 'Deleting…' : 'Delete'}
-          </button>
+          </Button>
         </>
       )}
 
@@ -362,45 +339,54 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           sees a clickable Sign Now during the fetch. */}
       {nda.workflowState === 'AWAITING_PARTY_A_SIGNATURE' && nda.partyASignerId && (
         canSign === true ? (
-          <Link href={`/sign-nda-public/${nda.partyASignerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
-              <Edit className="w-3.5 h-3.5" />
+          <Button asChild size="sm" shape="crisp">
+            <Link href={`/sign-nda-public/${nda.partyASignerId}`}>
+              <Edit className="w-3.5 h-3.5" aria-hidden="true" />
               Sign Now
-          </Link>
+            </Link>
+          </Button>
         ) : (
-          <div className="flex flex-col items-start gap-1">
-            <button
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              size="sm"
+              shape="crisp"
               onClick={() => setNotifyModalDraftId(nda.id)}
               disabled={canSign === null}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle className="w-3.5 h-3.5" />
+              <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
               Ask a teammate to sign
-            </button>
-            <span className="text-xs text-gray-500">Only Signers can sign this NDA.</span>
+            </Button>
+            <span className="text-xs text-muted-ink">Only Signers can sign this NDA.</span>
           </div>
         )
       )}
 
       {/* AWAITING_PARTY_A_REVIEW: Review Changes */}
       {nda.workflowState === 'AWAITING_PARTY_A_REVIEW' && nda.partyASignerId && (
-        <Link href={`/fillndahtml-public/${nda.partyASignerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-colors duration-200 cursor-pointer">
-            <Eye className="w-3.5 h-3.5" />
+        <Button asChild size="sm" shape="crisp">
+          <Link href={`/fillndahtml-public/${nda.partyASignerId}`}>
+            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
             Review
-        </Link>
+          </Link>
+        </Button>
       )}
 
       {/* RECEIVED/INCOMING: Sign Now or Review */}
       {nda.type === 'received' && nda.signerId && !['COMPLETE', 'SIGNING_COMPLETE'].includes(nda.workflowState || '') && (
         nda.workflowState === 'AWAITING_PARTY_B_SIGNATURE' ? (
-          <Link href={`/sign-nda-public/${nda.signerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer">
-              <Edit className="w-3.5 h-3.5" />
+          <Button asChild size="sm" shape="crisp">
+            <Link href={`/sign-nda-public/${nda.signerId}`}>
+              <Edit className="w-3.5 h-3.5" aria-hidden="true" />
               Sign Now
-          </Link>
+            </Link>
+          </Button>
         ) : (
-          <Link href={`/fillndahtml-public/${nda.signerId}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-              <Eye className="w-3.5 h-3.5" />
+          <Button asChild variant="outline" size="sm" shape="crisp" className={secondaryBtn}>
+            <Link href={`/fillndahtml-public/${nda.signerId}`}>
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
               Review
-          </Link>
+            </Link>
+          </Button>
         )
       )}
 
@@ -413,22 +399,27 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
         if (isComplete) {
           return (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
+              shape="crisp"
               onClick={() => window.open(`/api/ndas/viewpdf?draftId=${nda.id}`, '_blank')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-700 text-white hover:bg-teal-800 transition-colors duration-200 cursor-pointer"
+              className={secondaryBtn}
             >
-              <FileDown className="w-3.5 h-3.5" />
+              <FileDown className="w-3.5 h-3.5" aria-hidden="true" />
               View PDF
-            </button>
+            </Button>
           );
         }
 
         if (!isDraft && !hasActionButton && !isReceivedWithReview && nda.type === 'created') {
           return (
-            <Link href={`/view-nda/${nda.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-                <Eye className="w-3.5 h-3.5" />
+            <Button asChild variant="outline" size="sm" shape="crisp" className={secondaryBtn}>
+              <Link href={`/view-nda/${nda.id}`}>
+                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                 View
-            </Link>
+              </Link>
+            </Button>
           );
         }
 
@@ -437,77 +428,86 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
       {/* Expired link: Resend a fresh 14-day signing link */}
       {nda.type === 'created' && nda.expired && (
-        <button
+        <Button
+          size="sm"
+          shape="crisp"
           onClick={() => handleResend(nda.id)}
           disabled={resendingId === nda.id}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <RotateCw className="w-3.5 h-3.5" />
+          <RotateCw className="w-3.5 h-3.5" aria-hidden="true" />
           {resendingId === nda.id ? 'Resending…' : 'Resend NDA'}
-        </button>
+        </Button>
       )}
 
       {/* Expired or legacy-cancelled created NDA: hard delete (dashboard + DB) */}
       {nda.type === 'created' && (nda.expired || nda.status === 'cancelled') && (
-        <button
+        <Button
+          variant="outline"
+          size="sm"
+          shape="crisp"
           onClick={() => handleDelete(nda.id, nda.partyName, true)}
           disabled={deletingId === nda.id}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className={dangerBtn}
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           {deletingId === nda.id ? 'Deleting…' : 'Delete'}
-        </button>
+        </Button>
       )}
 
       {/* Finalized created NDA: archive / unarchive */}
       {nda.type === 'created' && canArchiveNda({ status: nda.status, workflowState: nda.workflowState }) && (
         nda.archivedAt ? (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            shape="crisp"
             onClick={() => handleArchive(nda.id, false)}
             disabled={archivingId === nda.id}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${secondaryBtn} text-muted-ink`}
           >
-            <ArchiveRestore className="w-3.5 h-3.5" />
+            <ArchiveRestore className="w-3.5 h-3.5" aria-hidden="true" />
             {archivingId === nda.id ? 'Restoring…' : 'Unarchive'}
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            shape="crisp"
             onClick={() => handleArchive(nda.id, true)}
             disabled={archivingId === nda.id}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`${secondaryBtn} text-muted-ink`}
           >
-            <Archive className="w-3.5 h-3.5" />
+            <Archive className="w-3.5 h-3.5" aria-hidden="true" />
             {archivingId === nda.id ? 'Archiving…' : 'Archive'}
-          </button>
+          </Button>
         )
       )}
     </>
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-ground font-sans">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
-        {/* Compact header */}
-        <div className="pt-8 pb-6 border-b border-gray-100">
-          <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage and track your Non-Disclosure Agreements</p>
+        {/* Header */}
+        <div className="pt-8">
+          <h1 className="font-display text-3xl font-bold text-ink tracking-tight">My NDAs</h1>
+          <p className="text-sm text-muted-ink mt-1">Manage and track your Non-Disclosure Agreements</p>
         </div>
-
 
         {/* Message banner */}
         {message && (
-          <div className={`mt-4 p-3 rounded-xl border flex items-center gap-2.5 text-sm font-medium ${
+          <div role="status" className={`mt-4 px-4 py-3 rounded-sheet border flex items-center gap-2.5 text-sm font-medium bg-white ${
             message.type === 'success'
-              ? 'bg-teal-50 border-teal-200 text-teal-800'
-              : 'bg-red-50 border-red-200 text-red-800'
+              ? 'border-line text-ink'
+              : 'border-red-200 text-red-800'
           }`}>
             {message.type === 'success' ? (
-              <svg aria-hidden="true" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-4 h-4 shrink-0 text-teal-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ) : (
-              <svg aria-hidden="true" className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg aria-hidden="true" className="w-4 h-4 shrink-0 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             )}
@@ -515,143 +515,150 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
           </div>
         )}
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 py-6">
-          {statCards.map((card) => {
-            const isActive = filter === card.key;
-            return (
-              <button
-                key={card.key}
-                onClick={() => setFilter(card.key)}
-                title={card.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
-                className={`relative text-left p-4 rounded-2xl border transition duration-200 focus:outline-none cursor-pointer ${
-                  isActive
-                    ? 'bg-white border-transparent ring-2 ring-teal-600 shadow-card'
-                    : 'bg-white border-gray-200 hover:shadow-card'
-                }`}
-              >
-                {card.urgent && card.count > 0 && !isActive && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500 motion-safe:animate-pulse" />
-                )}
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${card.iconColor}`}>
-                  {statIcons[card.key]}
-                </div>
-                <p className={`text-2xl font-extrabold mb-0.5 ${card.countColor}`}>
-                  {card.count}
-                </p>
-                <p className="text-xs font-medium text-gray-500 leading-tight">
-                  {card.label}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search + sort */}
-        <div className="flex flex-col sm:flex-row gap-3 pb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search by title or counterparty..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 bg-white"
-            />
+        {/* Filter tabs + search + sort */}
+        <div className="mt-6 flex flex-col gap-4">
+          <div role="group" aria-label="Filter NDAs" className="flex flex-wrap gap-x-0 min-w-0 border-b border-line">
+            {filterTabs.map((tab) => {
+              const isActive = filter === tab.key;
+              const needs = tab.urgent && tab.count > 0;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  aria-pressed={isActive}
+                  aria-label={`${tab.label}, ${tab.count}${needs ? ', needs your attention' : ''}`}
+                  onClick={() => setFilter(tab.key)}
+                  title={tab.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
+                  className={`-mb-px inline-flex items-center gap-2 h-10 px-2.5 border-b-2 text-sm cursor-pointer transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 rounded-t-control ${
+                    isActive
+                      ? 'border-teal-800 text-ink font-semibold'
+                      : 'border-transparent text-muted-ink font-medium hover:text-ink'
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`font-doc-mono text-xs leading-none px-1.5 py-1 rounded ${
+                    needs ? 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200' : 'bg-gray-100 text-muted-ink'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white text-gray-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="name">Name A–Z</option>
-          </select>
+          <div className="flex w-full gap-2 sm:max-w-lg">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" aria-hidden="true" />
+              <input
+                type="text"
+                placeholder="Search by title or counterparty..."
+                aria-label="Search NDAs"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`${inputClassesCrisp} pl-9`}
+              />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              aria-label="Sort NDAs"
+              className={`${inputClassesCrisp} w-auto! shrink-0`}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name A–Z</option>
+            </select>
+          </div>
         </div>
 
-        {/* Recent activity */}
-        <div className="mb-12">
-          <h2 className="text-sm font-semibold text-ink mb-3">
-            {searchQuery ? `Results for "${searchQuery}"` : 'Recent Activity'}
-          </h2>
+        {/* List */}
+        <div className="mt-4">
+          {searchQuery ? (
+            <h2 className="text-sm font-semibold text-muted-ink mb-2">Results for &quot;{searchQuery}&quot;</h2>
+          ) : (
+            <h2 className="sr-only">Recent activity</h2>
+          )}
 
           {filteredNdas.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-12 text-center">
-              <div className="w-12 h-12 bg-teal-800 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-6 h-6 text-white" />
+            <div className="bg-white rounded-sheet border border-line p-10 sm:p-12 text-center">
+              <div className="w-11 h-11 bg-teal-800 rounded-control flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
-              <h3 className="text-base font-bold text-ink mb-2">Send your first NDA in minutes</h3>
-              <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">Pick a template, fill in the details, and send a secure link — no back-and-forth, no blank page.</p>
-              <div className="flex items-center justify-center gap-4 text-xs text-gray-500 mb-6">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">1</span>
-                  Choose template
-                </span>
-                <span className="text-gray-300">→</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">2</span>
-                  Fill details
-                </span>
-                <span className="text-gray-300">→</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">3</span>
-                  Send secure link
-                </span>
+              <h3 className="font-display text-lg font-semibold text-ink tracking-tight mb-2">Send your first NDA in minutes</h3>
+              <p className="text-sm text-muted-ink mb-5 max-w-xs mx-auto">Pick a template, fill in the details, and send a secure link — no back-and-forth, no blank page.</p>
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-ink mb-6">
+                {['Choose template', 'Fill details', 'Send secure link'].map((step, i) => (
+                  <span key={step} className="flex items-center gap-1.5">
+                    <span className="w-5 h-5 rounded border border-line bg-ground flex items-center justify-center text-ink font-doc-mono text-xs">{i + 1}</span>
+                    {step}
+                  </span>
+                ))}
               </div>
-              <Link href={NEW_NDA_HREF} className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm">
-                <Plus className="w-4 h-4" />
-                Send Your First NDA
-              </Link>
+              <Button asChild shape="crisp">
+                <Link href={NEW_NDA_HREF}>
+                  <Plus className="w-4 h-4" aria-hidden="true" />
+                  Send Your First NDA
+                </Link>
+              </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="bg-white rounded-sheet border border-line overflow-hidden">
+              <div
+                aria-hidden="true"
+                className="hidden md:grid grid-cols-[minmax(0,1fr)_168px_88px_auto] gap-4 items-center px-5 h-9 bg-ground border-b border-line text-xs font-semibold text-muted-ink"
+              >
+                <span>Name</span>
+                <span>Status</span>
+                <span>Updated</span>
+                <span className="w-[1px]" />
+              </div>
+              <div role="list">
               {filteredNdas.map((nda) => {
                 const statusInfo = getWorkflowStatusInfo(nda);
+                const needsYou = actionRequired(nda);
                 return (
                   <div
                     key={nda.id}
                     id={`nda-${nda.id}`}
-                    className={`group rounded-2xl border bg-white px-4 sm:px-5 py-4 transition duration-200 ${
+                    role="listitem"
+                    className={`group border-b border-line last:border-b-0 px-4 sm:px-5 py-4 transition-colors duration-150 ${
                       highlightedId === nda.id
-                        ? 'border-transparent ring-2 ring-teal-600 bg-teal-50'
-                        : 'border-gray-100 hover:shadow-card'
+                        ? 'bg-teal-50 ring-2 ring-inset ring-teal-700'
+                        : needsYou
+                          ? 'bg-amber-50 hover:bg-amber-100/60'
+                          : 'hover:bg-gray-50/70'
                     }`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_168px_88px_auto] gap-x-4 gap-y-3 items-center">
                       {/* Document + counterparty */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="hidden sm:flex w-10 h-10 rounded-xl bg-teal-50 items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5 text-teal-700" />
+                      <div className="min-w-0 order-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-display text-[15px] font-semibold text-ink tracking-tight truncate">{nda.partyName}</span>
+                          {nda.type === 'received' && (
+                            <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-muted-ink shrink-0">Received</span>
+                          )}
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[15px] font-semibold text-ink truncate">{nda.partyName}</span>
-                            {nda.type === 'received' && (
-                              <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-500 shrink-0">Received</span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500 truncate">
-                            <span className="text-xs text-gray-500 mr-1">{getRecipientLabel(nda)}:</span>
-                            {getRecipient(nda)}
-                          </p>
-                        </div>
+                        <p className="text-sm text-muted-ink truncate mt-0.5">
+                          <span className="text-xs mr-1">{getRecipientLabel(nda)}:</span>
+                          {getRecipient(nda)}
+                        </p>
                       </div>
 
-                      {/* Status, date, actions */}
-                      <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-4 gap-y-2">
-                        <StatusPill tone={statusInfo.tone} label={statusInfo.label} />
-                        <span className="hidden md:inline text-xs text-gray-500 whitespace-nowrap">
-                          {new Date(nda.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </span>
-                        <div className="flex gap-2">
-                          {renderActions(nda)}
-                        </div>
+                      <div className="order-2 justify-self-end md:justify-self-start">
+                        <StatusPill tone={statusInfo.tone} label={statusInfo.label} shape="crisp" />
+                      </div>
+
+                      <span className="order-3 font-doc-mono text-xs text-muted-ink whitespace-nowrap">
+                        {new Date(nda.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+
+                      <div className="order-4 col-span-2 md:col-span-1 flex flex-wrap items-center justify-start md:justify-end gap-2 empty:hidden">
+                        {renderActions(nda)}
                       </div>
                     </div>
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
@@ -682,14 +689,14 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
             exit={{ opacity: 0, y: 8, transition: { duration: 0.2 } }}
-            className="fixed bottom-6 right-6 z-50 bg-white border border-gray-200 rounded-2xl shadow-float p-4 flex items-start gap-3 max-w-xs"
+            className="fixed bottom-6 right-6 z-50 bg-white border border-line rounded-sheet shadow-sheet p-4 flex items-start gap-3 max-w-xs"
           >
-            <div className="w-9 h-9 bg-teal-800 rounded-lg flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 bg-teal-800 rounded-control flex items-center justify-center shrink-0">
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-ink">You&apos;re on Pro</p>
-              <p className="text-sm text-gray-500">Welcome to FormalizeIt Pro!</p>
+              <p className="font-display text-sm font-semibold text-ink">You&apos;re on Pro</p>
+              <p className="text-sm text-muted-ink">Welcome to FormalizeIt Pro!</p>
             </div>
             <button
               onClick={() => setShowProBanner(false)}

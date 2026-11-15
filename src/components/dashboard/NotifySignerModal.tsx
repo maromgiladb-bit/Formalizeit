@@ -97,7 +97,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-ink/50 z-40"
             onClick={busy ? undefined : onClose}
           />
 
@@ -109,7 +109,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
               role="dialog"
               aria-modal="true"
               aria-label="Ask a teammate to sign"
-              className="pointer-events-auto relative bg-white border border-gray-100 rounded-2xl shadow-float max-w-md w-full p-6"
+              className="pointer-events-auto relative bg-white border border-line rounded-sheet shadow-sheet max-w-md w-full p-6"
             >
               <button
                 onClick={busy ? undefined : onClose}
@@ -120,7 +120,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-lg font-semibold text-ink mb-1">Who should sign this NDA?</h3>
+              <h3 className="font-display text-lg font-semibold text-ink tracking-tight mb-1">Who should sign this NDA?</h3>
               <p className="text-sm text-gray-500 mb-5">
                 Only Signers can sign on behalf of your company. Choose who to notify — they&apos;ll get
                 an email and an in-app notification.
@@ -129,7 +129,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
               {loading && <p className="text-sm text-gray-500 py-4">Loading signers…</p>}
 
               {!loading && !hasSigners && !error && (
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 mb-5">
+                <div className="rounded-control bg-ground border border-line p-4 mb-5">
                   <p className="text-sm text-gray-600">
                     No teammate on your team can sign yet. Ask an administrator to enable a signer.
                   </p>
@@ -141,7 +141,7 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
                   {signers!.map(s => (
                     <label
                       key={s.id}
-                      className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-center gap-3 rounded-control border border-line px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <input
                         type="checkbox"
@@ -161,11 +161,11 @@ export function NotifySignerModal({ isOpen, onClose, onConfirm }: NotifySignerMo
               {error && <p role="alert" className="text-sm text-red-600 mb-4">{error}</p>}
 
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={onClose} disabled={busy}>
+                <Button variant="outline" shape="crisp" className="flex-1" onClick={onClose} disabled={busy}>
                   Cancel
                 </Button>
                 {hasSigners && (
-                  <Button className="flex-1" onClick={handleConfirm} disabled={busy || selected.size === 0}>
+                  <Button shape="crisp" className="flex-1" onClick={handleConfirm} disabled={busy || selected.size === 0}>
                     <PenLine className="w-4 h-4" />
                     {busy ? 'Notifying…' : 'Notify selected'}
                   </Button>

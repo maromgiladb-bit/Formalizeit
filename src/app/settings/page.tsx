@@ -57,14 +57,14 @@ export default function SettingsPage() {
     >
 
       {/* Account Information */}
-      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100">
+      <motion.div variants={fadeUp} className="bg-white rounded-sheet border border-line overflow-hidden">
+        <div className="px-6 py-5 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-teal-50 rounded-control flex items-center justify-center">
               <User className="w-5 h-5 text-teal-700" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Account Information</h3>
+              <h3 className="text-sm font-semibold text-gray-700">Account Information</h3>
               <p className="text-sm text-gray-500">Personal details and account management</p>
             </div>
           </div>
@@ -73,27 +73,27 @@ export default function SettingsPage() {
         <div className="px-6 py-5 space-y-5">
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5">Full Name</label>
-            <p className="text-base text-gray-900 font-medium">{user?.fullName || 'Not set'}</p>
+            <p className="text-base text-ink font-medium">{user?.fullName || 'Not set'}</p>
           </div>
           <div className="h-px bg-gray-100" />
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email Address</label>
-            <p className="text-base text-gray-900 font-medium">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
+            <p className="text-base text-ink font-medium">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
           </div>
         </div>
       </motion.div>
 
       {/* Sign-in & Security */}
-      <motion.div variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
+      <motion.div variants={fadeUp} className="bg-white rounded-sheet border border-line overflow-hidden">
         <Link
           href="/settings/account-security"
           className="flex items-center gap-3 px-6 py-5 hover:bg-gray-50 transition-colors duration-200"
         >
-          <div className="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 bg-teal-50 rounded-control flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5 text-teal-700" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-bold text-gray-900">Sign-in &amp; Security</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Sign-in &amp; Security</h3>
             <p className="text-sm text-gray-500">
               Update your password and manage how you sign in.
             </p>
@@ -103,13 +103,13 @@ export default function SettingsPage() {
       </motion.div>
 
       {/* Danger Zone */}
-      <motion.div variants={fadeUp} className="rounded-xl border border-red-200 overflow-hidden">
+      <motion.div variants={fadeUp} className="rounded-sheet border border-red-200 overflow-hidden">
         <div className="px-6 py-5 border-b border-red-100 bg-red-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-red-100 rounded-control flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
-            <h3 className="text-sm font-bold text-red-800">Danger Zone</h3>
+            <h3 className="text-sm font-semibold text-red-800">Danger Zone</h3>
           </div>
         </div>
 
@@ -121,21 +121,21 @@ export default function SettingsPage() {
           {!showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-red-300 text-red-700 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors duration-200 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-red-300 text-red-700 rounded-control text-sm font-semibold hover:bg-red-50 transition-colors duration-200 cursor-pointer"
             >
               Delete Account
             </button>
           ) : (
-            <div className="bg-white border border-red-200 rounded-lg p-5 space-y-4">
+            <div className="bg-white border border-red-200 rounded-control p-5 space-y-4">
               <p className="text-sm font-semibold text-gray-800">
-                Type <span className="font-mono text-red-600 font-bold">DELETE</span> to confirm:
+                Type <span className="font-mono text-red-600 font-semibold">DELETE</span> to confirm:
               </p>
               <input
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="Type DELETE"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-line rounded-control text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
                 autoFocus
               />
               {deleteError && (
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleDeleteAccount}
                   disabled={confirmText !== 'DELETE' || deleting}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-control text-sm font-semibold hover:bg-red-700 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {deleting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {deleting ? 'Deleting...' : 'Permanently Delete Account'}
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => { setShowDeleteConfirm(false); setConfirmText(''); setDeleteError(null) }}
                   disabled={deleting}
-                  className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                  className="px-4 py-2.5 bg-white border border-line text-gray-700 rounded-control text-sm font-semibold hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
                 >
                   Cancel
                 </button>

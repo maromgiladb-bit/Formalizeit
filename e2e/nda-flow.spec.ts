@@ -110,7 +110,7 @@ test('sender fills and sends an NDA; receiver opens the secure link', async ({ p
     expect(body.reviewLink, 'reviewLink in response').toBeTruthy()
     reviewLink = body.reviewLink!
 
-    await expect(page.getByText('Secure link ready')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your NDA is ready to share' })).toBeVisible()
     await shot(page, '07-link-ready')
   })
 
