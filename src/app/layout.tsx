@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google'
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Schibsted_Grotesk } from 'next/font/google'
 import ToolbarSwitcher from '@/components/ToolbarSwitcher'
 import FooterWrapper from '@/components/FooterWrapper'
 import { FormiProvider } from '@/components/ai/FormiProvider'
@@ -26,6 +26,13 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
+})
+
+const schibstedGrotesk = Schibsted_Grotesk({
+  variable: '--font-schibsted',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -73,7 +80,7 @@ export default async function RootLayout({
               only hide content when they can also show it (globals.css). */}
           <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         </head>
-        <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
+        <body className={`${plusJakartaSans.variable} ${geistSans.variable} ${geistMono.variable} ${schibstedGrotesk.variable} font-sans antialiased flex flex-col min-h-screen`}>
           <TermsGate needsTerms={needsTerms} />
           <FormiProvider>
             <ToolbarSwitcher />

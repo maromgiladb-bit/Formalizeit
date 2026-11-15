@@ -80,6 +80,7 @@ const isDevOnlyRoute = createRouteMatcher([
   '/api/test',
   '/api/generate-preview',
   '/api/dev/(.*)',         // /api/dev/email-preview
+  '/dev/design-system',    // design-system preview page (Ink & Seal foundations)
 ])
 
 export default clerkMiddleware(async (auth, req) => {

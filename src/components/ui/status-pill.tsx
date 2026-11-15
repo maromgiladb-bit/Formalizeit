@@ -30,15 +30,17 @@ interface StatusPillProps {
   tone: StatusTone;
   label: string;
   icon?: ReactNode;
+  /** 'crisp' is the Ink & Seal shape (4px radius, display font). Default is unchanged. */
+  shape?: 'default' | 'crisp';
   className?: string;
 }
 
-export function StatusPill({ tone, label, icon, className }: StatusPillProps) {
+export function StatusPill({ tone, label, icon, shape = 'default', className }: StatusPillProps) {
   const styles = toneStyles[tone];
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap ${styles.pill} ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 ${shape === 'crisp' ? 'rounded px-2 py-1 font-display text-xs font-semibold' : 'rounded-full px-2.5 py-1 text-xs font-medium'} whitespace-nowrap ${styles.pill} ${className || ''}`}
     >
       {icon ?? (tone === 'done' ? (
         <Check className="h-3 w-3" aria-hidden="true" />

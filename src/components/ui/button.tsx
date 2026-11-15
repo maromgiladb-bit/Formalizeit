@@ -18,6 +18,11 @@ const buttonVariants = cva(
         ghost: "text-gray-600 hover:bg-gray-100 hover:text-ink",
         link: "text-teal-800 underline-offset-4 hover:underline",
       },
+      // Ink & Seal opt-in: 'default' adds no classes, so existing buttons are unchanged.
+      shape: {
+        default: "",
+        crisp: "rounded-control! font-display font-semibold",
+      },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-8 rounded-lg px-3 text-xs",
@@ -27,6 +32,7 @@ const buttonVariants = cva(
     },
     defaultVariants: {
       variant: "default",
+      shape: "default",
       size: "default",
     },
   }
@@ -39,11 +45,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, shape, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={buttonVariants({ variant, size, className })}
+        className={buttonVariants({ variant, size, shape, className })}
         ref={ref}
         {...props}
       />

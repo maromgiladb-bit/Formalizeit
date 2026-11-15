@@ -61,6 +61,17 @@
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
   --shadow-float: 0 8px 30px rgb(16 24 40 / 0.08);
   --shadow-lift: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+
+  /* Ink & Seal (Calm colors) foundations. Additive; pages adopt them in later tickets. */
+  --color-ground: #f6f8f8;
+  --color-line: #e3e9e8;
+  --color-muted-ink: #5b6b69;
+  --color-tint: #d9efec;
+  --shadow-sheet: 0 1px 1px rgba(13, 31, 30, 0.04), 0 14px 24px -18px rgba(13, 31, 30, 0.22);
+  --radius-control: 6px;
+  --radius-sheet: 8px;
+  --font-display: var(--font-schibsted);
+  --font-doc-mono: var(--font-geist-mono);
 }
 
 @keyframes appear-zoom {
@@ -364,4 +375,9 @@ p {
 
 .animate-accordion-up {
   animation: accordion-up 0.2s ease-out;
+}
+/* Share sheet rise: transform and opacity only; applied via motion-safe so reduced motion gets none. */
+@keyframes share-sheet-rise {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }
