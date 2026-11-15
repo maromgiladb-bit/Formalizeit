@@ -52,7 +52,7 @@ export default function MemberRoleDropdown({
                 <button
                     onClick={handleSave}
                     disabled={isPending}
-                    className="text-xs px-2 py-1 rounded-md bg-slate-700 text-white hover:bg-slate-800 disabled:opacity-50"
+                    className="text-xs px-2.5 py-1.5 rounded-control bg-teal-800 text-white hover:bg-teal-700 disabled:opacity-50"
                 >
                     {isPending ? 'Saving...' : 'Save'}
                 </button>

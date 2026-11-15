@@ -27,14 +27,14 @@ export default function InviteActions({ membershipId }: { membershipId: string }
             <button
                 onClick={handleDecline}
                 disabled={isPending}
-                className="px-3 py-1.5 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded hover:bg-blue-50 disabled:opacity-50 transition-colors shrink-0"
+                className="px-3 py-1.5 text-sm font-medium text-ink bg-white border border-line rounded-control hover:bg-gray-50 disabled:opacity-50 transition-colors shrink-0"
             >
                 {isPending ? '...' : 'Decline'}
             </button>
             <button
                 onClick={handleAccept}
                 disabled={isPending}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded hover:bg-blue-700 shadow-sm disabled:opacity-50 transition-colors shrink-0"
+                className="px-3 py-1.5 text-sm font-medium text-white bg-teal-800 border border-transparent rounded-control hover:bg-teal-700 disabled:opacity-50 transition-colors shrink-0"
             >
                 {isPending ? '...' : 'Accept'}
             </button>

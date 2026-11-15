@@ -25,17 +25,17 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-ground">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-ink tracking-tight">
+          <h2 className="mt-6 text-center text-3xl font-display font-semibold tracking-tight text-ink">
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-500">
             Send your first NDA in minutes — free
           </p>
         </div>
-        <div className="bg-white py-8 px-6 rounded-2xl border border-gray-100 shadow-card">
+        <div className="bg-white py-8 px-6 rounded-sheet border border-line">
           <SignUp
             routing="hash"
             fallbackRedirectUrl="/dashboard"

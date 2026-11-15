@@ -48,10 +48,10 @@ export default function LeaveTeamButton({
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
                             transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 max-w-sm w-full mx-4"
+                            className="bg-white rounded-sheet shadow-lg border border-line p-6 max-w-sm w-full mx-4"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h3 className="text-sm font-semibold text-gray-900">Leave Team</h3>
+                            <h3 className="text-sm font-semibold text-ink">Leave Team</h3>
                             <p className="mt-2 text-sm text-gray-600">
                                 Are you sure you want to leave <strong>{orgName}</strong>? You will lose access to team documents.
                             </p>
@@ -59,14 +59,14 @@ export default function LeaveTeamButton({
                                 <button
                                     onClick={() => setShowConfirm(false)}
                                     disabled={isPending}
-                                    className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                                    className="text-xs px-3 py-1.5 rounded-control border border-line text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleLeave}
                                     disabled={isPending}
-                                    className="text-xs px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 shadow-sm disabled:opacity-50 transition-colors"
+                                    className="text-xs px-3 py-1.5 rounded-control bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
                                 >
                                     {isPending ? 'Leaving...' : 'Leave Team'}
                                 </button>

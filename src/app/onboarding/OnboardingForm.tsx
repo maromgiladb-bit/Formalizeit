@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Building2 } from 'lucide-react'
 import { createOrganization } from '@/actions/team'
 import { Button } from '@/components/ui/button'
-import { inputClasses } from '@/components/ui/input'
+import { inputClassesCrisp } from '@/components/ui/input'
 
 export default function OnboardingForm() {
   const router = useRouter()
@@ -33,19 +33,19 @@ export default function OnboardingForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <Image src="/formalizeIt-logo.png" alt="FormalizeIt" width={180} height={45} className="h-10 w-auto" priority />
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-card px-8 py-10">
+        <div className="bg-white border border-line rounded-sheet shadow-sheet px-8 py-10">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-teal-50 rounded-sheet flex items-center justify-center shrink-0">
               <Building2 className="w-5 h-5 text-teal-700" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold text-ink leading-tight">Set up your workspace</h1>
+              <h1 className="text-lg font-display font-semibold tracking-tight text-ink leading-tight">Set up your workspace</h1>
               <p className="text-sm text-gray-500">What&apos;s the name of your organization?</p>
             </div>
           </div>
@@ -61,14 +61,14 @@ export default function OnboardingForm() {
                 onChange={(e) => setOrgName(e.target.value)}
                 placeholder="e.g., Acme Corp"
                 autoFocus
-                className={inputClasses}
+                className={inputClassesCrisp}
                 maxLength={80}
               />
               {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
               <p className="mt-1.5 text-xs text-gray-500">This will appear across your workspace and on your team page.</p>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full justify-center">
+            <Button shape="crisp" type="submit" disabled={loading} className="w-full justify-center">
               {loading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {loading ? 'Creating workspace...' : 'Create workspace'}
             </Button>

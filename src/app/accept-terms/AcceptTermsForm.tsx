@@ -51,7 +51,7 @@ export default function AcceptTermsForm({ next }: { next: string }) {
         </span>
       </label>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-      <Button type="submit" className="w-full" disabled={!checked || pending}>
+      <Button shape="crisp" type="submit" className="w-full" disabled={!checked || pending}>
         {pending ? 'Saving…' : 'Continue'}
       </Button>
     </form>

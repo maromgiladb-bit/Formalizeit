@@ -48,8 +48,8 @@ export default function TeamUpgradeBanner() {
     if (!visible) return null
 
     return (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0 border border-amber-200">
+        <div className="bg-amber-50 border border-amber-200 rounded-sheet p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-white rounded-control flex items-center justify-center shrink-0 border border-amber-200">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
             </div>
             <div className="flex-1 min-w-0">
@@ -59,7 +59,7 @@ export default function TeamUpgradeBanner() {
                     and signing.
                 </p>
                 <div className="flex items-center gap-4 mt-3">
-                    <Button size="sm" onClick={handleUpgrade} disabled={loading}>
+                    <Button shape="crisp" size="sm" onClick={handleUpgrade} disabled={loading}>
                         {loading ? 'Redirecting…' : 'Upgrade to Team'}
                     </Button>
                     <label className="flex items-center gap-2 cursor-pointer select-none">

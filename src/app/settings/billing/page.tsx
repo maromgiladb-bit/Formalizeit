@@ -244,9 +244,9 @@ export default function BillingSettingsPage() {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-48 bg-gray-100 rounded-xl" />
-        <div className="h-32 bg-gray-100 rounded-xl" />
-        <div className="h-40 bg-gray-100 rounded-xl" />
+        <div className="h-48 bg-gray-100 rounded-sheet" />
+        <div className="h-32 bg-gray-100 rounded-sheet" />
+        <div className="h-40 bg-gray-100 rounded-sheet" />
       </div>
     )
   }
@@ -276,7 +276,7 @@ export default function BillingSettingsPage() {
 
       {/* PAST_DUE warning */}
       {subscription.billingStatus === 'PAST_DUE' && (
-        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-white border border-line rounded-sheet shadow-sm">
           <div className="flex items-center gap-2.5 text-sm text-red-600 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Payment failed. Update your payment method to keep Pro access.</span>
@@ -293,7 +293,7 @@ export default function BillingSettingsPage() {
 
       {/* Pending cancellation notice */}
       {subscription.cancelAtPeriodEnd && subscription.billingStatus !== 'CANCELLED' && (
-        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-white border border-line rounded-sheet shadow-sm">
           <div className="flex items-center gap-2.5 text-sm text-amber-700 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
@@ -317,7 +317,7 @@ export default function BillingSettingsPage() {
       )}
 
       {/* Current Plan */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-line rounded-sheet overflow-hidden">
 
         {/* Plan header */}
         <div className="px-6 pt-6 pb-5">
@@ -325,10 +325,10 @@ export default function BillingSettingsPage() {
             <div>
               <p className="text-gray-700 text-sm font-semibold mb-2">Current Plan</p>
               <div className="flex items-center gap-3 mb-1">
-                <span className="text-3xl font-extrabold text-ink tracking-tight">
+                <span className="text-3xl font-display font-semibold tracking-tight text-ink">
                   {getPlanDisplayName(subscription.plan)}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                <span className={`px-2.5 py-0.5 rounded-control text-xs font-semibold ${
                   subscription.billingStatus === 'PAST_DUE'
                     ? 'bg-red-50 text-red-700'
                     : subscription.billingStatus === 'CANCELLED'
@@ -348,7 +348,7 @@ export default function BillingSettingsPage() {
               </div>
               <p className="text-sm text-gray-500">{getPlanPrice(subscription.plan, subscription.billingCycle)}</p>
             </div>
-            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-teal-50 rounded-sheet flex items-center justify-center shrink-0">
               <Zap className="w-5 h-5 text-teal-700" />
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function BillingSettingsPage() {
 
         {/* Usage bar — Free plan */}
         {subscription.plan === 'FREE' && subscription.limit && (
-          <div className="px-6 pb-5 border-t border-gray-100 pt-4">
+          <div className="px-6 pb-5 border-t border-line pt-4">
             <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2">
               <span>Usage</span>
               <span>{subscription.ndaCount} / {subscription.limit} NDAs</span>
@@ -387,7 +387,7 @@ export default function BillingSettingsPage() {
         )}
 
         {/* Features */}
-        <div className="border-t border-gray-100 bg-gray-50 px-6 py-5">
+        <div className="border-t border-line bg-gray-50 px-6 py-5">
           <p className="text-gray-700 text-sm font-semibold mb-4">Included features</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {features.map((f) => (
@@ -400,16 +400,16 @@ export default function BillingSettingsPage() {
         </div>
 
         {/* Action */}
-        <div className="border-t border-gray-100 px-6 py-4 flex items-center gap-4 flex-wrap">
+        <div className="border-t border-line px-6 py-4 flex items-center gap-4 flex-wrap">
           {!PAID_PLANS_ENABLED && subscription.plan === 'FREE' ? (
             /* Free beta: nothing to upgrade to yet */
-            <Button variant="outline" disabled>
+            <Button shape="crisp" variant="outline" disabled>
               Current Plan Active
             </Button>
           ) : subscription.billingStatus === 'CANCELLED' && isOwner && PAID_PLANS_ENABLED ? (
             /* Subscription was cancelled — allow re-subscribing */
             <>
-              <Button onClick={() => openCheckoutFor(subscription.plan === 'TEAM' ? 'TEAM' : 'PRO')}>
+              <Button shape="crisp" onClick={() => openCheckoutFor(subscription.plan === 'TEAM' ? 'TEAM' : 'PRO')}>
                 Re-subscribe
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -420,7 +420,7 @@ export default function BillingSettingsPage() {
           ) : subscription.plan === 'FREE' ? (
             <>
               {isOwner ? (
-                <Button onClick={() => openCheckoutFor('PRO')}>
+                <Button shape="crisp" onClick={() => openCheckoutFor('PRO')}>
                   Upgrade to Pro
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -434,7 +434,7 @@ export default function BillingSettingsPage() {
           ) : subscription.plan === 'PRO' && isOwner ? (
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex flex-col gap-1">
-                <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                <Button shape="crisp" variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
                   {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
                 </Button>
                 {portalError && <p className="text-xs text-red-600">{portalError}</p>}
@@ -456,7 +456,7 @@ export default function BillingSettingsPage() {
           ) : subscription.hasStripeSubscription && isOwner ? (
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex flex-col gap-1.5">
-                <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                <Button shape="crisp" variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
                   {portalLoading ? 'Opening portal...' : 'Manage Subscription'}
                 </Button>
                 {portalError && <p className="text-xs text-red-600">{portalError}</p>}
@@ -471,7 +471,7 @@ export default function BillingSettingsPage() {
               )}
             </div>
           ) : (
-            <Button variant="outline" disabled>
+            <Button shape="crisp" variant="outline" disabled>
               Current Plan Active
             </Button>
           )}
@@ -479,19 +479,19 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Billing Details */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="px-6 pt-6 pb-5 border-b border-gray-100">
+      <div className="bg-white border border-line rounded-sheet overflow-hidden">
+        <div className="px-6 pt-6 pb-5 border-b border-line">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-base font-semibold text-ink">Billing details</h3>
               <p className="text-sm text-gray-500">Subscription &amp; payment information</p>
             </div>
-            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-teal-50 rounded-sheet flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5 text-teal-700" />
             </div>
           </div>
         </div>
-        <dl className="divide-y divide-gray-100">
+        <dl className="divide-y divide-line">
           <div className="px-6 py-4 grid grid-cols-3 gap-4">
             <dt className="text-sm font-medium text-gray-500">Billing Cycle</dt>
             <dd className="text-sm text-ink col-span-2">
@@ -534,14 +534,14 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Invoice History */}
-      {isOwner && <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="px-6 pt-6 pb-5 border-b border-gray-100">
+      {isOwner && <div className="bg-white border border-line rounded-sheet overflow-hidden">
+        <div className="px-6 pt-6 pb-5 border-b border-line">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-base font-semibold text-ink">Invoice history</h3>
               <p className="text-sm text-gray-500">Past payments and receipts</p>
             </div>
-            <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-teal-50 rounded-sheet flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-teal-700" />
             </div>
           </div>
@@ -554,15 +554,15 @@ export default function BillingSettingsPage() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-500">Receipt</th>
+              <tr className="border-b border-line">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Invoice</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500">Receipt</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-line">
               {invoices.map((inv) => (
                 <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-3.5 text-sm text-gray-700">{formatDate(inv.date)}</td>
@@ -571,7 +571,7 @@ export default function BillingSettingsPage() {
                     {formatCurrency(inv.amountPaid, inv.currency)}
                   </td>
                   <td className="px-6 py-3.5">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-control text-xs font-semibold ${
                       inv.status === 'paid'
                         ? 'bg-teal-50 text-teal-800'
                         : 'bg-red-50 text-red-700'
@@ -586,7 +586,7 @@ export default function BillingSettingsPage() {
                           href={inv.pdfUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+                          className="p-1.5 rounded-control hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
                           title="Download PDF"
                         >
                           <Download className="w-4 h-4" />
@@ -597,7 +597,7 @@ export default function BillingSettingsPage() {
                           href={inv.hostedUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+                          className="p-1.5 rounded-control hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
                           title="View invoice"
                         >
                           <ExternalLink className="w-4 h-4" />

@@ -20,13 +20,13 @@ export default function SettingsLayout({
     const pathname = usePathname()
 
     return (
-        <div className="min-h-screen bg-white font-sans">
+        <div className="min-h-screen bg-ground font-sans">
 
             {/* Header */}
-            <section className="border-b border-gray-100">
+            <section className="border-b border-line bg-white">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight">My account</h1>
-                    <p className="text-base text-gray-500 leading-relaxed mt-2 max-w-lg">
+                    <h1 className="text-3xl sm:text-4xl font-display font-semibold text-ink tracking-tight">My account</h1>
+                    <p className="text-base text-muted-ink leading-relaxed mt-2 max-w-lg">
                         Manage your account, team, and billing preferences.
                     </p>
                 </div>
@@ -36,7 +36,7 @@ export default function SettingsLayout({
                 <div className="flex flex-col lg:flex-row gap-10">
                     {/* Sidebar — horizontal scrollable pill bar on mobile, vertical list on desktop */}
                     <aside className="lg:w-56 shrink-0">
-                        <nav className="lg:sticky lg:top-24 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible -mx-4 px-4 lg:mx-0 lg:px-0 pb-2 lg:pb-0">
+                        <nav className="lg:sticky lg:top-24 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible -mx-4 px-4 lg:mx-0 lg:px-0 pb-0 lg:pb-0 max-lg:border-b max-lg:border-line max-lg:gap-0">
                             {navigation.map((item) => {
                                 const isCurrent = item.href === '/settings'
                                     ? pathname === '/settings'
@@ -46,15 +46,16 @@ export default function SettingsLayout({
                                         key={item.name}
                                         href={item.href}
                                         className={`
-                                            flex items-center gap-3 px-3.5 py-2.5 rounded-full lg:rounded-xl text-sm font-medium transition-colors duration-150 whitespace-nowrap shrink-0
+                                            relative flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium transition-colors duration-150 whitespace-nowrap shrink-0 lg:rounded-control
+                                            max-lg:border-b-2 max-lg:-mb-px
                                             ${isCurrent
-                                                ? 'bg-teal-50 text-teal-800 font-semibold'
-                                                : 'text-gray-600 hover:text-ink hover:bg-gray-50'
+                                                ? 'text-ink font-semibold max-lg:border-teal-800 lg:bg-white lg:border lg:border-line lg:shadow-[inset_3px_0_0_0_var(--color-teal-800)]'
+                                                : 'text-muted-ink hover:text-ink hover:bg-white/70 max-lg:border-transparent lg:border lg:border-transparent'
                                             }
                                         `}
                                         aria-current={isCurrent ? 'page' : undefined}
                                     >
-                                        <item.icon className={`w-4 h-4 ${isCurrent ? 'text-teal-700' : 'text-gray-500'}`} />
+                                        <item.icon aria-hidden="true" className={`w-4 h-4 ${isCurrent ? 'text-teal-800' : 'text-gray-500'}`} />
                                         <span className="truncate">{item.name}</span>
                                     </Link>
                                 )
