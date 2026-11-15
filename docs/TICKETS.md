@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-059**
+**Next ID: T-060**
 
 ## Resume here (updated 2026-11-15)
 
@@ -15,9 +15,9 @@ Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here 
 landed the e2e suite (T-002) and the design audit (T-003).
 
 T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
-`main` (T-058).
+`main` (T-059).
 
-Next: **T-004** (You, Clerk Restricted sign-up), **T-058** (hydration errors), then triage
+Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
 opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
@@ -29,7 +29,7 @@ opens sign-up. The beta plan with estimates is in the "FormalizeIt Beta Roadmap"
 
 ## Next (launch path, in order)
 
-- ☐ **T-058** [normal] [Claude] React hydration error #418 (server/client HTML mismatch) on `/faq`,
+- ☐ **T-059** [normal] [Claude] React hydration error #418 (server/client HTML mismatch) on `/faq`,
   `/help`, `/privacy`, `/settings/billing`, on `main` and live. Found by the smoke e2e run on
   the T-048 branch (2026-11-15). Possibly from the design audit (PR #19, which merged without its
   high-tier e2e run), not yet confirmed. First step: `E2E_DEV=1` on those pages for the full
