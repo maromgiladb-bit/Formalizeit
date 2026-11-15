@@ -17,8 +17,8 @@ interface CheckoutModalProps {
 }
 
 const PLAN_PRICING = {
-  PRO: { label: 'Upgrade to Pro', monthly: '$9 / month · billed monthly', annual: '$7.65 / month · billed annually' },
-  TEAM: { label: 'Upgrade to Team', monthly: '$50 / month · billed monthly', annual: '$42.50 / month · billed annually' },
+  PRO: { label: 'Upgrade to Pro', monthly: '$9 / month, billed monthly', annual: '$7.65 / month, billed annually' },
+  TEAM: { label: 'Upgrade to Team', monthly: '$50 / month, billed monthly', annual: '$42.50 / month, billed annually' },
 } as const
 
 export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan = 'PRO' }: CheckoutModalProps) {
@@ -118,7 +118,7 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <div>
-                <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">{PLAN_PRICING[plan].label}</p>
+                <p className="text-gray-700 text-sm font-semibold">{PLAN_PRICING[plan].label}</p>
                 <p className="text-sm text-gray-500 mt-0.5">
                   {billingCycle === 'annual' ? PLAN_PRICING[plan].annual : PLAN_PRICING[plan].monthly}
                 </p>
@@ -129,14 +129,14 @@ export function CheckoutModal({ isOpen, onClose, billingCycle = 'monthly', plan 
                   disabled={fullPageLoading}
                   title="Open full page checkout"
                   aria-label="Open full page checkout"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </button>
                 <button
                   onClick={onClose}
                   aria-label="Close checkout"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>

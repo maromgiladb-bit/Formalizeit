@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
+  // The Playwright suite builds into `.next-e2e` (NEXT_DIST_DIR) so a test run
+  // never overwrites the `.next` folder a running `npm run dev` uses. Unset
+  // everywhere else, including Vercel.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   eslint: {
     // Still off: ~82 pre-existing errors and ~2,860 warnings. Clearing them is
     // real work, but not launch work.

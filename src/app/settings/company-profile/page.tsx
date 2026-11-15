@@ -209,10 +209,10 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 1: Company Information */}
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">1. Company Information</p>
+            <p className="text-xs font-bold text-gray-500 mb-4">1. Company Information</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Organization Name
                 </label>
                 <input
@@ -224,11 +224,11 @@ export default function CompanyProfileSettingsPage() {
                   placeholder="e.g., Acme Corp"
                   className={inputClasses}
                 />
-                <p className="mt-1 text-xs text-gray-400">Your workspace name — shown on your team page and in notifications.</p>
+                <p className="mt-1 text-xs text-gray-500">Your workspace name — shown on your team page and in notifications.</p>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Legal Company Name
                 </label>
                 <input
@@ -240,11 +240,11 @@ export default function CompanyProfileSettingsPage() {
                   placeholder="e.g., Acme Corporation Inc."
                   className={inputClasses}
                 />
-                <p className="mt-1 text-xs text-gray-400">Used as Party A in NDA documents.</p>
+                <p className="mt-1 text-xs text-gray-500">Used as Party A in NDA documents.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Email
                 </label>
                 <input
@@ -259,7 +259,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Phone
                 </label>
                 <input
@@ -274,7 +274,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Website
                 </label>
                 <input
@@ -294,10 +294,10 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 2: Address */}
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">2. Address</p>
+            <p className="text-xs font-bold text-gray-500 mb-4">2. Address</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Address Line 1
                 </label>
                 <input
@@ -312,7 +312,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Address Line 2
                 </label>
                 <input
@@ -327,7 +327,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   City
                 </label>
                 <input
@@ -342,7 +342,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   State / Province
                 </label>
                 <input
@@ -357,7 +357,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Postal Code
                 </label>
                 <input
@@ -372,7 +372,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Country
                 </label>
                 <input
@@ -392,10 +392,10 @@ export default function CompanyProfileSettingsPage() {
 
           {/* Section 3: Authorized Signatory */}
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">3. Authorized Signatory</p>
+            <p className="text-xs font-bold text-gray-500 mb-4">3. Authorized Signatory</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Signatory Name
                 </label>
                 <input
@@ -410,7 +410,7 @@ export default function CompanyProfileSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                   Signatory Title
                 </label>
                 <input

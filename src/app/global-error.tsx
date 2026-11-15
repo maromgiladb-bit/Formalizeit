@@ -37,18 +37,6 @@ export default function GlobalError({
         }}
       >
         <div style={{ textAlign: "center", maxWidth: "24rem" }}>
-          <p
-            style={{
-              color: "#0f766e",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              marginBottom: "1rem",
-            }}
-          >
-            Something went wrong
-          </p>
           <h1
             style={{
               fontSize: "1.875rem",

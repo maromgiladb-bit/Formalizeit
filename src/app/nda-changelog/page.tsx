@@ -10,7 +10,7 @@ export const metadata = {
 function ChangeGroup({ label, items }: { label: string; items: string[] }) {
 	return (
 		<div className="mt-4">
-			<p className="text-teal-700 text-xs font-bold uppercase tracking-widest">{label}</p>
+			<p className="text-gray-700 text-sm font-semibold">{label}</p>
 			<ul className="mt-2 space-y-1.5">
 				{items.map((item, i) => (
 					<li key={i} className="text-sm text-gray-600 flex gap-2 leading-relaxed">
@@ -32,7 +32,7 @@ export default function NdaChangelogPage() {
 				subtitle="A plain-language history of changes to the standard NDA"
 			/>
 
-			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch]">
 				<div className="space-y-6">
 					{NDA_CHANGELOG.map((entry) => (
 						<div
@@ -41,7 +41,7 @@ export default function NdaChangelogPage() {
 						>
 							<div className="flex items-baseline justify-between flex-wrap gap-2">
 								<h2 className="text-xl font-extrabold text-ink tracking-tight">v{entry.version}</h2>
-								<span className="text-sm text-gray-400">{entry.date}</span>
+								<span className="text-sm text-gray-500">{entry.date}</span>
 							</div>
 							<p className="text-base text-gray-500 leading-relaxed mt-2">{entry.summary}</p>
 							{entry.added && entry.added.length > 0 && <ChangeGroup label="Added" items={entry.added} />}
@@ -51,7 +51,7 @@ export default function NdaChangelogPage() {
 					))}
 				</div>
 
-				<p className="text-xs text-gray-400 mt-8 text-center">
+				<p className="text-xs text-gray-500 mt-8 text-center">
 					FormalizeIt is not a law firm and does not provide legal advice.
 				</p>
 			</div>

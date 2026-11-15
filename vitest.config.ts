@@ -8,6 +8,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    // e2e/ holds Playwright specs, run with `npm run e2e`.
+    exclude: ['**/node_modules/**', '**/.claude/**', 'e2e/**'],
   },
   resolve: {
     alias: {

@@ -368,14 +368,14 @@ const NdaAgentAvatar = forwardRef<NdaAgentHandle, NdaAgentAvatarProps>(
 									type="submit"
 									disabled={isLoading || !input.trim()}
 									aria-label="Send message"
-									className="bg-teal-800 hover:bg-teal-700 disabled:opacity-40 disabled:hover:bg-teal-800 text-white rounded-full p-2.5 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+									className="bg-teal-800 hover:bg-teal-700 disabled:opacity-40 disabled:hover:bg-teal-800 text-white rounded-full p-2.5 transition hover:scale-105 active:scale-95 cursor-pointer shrink-0"
 								>
 									<Send className="w-4 h-4" />
 								</button>
 							</form>
 
 							{/* Persistent legal disclaimer */}
-							<p className="text-[11px] text-gray-400 text-center px-3 pb-2 bg-white">
+							<p className="text-[11px] text-gray-500 text-center px-3 pb-2 bg-white">
 								Formi gives general help, not legal advice — FormalizeIt isn&apos;t a law firm.
 							</p>
 						</motion.div>

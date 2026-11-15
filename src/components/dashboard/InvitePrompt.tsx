@@ -86,7 +86,7 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
             onClick={handleDismiss}
             aria-label="Dismiss"
             disabled={busy}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-600 disabled:opacity-50 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/40 focus-visible:ring-offset-2"
           >
             <X className="w-5 h-5" />
           </button>
@@ -100,7 +100,6 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
 
           {/* Content */}
           <div className="text-center mb-6">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Team invite</p>
             <h3 className="text-lg font-semibold text-ink mb-2">
               You&apos;ve been invited to {invite.organizationName}
             </h3>
@@ -108,7 +107,7 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
               Join as <span className="font-semibold text-ink">{roleLabel}</span> to collaborate on NDAs with your team.
             </p>
             {pendingInvites.length > 1 && (
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 Invite {index + 1} of {pendingInvites.length}
               </p>
             )}

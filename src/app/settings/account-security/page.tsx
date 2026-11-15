@@ -21,7 +21,7 @@ export default function AccountSecurityPage() {
     <motion.div
       className="space-y-6"
       variants={fadeUp}
-      initial="initial"
+      initial={false}
       animate="animate"
     >
       <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">

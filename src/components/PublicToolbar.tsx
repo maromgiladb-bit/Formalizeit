@@ -44,7 +44,7 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
       {(scrolled) => (
         <>
           <div
-            className={`relative flex items-center justify-between transition-all duration-300 ease-out motion-reduce:transition-none ${
+            className={`relative flex items-center justify-between ${
               scrolled ? 'h-13' : 'h-16'
             }`}
           >
@@ -55,8 +55,8 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
                   alt="FormalizeIt"
                   width={200}
                   height={50}
-                  className={`w-auto transition-all duration-300 ease-out motion-reduce:transition-none ${
-                    scrolled ? 'h-20' : 'h-28'
+                  className={`h-28 w-auto origin-left transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                    scrolled ? 'scale-[0.715]' : 'scale-100'
                   }`}
                   priority
                 />
@@ -108,11 +108,11 @@ export default function PublicToolbar({ onLinkClick }: PublicToolbarProps) {
               >
                 <span className="sr-only">Open main menu</span>
                 {!isMobileMenuOpen ? (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg aria-hidden="true" className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 ) : (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg aria-hidden="true" className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}

@@ -21,7 +21,6 @@ export default async function ConfirmStopRemindersPage({
         <div className="mx-auto mb-5 w-11 h-11 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
           <BellOff className="w-5 h-5 text-teal-800" aria-hidden="true" />
         </div>
-        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Reminders</p>
         <h1 className="text-2xl font-extrabold text-ink mb-3">Stop reminders for this NDA?</h1>
         <p className="text-sm text-gray-500 leading-relaxed">
           We will stop sending you reminder emails about this NDA. Your secure link still works, and you may still

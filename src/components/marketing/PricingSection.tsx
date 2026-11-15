@@ -174,8 +174,7 @@ export default function PricingSection() {
   return (
     <div>
       <Reveal className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">Pricing</p>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+        <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
           {PAID_PLANS_ENABLED ? 'Simple, honest pricing' : "Free while we're in beta"}
         </h2>
         <p className="text-base text-gray-500 leading-relaxed mt-3 max-w-xl mx-auto">

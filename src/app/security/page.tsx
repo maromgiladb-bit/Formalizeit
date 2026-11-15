@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, Server, Key, FileCheck } from "lucide-react";
+import { Lock, Server, Key, FileCheck, Check } from "lucide-react";
 import PageHero from "@/components/ui/page-hero";
 
 export default function SecurityPage() {
@@ -13,7 +13,7 @@ export default function SecurityPage() {
 			/>
 
 			{/* Security Features */}
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch]">
 				<div className="grid md:grid-cols-2 gap-8 mb-16">
 					<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8">
 						<div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
@@ -77,25 +77,25 @@ export default function SecurityPage() {
 					<div className="space-y-4 text-gray-600">
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
-								<span className="text-teal-700 text-sm">✓</span>
+								<Check className="w-3.5 h-3.5 text-teal-700" aria-hidden="true" />
 							</div>
 							<p>Documents are kept in private storage and shared only through short-lived download links</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
-								<span className="text-teal-700 text-sm">✓</span>
+								<Check className="w-3.5 h-3.5 text-teal-700" aria-hidden="true" />
 							</div>
 							<p>Signing and review links are random and unguessable, and expire after two weeks of inactivity</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
-								<span className="text-teal-700 text-sm">✓</span>
+								<Check className="w-3.5 h-3.5 text-teal-700" aria-hidden="true" />
 							</div>
 							<p>Signing authority is checked on our servers, not just in the interface</p>
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="flex-shrink-0 w-6 h-6 bg-teal-50 rounded-full flex items-center justify-center mt-0.5">
-								<span className="text-teal-700 text-sm">✓</span>
+								<Check className="w-3.5 h-3.5 text-teal-700" aria-hidden="true" />
 							</div>
 							<p>Error monitoring is configured not to store IP addresses or record your sessions</p>
 						</div>

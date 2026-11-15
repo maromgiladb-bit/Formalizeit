@@ -82,7 +82,7 @@ export default function InviteMemberForm() {
             </div>
 
             {message && (
-                <div className={`mt-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`mt-4 p-4 rounded-md ${message.type === 'success' ? 'bg-gray-50 text-ink border border-gray-200' : 'bg-red-50 text-red-700'}`}>
                     {message.text}
                 </div>
             )}

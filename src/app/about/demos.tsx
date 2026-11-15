@@ -97,7 +97,7 @@ export function HeroLockedDoc() {
         <div className="p-5 space-y-3 relative">
           <div className="absolute top-4 right-4 inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5">
             <Lock className="w-3 h-3 text-gray-500" aria-hidden="true" />
-            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-gray-600">
               Legal text locked
             </span>
           </div>
@@ -105,7 +105,7 @@ export function HeroLockedDoc() {
           <div className="h-2 bg-gray-200 rounded w-full" />
           <div className="h-2 bg-gray-200 rounded w-5/6" />
           <motion.div variants={fadeIn} className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide shrink-0">
+            <span className="text-xs font-semibold text-gray-500 shrink-0">
               Party A
             </span>
             <span className="flex-1 px-2.5 py-1 bg-teal-50 border border-teal-200 rounded-md text-xs font-medium text-teal-800">
@@ -115,7 +115,7 @@ export function HeroLockedDoc() {
           <div className="h-2 bg-gray-200 rounded w-full" />
           <div className="h-2 bg-gray-200 rounded w-4/5" />
           <motion.div variants={fadeIn} className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide shrink-0">
+            <span className="text-xs font-semibold text-gray-500 shrink-0">
               Party B
             </span>
             <span className="flex-1 px-2.5 py-1 bg-teal-50 border border-teal-200 rounded-md text-xs font-medium text-teal-800">
@@ -124,7 +124,7 @@ export function HeroLockedDoc() {
           </motion.div>
           <div className="h-2 bg-gray-200 rounded w-full" />
           <motion.div variants={fadeIn} className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide shrink-0">
+            <span className="text-xs font-semibold text-gray-500 shrink-0">
               Effective
             </span>
             <span className="px-2.5 py-1 bg-teal-50 border border-teal-200 rounded-md text-xs font-medium text-teal-800">
@@ -210,8 +210,8 @@ export function FanOutDemo() {
       <motion.div variants={fadeIn} className="shrink-0">
         <div className="w-40 bg-white border border-gray-200 rounded-2xl shadow-float p-4 space-y-2">
           <div className="flex items-center gap-1.5">
-            <Lock className="w-3 h-3 text-gray-400" aria-hidden="true" />
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">One legal text</p>
+            <Lock className="w-3 h-3 text-gray-500" aria-hidden="true" />
+            <p className="text-xs font-bold text-gray-500">One legal text</p>
           </div>
           <div className="h-1.5 bg-gray-200 rounded w-full" />
           <div className="h-1.5 bg-gray-200 rounded w-5/6" />
@@ -231,9 +231,9 @@ export function FanOutDemo() {
           >
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-ink truncate">{deal.party}</p>
-              <p className="text-[10px] text-gray-400">{deal.date}</p>
+              <p className="text-xs text-gray-500">{deal.date}</p>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">
               <Check className="w-2.5 h-2.5" aria-hidden="true" />
               Standard
             </span>
@@ -257,7 +257,7 @@ export function ReadOnceMockup() {
           <div className="h-2 bg-gray-200 rounded w-full" />
           <div className="h-2 bg-gray-200 rounded w-3/4" />
           <div className="pt-1">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+            <p className="text-xs font-semibold text-gray-500 mb-1.5">
               Reading progress
             </p>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -297,7 +297,7 @@ export function TypingFillMockup() {
         <div className="p-5 space-y-4">
           {FILL_FIELDS.map((field) => (
             <motion.div key={field.label} variants={fadeIn}>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+              <p className="text-xs font-semibold text-gray-500 mb-1">
                 {field.label}
               </p>
               <div className="px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg min-h-[34px]">
@@ -326,11 +326,11 @@ export function CollaborateSendMockup() {
             className="flex items-start gap-3 rounded-xl bg-gray-50 border border-gray-200 p-3"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-50">
-              <span className="text-[10px] font-bold text-teal-700">DK</span>
+              <span className="text-xs font-bold text-teal-700">DK</span>
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-ink flex items-center gap-1.5">
-                Dana K. <MessageSquare className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                Dana K. <MessageSquare className="w-3 h-3 text-gray-500" aria-hidden="true" />
               </p>
               <p className="text-xs text-gray-500">Purpose looks right — good to send.</p>
             </div>

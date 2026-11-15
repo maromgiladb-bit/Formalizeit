@@ -31,7 +31,7 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 - **File storage:** AWS S3 (`@aws-sdk/client-s3`) — stores signed NDA PDFs and documents
 - **PDF generation:** Puppeteer via `@sparticuz/chromium` (server/serverless); `pdf-lib` only in dev scripts
 - **Document templating:** Handlebars for HTML template rendering
-- **Testing:** Vitest
+- **Testing:** Vitest (unit) · Playwright + `@clerk/testing` (browser e2e, see "Browser testing")
 - **Payments:** Stripe — subscription billing, embedded checkout, webhooks, billing portal
 
 ---
@@ -43,12 +43,14 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 Key rules to always apply:
 - Color discipline: teal-800 for CTAs/links ONLY, amber exclusively for "action needed" moments, no blue/purple/green/yellow utility colors
 - Primary buttons: use `@/components/ui/button` (never hand-roll; never teal-600)
-- Accent labels: `text-teal-700 text-xs font-bold uppercase tracking-widest`
+- No eyebrows above headings; labels are sentence case, untracked, never `uppercase` (panel title `text-sm font-semibold text-gray-700`, form label `text-xs font-semibold text-gray-500`) — changed Nov 2026 per the Hallmark audit
 - Cards: `bg-white border border-gray-100 rounded-2xl shadow-card`
 - Alternate section backgrounds: `bg-gray-50`
 - Body text: `text-ink` headings (not gray-900), `text-gray-500` descriptions
 - Status badges: `@/components/ui/status-pill` (neutral/progress/action/done tones)
-- Scroll animations: `@/components/ui/reveal` only; respect prefers-reduced-motion
+- Scroll animations: `@/components/ui/reveal` only (visible by default, hidden only when scripted); no framer `initial` opacity-0 on page content; respect prefers-reduced-motion
+- Never `transition-all`; never animate width/height/top/left; decorative icons `aria-hidden`, icon-only buttons `aria-label`; no emoji icons; gray text on white is `text-gray-500` or darker, smallest text 12px
+- Hallmark (`/hallmark audit`) is the design checker: its stamp and waivers sit at the top of `src/app/globals.css`; records in `.hallmark/` (git-ignored)
 
 ---
 
@@ -303,23 +305,82 @@ Confidence signals come after the speed hook, never before:
 
 ---
 
-## Task list — keep it current
+## Work rules (this repo)
 
-The live task list is **`docs/launch/README.md`** (with `phase-0` … `phase-4` files beside it):
-launch status, open decisions, post-MVP tasks and deferred items. Specs for planned features live in
-`docs/superpowers/specs/`.
+General rules for tickets, branches, commits, checks and merges are in the user's global
+`~/.claude/CLAUDE.md`. This section adds what is specific to this repo. If that file isn't loaded
+(another machine or another person), the short version: one branch per ticket off `main`;
+conventional commits ending `(T-0NN)`; checks by risk tier; PR, then squash-merge only when the
+user says "merge".
 
-**Standing rule (every session):**
-- **New task → write it down immediately.** Whenever a session adds a task — the user asks for
-  something to be done later, a decision creates follow-up work, or a review/bug hunt finds
-  something not fixed right away — add it to the tracker in the right section (launch phase, open
-  decisions, post-MVP, or deferred) before the session ends, even if no code changed. Tasks that
-  live only in chat are lost.
-- **Task finished or changed → tick it** (☑ with the date) in the same commit as the change, or
-  mark it ⊘ deferred with the reason.
-- **Next step changed → refresh the "Resume here" block.**
-- Read the tracker at the start of any planning conversation. A finished change that leaves the
-  tracker stale is incomplete.
+**Tickets**
+- The ticket list is **`docs/TICKETS.md`**: Resume here, Now, Next, Waiting on you, Later, Open
+  decisions, Deferred, Done. `docs/launch/` keeps the launch plan and phase detail and refers to
+  tickets by ID. Specs for planned features live in `docs/superpowers/specs/`.
+- IDs are `T-NNN`. "Next ID" sits at the top of TICKETS.md; a new ticket takes it and bumps it in
+  the same edit. Each line: `☐ **T-0NN** [tier] [owner] one-line summary` + a link to detail.
+- **New task → write it down immediately.** Whenever the user or any agent comes up with a task
+  (a "do this later", follow-up work from a decision, a bug found but not fixed now), add it to
+  TICKETS.md in the same session, even if no code changed, and say "Added T-0NN". Tasks that live
+  only in chat are lost.
+- **Done → tick it** `☑ **T-0NN** … (YYYY-MM-DD, PR #N)` and move it to Done, in the ticket's own
+  PR; or `⊘` with the reason. **Next step changed → refresh "Resume here".** A finished change that
+  leaves TICKETS.md stale is incomplete.
+- Read TICKETS.md at the start of any planning conversation.
+
+**Branches and sessions**
+- Branch per ticket from an up-to-date `main`: `feat|fix|chore|docs|refactor|test/T-0NN-slug`.
+- One editing session at a time works in the main folder. If the main folder is on another ticket
+  branch or has uncommitted work this session didn't make, a second session moves to its own git
+  worktree under `.claude/worktrees/` (git-ignored). Never commit, stash or switch away the other
+  session's work. A new worktree needs `.env.local` copied from the main folder and `npm install`.
+- While an agent worktree exists, run `vitest` with `--exclude ".claude/**"` so it doesn't also
+  test that copy.
+
+**Risk tiers here**
+- **high:** signing and signature evidence, Clerk/auth, Stripe/billing, Prisma migrations, the
+  retention cron, legal page text, security headers and rate limits.
+- Commands: `npm run typecheck` · `npm run lint` (82 pre-existing errors, T-031: judge only new
+  ones) · `npm test` · `npm run build` · `npm run e2e` (see "Browser testing" below).
+- A PR with a Prisma migration lists it, and the migration runs on production **before** the
+  merge (as done for PR #18).
+
+## Browser testing (Playwright e2e) — agents can sign in
+
+A Playwright suite in `e2e/` lets an agent drive the real app **signed in**, past Clerk's sign-in
+and 2FA. Use it to test flows, take screenshots for UI review, or check a change end to end.
+
+- **Run:** `npm run e2e` (all) · `npx playwright test e2e/smoke.spec.ts` (one file) ·
+  `npm run e2e:ui` (interactive) · `npm run e2e:report` (last HTML report).
+- **Server:** by default it builds production into `.next-e2e` and serves it on **port 3100**
+  (`NEXT_DIST_DIR`, set only by the suite), so it never touches `npm run dev` on 3000. The build
+  takes a few minutes; pages then load in about a second. `E2E_DEV=1` uses `next dev` instead. That
+  skips the build but takes minutes per route on a cold start and is flaky. `E2E_BASE_URL` points it
+  at an existing server.
+- **How sign-in works** (`e2e/global.setup.ts`): it creates the test admin in the Clerk dev
+  instance if missing, signs in with a one-time Clerk ticket (no password, no 2FA), clicks through
+  accept-terms and onboarding on a fresh user, and saves the session to `e2e/.auth/admin.json`
+  (git-ignored). Every test in the `chromium` project starts signed in. A signed-out context
+  (`test.use({ storageState: { cookies: [], origins: [] } })`) plays the receiver.
+- **Test data:** user `e2e-admin+clerk_test@example.com` in company **"E2E Test Co"** on the
+  **development** database; receiver email `delivered+e2e@resend.dev` (Resend's test inbox, so
+  nothing bounces). Each flow run adds an NDA titled `E2E NDA <id>`.
+- **Safety guard** (`e2e/env.ts` → `assertSafeTarget`): refuses to run unless the Clerk keys are
+  `sk_test_`/`pk_test_`, `DATABASE_URL` is not the production Neon host (`ep-wild-sea-…`) and the
+  URL is not formalizeit.com. Never weaken it; never point the suite at production.
+- **Specs:** `smoke.spec.ts` (every signed-in and public page loads with no console errors;
+  screenshots in `e2e/.results/screens/`) · `nda-flow.spec.ts` (fill all wizard steps → "Send NDA"
+  → secure link from the `send-for-review` response → receiver opens it signed out).
+- **New specs:** import `test`/`expect` from `./fixtures` (not `@playwright/test`). It stubs
+  `/_vercel/insights/script.js`, which only exists on Vercel and otherwise 500s locally.
+- **Selectors:** fill-page labels aren't linked to their inputs, so the specs use placeholders and
+  button names. If you change a placeholder or button label on `/fillndahtml` or `/templates`,
+  update `e2e/nda-flow.spec.ts`. With one template, `/templates` redirects straight to the fill page.
+- Signing as the company needs the test admin's signer toggle (`isSigner`) on; it is off by
+  default for a new workspace. Planned extensions are in the tracker ("Browser e2e suite").
+- **Windows quirk (unit tests too):** if Vitest fails *every* file with "Cannot read properties
+  of undefined (reading 'config')", the shell's working directory has a lowercase drive letter
+  (`c:\…`). `cd C:/Users/marom/Projects/nda-saas` and rerun.
 
 ## Notes for Claude Code
 

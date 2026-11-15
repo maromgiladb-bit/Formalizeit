@@ -122,9 +122,10 @@ export default function ViewPDF() {
             <div className="flex items-center gap-4">
               <Link
                 href="/dashboard"
+                aria-label="Back to dashboard"
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </Link>
@@ -147,7 +148,7 @@ export default function ViewPDF() {
           {/* PDF Viewer */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-900">Document Preview</h3>
               </div>
               <div className="p-6">
@@ -166,7 +167,7 @@ export default function ViewPDF() {
                 ) : (
                   <div className="flex items-center justify-center h-[700px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                     <div className="text-center">
-                      <svg className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg aria-hidden="true" className="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <p className="text-gray-500 font-medium">PDF preview not available</p>
@@ -187,7 +188,7 @@ export default function ViewPDF() {
           <div className="space-y-6">
             {/* Document Info */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-900">Document Info</h3>
               </div>
               <div className="p-6 space-y-4">
@@ -227,7 +228,7 @@ export default function ViewPDF() {
             {/* Signers */}
             {draft.signers && draft.signers.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                   <h3 className="text-lg font-semibold text-gray-900">Signers</h3>
                 </div>
                 <div className="p-6">
@@ -255,7 +256,7 @@ export default function ViewPDF() {
 
             {/* Actions */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
               </div>
               <div className="p-6 space-y-3">
@@ -263,9 +264,9 @@ export default function ViewPDF() {
                   <a
                     href={pdfPath}
                     download={`${draft.title}.pdf`}
-                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-blue-300 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all"
+                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-blue-300 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                   >
-                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Download PDF
@@ -274,9 +275,9 @@ export default function ViewPDF() {
                 {draft.status === 'DRAFT' && (
                   <Link
                     href={`/fillndahtml?draftId=${draft.id}`}
-                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
+                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Edit Document
@@ -284,9 +285,9 @@ export default function ViewPDF() {
                 )}
                 <Link
                   href="/dashboard"
-                  className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all"
+                  className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-gray-300 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg aria-hidden="true" className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                   Back to Dashboard

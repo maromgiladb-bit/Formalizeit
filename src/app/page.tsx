@@ -2,8 +2,7 @@
 import { useAuth } from "@clerk/nextjs";
 import SignupButton from "@/components/SignupButton";
 import Link from "next/link";
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   FileText,
   PenLine,
@@ -96,22 +95,17 @@ const TEASER_FAQ_INDEXES = [0, 2, 5, 13];
 /* ─── Document Mockup ─────────────────────────────────────── */
 function DocumentMockup() {
   return (
-    <div className="relative w-full max-w-md mx-auto lg:mx-0">
+    <div className="relative w-full max-w-lg mx-auto lg:mx-0">
       {/* Document card */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden">
         {/* Doc header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <div className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-          </div>
-          <div className="text-xs font-semibold text-gray-400 tracking-wide">NDA_Agreement.docx</div>
-          <div className="w-12" />
+        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50">
+          <FileText className="w-4 h-4 text-gray-500" aria-hidden="true" />
+          <div className="text-xs font-semibold text-gray-600">NDA_Agreement.docx</div>
         </div>
 
         {/* Doc body */}
-        <div className="px-6 py-5 space-y-3">
+        <div className="px-7 py-7 space-y-3.5">
           {/* Title line */}
           <div className="h-3 bg-ink rounded w-2/3 mb-5" />
 
@@ -159,19 +153,11 @@ function DocumentMockup() {
 
 /* ─── Animated stat ───────────────────────────────────────── */
 function AnimatedStat({ value, label }: { value: string; label: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const reduceMotion = useReducedMotion();
   return (
-    <div ref={ref} className="text-center">
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, scale: 0.85 }}
-        animate={inView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-teal-800 tracking-tight"
-      >
+    <div className="text-center">
+      <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
         {value}
-      </motion.div>
+      </div>
       <div className="text-gray-500 text-sm mt-1 font-medium">{label}</div>
     </div>
   );
@@ -198,12 +184,12 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:py-16 lg:min-h-[calc(100svh-4rem)] lg:flex lg:items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
           {/* Left: copy */}
           <motion.div
-            initial="initial"
+            initial={false}
             animate="animate"
             variants={stagger}
           >
@@ -217,9 +203,7 @@ export default function Home() {
               variants={fadeUp}
               className="text-lg text-gray-500 leading-relaxed mb-8 max-w-md"
             >
-              You don&apos;t reinvent the NDA each time. Start from the standard NDA,
-              fill in what&apos;s different, and send — no back-and-forth, no
-              formatting drama, no blank page.
+              Start from the standard NDA, fill in what&apos;s different, and send.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
               {userId ? (
@@ -228,13 +212,13 @@ export default function Home() {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm"
                 >
                   Send your NDA now
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
               ) : (
                 <SignupButton>
                   <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm cursor-pointer">
                     Send Your First NDA Free
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </SignupButton>
               )}
@@ -249,7 +233,7 @@ export default function Home() {
 
           {/* Right: document mockup */}
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+            initial={false}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
             className="flex justify-center lg:justify-end pr-8 lg:pr-14"
@@ -262,13 +246,10 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           HOW IT WORKS + STATS
       ══════════════════════════════════════════════ */}
-      <section className="bg-gray-50 border-y border-gray-100 py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-12 text-center">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
-              How it works
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+      <section className="bg-gray-50 border-y border-gray-100 py-24 lg:py-32">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="mb-14 text-center">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               Three steps. That&apos;s the whole process.
             </h2>
           </Reveal>
@@ -287,7 +268,7 @@ export default function Home() {
                       {step.number}
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold text-ink mb-1.5">
+                  <h3 className="text-lg font-semibold text-ink mb-1.5">
                     {step.title}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
@@ -314,13 +295,10 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           FEATURES
       ══════════════════════════════════════════════ */}
-      <section className="bg-white py-20 lg:py-28">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-12">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
-              Capabilities
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+      <section className="bg-white py-24 lg:py-32">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="mb-14">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               Fast by design. Built with security in mind.
             </h2>
           </Reveal>
@@ -329,10 +307,8 @@ export default function Home() {
             {FEATURES.map((f, i) => (
               <RevealItem key={i}>
                 <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 h-full cursor-default">
-                  <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center mb-4">
-                    <f.icon className="w-5 h-5 text-teal-700" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-ink mb-1.5">
+                  <h3 className="flex items-center gap-2.5 text-base font-semibold text-ink mb-1.5">
+                    <f.icon className="w-5 h-5 shrink-0 text-teal-700" aria-hidden="true" />
                     {f.title}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
@@ -348,20 +324,17 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           PRICING
       ══════════════════════════════════════════════ */}
-      <section id="pricing" className="scroll-mt-28 bg-gray-50 border-y border-gray-100 py-20">
+      <section id="pricing" className="scroll-mt-28 bg-gray-50 border-y border-gray-100 py-24 lg:py-32">
         <PricingSection />
       </section>
 
       {/* ══════════════════════════════════════════════
           FAQ TEASER
       ══════════════════════════════════════════════ */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-24 lg:py-32">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-10 text-center">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">
-              FAQ
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+          <Reveal className="mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               Good questions, quick answers
             </h2>
           </Reveal>
@@ -372,7 +345,7 @@ export default function Home() {
                 <AccordionItem
                   key={faqIndex}
                   value={`item-${faqIndex}`}
-                  className="bg-white rounded-2xl border border-gray-200 px-6 data-[state=open]:border-teal-600 transition-colors duration-200"
+                  className="bg-white rounded-2xl border border-gray-200 px-6 data-[state=open]:border-teal-700 transition-colors duration-200"
                 >
                   <AccordionTrigger className="text-ink text-sm font-semibold hover:no-underline py-5">
                     {faqs[faqIndex].question}
@@ -389,7 +362,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 text-sm font-semibold text-teal-800 hover:text-teal-700 transition-colors"
               >
                 All questions
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
             </div>
           </Reveal>
@@ -399,7 +372,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           FINAL CTA
       ══════════════════════════════════════════════ */}
-      <section className="bg-teal-800 py-20">
+      <section className="bg-teal-800 py-24 lg:py-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Reveal>
             <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
@@ -414,13 +387,13 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm"
               >
                 Send your NDA now
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
             ) : (
               <SignupButton>
                 <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm cursor-pointer">
                   Start in seconds
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </button>
               </SignupButton>
             )}

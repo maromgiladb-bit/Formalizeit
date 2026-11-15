@@ -18,9 +18,6 @@ export default async function RemindersStoppedPage({
             <Check className="w-5 h-5 text-teal-800" aria-hidden="true" />
           </div>
         )}
-        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-          {invalid ? 'Link not valid' : 'Done'}
-        </p>
         <h1 className="text-2xl font-extrabold text-ink mb-3">
           {invalid ? 'This link did not work' : 'No more reminders for this NDA'}
         </h1>

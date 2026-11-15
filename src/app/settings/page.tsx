@@ -52,7 +52,7 @@ export default function SettingsPage() {
     <motion.div
       className="space-y-6"
       variants={stagger}
-      initial="initial"
+      initial={false}
       animate="animate"
     >
 
@@ -72,12 +72,12 @@ export default function SettingsPage() {
 
         <div className="px-6 py-5 space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Full Name</label>
             <p className="text-base text-gray-900 font-medium">{user?.fullName || 'Not set'}</p>
           </div>
           <div className="h-px bg-gray-100" />
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Email Address</label>
             <p className="text-base text-gray-900 font-medium">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function SettingsPage() {
               Update your password and manage how you sign in.
             </p>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
+          <ChevronRight className="w-5 h-5 text-gray-500 shrink-0" />
         </Link>
       </motion.div>
 

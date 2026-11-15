@@ -46,9 +46,9 @@ export default function FloatingNavShell({
       {/* Spacer: the bar is fixed, so this keeps page content from sliding under it. */}
       <div className="h-16" aria-hidden="true" />
       <header className="fixed inset-x-0 top-0 z-50">
-        <div className={`mx-auto transition-all duration-300 ease-out motion-reduce:transition-none ${pill}`}>
+        <div className={`mx-auto transition-[background-color,border-color,box-shadow,border-radius] duration-300 ease-out motion-reduce:transition-none ${pill}`}>
           <div
-            className={`mx-auto transition-all duration-300 ease-out motion-reduce:transition-none ${
+            className={`mx-auto transition-colors duration-300 ease-out motion-reduce:transition-none ${
               scrolled ? 'px-3 sm:px-4' : 'max-w-7xl px-4 sm:px-6 lg:px-8'
             }`}
           >

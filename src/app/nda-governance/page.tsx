@@ -16,9 +16,9 @@ export default function NdaGovernancePage() {
 				subtitle="How the standard NDA is maintained and versioned"
 			/>
 
-			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-6">
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch] space-y-6">
 				<div className="bg-white rounded-2xl shadow-card border border-amber-200 p-6">
-					<p className="text-amber-700 text-xs font-bold uppercase tracking-widest mb-2">
+					<p className="text-amber-700 text-sm font-semibold mb-2">
 						Please read
 					</p>
 					<p className="text-sm text-gray-600 leading-relaxed">

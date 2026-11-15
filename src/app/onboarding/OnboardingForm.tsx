@@ -52,7 +52,7 @@ export default function OnboardingForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5">
                 Organization Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -65,7 +65,7 @@ export default function OnboardingForm() {
                 maxLength={80}
               />
               {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
-              <p className="mt-1.5 text-xs text-gray-400">This will appear across your workspace and on your team page.</p>
+              <p className="mt-1.5 text-xs text-gray-500">This will appear across your workspace and on your team page.</p>
             </div>
 
             <Button type="submit" disabled={loading} className="w-full justify-center">

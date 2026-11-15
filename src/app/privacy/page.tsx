@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 				subtitle="Last updated: October 8, 2026"
 			/>
 
-			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 [&_p]:max-w-[70ch] [&_li]:max-w-[70ch]">
 				<div className="bg-white rounded-2xl shadow-card border border-gray-100 p-8 sm:p-10 prose prose-gray max-w-none">
 
 					<h2>1. Who We Are</h2>

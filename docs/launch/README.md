@@ -13,6 +13,8 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 
 ☐ not started · ◑ in progress · ☑ done · ⊘ deferred (not a launch blocker)
 
+Open items carry a ticket ID (`T-0NN`); the live list is [docs/TICKETS.md](../TICKETS.md).
+
 ## Phases
 
 | Phase | File | Owner | Status |
@@ -23,7 +25,10 @@ Plan of record: `C:\Users\marom\.claude\plans\i-havent-touched-my-smooth-church.
 | 3 — Cleanup and doc reconciliation | [phase-3-cleanup.md](phase-3-cleanup.md) | Claude | ☑ done 2026-09-25 (3.6 deferred post-launch) |
 | 4 — Verify and open signups | [phase-4-launch.md](phase-4-launch.md) | Both | ☐ not started |
 
-### Resume here (updated 2026-11-14)
+### Launch status (2026-11-14)
+
+The live "Resume here" and every open ticket moved to [docs/TICKETS.md](../TICKETS.md)
+(2026-11-15). The history below is kept for context.
 
 PR #18 merged to `main` 2026-11-14 (production migrations run first). Next: confirm the Clerk
 Restricted sign-up mode, then Phase 4 on production with sign-up closed (Merge plan step 6). The beta plan with steps and estimates is in the
@@ -38,28 +43,29 @@ CLAUDE.md.
    FREE unlimited NDAs + 10 users; Pro/Team "Coming soon"; FAQ/Help/Terms §7/Formi updated) and a
    lightweight sign-up gate (`NEXT_PUBLIC_PRIVATE_BETA`, unset = closed in production; `/signup`
    and "Get started" go to a request-access form on `/coming-soon`). The full invite-list gate was
-   dropped in favor of this. ☐ **You — Clerk still needs one setting** (found 2026-11-09): the gate
+   dropped in favor of this. ☐ **T-004** **You — Clerk still needs one setting** (found 2026-11-09): the gate
    only hides our sign-up pages; Clerk itself still creates accounts (e.g. "Continue with Google" on
    `/sign-in` for an unknown email, or a direct Clerk API call). In the **production** Clerk instance
    set Restrictions → Sign-up mode to **Restricted** (or Waitlist) while sign-up is closed, and back
    to Public when opening. Existing accounts keep signing in.
 2. ☑ **Merge** (2026-11-09): `launch-fixes` merged into `feat/todolistimpl-2` after testing; see
    [Merge plan](#merge-plan-2026-10-23).
-3. ☐ **Both — Phase 1 browser matrix and Phase 4** on staging, then on production with sign-up
-   closed.
+3. ☐ **T-005** / **T-044** **Both — Phase 1 browser matrix and Phase 4** on staging, then on production with sign-up
+   closed. The automated e2e suite (`npm run e2e`, see [Browser e2e suite](#browser-e2e-suite-2026-11-15))
+   now covers the sender flow up to the receiver opening the link; signing is still manual.
 4. ⊘ Stripe activation (Phase 0.3): deferred until after the free-beta launch.
 
 ### Go-live switches (in this order)
 
-1. ☐ **Open sign-up:** after Phase 4 passes on production, set `NEXT_PUBLIC_PRIVATE_BETA=off` in
+1. ☐ **T-010** **Open sign-up:** after Phase 4 passes on production, set `NEXT_PUBLIC_PRIVATE_BETA=off` in
    Vercel Production and redeploy. Check: `/signup` loads and "Get started" opens sign-up. To close
    again: set `on`, redeploy.
-2. ☐ **Turn paid plans on** (later, once Stripe is live): email users at least 30 days ahead (Terms
+2. ⊘ **T-011** **Turn paid plans on** (later, once Stripe is live): email users at least 30 days ahead (Terms
    §7 promises it); set `FREE_ALLOWANCE_COUNTS_FROM` in `src/billing/planLimits.ts` to the launch
    date (merge that); set `NEXT_PUBLIC_PAID_PLANS_ENABLED=true` in Production; redeploy. Check:
    prices and upgrade buttons are back, a live checkout reaches PRO, a Free company's 4th send
    (counted from launch day) shows the upgrade notice. Roll back: set it to `false`, redeploy.
-3. ☐ **Remove the Beta label:** set `BETA_LABEL = false` in `src/lib/featureFlags.ts`, only after
+3. ☐ **T-012** **Remove the Beta label:** set `BETA_LABEL = false` in `src/lib/featureFlags.ts`, only after
    legal counsel has reviewed the legal pages.
 
 Done since the last update: Clerk, Resend, Gemini, S3, Sentry, staging DB, domain move to the root
@@ -129,7 +135,7 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
 - ☑ Signed-PDF failures are no longer swallowed (2026-10-06): render and S3 store are retried
   (`src/lib/signedPdf.ts`), a final failure is recorded as `pdfStatus` on the SIGNED audit event and
   sent to Sentry, the PDF is still emailed when only the store failed, and a PDF rebuilt on demand
-  in `viewpdf` records its own hash (`PDF_EXPORTED` event). ☐ Not yet exercised end to end: needs
+  in `viewpdf` records its own hash (`PDF_EXPORTED` event). ☐ **T-013** Not yet exercised end to end: needs
   the staging DB + a real signing on Preview.
 - ☑ `sendEmail` is loud in production (2026-10-08): throws and reports to Sentry when
   `RESEND_API_KEY` is missing or Resend fails; fallback `MAIL_FROM` is the verified
@@ -138,7 +144,7 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
 - ◑ Rate limiting is per-instance memory. ☑ Runbook written (2026-10-23): "Vercel Firewall
   rate-limit rules" in [phase-2-hardening.md](phase-2-hardening.md) (6 rules, log first then deny;
   Hobby plans get only 1 rate-limit rule). ☑ `/api/claim` and `/api/ndas/viewpdf` now have in-code
-  limits too. ☐ **You:** create the rules in the Vercel dashboard (rate limits can't be set in
+  limits too. ☐ **T-014** **You:** create the rules in the Vercel dashboard (rate limits can't be set in
   `vercel.json`).
 - ☑ Missing Stripe env vars no longer crash (2026-10-23): `src/lib/stripe.ts` is a lazy
   `getStripe()` with `isStripeConfigured()`; billing routes and the webhook answer 503
@@ -146,7 +152,7 @@ longer counts the draft being re-sent. Still open, roughly in priority order:
   paid buttons is part of the free-beta switch.
 - ☑ First `invoice.payment_failed` now emails the administrator (once per failure streak, not on
   Stripe's retries). PAST_DUE keeps the plan's limits until Stripe ends the subscription.
-- ☐ Nice to have: 83 `console.log` calls on sensitive paths; delete `generate-token.js` and
+- ☐ **T-015** Nice to have: 83 `console.log` calls on sensitive paths; delete `generate-token.js` and
   `private.key` (old DocuSign key, untracked) from disk; orphaned `internal-approve` /
   `internal-reject` routes, `/mydrafts`, `/viewpdf`, the `DEV` plan in the billing UI.
 - ☑ Full `npm run build` passes on branch `launch-fixes` (2026-10-23), also with no Stripe env vars set.
@@ -160,17 +166,17 @@ Still open from the database audit (2026-10-08; C1, C2, H1, H2, H3 fixed above),
 - ☑ H5 (2026-10-23): `viewpdf` regeneration uses `content.templateId` and the same field mapping as
   signing (shared `src/lib/signedTemplateData.ts`).
 - ☑ Schema drift (2026-10-23): index and `@db.Timestamptz` added to `schema.prisma`.
-- ☐ M1: send limit is check-then-act (race) and deleting an expired NDA frees a FREE slot. Lower
+- ☐ **T-016** M1: send limit is check-then-act (race) and deleting an expired NDA frees a FREE slot. Lower
   priority while the free beta removes the FREE limit.
 - ☑ M2 (2026-10-23): Stripe webhook ignores repeated events (new `stripe_events` table, migration
   `20260709000000_add_stripe_events`) and skips subscription events for a subscription the company
-  doesn't own; an unknown price no longer grants PRO. ☐ **The migration must run on production
+  doesn't own; an unknown price no longer grants PRO. ☑ (2026-11-14, Merge plan step 4) **The migration must run on production
   (`prisma migrate deploy`) before this code deploys**, or every webhook call fails.
-- ☐ M3: retention cleanup can delete without the 30-day notice, leaves `NdaRevision` content behind,
+- ☐ **T-017** M3: retention cleanup can delete without the 30-day notice, leaves `NdaRevision` content behind,
   and skips completed NDAs with no `completedAt` (backfill on production).
-- ☐ M4/M5/M6: lowercase emails on write + `lower(email)` unique index; set `isSigner` for every new
+- ☐ **T-018** M4/M5/M6: lowercase emails on write + `lower(email)` unique index; set `isSigner` for every new
   administrator; `storeNdaPdf.ts` should use the shared Prisma client.
-- ☐ Before deploy: on production, count in-flight NDAs with more than one SignRequest (the new
+- ☑ (2026-11-14, Merge plan step 4) Before deploy: on production, count in-flight NDAs with more than one SignRequest (the new
   "latest link only" check would refuse an active link on an older one).
 
 ## Legal and compliance readiness (2026-10-23)
@@ -183,32 +189,83 @@ Five-way research review; full plan, priorities and counsel tags in
   2026-10-23, uncommitted). Account-level Terms acceptance built (2026-10-23, uncommitted):
   `users.terms_accepted_at/terms_version`, `/accept-terms` gate, Clerk `legalAcceptedAt` mirrored,
   migration `20260708000000` applied to dev. FAQ, E-Signature Consent page and Formi updated.
-  ☐ **You:** turn on Clerk legal acceptance in the dashboard (see phase-0 doc); apply both new
-  migrations (`20260707000000`, `20260708000000`) to **production**; set `REMINDER_LINK_SECRET` in
-  Vercel. ☐ `LEGAL_VERSION` (`src/lib/legalVersions.ts`) must be bumped when the Terms/Privacy text
-  changes, to re-ask users. ☐ The gate is client-side (brief flash before redirect); consider a
+  ☐ **T-019** **You:** turn on Clerk legal acceptance in the dashboard (see phase-0 doc). ☑ Both new
+  migrations (`20260707000000`, `20260708000000`) applied to **production** (2026-11-14, Merge plan
+  step 4). ☐ **T-020** Set `REMINDER_LINK_SECRET` in Vercel. Standing rule: `LEGAL_VERSION` (`src/lib/legalVersions.ts`) must be bumped when the Terms/Privacy text
+  changes, to re-ask users. ☐ **T-021** The gate is client-side (brief flash before redirect); consider a
   server-side check.
-- ☐ Terms rewrite (missing clauses, liability carve-outs, retention section, refunds, signature tier)
+- ☐ **T-022** Terms rewrite (missing clauses, liability carve-outs, retention section, refunds, signature tier)
   and Privacy additions (roles, bases, transfers, Google, cookies) — after counsel comments.
 - ☑ Email footer (entity/address from `COMPANY_LEGAL_NAME`/`COMPANY_ADDRESS`, blank until the entity
   is decided), "stop reminders" link (`reminders_stopped_at` migration `20260707000000`, must be
   applied in production), `sign-public` log cleanup, 30-day vs 5-year settings copy, overclaims
   softened, "Formalize It" spellings fixed (2026-10-23, uncommitted). Migration applied to the
-  development/staging DB 2026-10-23. ☐ Apply `prisma migrate deploy` to **production** at launch.
-- ☐ NDA template v1.1 (truly mutual, remedies, survival, compelled-disclosure fix) — counsel first.
-- ◑ `/accessibility`, `/subprocessors`, `security.txt` added (2026-10-23, uncommitted). ☐ Skip link;
+  development/staging DB 2026-10-23. ☑ Applied to **production** 2026-11-14 (Merge plan step 4).
+- ☐ **T-023** NDA template v1.1 (truly mutual, remedies, survival, compelled-disclosure fix) — counsel first.
+- ◑ `/accessibility`, `/subprocessors`, `security.txt` added (2026-10-23, uncommitted). ☐ **T-024** Skip link;
   confirm sub-processor regions marked "to be confirmed" (Clerk, Stripe, Resend, ImprovMX, Vercel
   Analytics). `.env.example` S3_REGION corrected to eu-central-1.
-- ☐ **You:** legal entity details everywhere and on Stripe; Israeli VAT/invoicing; auto-renewal
+- ☐ **T-025** **You:** legal entity details everywhere and on Stripe; Israeli VAT/invoicing; auto-renewal
   consent and refund policy; counsel review (add Israeli Bar Law and Standard Contracts Law to the
   brief); cyber/E&O insurance; breach-response runbook; verify S3/vendor settings and DPAs; upgrade
   Neon and run a restore drill.
-- ☐ Tier 2 (first month): DPA template, 2FA status (Clerk Pro), CSP/HSTS, legal-hold flag, data
+- ☐ **T-026** Tier 2 (first month): DPA template, 2FA status (Clerk Pro), CSP/HSTS, legal-hold flag, data
   export, Amendment 13 registration question.
+
+## Site-wide design audit (2026-11-14)
+
+Hallmark audit of the whole site (17 public pages rendered, every app screen linted from source;
+records in `.hallmark/`, git-ignored). Source findings went from 339 hard-rule fails to 27. Design
+only, no behaviour changed. Calm Precision rules updated in CLAUDE.md and
+`.claude/skills/stitch-design.md` where Hallmark disagreed (user decision 2026-11-14).
+
+- ☑ Scroll-reveal content no longer invisible without JS (2026-11-14): `ui/reveal.tsx` renders
+  visible and only hides under `html.js`; page-load framer entrances set to `initial={false}`.
+- ☑ Eyebrows above headings removed (35, facts kept as plain labels); all tracked-caps labels now
+  sentence case, untracked; 10px text raised to 12px; `text-gray-400` text raised to gray-500.
+- ☑ Accessibility: 101 decorative SVGs `aria-hidden`, back link and signature canvas labelled,
+  site-wide `:focus-visible` ring, `:active` / `:disabled` states, form-field edges at 3:1.
+- ☑ Motion: every `transition-all` replaced; no width/height/right animations (progress bars use
+  scale, accordion fades, nav height snaps); global reduced-motion fallback.
+- ☑ Emoji icons → Lucide; purple-blue gradient on /viewpdf → gray; glued arrows and middle-dot
+  strings removed; hero mockup lost its fake window dots; landing hero is one screen with a
+  12-word sentence; section heads scaled up.
+- ☐ **T-027** Copy: about 100 dashes (— / –) remain in UI copy (help, about, fill pages, dashboard…).
+  Hallmark wants them gone; left because the pass was design-only. Rewrite when doing a copy pass
+  (legal pages excluded).
+- ☐ **T-028** Decide: confirm the landing "< 5 min" stat is a claim we stand behind; consider replacing the
+  hero's drawn document with a real screenshot of the fill page.
+- ☐ **T-029** (lint part: **T-031**, landing order: **T-028**) Follow-ups from the audit: form labels are still Title Case ("Email Address"); 5 font weights
+  in use (Hallmark suggests 3); landing order is the stock SaaS anatomy (hero, steps, stats,
+  features, pricing, FAQ, CTA band) — a full redesign question, not a fix; 19 old
+  `react/no-unescaped-entities` lint errors in `terms/page.tsx` and other legal pages.
+
+## Browser e2e suite (2026-11-15)
+
+Playwright + `@clerk/testing` in `e2e/` so an agent can drive the app signed in (setup and
+usage: CLAUDE.md → "Browser testing"). Runs against a local production build on port 3100 with
+the development Clerk instance and database; refuses to run against production.
+
+- ☑ (2026-11-15) Sign-in bypass (Clerk ticket, no password or 2FA), saved session, safety guard.
+- ☑ (2026-11-15) `smoke.spec.ts`: 8 signed-in and 7 public pages load with no console errors,
+  plus the signed-out redirect. `nda-flow.spec.ts`: fill all 5 steps → secure link → dashboard
+  shows it → receiver opens the link signed out. 22/22 pass, about 2.5 min.
+- ☐ **T-032** Extend the flow: receiver suggests a change → sender accepts → receiver signs → sender signs
+  (turn on `isSigner` for the test admin first) → signed PDF and evidence (IP, hash, template
+  version) recorded. Also: contributor cannot sign; expired link; reminder stop link.
+- ☐ **T-033** Purge E2E test data on development when it piles up: Clerk user
+  `e2e-admin+clerk_test@example.com`, company "E2E Test Co", NDAs titled `E2E NDA <id>`.
+- ☐ **T-034** Bug, local only (Vercel unaffected): `/_vercel/insights/script.js` 404s off Vercel, and the
+  not-found render calls Clerk `auth()` on a path the middleware matcher skips → 500 + "can't
+  detect clerkMiddleware" in the server log. Same for any missing `.js/.png/...` path. The suite
+  stubs the script. Fix if it shows in production logs: make the root layout tolerate a missing
+  middleware context.
+- ☐ **T-035** Decide: run the suite in CI (GitHub Actions needs the dev Clerk keys and dev database URL as
+  secrets) or keep it local.
 
 ## Open decisions (2026-10-08)
 
-- ☐ **Where the business is based: Israel or US (raised 2026-10-23).** It decides governing law and
+- ☐ **T-036** **Where the business is based: Israel or US (raised 2026-10-23).** It decides governing law and
   venue in the Terms, tax setup (Israeli VAT vs US sales tax), Stripe activation and which privacy
   regulator applies. Decide before Stripe activation and before the Terms rewrite. If the company is
   US-registered but run from Israel, ask a cross-border accountant whether it is still Israeli tax
@@ -242,7 +299,7 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    `C:\Users\marom\Projects\nda-saas-wt\` worktrees and their merged branches (2026-11-14).
    Pre-merge re-check of PR #18 head `6f55697` (2026-11-14): typecheck clean, 239/239 tests,
    production build OK, CI and Vercel Preview green. Lint has 82 pre-existing errors in 17 files
-   (CI does not run lint) — ☐ post-launch cleanup. Note: run `vitest` with
+   (CI does not run lint) — ☐ **T-031** post-launch cleanup. Note: run `vitest` with
    `--exclude ".claude/**"` while an agent worktree exists, or it also tests that copy.
 2. ☑ Sign-up gate and free-beta switch built (2026-10-24), both safe when unset.
 3. ☑ (2026-11-14, confirmed by founder) Vercel Production env vars: `NEXT_PUBLIC_PRIVATE_BETA=on`, `NEXT_PUBLIC_PAID_PLANS_ENABLED=false`.
@@ -251,31 +308,31 @@ merging opens nothing, and every week of drift makes the merge riskier. Order:
    `20260707000000_add_nda_reminders_stopped_at`, `20260708000000_add_user_terms_acceptance`,
    `20260709000000_add_stripe_events`. Take a Neon snapshot first. Also run the two read-only
    checks: in-flight NDAs with more than one SignRequest, and
-   `select billing_plan, count(*) from organizations group by 1`. ☐ **Also on the development
-   (staging) branch:** `20260709000000_add_stripe_events` is not applied there yet (run
-   `npx prisma migrate deploy` from the laptop; `.env` points at development).
-   ☐ Purge test data on development before relying on it: Clerk dev user
+   `select billing_plan, count(*) from organizations group by 1`. ☑ **Also on the development
+   (staging) branch:** `20260709000000_add_stripe_events` applied 2026-11-14 (`prisma migrate
+   deploy` from the laptop; schema up to date).
+   ☐ **T-033** Purge test data on development before relying on it: Clerk dev user
    `claude-verify+clerk_test@example.com` and its company "Claude Verify" with 5 test NDAs
    (created 2026-11-09 during merge testing).
-   ☐ Decide: the Beta pill also shows in the header of receiver pages (`/fillndahtml-public`,
+   ☐ **T-037** Decide: the Beta pill also shows in the header of receiver pages (`/fillndahtml-public`,
    `/sign-nda-public`). The beta-scope review suggested keeping "beta" off pages the counterparty
    signs on, so the NDA itself doesn't look provisional.
 5. ☑ (2026-11-14) Checked the Vercel Preview deployment of the PR, then merged PR #18. Production deploys with
    sign-up closed.
-6. ☐ Test on production with your existing account (Phase 4: full flow, email round trip, cron run).
-7. ☐ Open sign-up: see "Go-live switches" above.
+6. ☐ **T-044** (with **T-007**, **T-008**, **T-009**) Test on production with your existing account (Phase 4: full flow, email round trip, cron run).
+7. ☐ **T-010** Open sign-up: see "Go-live switches" above.
 
 ## Post-MVP tasks (decided during launch setup)
 
 - `support@formalizeit.com` now exists (2026-10-06): ImprovMX free forwarding to the founder's
   Gmail via root MX + SPF records at GoDaddy, catch-all `*` alias, no mailbox. Replies still go out
-  from Gmail; consider Google Workspace later for send-as. ☐ Switch `CONTACT_INBOX` (Vercel, all
+  from Gmail; consider Google Workspace later for send-as. ☐ **T-038** Switch `CONTACT_INBOX` (Vercel, all
   environments) from the founder's Gmail to `support@formalizeit.com`, and update Google OAuth
   Branding → user support email to the same address.
-- Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
+- ☐ **T-039** Turn on 2FA after upgrading Clerk to Pro (dashboard toggle only, then restore the 2FA copy on
   the Security / Settings pages and in Formi).
-- Legal counsel review of all seven legal pages before removing beta framing.
-- Multi-recipient send (first post-launch feature, PRO+): one shared link, up to 20 receivers,
+- ☐ Legal counsel review of all seven legal pages before removing beta framing (part of **T-025**).
+- ☐ **T-040** Multi-recipient send (first post-launch feature, PRO+): one shared link, up to 20 receivers,
   each gets their own sign-only copy. Design:
   [2026-10-06-multi-recipient-send-design.md](../superpowers/specs/2026-10-06-multi-recipient-send-design.md).
 

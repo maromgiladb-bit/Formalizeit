@@ -371,12 +371,11 @@ export default function SignNDAPublicClient({
                         {/* Header */}
                         <div className="mb-6">
                             <div className="inline-flex items-center gap-1.5 bg-teal-50 text-teal-800 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
                                 Secure NDA link
                             </div>
-                            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Non-Disclosure Agreement</p>
                             <h1 className="text-2xl font-extrabold text-ink leading-tight mb-1">{ndaTitle}</h1>
                             <p className="text-sm text-gray-500">Review the document and add your signature below.</p>
                         </div>
@@ -392,7 +391,7 @@ export default function SignNDAPublicClient({
                                 <span className="text-sm font-semibold text-ink">
                                     {showMobilePreview ? 'Hide document' : 'Read the full NDA'}
                                 </span>
-                                <svg
+                                <svg aria-hidden="true"
                                     className={`w-4 h-4 text-gray-500 transition-transform ${showMobilePreview ? 'rotate-180' : ''}`}
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
                                 >
@@ -417,7 +416,7 @@ export default function SignNDAPublicClient({
                         </div>
 
                         <div ref={signatureCardRef} className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 flex flex-col flex-1 min-h-0">
-                            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">Your Signature</p>
+                            <p className="text-gray-700 text-sm font-semibold mb-4">Your Signature</p>
 
                             {/* Form Fields */}
                             <div className="space-y-4 mb-5">
@@ -494,6 +493,7 @@ export default function SignNDAPublicClient({
                                 {signatureMode === 'draw' && (
                                     <div className="flex-1 flex flex-col gap-2">
                                         <canvas
+                                            aria-label="Signature pad: draw your signature"
                                             ref={canvasRef}
                                             width={400}
                                             height={150}
@@ -604,7 +604,7 @@ export default function SignNDAPublicClient({
                     className="hidden lg:flex lg:flex-col w-[55%] h-full bg-white overflow-y-auto"
                 >
                     <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
-                        <p className="text-teal-700 text-xs font-bold uppercase tracking-widest">Document Preview</p>
+                        <p className="text-gray-700 text-sm font-semibold">Document Preview</p>
                     </div>
                     <div className="p-6 flex-1">
                         {previewHtml ? (

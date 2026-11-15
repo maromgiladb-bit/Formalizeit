@@ -44,7 +44,7 @@ export default function CreateOrganizationForm() {
                 <p className="mt-1 text-sm text-gray-500">
                     Set up a workspace to manage NDAs and invite team members.
                 </p>
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-gray-500">
                     Already part of a team? Ask your organization admin to invite you.
                 </p>
 

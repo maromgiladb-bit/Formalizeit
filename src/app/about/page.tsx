@@ -65,7 +65,7 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
 
   const textBlock = (align: 'left' | 'right') => (
     <div className={`max-w-xs ${align === 'right' ? 'pr-12 text-right' : 'pl-12'}`}>
-      <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-2">{step.number}</p>
+      <p className="text-sm font-semibold text-gray-500 tabular-nums mb-2">{step.number}</p>
       <h3 className="text-2xl font-extrabold text-ink mb-3">{step.title}</h3>
       <p className="text-sm text-gray-500 leading-relaxed">{step.description}</p>
     </div>
@@ -76,7 +76,7 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
       {/* Circle node */}
       <motion.div
         className="absolute left-0 lg:left-1/2 lg:-translate-x-1/2 top-0 z-10 w-12 h-12 rounded-full bg-teal-800 border-4 border-white shadow-card flex items-center justify-center"
-        initial={reduceMotion ? false : { scale: 0, opacity: 0 }}
+        initial={false}
         animate={isInView ? { scale: 1, opacity: 1 } : {}}
         transition={{ duration: 0.4, type: 'spring', stiffness: 220, damping: 18 }}
       >
@@ -86,11 +86,11 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
       {/* Mobile */}
       <div className="lg:hidden pl-20 pt-1">
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          initial={false}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
-          <p className="text-xs font-bold text-teal-700 uppercase tracking-widest mb-1">{step.number}</p>
+          <p className="text-sm font-semibold text-gray-500 tabular-nums mb-1">{step.number}</p>
           <h3 className="text-xl font-extrabold text-ink mb-2">{step.title}</h3>
           <p className="text-sm text-gray-500 leading-relaxed mb-6">{step.description}</p>
         </motion.div>
@@ -101,7 +101,7 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
       <div className="hidden lg:grid grid-cols-2 gap-16 items-center min-h-[240px]">
         <motion.div
           className="flex justify-end"
-          initial={reduceMotion ? false : { opacity: 0, x: -48 }}
+          initial={false}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.65, delay: 0.1, ease: 'easeOut' }}
         >
@@ -109,7 +109,7 @@ function TimelineStep({ step, index }: { step: (typeof TIMELINE_STEPS)[0]; index
         </motion.div>
         <motion.div
           className="flex justify-start"
-          initial={reduceMotion ? false : { opacity: 0, x: 48 }}
+          initial={false}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.65, delay: 0.2, ease: 'easeOut' }}
         >
@@ -167,9 +167,6 @@ export default function About() {
       {/* ── 1. HERO ── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
         <Reveal className="text-center max-w-2xl mx-auto mb-10">
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-            About FormalizeIt
-          </p>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
             Review once, reuse forever.
           </h1>
@@ -187,10 +184,7 @@ export default function About() {
       <section className="border-y border-gray-100 bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              The problem
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
               NDAs are repetitive, low-value to negotiate — and they still waste
               everyone&apos;s time.
             </h2>
@@ -203,7 +197,7 @@ export default function About() {
             <RevealItem>
               <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
                 <div className="px-5 py-3 border-b border-gray-100">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-gray-500">
                     The old way
                   </p>
                 </div>
@@ -213,7 +207,7 @@ export default function About() {
             <RevealItem>
               <div className="bg-white border border-gray-100 rounded-2xl shadow-card h-full">
                 <div className="px-5 py-3 border-b border-gray-100">
-                  <p className="text-xs font-semibold text-teal-700 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-teal-700">
                     With FormalizeIt
                   </p>
                 </div>
@@ -228,10 +222,7 @@ export default function About() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              One standard
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
               One NDA. One legal text. Infinite deals.
             </h2>
             <p className="text-base text-gray-500 leading-relaxed">
@@ -250,10 +241,7 @@ export default function About() {
       <section className="border-y border-gray-100 bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="mb-8 text-center">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              How it works
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               From standard to signed
             </h2>
           </Reveal>
@@ -277,10 +265,7 @@ export default function About() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              Trusted by both sides
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight mb-4">
               When they recognize the standard, they sign faster.
             </h2>
             <p className="text-base text-gray-500 leading-relaxed">
@@ -308,10 +293,7 @@ export default function About() {
       <section className="border-y border-gray-100 bg-gray-50 py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-3">
-              Built for teams
-            </p>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               Everyone moves the deal. One person signs.
             </h2>
           </Reveal>

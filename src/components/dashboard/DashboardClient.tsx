@@ -301,22 +301,22 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
     all: <FileText className="w-5 h-5" />,
     draft: <Edit className="w-5 h-5" />,
     sent: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
       </svg>
     ),
     received: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
       </svg>
     ),
     action: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
     ),
     signed: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
@@ -490,7 +490,6 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
 
         {/* Compact header */}
         <div className="pt-8 pb-6 border-b border-gray-100">
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Dashboard</p>
           <h1 className="text-2xl font-extrabold text-ink tracking-tight">My NDAs</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage and track your Non-Disclosure Agreements</p>
         </div>
@@ -504,11 +503,11 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               : 'bg-red-50 border-red-200 text-red-800'
           }`}>
             {message.type === 'success' ? (
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ) : (
-              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg aria-hidden="true" className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             )}
@@ -525,7 +524,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                 key={card.key}
                 onClick={() => setFilter(card.key)}
                 title={card.key === 'action' ? 'NDAs that need you to review or sign' : undefined}
-                className={`relative text-left p-4 rounded-2xl border transition-all duration-200 focus:outline-none cursor-pointer ${
+                className={`relative text-left p-4 rounded-2xl border transition duration-200 focus:outline-none cursor-pointer ${
                   isActive
                     ? 'bg-white border-transparent ring-2 ring-teal-600 shadow-card'
                     : 'bg-white border-gray-200 hover:shadow-card'
@@ -551,7 +550,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
         {/* Search + sort */}
         <div className="flex flex-col sm:flex-row gap-3 pb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder="Search by title or counterparty..."
@@ -584,19 +583,19 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
               </div>
               <h3 className="text-base font-bold text-ink mb-2">Send your first NDA in minutes</h3>
               <p className="text-sm text-gray-500 mb-5 max-w-xs mx-auto">Pick a template, fill in the details, and send a secure link — no back-and-forth, no blank page.</p>
-              <div className="flex items-center justify-center gap-4 text-xs text-gray-400 mb-6">
+              <div className="flex items-center justify-center gap-4 text-xs text-gray-500 mb-6">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">1</span>
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">1</span>
                   Choose template
                 </span>
                 <span className="text-gray-300">→</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">2</span>
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">2</span>
                   Fill details
                 </span>
                 <span className="text-gray-300">→</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-[10px]">3</span>
+                  <span className="w-5 h-5 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-bold text-xs">3</span>
                   Send secure link
                 </span>
               </div>
@@ -613,7 +612,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                   <div
                     key={nda.id}
                     id={`nda-${nda.id}`}
-                    className={`group rounded-2xl border bg-white px-4 sm:px-5 py-4 transition-all duration-200 ${
+                    className={`group rounded-2xl border bg-white px-4 sm:px-5 py-4 transition duration-200 ${
                       highlightedId === nda.id
                         ? 'border-transparent ring-2 ring-teal-600 bg-teal-50'
                         : 'border-gray-100 hover:shadow-card'
@@ -629,11 +628,11 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                           <div className="flex items-center gap-2">
                             <span className="text-[15px] font-semibold text-ink truncate">{nda.partyName}</span>
                             {nda.type === 'received' && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500 uppercase shrink-0">Received</span>
+                              <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-500 shrink-0">Received</span>
                             )}
                           </div>
                           <p className="text-sm text-gray-500 truncate">
-                            <span className="text-xs text-gray-400 mr-1">{getRecipientLabel(nda)}:</span>
+                            <span className="text-xs text-gray-500 mr-1">{getRecipientLabel(nda)}:</span>
                             {getRecipient(nda)}
                           </p>
                         </div>
@@ -642,7 +641,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
                       {/* Status, date, actions */}
                       <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-4 gap-y-2">
                         <StatusPill tone={statusInfo.tone} label={statusInfo.label} />
-                        <span className="hidden md:inline text-xs text-gray-400 whitespace-nowrap">
+                        <span className="hidden md:inline text-xs text-gray-500 whitespace-nowrap">
                           {new Date(nda.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                         </span>
                         <div className="flex gap-2">
@@ -695,7 +694,7 @@ export default function DashboardClient({ ndas, checkoutSuccess, hasCompanyProfi
             <button
               onClick={() => setShowProBanner(false)}
               aria-label="Dismiss"
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none shrink-0 cursor-pointer"
+              className="text-gray-500 hover:text-gray-600 text-lg leading-none shrink-0 cursor-pointer"
             >
               ×
             </button>

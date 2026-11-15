@@ -323,7 +323,7 @@ export default function BillingSettingsPage() {
         <div className="px-6 pt-6 pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-2">Current Plan</p>
+              <p className="text-gray-700 text-sm font-semibold mb-2">Current Plan</p>
               <div className="flex items-center gap-3 mb-1">
                 <span className="text-3xl font-extrabold text-ink tracking-tight">
                   {getPlanDisplayName(subscription.plan)}
@@ -366,13 +366,13 @@ export default function BillingSettingsPage() {
         {/* Usage bar — Free plan */}
         {subscription.plan === 'FREE' && subscription.limit && (
           <div className="px-6 pb-5 border-t border-gray-100 pt-4">
-            <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2">
               <span>Usage</span>
               <span>{subscription.ndaCount} / {subscription.limit} NDAs</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
               <div
-                className={`h-2 rounded-full transition-all duration-500 ${
+                className={`h-2 rounded-full transition-colors duration-500 ${
                   subscription.remaining === 0 ? 'bg-red-500' : 'bg-teal-800'
                 }`}
                 style={{ width: `${Math.min((subscription.ndaCount / subscription.limit) * 100, 100)}%` }}
@@ -388,7 +388,7 @@ export default function BillingSettingsPage() {
 
         {/* Features */}
         <div className="border-t border-gray-100 bg-gray-50 px-6 py-5">
-          <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-4">Included features</p>
+          <p className="text-gray-700 text-sm font-semibold mb-4">Included features</p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {features.map((f) => (
               <li key={f} className="flex items-start gap-2.5 text-sm text-gray-700">
@@ -447,7 +447,7 @@ export default function BillingSettingsPage() {
               {!subscription.cancelAtPeriodEnd && (
                 <button
                   onClick={() => setCancelOpen(true)}
-                  className="text-xs text-gray-400 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
+                  className="text-xs text-gray-500 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
                 >
                   Cancel subscription
                 </button>
@@ -464,7 +464,7 @@ export default function BillingSettingsPage() {
               {!subscription.cancelAtPeriodEnd && (
                 <button
                   onClick={() => setCancelOpen(true)}
-                  className="text-xs text-gray-400 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
+                  className="text-xs text-gray-500 hover:text-red-600 underline underline-offset-2 cursor-pointer transition-colors"
                 >
                   Cancel subscription
                 </button>
@@ -483,8 +483,8 @@ export default function BillingSettingsPage() {
         <div className="px-6 pt-6 pb-5 border-b border-gray-100">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Billing Details</p>
-              <h3 className="text-sm font-semibold text-ink">Subscription &amp; payment information</h3>
+              <h3 className="text-base font-semibold text-ink">Billing details</h3>
+              <p className="text-sm text-gray-500">Subscription &amp; payment information</p>
             </div>
             <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5 text-teal-700" />
@@ -538,8 +538,8 @@ export default function BillingSettingsPage() {
         <div className="px-6 pt-6 pb-5 border-b border-gray-100">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-teal-700 text-xs font-bold uppercase tracking-widest mb-1">Invoice History</p>
-              <h3 className="text-sm font-semibold text-ink">Past payments and receipts</h3>
+              <h3 className="text-base font-semibold text-ink">Invoice history</h3>
+              <p className="text-sm text-gray-500">Past payments and receipts</p>
             </div>
             <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-teal-700" />
@@ -555,11 +555,11 @@ export default function BillingSettingsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Receipt</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Invoice</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-500">Receipt</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -586,7 +586,7 @@ export default function BillingSettingsPage() {
                           href={inv.pdfUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
                           title="Download PDF"
                         >
                           <Download className="w-4 h-4" />
@@ -597,7 +597,7 @@ export default function BillingSettingsPage() {
                           href={inv.hostedUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
                           title="View invoice"
                         >
                           <ExternalLink className="w-4 h-4" />

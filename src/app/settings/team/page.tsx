@@ -134,7 +134,7 @@ export default async function TeamSettingsPage() {
 
                     {/* Role guide */}
                     <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Role Guide</p>
+                        <p className="text-xs font-bold text-gray-500 mb-3">Role Guide</p>
                         <ul className="space-y-2">
                             {(['ADMINISTRATOR', 'SIGNER', 'CONTRIBUTOR'] as const).map(r => (
                                 <li key={r} className="flex items-start gap-3">

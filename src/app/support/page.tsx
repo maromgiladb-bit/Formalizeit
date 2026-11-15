@@ -31,7 +31,7 @@ export default function SupportPage() {
 							Send us an email and we'll respond within 24 hours
 						</p>
 						<span className="text-teal-800 font-semibold hover:text-teal-700">
-							Contact Us →
+							Contact us
 						</span>
 					</Link>
 
@@ -50,7 +50,7 @@ export default function SupportPage() {
 							Find quick answers to common questions
 						</p>
 						<span className="text-teal-800 font-semibold hover:text-teal-700">
-							Browse FAQ →
+							Browse the FAQ
 						</span>
 					</Link>
 
@@ -69,7 +69,7 @@ export default function SupportPage() {
 							Learn more about NDAs and best practices
 						</p>
 						<span className="text-teal-800 font-semibold hover:text-teal-700">
-							Learn More →
+							Learn more
 						</span>
 					</Link>
 				</div>
