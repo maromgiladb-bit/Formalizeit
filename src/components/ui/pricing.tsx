@@ -46,12 +46,12 @@ export function Pricing({
             {(title || description) && (
                 <div className="text-center space-y-4 mb-12">
                     {title && (
-                        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-ink">
+                        <h2 className="font-display text-4xl font-bold tracking-[-0.03em] sm:text-5xl text-ink">
                             {title}
                         </h2>
                     )}
                     {description && (
-                        <p className="text-gray-500 text-lg whitespace-pre-line max-w-2xl mx-auto">
+                        <p className="text-muted-ink text-lg whitespace-pre-line max-w-2xl mx-auto">
                             {description}
                         </p>
                     )}
@@ -59,7 +59,7 @@ export function Pricing({
             )}
 
             <div className="flex justify-center items-center gap-3 mb-10">
-                <span className={cn("text-sm font-medium", isMonthly ? "text-ink" : "text-gray-500")}>Monthly</span>
+                <span className={cn("text-sm font-medium", isMonthly ? "text-ink" : "text-muted-ink")}>Monthly</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                     <Label>
                         <Switch
@@ -69,12 +69,12 @@ export function Pricing({
                         />
                     </Label>
                 </label>
-                <span className={cn("text-sm font-medium", !isMonthly ? "text-ink" : "text-gray-500")}>
+                <span className={cn("text-sm font-medium", !isMonthly ? "text-ink" : "text-muted-ink")}>
                     Annual <span className="text-teal-700 font-semibold">(Save 15%)</span>
                 </span>
             </div>
 
-            <div className={`grid grid-cols-1 md:grid-cols-2 ${plans.length <= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${plans.length <= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8`}>
                 {plans.map((plan, index) => (
                     <motion.div
                         key={index}
@@ -83,35 +83,35 @@ export function Pricing({
                         viewport={{ once: true, margin: "-60px" }}
                         transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.08 }}
                         className={cn(
-                            "rounded-2xl p-8 text-center flex flex-col relative bg-white",
+                            "rounded-sheet p-7 text-left flex flex-col relative bg-white border",
                             plan.isPopular
-                                ? "border border-teal-600 ring-1 ring-teal-600 shadow-float"
-                                : "border border-gray-200 shadow-card"
+                                ? "border-teal-700 ring-1 ring-teal-700 shadow-sheet"
+                                : "border-line"
                         )}
                     >
                         {plan.isPopular && (
-                            <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
+                            <div className="absolute -top-3 left-6">
                                 {plan.badge ? (
-                                    <div className="bg-teal-800 text-white py-1 px-3.5 rounded-full text-xs font-bold shadow-card">
+                                    <div className="bg-teal-800 text-white py-1 px-3 rounded-control font-display text-xs font-semibold">
                                         {plan.badge}
                                     </div>
                                 ) : (
-                                    <div className="bg-amber-500 text-ink py-1 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-card">
-                                        <Star className="h-3.5 w-3.5 fill-current" />
+                                    <div className="bg-amber-500 text-ink py-1 px-3 rounded-control flex items-center gap-1.5 font-display text-xs font-semibold">
+                                        <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
                                         Most popular
                                     </div>
                                 )}
                             </div>
                         )}
                         <div className="flex-1 flex flex-col">
-                            <div className="flex items-center justify-center gap-2">
-                                <p className="text-sm font-semibold text-gray-700">
+                            <div className="flex items-center gap-2">
+                                <p className="font-display text-base font-semibold text-ink">
                                     {plan.name}
                                 </p>
-                                {plan.comingSoon && <StatusPill tone="neutral" label="Coming soon" />}
+                                {plan.comingSoon && <StatusPill tone="neutral" label="Coming soon" shape="crisp" />}
                             </div>
-                            <div className="mt-4 flex items-baseline justify-center gap-x-1">
-                                <span className="text-5xl font-extrabold tracking-tight text-ink">
+                            <div className="mt-4 flex items-baseline gap-x-1">
+                                <span className="font-display text-5xl font-bold tracking-[-0.03em] text-ink">
                                     {plan.price === "Custom" ? (
                                         "Custom"
                                     ) : (
@@ -128,19 +128,19 @@ export function Pricing({
                                                 easing: "ease-out",
                                             }}
                                             willChange
-                                            className="tabular-nums"
+                                            className="font-doc-mono tabular-nums"
                                         />
                                     )}
                                 </span>
                                 {plan.period && plan.price !== "Custom" && (
-                                    <span className="text-sm font-medium text-gray-500">
+                                    <span className="text-sm font-medium text-muted-ink">
                                         /{plan.period}
                                     </span>
                                 )}
                             </div>
 
                             {plan.price !== "Custom" && (
-                                <p className="text-xs mt-1 text-gray-500">
+                                <p className="font-doc-mono text-xs mt-1 text-muted-ink">
                                     {isMonthly ? "billed monthly" : "billed annually"}
                                 </p>
                             )}
@@ -148,7 +148,7 @@ export function Pricing({
                             <ul className="mt-6 space-y-3 text-left flex-1">
                                 {plan.features.map((feature, idx) => (
                                     <li key={idx} className="flex items-start gap-3">
-                                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5 text-teal-700" />
+                                        <Check className="h-5 w-5 flex-shrink-0 mt-0.5 text-teal-800" aria-hidden="true" />
                                         <span className="text-sm text-gray-700">
                                             {feature}
                                         </span>
@@ -161,7 +161,7 @@ export function Pricing({
                                     <button
                                         type="button"
                                         disabled
-                                        className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+                                        className={cn(buttonVariants({ variant: "outline", size: "lg", shape: "crisp" }), "w-full")}
                                     >
                                         {plan.buttonText}
                                     </button>
@@ -170,7 +170,7 @@ export function Pricing({
                                         type="button"
                                         onClick={() => plan.onClickAction!(isMonthly)}
                                         className={cn(
-                                            buttonVariants({ variant: plan.isPopular ? "default" : "outline", size: "lg" }),
+                                            buttonVariants({ variant: plan.isPopular ? "default" : "outline", size: "lg", shape: "crisp" }),
                                             "w-full"
                                         )}
                                     >
@@ -180,7 +180,7 @@ export function Pricing({
                                     <Link
                                         href={plan.href}
                                         className={cn(
-                                            buttonVariants({ variant: plan.isPopular ? "default" : "outline", size: "lg" }),
+                                            buttonVariants({ variant: plan.isPopular ? "default" : "outline", size: "lg", shape: "crisp" }),
                                             "w-full"
                                         )}
                                     >
@@ -188,7 +188,7 @@ export function Pricing({
                                     </Link>
                                 )}
                             </div>
-                            <p className="mt-4 text-xs text-gray-500">
+                            <p className="mt-4 text-xs text-muted-ink">
                                 {plan.description}
                             </p>
                         </div>

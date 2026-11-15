@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { PAID_PLANS_ENABLED } from "@/lib/featureFlags";
 import { motion } from "framer-motion";
 import {
@@ -259,7 +260,7 @@ export default function HelpPage() {
 		<div className="min-h-screen bg-white font-sans">
 
 			{/* Hero */}
-			<section className="border-b border-gray-100">
+			<section className="border-b border-line bg-white">
 				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
 					<motion.div
 						className="text-center max-w-2xl mx-auto"
@@ -267,10 +268,10 @@ export default function HelpPage() {
 						animate="animate"
 						variants={stagger}
 					>
-						<motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl font-extrabold text-ink leading-tight tracking-tight mb-4">
+						<motion.h1 variants={fadeUp} className="font-display text-4xl sm:text-5xl font-bold text-ink leading-tight tracking-[-0.03em] mb-4">
 							Need help using FormalizeIt?
 						</motion.h1>
-						<motion.p variants={fadeUp} className="text-base text-gray-500 leading-relaxed">
+						<motion.p variants={fadeUp} className="text-base text-muted-ink leading-relaxed">
 							Learn how to create documents, update key terms, review changes efficiently, and get the most out of your workflow.
 						</motion.p>
 					</motion.div>
@@ -278,7 +279,7 @@ export default function HelpPage() {
 			</section>
 
 			{/* Main Content */}
-			<section className="bg-white py-12">
+			<section className="bg-ground py-12">
 				<div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 [&_p]:max-w-[70ch]">
 					<div className="flex flex-col lg:flex-row gap-10">
 
@@ -293,9 +294,9 @@ export default function HelpPage() {
 										<a
 											key={item.id}
 											href={`#${item.id}`}
-											className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-teal-800 hover:bg-teal-50 transition-colors duration-150 group"
+											className="flex items-center gap-2 px-3 py-2 rounded-control text-sm text-muted-ink hover:text-teal-800 hover:bg-white transition-colors duration-150 group"
 										>
-											<ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-teal-500 transition-colors" />
+											<ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-teal-700 transition-colors" />
 											{item.label}
 										</a>
 									))}
@@ -319,13 +320,13 @@ export default function HelpPage() {
 											key={section.id}
 											id={section.id}
 											variants={fadeUp}
-											className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-6 sm:p-8 scroll-mt-24"
+											className="group bg-white rounded-sheet border border-line p-6 sm:p-8 scroll-mt-24"
 										>
 											<div className="flex items-center gap-3 mb-4">
-												<div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200">
-													<Icon className="w-5 h-5 text-teal-700" />
+												<div className="w-9 h-9 bg-ground border border-line rounded-control flex items-center justify-center shrink-0 transition-colors duration-200">
+													<Icon className="w-5 h-5 text-teal-800" aria-hidden="true" />
 												</div>
-												<h2 className="text-sm font-bold text-ink">
+												<h2 className="font-display text-base font-semibold tracking-tight text-ink">
 													{section.title}
 												</h2>
 											</div>
@@ -336,19 +337,19 @@ export default function HelpPage() {
 															{block.heading}
 														</h3>
 													)}
-													<p className="text-sm text-gray-500 leading-relaxed">{block.body}</p>
+													<p className="text-sm text-muted-ink leading-relaxed">{block.body}</p>
 													{block.list && (
 														<ul className="mt-3 space-y-1.5">
 															{block.list.map((item) => (
-																<li key={item} className="flex items-start gap-2 text-sm text-gray-500">
-																	<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+																<li key={item} className="flex items-start gap-2 text-sm text-muted-ink">
+																	<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-800 shrink-0" />
 																	{item}
 																</li>
 															))}
 														</ul>
 													)}
 													{block.listNote && (
-														<p className="mt-3 text-sm text-gray-500 leading-relaxed">{block.listNote}</p>
+														<p className="mt-3 text-sm text-muted-ink leading-relaxed">{block.listNote}</p>
 													)}
 												</div>
 											))}
@@ -359,15 +360,15 @@ export default function HelpPage() {
 								{/* Need More Help */}
 								<motion.article
 									variants={fadeUp}
-									className="group bg-white rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 p-6 sm:p-8"
+									className="group bg-white rounded-sheet border border-line p-6 sm:p-8"
 								>
 									<div className="flex items-center gap-3 mb-4">
-										<div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200">
-											<MessageCircle className="w-5 h-5 text-teal-700" />
+										<div className="w-9 h-9 bg-ground border border-line rounded-control flex items-center justify-center shrink-0 transition-colors duration-200">
+											<MessageCircle className="w-5 h-5 text-teal-800" aria-hidden="true" />
 										</div>
-										<h2 className="text-sm font-bold text-ink">Need more help?</h2>
+										<h2 className="font-display text-base font-semibold tracking-tight text-ink">Need more help?</h2>
 									</div>
-									<p className="text-sm text-gray-500 leading-relaxed mb-4">
+									<p className="text-sm text-muted-ink leading-relaxed mb-4">
 										If you cannot find the answer you need, contact support and include:
 									</p>
 									<ul className="space-y-1.5 mb-5">
@@ -377,29 +378,25 @@ export default function HelpPage() {
 											"Any error message you saw",
 											"The document or page involved",
 										].map((item) => (
-											<li key={item} className="flex items-start gap-2 text-sm text-gray-500">
-												<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0" />
+											<li key={item} className="flex items-start gap-2 text-sm text-muted-ink">
+												<span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-800 shrink-0" />
 												{item}
 											</li>
 										))}
 									</ul>
-									<p className="text-xs text-gray-500 mb-5">
+									<p className="text-xs text-muted-ink mb-5">
 										This helps us resolve issues faster.
 									</p>
 									<div className="flex flex-col sm:flex-row gap-3">
-										<Link
-											href="/contact"
-											className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors duration-200 text-sm cursor-pointer"
-										>
-											Contact Support
-											<ArrowRight className="w-4 h-4" />
-										</Link>
-										<Link
-											href="/faq"
-											className="inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm cursor-pointer"
-										>
-											Browse FAQ
-										</Link>
+										<Button asChild shape="crisp" size="lg">
+											<Link href="/contact">
+												Contact Support
+												<ArrowRight aria-hidden="true" />
+											</Link>
+										</Button>
+										<Button asChild shape="crisp" size="lg" variant="outline" className="shadow-none">
+											<Link href="/faq">Browse FAQ</Link>
+										</Button>
 									</div>
 								</motion.article>
 							</motion.div>

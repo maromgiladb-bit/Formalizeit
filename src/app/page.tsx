@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/accordion";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/reveal";
 import PricingSection from "@/components/marketing/PricingSection";
+import { HeroSheet } from "@/components/marketing/HeroSheet";
+import { Button } from "@/components/ui/button";
 import { NEW_NDA_HREF } from "@/lib/newNdaHref";
 import { faqs } from "./faq/faq-data";
 
@@ -92,73 +94,14 @@ const FEATURES = [
 // A curated taste of the FAQ — the full list lives at /faq.
 const TEASER_FAQ_INDEXES = [0, 2, 5, 13];
 
-/* ─── Document Mockup ─────────────────────────────────────── */
-function DocumentMockup() {
-  return (
-    <div className="relative w-full max-w-lg mx-auto lg:mx-0">
-      {/* Document card */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-float overflow-hidden">
-        {/* Doc header */}
-        <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50">
-          <FileText className="w-4 h-4 text-gray-500" aria-hidden="true" />
-          <div className="text-xs font-semibold text-gray-600">NDA_Agreement.docx</div>
-        </div>
-
-        {/* Doc body */}
-        <div className="px-7 py-7 space-y-3.5">
-          {/* Title line */}
-          <div className="h-3 bg-ink rounded w-2/3 mb-5" />
-
-          {/* Regular lines */}
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-5/6" />
-          <div className="h-2 bg-gray-200 rounded w-full" />
-
-          {/* Highlighted row — Variable */}
-          <div className="flex items-center gap-2 rounded-md bg-teal-50 border border-teal-200 px-3 py-2 mt-2">
-            <div className="h-2 bg-teal-400 rounded w-1/3" />
-            <div className="h-2 bg-teal-200 rounded flex-1" />
-          </div>
-
-          {/* Regular lines */}
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-4/5" />
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-3/4" />
-
-          {/* Highlighted row — Custom Clause */}
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-            <div className="h-2 bg-amber-400 rounded w-2/5" />
-            <div className="h-2 bg-amber-200 rounded flex-1" />
-          </div>
-
-          {/* Regular lines */}
-          <div className="h-2 bg-gray-200 rounded w-full" />
-          <div className="h-2 bg-gray-200 rounded w-5/6" />
-        </div>
-      </div>
-
-      {/* Floating tooltip */}
-      <div className="hidden sm:block absolute -right-4 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl shadow-float px-4 py-3 w-52">
-        <p className="text-xs font-semibold text-ink leading-snug">
-          Review only the changes:
-        </p>
-        <p className="text-xs text-teal-700 font-medium mt-0.5">
-          Variables &amp; Custom Clauses
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Animated stat ───────────────────────────────────────── */
+/* ─── Stat ────────────────────────────────────────────────── */
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="text-center">
-      <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+    <div className="px-2 text-center sm:px-6">
+      <div className="font-doc-mono text-xl font-medium tracking-tight text-ink sm:text-2xl md:text-3xl">
         {value}
       </div>
-      <div className="text-gray-500 text-sm mt-1 font-medium">{label}</div>
+      <div className="mt-1 text-sm text-muted-ink">{label}</div>
     </div>
   );
 }
@@ -179,99 +122,90 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-white">
 
       {/* ══════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════ */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:py-16 lg:min-h-[calc(100svh-4rem)] lg:flex lg:items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <section className="border-b border-line bg-ground">
+        <div className="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 lg:flex lg:min-h-[calc(100svh-4rem)] lg:items-center lg:px-8 lg:py-14">
+          <div className="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:gap-14">
 
-          {/* Left: copy */}
-          <motion.div
-            initial={false}
-            animate="animate"
-            variants={stagger}
-          >
-            <motion.h1
-              variants={fadeUp}
-              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-ink leading-[1.05] tracking-tight mb-6"
-            >
-              NDA in<br />minutes.
-            </motion.h1>
-            <motion.p
-              variants={fadeUp}
-              className="text-lg text-gray-500 leading-relaxed mb-8 max-w-md"
-            >
-              Start from the standard NDA, fill in what&apos;s different, and send.
-            </motion.p>
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
-              {userId ? (
-                <Link
-                  href={NEW_NDA_HREF}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm"
-                >
-                  Send your NDA now
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </Link>
-              ) : (
-                <SignupButton>
-                  <button className="inline-flex items-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-card transition-colors duration-200 text-sm cursor-pointer">
-                    Send Your First NDA Free
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                </SignupButton>
-              )}
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-ink hover:bg-gray-100 font-semibold rounded-xl transition-colors duration-200 text-sm"
+            {/* Left: copy */}
+            <motion.div initial={false} animate="animate" variants={stagger}>
+              <motion.h1
+                variants={fadeUp}
+                className="mb-6 font-display text-5xl font-bold leading-[0.98] tracking-[-0.04em] text-ink sm:text-6xl lg:text-7xl"
               >
-                See pricing
-              </a>
+                NDA in{" "}
+                <span className="bg-[linear-gradient(var(--color-teal-100),var(--color-teal-100))] bg-[length:100%_10px] bg-[position:0_88%] bg-no-repeat">
+                  minutes
+                </span>
+                .
+              </motion.h1>
+              <motion.p
+                variants={fadeUp}
+                className="mb-8 max-w-[30ch] text-lg leading-snug text-muted-ink sm:text-xl"
+              >
+                Start from the standard NDA, fill in what&apos;s different, and send.
+              </motion.p>
+              <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3">
+                {userId ? (
+                  <Button asChild shape="crisp" size="lg">
+                    <Link href={NEW_NDA_HREF}>
+                      Send your NDA now
+                      <ArrowRight aria-hidden="true" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <SignupButton>
+                    <Button shape="crisp" size="lg">
+                      Send your NDA now
+                      <ArrowRight aria-hidden="true" />
+                    </Button>
+                  </SignupButton>
+                )}
+                <Button asChild shape="crisp" size="lg" variant="outline" className="shadow-none">
+                  <Link href="/standard-nda">Read the standard NDA</Link>
+                </Button>
+              </motion.div>
             </motion.div>
-          </motion.div>
 
-          {/* Right: document mockup */}
-          <motion.div
-            initial={false}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-            className="flex justify-center lg:justify-end pr-8 lg:pr-14"
-          >
-            <DocumentMockup />
-          </motion.div>
+            {/* Right: the standard NDA, variables filling in */}
+            <div className="flex justify-center lg:justify-end">
+              <HeroSheet />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════
           HOW IT WORKS + STATS
       ══════════════════════════════════════════════ */}
-      <section className="bg-gray-50 border-y border-gray-100 py-24 lg:py-32">
+      <section className="bg-white py-20 lg:py-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-14 text-center">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+          <Reveal className="mb-12 text-center">
+            <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-ink md:text-5xl">
               Three steps. That&apos;s the whole process.
             </h2>
           </Reveal>
 
-          <RevealGroup className="relative grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Connecting line behind the cards (desktop) */}
-            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-px bg-gray-200" aria-hidden="true" />
+          <RevealGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {STEPS.map((step) => (
               <RevealItem key={step.number}>
-                <div className="relative bg-white rounded-2xl border border-gray-100 shadow-card p-7 h-full">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center">
-                      <step.icon className="w-5 h-5 text-teal-700" />
+                <div className="h-full rounded-sheet border border-line bg-white p-6 shadow-sheet">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-control bg-ground text-teal-800">
+                      <step.icon className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <span className="text-4xl font-extrabold text-gray-200 leading-none select-none">
-                      {step.number}
+                    <span className="select-none font-doc-mono text-sm text-muted-ink">
+                      0{step.number}
                     </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-ink mb-1.5">
+                  <h3 className="mb-1.5 font-display text-lg font-semibold tracking-tight text-ink">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-muted-ink">
                     {step.description}
                   </p>
                 </div>
@@ -280,7 +214,7 @@ export default function Home() {
           </RevealGroup>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 mt-16 max-w-3xl mx-auto">
+          <div className="mx-auto mt-14 grid max-w-3xl grid-cols-3 divide-x divide-line border-y border-line py-6">
             {[
               { value: "< 5 min", label: "from template to sent" },
               { value: "0", label: "recipient accounts needed" },
@@ -295,23 +229,23 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           FEATURES
       ══════════════════════════════════════════════ */}
-      <section className="bg-white py-24 lg:py-32">
+      <section className="border-y border-line bg-ground py-20 lg:py-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-14">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+          <Reveal className="mb-12">
+            <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-ink md:text-5xl">
               Fast by design. Built with security in mind.
             </h2>
           </Reveal>
 
-          <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <RevealGroup className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
               <RevealItem key={i}>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-card hover:shadow-float transition-shadow duration-200 h-full cursor-default">
-                  <h3 className="flex items-center gap-2.5 text-base font-semibold text-ink mb-1.5">
-                    <f.icon className="w-5 h-5 shrink-0 text-teal-700" aria-hidden="true" />
+                <div className="h-full rounded-sheet border border-line bg-white p-6">
+                  <h3 className="mb-1.5 flex items-center gap-2.5 font-display text-base font-semibold tracking-tight text-ink">
+                    <f.icon className="h-5 w-5 shrink-0 text-teal-800" aria-hidden="true" />
                     {f.title}
                   </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-muted-ink">
                     {f.description}
                   </p>
                 </div>
@@ -324,33 +258,33 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           PRICING
       ══════════════════════════════════════════════ */}
-      <section id="pricing" className="scroll-mt-28 bg-gray-50 border-y border-gray-100 py-24 lg:py-32">
+      <section id="pricing" className="scroll-mt-28 bg-white py-20 lg:py-28">
         <PricingSection />
       </section>
 
       {/* ══════════════════════════════════════════════
           FAQ TEASER
       ══════════════════════════════════════════════ */}
-      <section className="bg-white py-24 lg:py-32">
+      <section className="border-y border-line bg-ground py-20 lg:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
+          <Reveal className="mb-10 text-center">
+            <h2 className="font-display text-3xl font-bold tracking-[-0.03em] text-ink md:text-5xl">
               Good questions, quick answers
             </h2>
           </Reveal>
 
           <Reveal>
-            <Accordion type="single" collapsible className="space-y-3">
+            <Accordion type="single" collapsible className="space-y-2">
               {TEASER_FAQ_INDEXES.map((faqIndex) => (
                 <AccordionItem
                   key={faqIndex}
                   value={`item-${faqIndex}`}
-                  className="bg-white rounded-2xl border border-gray-200 px-6 data-[state=open]:border-teal-700 transition-colors duration-200"
+                  className="rounded-sheet border border-line bg-white px-5 transition-colors duration-200 data-[state=open]:border-teal-700"
                 >
-                  <AccordionTrigger className="text-ink text-sm font-semibold hover:no-underline py-5">
+                  <AccordionTrigger className="py-4 text-sm font-semibold text-ink hover:no-underline">
                     {faqs[faqIndex].question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm text-gray-500 leading-relaxed pb-5">
+                  <AccordionContent className="pb-4 text-sm leading-relaxed text-muted-ink">
                     {faqs[faqIndex].answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -372,29 +306,28 @@ export default function Home() {
       {/* ══════════════════════════════════════════════
           FINAL CTA
       ══════════════════════════════════════════════ */}
-      <section className="bg-teal-800 py-24 lg:py-32">
+      <section className="bg-white py-20 lg:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Reveal>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
+            <h2 className="mb-4 font-display text-3xl font-bold tracking-[-0.03em] text-ink md:text-5xl">
               Your next NDA, sent in minutes.
             </h2>
-            <p className="text-teal-100 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto">
+            <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-ink md:text-lg">
               Start from the standard NDA, fill in what&apos;s different, send. No lawyer required.
             </p>
             {userId ? (
-              <Link
-                href={NEW_NDA_HREF}
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm"
-              >
-                Send your NDA now
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
+              <Button asChild shape="crisp" size="lg">
+                <Link href={NEW_NDA_HREF}>
+                  Send your NDA now
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
             ) : (
               <SignupButton>
-                <button className="inline-flex items-center gap-2 px-7 py-3.5 bg-white hover:bg-gray-100 text-teal-900 font-semibold rounded-xl shadow-float transition-colors duration-200 text-sm cursor-pointer">
+                <Button shape="crisp" size="lg">
                   Start in seconds
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </button>
+                  <ArrowRight aria-hidden="true" />
+                </Button>
               </SignupButton>
             )}
           </Reveal>
