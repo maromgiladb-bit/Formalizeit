@@ -10,7 +10,7 @@ export function SealReplay() {
   const [run, setRun] = useState(0);
   return (
     <div className="flex items-center gap-4">
-      <Seal key={run} size={96} animate={run > 0} />
+      <Seal key={run} size={96} animate={run > 0} version="1.0" />
       <Button type="button" variant="outline" size="sm" shape="crisp" onClick={() => setRun((n) => n + 1)}>
         Replay
       </Button>

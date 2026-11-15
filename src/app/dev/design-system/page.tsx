@@ -142,7 +142,7 @@ export default function DesignSystemPreview() {
 
         <Section title="Seal">
           <div className="flex flex-wrap items-center gap-8">
-            <Seal size={96} />
+            <Seal size={96} version="1.0" />
             <SealReplay />
           </div>
         </Section>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Check, Link2, Lock, Mail, MessageCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StatusPill } from '@/components/ui/status-pill';
+import { StatusPill, type StatusTone } from '@/components/ui/status-pill';
 
 export type SharePlatform = 'gmail' | 'outlook' | 'whatsapp' | 'copy';
 
@@ -16,6 +16,8 @@ interface ShareSheetProps {
   body: string;
   onShare: (platform: SharePlatform) => void;
   reminderNote?: string;
+  /** Status shown beside Done. Defaults to "Waiting on them"; pass null to hide. */
+  status?: { tone: StatusTone; label: string } | null;
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -28,7 +30,18 @@ const PLATFORMS: { id: SharePlatform; label: string; Icon: typeof Mail }[] = [
 ];
 
 /** Presentational share sheet for the secure link. Sends nothing itself. */
-export function ShareSheet({ open, onClose, link, recipientName, subject, body, onShare, reminderNote }: ShareSheetProps) {
+export function ShareSheet({
+  open,
+  onClose,
+  link,
+  recipientName,
+  subject,
+  body,
+  onShare,
+  reminderNote,
+  status = { tone: 'progress', label: 'Waiting on them' },
+}: ShareSheetProps) {
+  const titleId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -71,7 +84,8 @@ export function ShareSheet({ open, onClose, link, recipientName, subject, body, 
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
-      returnFocusRef.current?.focus();
+      const target = returnFocusRef.current;
+      if (target?.isConnected) target.focus();
     };
   }, [open]);
 
@@ -97,7 +111,7 @@ export function ShareSheet({ open, onClose, link, recipientName, subject, body, 
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="share-sheet-title"
+        aria-labelledby={titleId}
         tabIndex={-1}
         className="relative max-h-[100dvh] w-full max-w-[560px] overflow-y-auto rounded-t-xl bg-white p-4 shadow-[0_24px_48px_-16px_rgba(13,31,30,0.4),0_0_0_1px_rgba(13,31,30,0.08)] focus:outline-none motion-safe:animate-[share-sheet-rise_280ms_cubic-bezier(0.2,0.8,0.2,1)] sm:rounded-xl sm:p-6"
       >
@@ -106,7 +120,7 @@ export function ShareSheet({ open, onClose, link, recipientName, subject, body, 
             <Check className="h-5 w-5" strokeWidth={2.6} aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 id="share-sheet-title" className="font-display text-2xl font-bold leading-tight tracking-tight text-ink">
+            <h2 id={titleId} className="font-display text-2xl font-bold leading-tight tracking-tight text-ink">
               Your NDA is ready to share
             </h2>
             <p className="mt-1 text-sm text-muted-ink">
@@ -176,7 +190,7 @@ export function ShareSheet({ open, onClose, link, recipientName, subject, body, 
           ) : (
             <span className="flex-1" />
           )}
-          <StatusPill tone="progress" label="Waiting on them" shape="crisp" />
+          {status ? <StatusPill tone={status.tone} label={status.label} shape="crisp" /> : null}
           <Button type="button" variant="outline" size="sm" shape="crisp" onClick={onClose}>
             Done
           </Button>
