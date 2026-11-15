@@ -48,7 +48,7 @@ export default function Footer() {
 	const currentYear = new Date().getFullYear();
 
 	return (
-		<footer className="bg-gray-50 border-t border-gray-200">
+		<footer className="bg-ground border-t border-line">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
 				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10">
 					<div className="col-span-2 md:col-span-1">
@@ -61,20 +61,20 @@ export default function Footer() {
 								className="h-24 w-auto"
 							/>
 						</Link>
-						<p className="text-sm text-gray-500 leading-relaxed max-w-xs">
+						<p className="text-sm text-muted-ink leading-relaxed max-w-xs">
 							One standard NDA. Fill in what&apos;s different, send — in minutes. No lawyer required.
 						</p>
 					</div>
 
 					{columns.map((column) => (
 						<div key={column.heading}>
-							<h3 className="text-sm font-semibold text-ink mb-4">{column.heading}</h3>
+							<h3 className="font-display text-sm font-semibold tracking-tight text-ink mb-4">{column.heading}</h3>
 							<ul className="space-y-2.5">
 								{column.links.map((link) => (
 									<li key={link.name}>
 										<Link
 											href={link.href}
-											className="text-sm text-gray-500 hover:text-ink transition-colors whitespace-nowrap"
+											className="text-sm text-muted-ink hover:text-ink transition-colors whitespace-nowrap"
 										>
 											{link.name}
 										</Link>
@@ -85,16 +85,16 @@ export default function Footer() {
 					))}
 				</div>
 
-				<div className="mt-12 pt-8 border-t border-gray-200">
+				<div className="mt-12 pt-8 border-t border-line">
 					<div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-						<span className="text-sm text-gray-500">
+						<span className="text-sm text-muted-ink">
 							© {currentYear} FormalizeIt. All rights reserved.
 						</span>
 						<div className="flex items-center gap-6">
-							<Link href="/contact" className="text-sm text-gray-500 hover:text-ink transition-colors">
+							<Link href="/contact" className="text-sm text-muted-ink hover:text-ink transition-colors">
 								Contact
 							</Link>
-							<Link href="/about" className="text-sm text-gray-500 hover:text-ink transition-colors">
+							<Link href="/about" className="text-sm text-muted-ink hover:text-ink transition-colors">
 								About
 							</Link>
 						</div>

@@ -18,7 +18,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jakarta);
+  --font-sans: var(--font-schibsted);
   --font-mono: var(--font-geist-mono);
   --animate-appear-zoom: appear-zoom 0.5s ease-out forwards;
   --animate-spotlight: spotlight 2s ease forwards;
