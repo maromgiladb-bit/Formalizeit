@@ -77,11 +77,11 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop — dismisses (keeps the invite pending); it never declines. */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={handleDismiss} />
+      <div className="fixed inset-0 bg-ink/50 transition-opacity" onClick={handleDismiss} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div role="dialog" aria-modal="true" aria-label="Team invite" className="relative bg-white rounded-2xl shadow-float max-w-md w-full p-6">
+        <div role="dialog" aria-modal="true" aria-label="Team invite" className="relative bg-white border border-line rounded-sheet shadow-sheet max-w-md w-full p-6">
           <button
             onClick={handleDismiss}
             aria-label="Dismiss"
@@ -93,14 +93,14 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
 
           {/* Icon */}
           <div className="mb-4 flex justify-center">
-            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-black">
+            <div className="flex items-center justify-center h-12 w-12 rounded-control bg-teal-800">
               <Mail className="h-6 w-6 text-white" />
             </div>
           </div>
 
           {/* Content */}
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold text-ink mb-2">
+            <h3 className="font-display text-lg font-semibold text-ink tracking-tight mb-2">
               You&apos;ve been invited to {invite.organizationName}
             </h3>
             <p className="text-gray-500">
@@ -117,10 +117,10 @@ export default function InvitePrompt({ pendingInvites }: { pendingInvites: Pendi
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={handleDecline} disabled={busy}>
+            <Button variant="outline" shape="crisp" className="flex-1" onClick={handleDecline} disabled={busy}>
               Decline
             </Button>
-            <Button className="flex-1" onClick={handleAccept} disabled={busy}>
+            <Button shape="crisp" className="flex-1" onClick={handleAccept} disabled={busy}>
               {busy ? 'Working…' : 'Accept invite'}
             </Button>
           </div>
