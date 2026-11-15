@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-060**
+**Next ID: T-072**
 
 ## Resume here (updated 2026-11-15)
 
@@ -100,6 +100,16 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-071** [low] [Claude] Stop parallel sessions from taking the same ticket ID (happened
+  2026-11-15: two sessions both took T-058; another then used T-059 while a third had already
+  written T-059–T-070 on an unmerged branch). Cause: each session reads Next ID from its own
+  worktree copy of TICKETS.md. Fix: (1) rule in CLAUDE.md and `~/.claude/CLAUDE.md`: `git fetch`
+  and read Next ID from `origin/main` right before taking an ID; write only IDs you actually use
+  (no reserving a block ahead); put the ticket into TICKETS.md in a tiny docs PR and merge it
+  before branching on it. (2) SessionStart hook: read Next ID from `origin/main`, and list IDs
+  found on other unmerged branches' TICKETS.md so a session sees the real highest ID. (3) If two
+  branches still collide, the one not yet merged renumbers. Open: the hydration ticket T-059 on
+  `main` collides with the design refresh's T-059 (tokens); decide who renumbers.
 - ☐ **T-013** [high] [Claude] Exercise the signed-PDF failure path end to end on Preview.
 - ☐ **T-032** [high] [Claude] Extend e2e: suggest → accept → both sign → PDF + evidence; contributor
   can't sign; expired link; reminder stop link. [README](launch/README.md#browser-e2e-suite-2026-11-15)
