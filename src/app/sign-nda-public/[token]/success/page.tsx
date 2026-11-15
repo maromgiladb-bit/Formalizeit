@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { isValidSignLinkToken } from '@/lib/signLink';
+import { Seal } from '@/components/ui/seal';
+import { Button } from '@/components/ui/button';
 
 export default async function SignSuccessPage({
     params,
@@ -25,44 +27,40 @@ export default async function SignSuccessPage({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-float border border-gray-100 p-8 text-center animate-appear-zoom">
-                <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg aria-hidden="true" className="w-10 h-10 text-teal-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+        <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-sheet shadow-sheet border border-line p-8 text-center animate-appear-zoom">
+                <div className="flex justify-center mb-5">
+                    <Seal size={96} animate />
                 </div>
 
-                <h1 className="text-2xl font-bold text-ink mb-2">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-ink mb-2">
                     Signed successfully
                 </h1>
 
-                <p className="text-gray-600 mb-8">
+                <p className="text-muted-ink mb-8">
                     Your signature has been securely recorded. The final document will be sent to all parties once everyone has signed.
                 </p>
 
                 <div className="space-y-3">
-                    <Link
-                        href={`/api/claim?signerId=${signer.id}`}
-                        className="block w-full px-5 py-3 bg-teal-800 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors shadow-card"
-                    >
-                        Create a free account to keep this NDA
-                    </Link>
+                    <Button asChild shape="crisp" size="lg" className="w-full">
+                        <Link href={`/api/claim?signerId=${signer.id}`}>
+                            Create a free account to keep this NDA
+                        </Link>
+                    </Button>
 
                     <p className="text-xs text-gray-500">
                         Create a free account to track your NDA progress and get quick access.
                     </p>
 
-                    <Link
-                        href="/"
-                        className="block w-full px-5 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                    >
-                        Back to Home Page
-                    </Link>
+                    <Button asChild variant="outline" shape="crisp" size="lg" className="w-full shadow-none">
+                        <Link href="/">
+                            Back to Home Page
+                        </Link>
+                    </Button>
                 </div>
             </div>
 
-            <div className="mt-8 text-center text-sm text-gray-500">
+            <div className="mt-8 text-center text-sm text-muted-ink">
                 <p className="mb-1">Encrypted and audit-trailed. Powered by FormalizeIt.</p>
                 &copy; {new Date().getFullYear()} FormalizeIt. All rights reserved.
             </div>

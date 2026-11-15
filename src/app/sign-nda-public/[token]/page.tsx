@@ -98,13 +98,13 @@ export default async function SignNDAPublicPage({
     // issue a fresh link — we don't offer a cancel button.
     if (signer.expiresAt && signer.expiresAt < new Date()) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
-                    <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <Info className="w-6 h-6 text-teal-700" />
+            <div className="min-h-screen bg-ground flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-sheet border border-line shadow-sheet p-8 text-center">
+                    <div className="w-12 h-12 bg-white border border-line rounded-control flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-6 h-6 text-teal-800" aria-hidden="true" />
                     </div>
-                    <h1 className="text-xl font-extrabold text-gray-900 mb-2">This NDA link has expired</h1>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <h1 className="font-display text-xl font-bold tracking-tight text-ink mb-2">This NDA link has expired</h1>
+                    <p className="text-sm text-muted-ink leading-relaxed">
                         For security, signing links expire after two weeks of inactivity. Please contact the sender to have the NDA resent.
                     </p>
                 </div>
@@ -140,19 +140,19 @@ export default async function SignNDAPublicPage({
                 });
                 if (membership && !canSignNDA({ role: membership.role, isSigner: membership.isSigner })) {
                     return (
-                        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                            <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
-                                <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                    <Info className="w-6 h-6 text-teal-700" />
+                        <div className="min-h-screen bg-ground flex items-center justify-center p-4">
+                            <div className="max-w-md w-full bg-white rounded-sheet border border-line shadow-sheet p-8 text-center">
+                                <div className="w-12 h-12 bg-white border border-line rounded-control flex items-center justify-center mx-auto mb-4">
+                                    <Info className="w-6 h-6 text-teal-800" aria-hidden="true" />
                                 </div>
-                                <h1 className="text-xl font-extrabold text-ink mb-2">Only Signers can sign this NDA</h1>
-                                <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                                <h1 className="font-display text-xl font-bold tracking-tight text-ink mb-2">Only Signers can sign this NDA</h1>
+                                <p className="text-sm text-muted-ink leading-relaxed mb-6">
                                     Signing on behalf of your company is limited to your designated Signers. From your dashboard you
                                     can ask a teammate who can sign to finish this NDA.
                                 </p>
                                 <Link
                                     href="/dashboard"
-                                    className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors"
+                                    className="inline-flex items-center justify-center px-4 py-2 rounded-control text-sm font-semibold font-display bg-teal-800 text-white hover:bg-teal-700 transition-colors"
                                 >
                                     Back to dashboard
                                 </Link>
@@ -207,17 +207,17 @@ export default async function SignNDAPublicPage({
         }
 
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-xl border border-gray-200 p-8 text-center">
-                    <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <Info className="w-6 h-6 text-teal-700" />
+            <div className="min-h-screen bg-ground flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-sheet border border-line shadow-sheet p-8 text-center">
+                    <div className="w-12 h-12 bg-white border border-line rounded-control flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-6 h-6 text-teal-800" aria-hidden="true" />
                     </div>
-                    <h1 className="text-xl font-extrabold text-ink mb-2">{title}</h1>
-                    <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
+                    <h1 className="font-display text-xl font-bold tracking-tight text-ink mb-2">{title}</h1>
+                    <p className="text-sm text-muted-ink leading-relaxed">{message}</p>
                     {ctaHref && (
                         <Link
                             href={ctaHref}
-                            className="mt-6 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold bg-teal-800 text-white hover:bg-teal-700 transition-colors"
+                            className="mt-6 inline-flex items-center justify-center px-4 py-2 rounded-control text-sm font-semibold font-display bg-teal-800 text-white hover:bg-teal-700 transition-colors"
                         >
                             {ctaLabel}
                         </Link>

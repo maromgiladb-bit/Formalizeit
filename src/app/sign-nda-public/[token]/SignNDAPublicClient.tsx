@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Great_Vibes } from 'next/font/google';
 import { LegalDisclaimer } from '@/components/ui/legal-disclaimer';
+import { Button } from '@/components/ui/button';
+import { inputClassesCrisp } from '@/components/ui/input';
 import { AUTHORITY_CONSENT_TEXT, TERMS_CONSENT_TEXT } from '@/lib/authorityConsentText';
 
 const greatVibes = Great_Vibes({
@@ -361,267 +363,307 @@ export default function SignNDAPublicClient({
 
 
 
+    // Deal summary: only fields that are already on the client; rows with no value are skipped.
+    const asText = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : '');
+    const partyA = asText(formData.party_a_name);
+    const partyB = asText(formData.party_b_name);
+    const termMonths = asText(formData.term_months);
+    const confMonths = asText(formData.confidentiality_period_months);
+    const summaryRows: { label: string; value: string; mono?: boolean }[] = [
+        ...(partyA || partyB ? [{ label: 'Parties', value: [partyA, partyB].filter(Boolean).join(' and ') }] : []),
+        ...(asText(formData.effective_date) ? [{ label: 'Effective', value: asText(formData.effective_date), mono: true }] : []),
+        ...(termMonths ? [{ label: 'Term', value: `${termMonths} months`, mono: true }] : []),
+        ...(confMonths ? [{ label: 'Confidentiality', value: `${confMonths} months`, mono: true }] : []),
+        ...(asText(formData.governing_law) ? [{ label: 'Governing law', value: asText(formData.governing_law) }] : []),
+    ];
+
+    const checkboxClasses =
+        'mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer';
+    const labelClasses = 'block text-xs font-semibold text-gray-500 mb-1.5';
+
     return (
-        <div className="min-h-screen bg-white flex flex-col">
-            {/* Main Container with Fixed Layout */}
-            <div className="flex flex-1 h-screen overflow-hidden">
-                {/* LEFT SIDE: Signature Form */}
-                <div className="w-full lg:w-[45%] h-full overflow-hidden bg-gray-50 flex flex-col border-r border-gray-100">
-                    <div className="flex-1 flex flex-col w-full px-6 py-8 overflow-y-auto">
-                        {/* Header */}
-                        <div className="mb-6">
-                            <div className="inline-flex items-center gap-1.5 bg-teal-50 text-teal-800 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
-                                <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                </svg>
-                                Secure NDA link
-                            </div>
-                            <h1 className="text-2xl font-extrabold text-ink leading-tight mb-1">{ndaTitle}</h1>
-                            <p className="text-sm text-gray-500">Review the document and add your signature below.</p>
-                        </div>
+        <div className="min-h-screen bg-ground flex flex-col">
+            {/* Header, then document (left) and sign panel (right, docked on desktop) */}
+            <div className="flex flex-col h-screen overflow-hidden">
+                <header className="shrink-0 border-b border-line bg-white px-4 py-3 lg:px-8 lg:py-4">
+                    <div className="inline-flex items-center gap-1.5 text-muted-ink text-xs font-doc-mono mb-1">
+                        <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        Secure NDA link
+                    </div>
+                    <h1 className="font-display text-lg lg:text-2xl font-bold tracking-tight text-ink leading-tight">{ndaTitle}</h1>
+                    <p className="text-sm text-muted-ink mt-0.5">Review the document and add your signature below.</p>
+                </header>
 
-                        {/* Mobile / tablet: stacked document preview (the side column is lg-only) */}
-                        <div className="lg:hidden mb-4 bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
-                            <button
-                                type="button"
-                                onClick={() => setShowMobilePreview(v => !v)}
-                                aria-expanded={showMobilePreview}
-                                className="w-full flex items-center justify-between px-5 py-3.5 text-left cursor-pointer hover:bg-gray-50 transition-colors"
-                            >
-                                <span className="text-sm font-semibold text-ink">
-                                    {showMobilePreview ? 'Hide document' : 'Read the full NDA'}
-                                </span>
-                                <svg aria-hidden="true"
-                                    className={`w-4 h-4 text-gray-500 transition-transform ${showMobilePreview ? 'rotate-180' : ''}`}
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
+                <div className="flex flex-1 min-h-0">
+                    {/* LEFT SIDE: Document (dominant on desktop) */}
+                    <div
+                        ref={documentRef}
+                        onScroll={handleScroll}
+                        className="hidden lg:flex lg:flex-col flex-1 min-w-0 h-full bg-ground overflow-y-auto"
+                    >
+                        <div className="sticky top-0 bg-ground border-b border-line px-8 py-3 z-10">
+                            <p className="text-gray-700 text-sm font-semibold">Document Preview</p>
+                        </div>
+                        <div className="p-8 flex-1">
+                            <div className="bg-white border border-line rounded-sheet shadow-sheet p-6 max-w-[860px] mx-auto">
+                                {previewHtml ? (
+                                    <iframe
+                                        srcDoc={previewHtml}
+                                        className="w-full border-0"
+                                        style={{ minHeight: '1200px', height: 'auto' }}
+                                        title="NDA Preview"
+                                        sandbox="allow-same-origin allow-scripts"
+                                        onLoad={handleDesktopPreviewLoad}
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-64">
+                                        <p className="text-sm text-gray-500">Loading preview...</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE: Sign panel (docked on desktop, stacked on phones) */}
+                    <aside
+                        aria-label="Sign this NDA"
+                        className="w-full lg:w-[420px] lg:shrink-0 h-full overflow-y-auto bg-ground lg:bg-white lg:border-l border-line"
+                    >
+                        <div className="flex flex-col w-full px-4 py-5 lg:px-6 lg:py-6">
+                            {/* Mobile / tablet: stacked document preview (the side column is lg-only) */}
+                            <div className="lg:hidden mb-4 bg-white rounded-sheet border border-line overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMobilePreview(v => !v)}
+                                    aria-expanded={showMobilePreview}
+                                    className="w-full flex items-center justify-between px-4 py-3.5 text-left cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {showMobilePreview && (
-                                <div className="border-t border-gray-100">
-                                    {previewHtml ? (
-                                        <iframe
-                                            srcDoc={previewHtml}
-                                            className="w-full border-0 h-[70vh]"
-                                            title="NDA Preview"
-                                            sandbox="allow-same-origin allow-scripts"
-                                            onLoad={handleMobilePreviewLoad}
-                                        />
-                                    ) : (
-                                        <p className="p-6 text-sm text-gray-500">Loading preview...</p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        <div ref={signatureCardRef} className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 flex flex-col flex-1 min-h-0">
-                            <p className="text-gray-700 text-sm font-semibold mb-4">Your Signature</p>
-
-                            {/* Form Fields */}
-                            <div className="space-y-4 mb-5">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
-                                    <input
-                                        type="text"
-                                        value={signature.name}
-                                        onChange={(e) => setSignature({ ...signature, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
-                                        placeholder="Your full name"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
-                                    <input
-                                        type="text"
-                                        value={signature.title}
-                                        onChange={(e) => setSignature({ ...signature, title: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
-                                        placeholder="e.g. CEO, CTO, Director"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
-                                    <input
-                                        type="date"
-                                        value={signature.date}
-                                        onChange={(e) => setSignature({ ...signature, date: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Signature Mode Tabs */}
-                            <div className="flex gap-1 mb-4 border-b border-gray-100">
-                                {(['type', 'draw', 'upload'] as const).map((mode) => (
-                                    <button
-                                        key={mode}
-                                        onClick={() => setSignatureMode(mode)}
-                                        className={`px-4 py-2 text-sm font-semibold capitalize transition-colors duration-200 cursor-pointer ${
-                                            signatureMode === mode
-                                                ? 'text-teal-700 border-b-2 border-teal-700 -mb-px'
-                                                : 'text-gray-500 hover:text-gray-900'
-                                        }`}
+                                    <span className="text-sm font-semibold text-ink">
+                                        {showMobilePreview ? 'Hide document' : 'Read the full NDA'}
+                                    </span>
+                                    <svg aria-hidden="true"
+                                        className={`w-4 h-4 text-gray-500 transition-transform ${showMobilePreview ? 'rotate-180' : ''}`}
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
                                     >
-                                        {mode}
-                                    </button>
-                                ))}
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {showMobilePreview && (
+                                    <div className="border-t border-line">
+                                        {previewHtml ? (
+                                            <iframe
+                                                srcDoc={previewHtml}
+                                                className="w-full border-0 h-[70vh]"
+                                                title="NDA Preview"
+                                                sandbox="allow-same-origin allow-scripts"
+                                                onLoad={handleMobilePreviewLoad}
+                                            />
+                                        ) : (
+                                            <p className="p-6 text-sm text-gray-500">Loading preview...</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Signature Capture Area */}
-                            <div className="mb-5 flex-1 min-h-0 flex flex-col">
-                                {signatureMode === 'type' && (
-                                    <div className="flex-1 flex flex-col gap-3">
+                            <div ref={signatureCardRef} className="bg-white lg:bg-transparent rounded-sheet lg:rounded-none border border-line lg:border-0 p-5 lg:p-0 flex flex-col">
+                                {/* Deal summary (only fields already on the client) */}
+                                {summaryRows.length > 0 && (
+                                    <section aria-label="Deal summary" className="mb-5">
+                                        <h2 className="font-display text-sm font-semibold text-gray-700 mb-2">Deal summary</h2>
+                                        <dl className="divide-y divide-line border-y border-line text-sm">
+                                            {summaryRows.map((row) => (
+                                                <div key={row.label} className="flex justify-between gap-4 py-2">
+                                                    <dt className="text-muted-ink shrink-0">{row.label}</dt>
+                                                    <dd className={`text-ink text-right [overflow-wrap:anywhere] ${row.mono ? 'font-doc-mono text-xs leading-5' : ''}`}>{row.value}</dd>
+                                                </div>
+                                            ))}
+                                        </dl>
+                                    </section>
+                                )}
+
+                                {/* Authority-to-sign affirmation */}
+                                <label className="flex items-start gap-3 mb-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={authorityConfirmed}
+                                        onChange={(e) => setAuthorityConfirmed(e.target.checked)}
+                                        className={checkboxClasses}
+                                        data-testid="authority-checkbox"
+                                    />
+                                    <span className="text-sm text-ink leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
+                                </label>
+
+                                {/* Terms / Privacy / E-Signature consent */}
+                                <div className="flex items-start gap-3 mb-5">
+                                    <input
+                                        id="terms-consent"
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                        className={checkboxClasses}
+                                        data-testid="terms-checkbox"
+                                    />
+                                    <div className="text-sm text-ink leading-snug">
+                                        <label htmlFor="terms-consent" className="cursor-pointer">{TERMS_CONSENT_TEXT}</label>
+                                        <p className="mt-1 text-xs text-muted-ink">
+                                            Read:{' '}
+                                            <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Terms of Service</a>
+                                            {' · '}
+                                            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Privacy Policy</a>
+                                            {' · '}
+                                            <a href="/esignature-consent" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">E-Signature Consent</a>
+                                            {' · '}
+                                            <a href="/standard-nda" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Standard NDA</a>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <h2 className="font-display text-sm font-semibold text-gray-700 mb-3">Your Signature</h2>
+
+                                {/* Form Fields */}
+                                <div className="space-y-3 mb-4">
+                                    <div>
+                                        <label className={labelClasses}>Full Name *</label>
                                         <input
                                             type="text"
-                                            value={typedSignature}
-                                            onChange={(e) => handleTypedChange(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition-colors"
-                                            data-testid="signature-input"
-                                            placeholder="Type your name to generate signature"
+                                            value={signature.name}
+                                            onChange={(e) => setSignature({ ...signature, name: e.target.value })}
+                                            className={inputClassesCrisp}
+                                            placeholder="Your full name"
                                         />
-                                        {typedSignature && (
-                                            <div className="p-4 border border-gray-200 rounded-lg bg-white flex items-center justify-center flex-1 min-h-[80px]">
-                                                <p className={`${greatVibes.className} text-3xl text-gray-900 text-center break-words`}>{typedSignature}</p>
-                                            </div>
-                                        )}
                                     </div>
-                                )}
 
-                                {signatureMode === 'draw' && (
-                                    <div className="flex-1 flex flex-col gap-2">
-                                        <canvas
-                                            aria-label="Signature pad: draw your signature"
-                                            ref={canvasRef}
-                                            width={400}
-                                            height={150}
-                                            onPointerDown={startDrawing}
-                                            onPointerMove={draw}
-                                            onPointerUp={stopDrawing}
-                                            onPointerCancel={stopDrawing}
-                                            onPointerLeave={stopDrawing}
-                                            className="w-full border border-gray-200 rounded-lg cursor-crosshair bg-white flex-1 touch-none"
-                                        />
-                                        <button
-                                            onClick={clearCanvas}
-                                            className="text-sm text-gray-500 hover:text-gray-900 underline self-start cursor-pointer transition-colors duration-200"
-                                        >
-                                            Clear
-                                        </button>
-                                    </div>
-                                )}
-
-                                {signatureMode === 'upload' && (
-                                    <div className="flex-1 flex flex-col gap-3">
+                                    <div>
+                                        <label className={labelClasses}>Title *</label>
                                         <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer"
+                                            type="text"
+                                            value={signature.title}
+                                            onChange={(e) => setSignature({ ...signature, title: e.target.value })}
+                                            className={inputClassesCrisp}
+                                            placeholder="e.g. CEO, CTO, Director"
                                         />
-                                        {signatureImage && (
-                                            <div className="p-4 border border-gray-200 rounded-lg bg-white flex items-center justify-center flex-1 min-h-[80px]">
-                                                <img src={signatureImage} alt="Signature" className="max-h-32 mx-auto" />
-                                            </div>
-                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className={labelClasses}>Date</label>
+                                        <input
+                                            type="date"
+                                            value={signature.date}
+                                            onChange={(e) => setSignature({ ...signature, date: e.target.value })}
+                                            className={`${inputClassesCrisp} font-doc-mono`}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Signature Mode Tabs */}
+                                <div className="flex gap-1 mb-3 border-b border-line">
+                                    {(['type', 'draw', 'upload'] as const).map((mode) => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => setSignatureMode(mode)}
+                                            className={`px-4 py-2 text-sm font-semibold capitalize transition-colors duration-200 cursor-pointer ${
+                                                signatureMode === mode
+                                                    ? 'text-teal-800 border-b-2 border-teal-800 -mb-px'
+                                                    : 'text-gray-500 hover:text-ink'
+                                            }`}
+                                        >
+                                            {mode}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Signature Capture Area */}
+                                <div className="mb-5 flex flex-col">
+                                    {signatureMode === 'type' && (
+                                        <div className="flex flex-col gap-3">
+                                            <input
+                                                type="text"
+                                                value={typedSignature}
+                                                onChange={(e) => handleTypedChange(e.target.value)}
+                                                className={inputClassesCrisp}
+                                                data-testid="signature-input"
+                                                placeholder="Type your name to generate signature"
+                                            />
+                                            {typedSignature && (
+                                                <div className="p-4 border border-line rounded-control bg-white flex items-center justify-center min-h-[80px]">
+                                                    <p className={`${greatVibes.className} text-3xl text-gray-900 text-center break-words`}>{typedSignature}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {signatureMode === 'draw' && (
+                                        <div className="flex flex-col gap-2">
+                                            <canvas
+                                                aria-label="Signature pad: draw your signature"
+                                                ref={canvasRef}
+                                                width={400}
+                                                height={150}
+                                                onPointerDown={startDrawing}
+                                                onPointerMove={draw}
+                                                onPointerUp={stopDrawing}
+                                                onPointerCancel={stopDrawing}
+                                                onPointerLeave={stopDrawing}
+                                                className="w-full border border-line rounded-control cursor-crosshair bg-white touch-none"
+                                            />
+                                            <button
+                                                onClick={clearCanvas}
+                                                className="text-sm text-gray-500 hover:text-ink underline self-start cursor-pointer transition-colors duration-200"
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {signatureMode === 'upload' && (
+                                        <div className="flex flex-col gap-3">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="w-full px-3 py-2 border border-line rounded-control text-sm text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-control file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-teal-800 hover:file:bg-gray-200 cursor-pointer"
+                                            />
+                                            {signatureImage && (
+                                                <div className="p-4 border border-line rounded-control bg-white flex items-center justify-center min-h-[80px]">
+                                                    <img src={signatureImage} alt="Signature" className="max-h-32 mx-auto" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Error Message */}
+                                {error && (
+                                    <div role="alert" className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-control text-red-700 text-sm">
+                                        {error}
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Error Message */}
-                            {error && (
-                                <div className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-lg text-red-700 text-sm">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* Authority-to-sign affirmation */}
-                            <label className="flex items-start gap-3 mb-4 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={authorityConfirmed}
-                                    onChange={(e) => setAuthorityConfirmed(e.target.checked)}
-                                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
-                                    data-testid="authority-checkbox"
-                                />
-                                <span className="text-sm text-gray-500 leading-snug">{AUTHORITY_CONSENT_TEXT}</span>
-                            </label>
-
-                            {/* Terms / Privacy / E-Signature consent */}
-                            <div className="flex items-start gap-3 mb-4">
-                                <input
-                                    id="terms-consent"
-                                    type="checkbox"
-                                    checked={termsAccepted}
-                                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer"
-                                    data-testid="terms-checkbox"
-                                />
-                                <div className="text-sm text-gray-500 leading-snug">
-                                    <label htmlFor="terms-consent" className="cursor-pointer">{TERMS_CONSENT_TEXT}</label>
-                                    <p className="mt-1 text-xs">
-                                        Read:{' '}
-                                        <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Terms of Service</a>
-                                        {' · '}
-                                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Privacy Policy</a>
-                                        {' · '}
-                                        <a href="/esignature-consent" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">E-Signature Consent</a>
-                                        {' · '}
-                                        <a href="/standard-nda" target="_blank" rel="noopener noreferrer" className="font-medium text-teal-800 underline underline-offset-2 hover:text-teal-700">Standard NDA</a>
+                                {!hasScrolledToBottom && (
+                                    <p className="mb-3 text-xs font-medium text-amber-700" role="status">
+                                        <span className="lg:hidden">Open &ldquo;Read the full NDA&rdquo; above and scroll to the end to sign.</span>
+                                        <span className="hidden lg:inline">Scroll to the end of the document to sign.</span>
                                     </p>
-                                </div>
+                                )}
+
+                                {/* Not-legal-advice notice stays in its full form, directly above the sign button */}
+                                <LegalDisclaimer className="mb-4 rounded-sheet! shadow-none! border-line!" />
+
+                                {/* Submit Button */}
+                                <Button
+                                    shape="crisp"
+                                    size="lg"
+                                    onClick={handleSubmit}
+                                    disabled={loading || !authorityConfirmed || !termsAccepted || !hasScrolledToBottom}
+                                    className="w-full"
+                                >
+                                    {loading ? 'Submitting...' : 'Submit Signature'}
+                                </Button>
                             </div>
-
-                            {!hasScrolledToBottom && (
-                                <p className="mb-3 text-xs font-medium text-amber-700" role="status">
-                                    <span className="lg:hidden">Open &ldquo;Read the full NDA&rdquo; above and scroll to the end to sign.</span>
-                                    <span className="hidden lg:inline">Scroll to the end of the document to sign.</span>
-                                </p>
-                            )}
-
-                            <LegalDisclaimer className="mb-4" />
-
-                            {/* Submit Button */}
-                            <button
-                                onClick={handleSubmit}
-                                disabled={loading || !authorityConfirmed || !termsAccepted || !hasScrolledToBottom}
-                                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-teal-800 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
-                            >
-                                {loading ? 'Submitting...' : 'Submit Signature'}
-                            </button>
-
-                            <LegalDisclaimer className="mt-4" />
                         </div>
-                    </div>
-                </div>
-
-                {/* RIGHT SIDE: Document Preview */}
-                <div
-                    ref={documentRef}
-                    onScroll={handleScroll}
-                    className="hidden lg:flex lg:flex-col w-[55%] h-full bg-white overflow-y-auto"
-                >
-                    <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
-                        <p className="text-gray-700 text-sm font-semibold">Document Preview</p>
-                    </div>
-                    <div className="p-6 flex-1">
-                        {previewHtml ? (
-                            <iframe
-                                srcDoc={previewHtml}
-                                className="w-full border-0"
-                                style={{ minHeight: '1200px', height: 'auto' }}
-                                title="NDA Preview"
-                                sandbox="allow-same-origin allow-scripts"
-                                onLoad={handleDesktopPreviewLoad}
-                            />
-                        ) : (
-                            <div className="flex items-center justify-center h-64">
-                                <p className="text-sm text-gray-500">Loading preview...</p>
-                            </div>
-                        )}
-                    </div>
+                    </aside>
                 </div>
             </div>
         </div>

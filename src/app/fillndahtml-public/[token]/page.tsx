@@ -68,13 +68,13 @@ export default async function FillNDAPublicPage({
     // Check expiry
     if (signer.expiresAt && signer.expiresAt < new Date()) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Clock className="w-7 h-7 text-teal-700" />
+            <div className="min-h-screen bg-ground flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-sheet border border-line shadow-sheet p-8 text-center">
+                    <div className="w-12 h-12 bg-white border border-line rounded-control flex items-center justify-center mx-auto mb-4">
+                        <Clock className="w-6 h-6 text-teal-800" aria-hidden="true" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h1>
-                    <p className="text-gray-600">This review link has expired. Please ask the sender to resend the NDA.</p>
+                    <h1 className="font-display text-2xl font-bold tracking-tight text-ink mb-2">Link Expired</h1>
+                    <p className="text-muted-ink">This review link has expired. Please ask the sender to resend the NDA.</p>
                 </div>
             </div>
         );
@@ -109,15 +109,15 @@ export default async function FillNDAPublicPage({
 
     if (!allowedStates.includes(workflowState)) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Info className="w-7 h-7 text-teal-700" />
+            <div className="min-h-screen bg-ground flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-sheet border border-line shadow-sheet p-8 text-center">
+                    <div className="w-12 h-12 bg-white border border-line rounded-control flex items-center justify-center mx-auto mb-4">
+                        <Info className="w-6 h-6 text-teal-800" aria-hidden="true" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="font-display text-2xl font-bold tracking-tight text-ink mb-2">
                         {workflowState === 'COMPLETE' ? 'Already Completed' : 'Not Available'}
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-muted-ink">
                         {workflowState === 'COMPLETE'
                             ? 'This NDA has already been completed.'
                             : isPartyA
