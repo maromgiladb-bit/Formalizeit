@@ -1421,6 +1421,9 @@ export default function FillNDAHTML() {
 							</div>
 						</div>
 
+						{/* Legal disclaimer (full, prominent; CLAUDE.md rule 6) */}
+						<LegalDisclaimer className="mb-4 rounded-sheet! shadow-none! border-line!" />
+
 						{/* Alerts */}
 						{loading && (
 							<div className="flex items-center gap-3 text-sm text-teal-700 mb-4 bg-teal-50 px-4 py-3 rounded-control border border-teal-200">
