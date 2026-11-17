@@ -1,126 +1,190 @@
-# FormalizeIt — Calm Precision Design System
+# FormalizeIt — Ink & Seal design system
 
-Read this file at the start of any UI task. All pages must follow this design system.
+Read this file at the start of any UI task. All pages follow it.
 
----
-
-## Overview
-
-**Calm precision** — Linear/Notion-feel minimalism. Generous whitespace, soft shadows, rounded-2xl cards, subtle teal tints, restrained scroll reveals. The site must *feel* like its message: "NDA in minutes" — fast, simple, frictionless.
-
-Reference implementations: `src/app/page.tsx` (marketing), `src/components/dashboard/DashboardClient.tsx` (app).
+Ink & Seal replaced Calm Precision in November 2026 (T-058, PRs #23–#25). Full rationale, screen
+specs and open decisions: `docs/superpowers/specs/2026-11-15-ink-and-seal-design-system.md`.
+Living reference page (dev only): `/dev/design-system` (`src/app/dev/design-system/page.tsx`).
 
 ---
 
-## Color discipline — every color has exactly one job
+## Thesis
 
-Tokens are defined in `src/app/globals.css` (`@theme`). Never invent new colors.
+Precise and fast, grounded in the document. Every screen shows the real NDA beside the controls
+that change it. Trust comes from showing evidence (template version, timestamp, hash), not from
+saying "secure". Quiet by default; three signature motion moments (below).
 
-| Role | Token / class | Rule |
+---
+
+## Color: every color has exactly one job
+
+Tokens live in `src/app/globals.css` (`@theme`). Never invent colors.
+
+| Role | Class | Rule |
 |---|---|---|
-| Ink | `text-ink` (`#0d1f1e`) | Headings, nav links, primary text. NOT `text-gray-900`. |
-| Body | `text-gray-500` | Descriptions, secondary text. |
-| Surfaces | `bg-white` / `bg-gray-50` | Alternate section backgrounds. |
-| Primary | `bg-teal-800 hover:bg-teal-700` | CTAs and links ONLY. Never as decoration, block hovers, or random borders. Never teal-600. |
-| Soft tint | `bg-teal-50` + `text-teal-700` | Icon chips, active nav pills, info boxes. |
-| Action | amber (`bg-amber-50 text-amber-700` / `bg-amber-500`) | EXCLUSIVELY "needs you" moments: sign now, review changes, pending approval, popular badge. Never decorative — amber must always mean something. |
-| Borders | `border-gray-100` (cards), `border-gray-200` (inputs, dividers) | |
-| Destructive | `text-red-600` etc. | Errors and delete confirmation only. |
+| Ink | `text-ink` (`#0d1f1e`) | Headings, primary text. Not `text-gray-900`. |
+| Muted text | `text-muted-ink` (`#5b6b69`) | Secondary text, descriptions, inactive nav. |
+| Ground | `bg-ground` (`#f6f8f8`) | App and section backgrounds. |
+| Sheet | `bg-white` | Paper sheets, panels, cards. |
+| Line | `border-line` (`#e3e9e8`) | Every 1px rule and border. |
+| Action | `bg-teal-800 hover:bg-teal-700` / `text-teal-800` (`--color-primary`) | CTAs, links, focus ring, active field, active nav underline. The only action color. Never teal-600. |
+| Tint | `bg-tint` (`#d9efec`) or `bg-teal-50` | Highlighted variables, active pills, info boxes. |
+| Needs you | amber (`bg-amber-50 text-amber-700`, `bg-amber-500`) | ONLY "needs you": sign now, review changes, link expired. Never decorative. |
+| Done | solid teal (`bg-teal-700 text-white`) | Signed / complete pill, seal. |
+| Destructive | `text-red-600`, `--color-destructive` | Errors and delete confirmation only. |
 
-**Banned:** blue, purple, orange, green, yellow utility colors. Green "success" → teal done-tone. Yellow "warning" → amber. Blue "info" → teal-50 tint.
-
----
-
-## Elevation & shape
-
-- Cards: `bg-white rounded-2xl border border-gray-100 shadow-card` (hover: `hover:shadow-float`)
-- Overlays / nav pill / hero mockups: `shadow-float`
-- Buttons & inputs: `rounded-xl` (small buttons `rounded-lg`, nav pills `rounded-full`)
-- Never `shadow-md/lg/xl` — only the two tokens.
+**Banned:** blue, purple, orange, green, yellow, crimson utility colors. Green success → teal done
+tone. Yellow warning → amber. Blue info → tint. (Brand colors for the share buttons, e.g.
+`--color-whatsapp`, are the one exception and live only in `share-sheet` / `brand-icons`.)
 
 ---
 
-## Typography (Plus Jakarta Sans)
+## Shape and elevation
 
-- **Display (home hero):** `text-5xl sm:text-6xl lg:text-7xl font-extrabold text-ink tracking-tight leading-[1.05]`
-- **Page H1:** `text-4xl md:text-5xl font-extrabold text-ink tracking-tight`
-- **Section H2 (marketing):** `text-4xl md:text-5xl font-extrabold text-ink tracking-tight` (about half the hero display, never a third)
-- **Card H3:** `text-base font-semibold text-ink` (drop pervasive `font-bold` — use semibold/medium)
-- **No eyebrows.** Never put a small label above a heading that only names what the heading says. Small type before a heading stays only when it carries a fact the heading lacks (a step number, "Error 404", a version), and then it is a plain label.
-- **Labels** (form labels, table heads, panel titles, tags, nav): sentence case in the body face, a step smaller, untracked. Panel title: `text-sm font-semibold text-gray-700`. Form label / table head: `text-xs font-semibold text-gray-500`. **Never `uppercase`, never `tracking-wide/wider/widest`.**
-- **Smallest text:** 12px (`text-xs`). Never `text-[10px]`.
-- **Gray text on white:** `text-gray-500` or darker. `text-gray-400` fails contrast (about 2.6:1) and is for icons and placeholders only.
-- **Body:** `text-base text-gray-500 leading-relaxed`
+- **Radius:** controls (buttons, inputs, nav items) `rounded-control` (6px); sheets, panels, menus,
+  cards `rounded-sheet` (8px); pills `rounded` (4px) or `rounded-full`. No `rounded-2xl` / `rounded-xl`
+  in new work.
+- **Borders:** 1px `border-line`, not `border-gray-100/200`.
+- **Shadows:** `shadow-sheet` (stacked paper) for document sheets, panels and menus;
+  `shadow-card` / `shadow-float` remain for small raised elements. Never `shadow-md/lg/xl`.
 
 ---
 
-## Components — use the shared primitives, never hand-roll
+## Type
 
-- **Buttons:** `@/components/ui/button` (`Button` / `buttonVariants`). Default = teal-800. Variants: outline, secondary, ghost, link, destructive. Never hand-roll a teal button.
-- **Inputs:** `@/components/ui/input` — `Input`, `Textarea`, or the `inputClasses` string for legacy forms. Focus = `focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700`.
-- **Status:** `@/components/ui/status-pill` — `<StatusPill tone label />`. Tones:
-  - `neutral` (gray) — DRAFT, FILLING, CANCELLED
-  - `progress` (teal-50/teal-700 ring) — SENT, AWAITING_*  on the other side
-  - `action` (amber, pulsing dot) — SIGN NOW, CHANGES TO REVIEW
-  - `done` (solid teal-700 + check) — SIGNED, COMPLETE
-- **Scroll reveals:** `@/components/ui/reveal` — `<Reveal>`, `<RevealGroup>` + `<RevealItem>`. The ONLY scroll-animation mechanism. Content is visible by default: it only hides once the `js` class (set in the root layout) is on `<html>`, so it shows with scripting off, in link previews and under `prefers-reduced-motion`. Never use framer `initial={{ opacity: 0 }}` / `initial="hidden"` on page content; it is server-rendered invisible. Page-load entrance animations are not used (one reveal per page at most).
-- **Cards:** `@/components/ui/card` or the card classes above.
+| Role | Face | Class / where |
+|---|---|---|
+| UI + display | **Schibsted Grotesk** | Default `font-sans` (and `font-display`) site-wide, loaded in `src/app/layout.tsx` |
+| Evidence / data | **Geist Mono** | `font-mono` / `font-doc-mono`: dates, counters, step numbers, hashes, template version, timers |
+| Document | **Noto Serif** | Only inside the NDA (`templates/professional_mutual_nda_v1.hbs`), never in the app UI |
+| Signature | **Great Vibes** | Typed signatures (baked into the signed PDF as an image) |
 
----
-
-## Navigation
-
-- Both toolbars wrap `src/components/nav/FloatingNavShell.tsx`: full-width white bar at top of page → centered floating pill (`bg-white/85 backdrop-blur-md shadow-float rounded-full`) past 32px scroll. Two discrete states with CSS transitions — never continuous scroll-linked animation.
-- Shrunken pill keeps only core links + primary CTA.
-- Nav links: `text-gray-600 hover:text-ink hover:bg-gray-100 rounded-full` — active = `bg-teal-50 text-teal-800 font-semibold`. No solid teal block hovers.
-- Pages are spaced by the shell's built-in `h-16` spacer (the header is `fixed`). Anchor targets need `scroll-mt-28`.
-
-## Footer
-
-Light: `bg-gray-50 border-t border-gray-200`, brand blurb + 3 link columns, links `text-gray-500 hover:text-ink`.
+- **Scale:** display 56–72px · H1 32–40 · H2 24 · body 15–16 · small 13 · minimum 12 (`text-xs`).
+  Never `text-[10px]`. Headings `font-display font-bold text-ink tracking-[-0.03em]`.
+- **Meta lines** in Geist Mono, e.g. `v1.0 · 15 Nov 2026 · 9f2c4e…a41e` (evidence and document
+  meta are the one place middle-dot strings belong).
+- **No eyebrows.** Never a small label above a heading that only repeats it. Small type before a
+  heading stays only when it carries a fact the heading lacks (a step number, a version).
+- **Labels** (form labels, table heads, panel titles, tags, nav): sentence case, a step smaller,
+  untracked. **Never `uppercase`, never `tracking-wide/wider/widest`.**
+- **Gray text on white:** `text-muted-ink`, `text-gray-500` or darker. `text-gray-400` is for icons
+  and placeholders only.
+- Headings say what the user does ("Who are you sending it to?"), not what the section is.
 
 ---
 
-## Layout
+## Components: use the shared primitives (`src/components/ui`), never hand-roll
 
-- Container: `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8` (home uses 6xl for every section except the FAQ's reading column, footer/nav 7xl)
-- Marketing sections: `py-24 lg:py-32` with alternating white / gray-50 + `border-y border-gray-100`
-- Home hero: one screen at desktop (`lg:min-h-[calc(100svh-4rem)]`), headline + one sentence (about 12 words) + actions; nothing else above the fold
-- Long documents (legal pages, help): cap running text at 70ch (`[&_p]:max-w-[70ch]` on the content wrapper)
-- App pages: `py-8`–`py-12`, compact headers with H1 + description
+- **Button** (`button.tsx`): always pass `shape="crisp"` in new work (6px radius, display face).
+  Variants: default (teal-800), outline, secondary, ghost, link, destructive. The `default` shape
+  is the legacy Calm Precision look, kept so unmigrated buttons don't change (T-075).
+- **Inputs** (`input.tsx`): `inputClassesCrisp` for new forms (6px, `border-line`); `Input` /
+  `Textarea` / `inputClasses` are legacy. Focus: `focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700`.
+- **StatusPill** (`status-pill.tsx`): `<StatusPill tone label shape="crisp" />`. Labels come from
+  `getWorkflowStatusInfo()` in `src/lib/workflowStatus.ts`. Tones:
+  - `neutral` (gray): Draft, Cancelled
+  - `progress` (tint + teal ring): Sent, Waiting on them, Awaiting signature
+  - `action` (amber, pulsing dot): Your turn: sign / review, Review changes, Link expired
+  - `done` (solid teal + check): Signed, Complete
+- **Sheet** (`sheet.tsx`): white paper sheet, `rounded-sheet border-line shadow-sheet`, optional
+  Geist Mono `meta` header line. Use for documents and main panels.
+- **EvidenceLine / EvidenceBlock** (`evidence.tsx`): Geist Mono lines built only from recorded
+  evidence fields (signer, timestamp, IP, template version, `agreementHash`). Never show a field we
+  don't record.
+- **Seal** (`seal.tsx`): teal circular seal for the executed state, worded "Signed" + date, never
+  "certified" / "verified". **UI only**: nothing is printed on the PDF until T-070 is decided.
+- **ShareSheet** (`share-sheet.tsx`): the send-success sheet (secure link + copy, Gmail / Outlook /
+  WhatsApp / Copy link, pre-written message). Links-only send: never say "email sent".
+- **LegalDisclaimer** (`legal-disclaimer.tsx`): `variant="compact"` (one line + "Learn more") on the
+  fill, review and sign pages. It must stay visible on those pages (CLAUDE.md rule 6).
+- **PageHero** (`page-hero.tsx`): icon chip + H1 + subtitle on `bg-ground`, for legal and info pages.
+- **Reveal** (`reveal.tsx`): `<Reveal>`, `<RevealGroup>` + `<RevealItem>`, the ONLY scroll-reveal
+  mechanism. Content is visible by default and hides only once the `js` class is on `<html>`. Never
+  framer `initial={{ opacity: 0 }}` / `initial="hidden"` on page content.
+- Also: `accordion`, `dropdown-menu`, `switch`, `field-tooltip`, `notification-icon`, `pricing`.
 
 ---
 
-## Motion rules
+## App shell and navigation
 
-- Reveals: once-only, fade-up 24px, 0.4–0.5s easeOut, stagger 0.08 — via `<Reveal>` only.
-- Hovers: color/shadow transitions (`transition-colors` / `transition-shadow`), 200–300ms. No scale bounces, no translate lifts, no confetti.
-- **Never `transition-all`.** Name the properties (`transition-colors`, `transition-shadow`, `transition-transform`, or Tailwind's `transition`). Never animate `width`, `height`, `top`, `left`, `right` or `max-width`: progress bars use `origin-left scale-x-*` + `transition-transform`; the nav's height change snaps and only its colours/shadow fade; accordions fade (opacity + transform), never animate height.
-- **States:** `globals.css` gives every control a 2px teal focus ring on `:focus-visible` (instant), 1px press on `:active` and `not-allowed` on `:disabled`. Components may add their own `focus-visible:ring-*`; never `outline-none` without a replacement ring.
-- **Icons:** decorative SVG and Lucide icons carry `aria-hidden="true"`; icon-only buttons and links carry an `aria-label`. Never an emoji as an icon; use Lucide.
-- **Punctuation:** no arrows glued to link text ("Learn more →"), no middle-dot meta strings ("A · B · C"), no decorative status dots.
-- `prefers-reduced-motion` is mandatory: framer components use `useReducedMotion()`, CSS uses `motion-reduce:` / `motion-safe:` variants.
-
----
-
-## Page recipes
-
-- **Marketing section:** H2 → description → `RevealGroup` of rounded-2xl cards.
-- **App page header:** `text-2xl font-extrabold text-ink` H1 → `text-sm text-gray-500` description → primary action button on the right.
-- **List rows (dashboard pattern):** `rounded-2xl border-gray-100 bg-white px-5 py-4 hover:shadow-card` — icon chip + semibold name + gray-500 counterparty | StatusPill | date + small actions. Stacks on mobile, no horizontal scroll.
-- **Public token frame (external recipients):** gray-50 page, "Secure NDA link" lock badge (`bg-teal-50 text-teal-800 rounded-full`), white rounded-2xl card with shadow-float, single prominent CTA, trust line "Encrypted and audit-trailed. Powered by FormalizeIt."
-- **Pricing:** lives on home at `/#pricing` (`/plans` redirects there). Popular card = white + `border-teal-700 ring-1` + amber badge.
+- **Top app bar** on every page via `src/components/nav/FloatingNavShell.tsx`, wrapped by
+  `PrivateToolbar` (signed in) and `PublicToolbar`. Full-width white bar with a `border-line` rule
+  at the top; past 32px of scroll it becomes a floating `rounded-sheet` bar with `shadow-sheet`
+  (two discrete states, never scroll-linked animation).
+- Signed-in bar: logo + Beta pill, nav (Dashboard, My account, Pricing, More: About, Contact, FAQ,
+  Help, Home), bell, **New NDA** (the only New NDA button on the page), account.
+- Nav links: `text-muted-ink hover:text-ink` with a 2px bottom border; active = `text-ink
+  border-teal-800`. No filled-pill or solid-teal hovers.
+- The bar is `fixed`; the shell adds an `h-16` spacer. Anchor targets need `scroll-mt-28`.
+- **Footer:** marketing and legal pages only. App pages (dashboard, fill, settings, templates,
+  drafts, view) have none (`FooterWrapper`).
+- Mobile: links fold behind the menu button; logo, New NDA and account stay.
 
 ---
 
-## Site map notes
+## Screen patterns
 
-- Pricing is a home-page section: link to `/#pricing`, never `/plans`.
-- About stays a standalone page (scroll timeline).
-- One shared app shell for all roles — role differences are action-level, not page-level.
+- **Home:** "NDA in minutes." + one sentence + "Send your NDA now" / "Read the standard NDA"; a
+  real NDA sheet whose blanks fill in with a mono counter. One screen at desktop.
+- **Fill wizard** (`/fillndahtml`): stepper under the bar (Document, Party A, Party B, Clauses,
+  Review) with a mono "Step n of 5"; form left, live preview sheet right; compact disclaimer;
+  Back / Save draft / Continue.
+- **Receiver sign:** document dominant, sign panel docked right (bottom panel on phones): deal
+  summary, both consent checkboxes with the exact text from `src/lib/authorityConsentText.ts`,
+  signature, Sign NDA, trust line. Executed state: seal + evidence block.
+- **Dashboard:** compact list with filter tabs and counts (All, Needs you, Waiting, Received,
+  Signed, Drafts, Archived). Rows: name + counterparty | StatusPill | mono date + row actions.
+  Stacks on mobile, no horizontal scroll.
+- **Settings, legal, other pages:** same tokens and shell. Legal page text never changes in a
+  design pass.
+- **Pricing** lives on home at `/#pricing` (`/plans` redirects there).
 
-## Mobile
+### Layout
 
-- Every surface works at 375px. Lists stack, never scroll horizontally.
-- Settings sidebar becomes a horizontal pill bar on mobile.
-- Mobile menus open as sheets inside the nav pill (rounded-2xl).
+- Container `max-w-5xl mx-auto px-4 sm:px-6 lg:px-8` (home 6xl, nav 7xl).
+- Marketing sections `py-24 lg:py-32`, alternating `bg-white` / `bg-ground` with `border-line` rules.
+- Long documents cap running text at 70ch (`[&_p]:max-w-[70ch]`).
+- App pages `py-8`–`py-12`, compact header: H1 + one muted line + primary action on the right.
+
+---
+
+## The document vs the UI
+
+The fill preview, the sign page iframe and the PDF all render the same `.hbs` template. A design
+pass **never** changes the template, its fonts, or the PDF. Preview-only aids (variable highlight,
+T-073) are injected into the fill preview iframe only, never into the sign page or the PDF render.
+
+---
+
+## Motion
+
+| Moment | Spec |
+|---|---|
+| Hero blanks fill | each variable resolves in turn, 60ms stagger, color/background only |
+| Share sheet | translateY(40px)→0 + fade, 280ms `cubic-bezier(0.2,0.8,0.2,1)`; copy icon morphs to check |
+| Executed seal | scale 1.15→1, opacity 0→1, rest at rotate(-6deg), 220ms; evidence lines follow |
+| Everything else | hovers 150–200ms on color/shadow; `Reveal` for scroll reveals |
+
+- **Never `transition-all`.** Name the properties. Never animate `width`, `height`, `top`, `left`,
+  `right` or `max-width` (progress bars use `origin-left scale-x-*`).
+- `prefers-reduced-motion` is mandatory: final state shown, framer uses `useReducedMotion()`, CSS
+  uses `motion-reduce:` / `motion-safe:`. Readable content never starts at opacity 0 without JS.
+
+---
+
+## States, accessibility, punctuation
+
+- `globals.css` gives every control a 2px teal focus ring on `:focus-visible`, 1px press on
+  `:active`, `not-allowed` on `:disabled`. Never `outline-none` without a replacement ring.
+- Decorative icons `aria-hidden="true"`; icon-only buttons and links `aria-label`. Lucide icons,
+  never emoji.
+- No arrows glued to link text ("Learn more →"), no decorative status dots.
+- Every surface works at 375px; lists stack, never scroll horizontally.
+
+---
+
+## Checking
+
+Hallmark (`/hallmark audit`) is the design checker; its stamp and waivers sit at the top of
+`src/app/globals.css`, records in `.hallmark/` (git-ignored). The e2e smoke run
+(`e2e/smoke.spec.ts`) takes a screenshot of every page into `e2e/.results/screens/`.

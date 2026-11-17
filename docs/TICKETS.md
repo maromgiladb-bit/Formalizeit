@@ -7,22 +7,19 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-075**
+**Next ID: T-077**
 
-## Resume here (updated 2026-11-15)
+## Resume here (updated 2026-11-17)
 
-Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
-landed the e2e suite (T-002) and the design audit (T-003).
+Work rules adopted (T-001, PR #19): one branch per ticket. Design refresh PRs #23–#25 merged
+(2026-11-15). Waiting for your "merge": T-059 (hydration errors, PR #26) and T-069 (design docs
+sync, PR #PRNUM).
 
-T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
-`main` (T-059).
-
-Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
-the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
-**T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
-opens sign-up. Design refresh (T-058): spec PR #23, foundations PR #24 and the page rollout PR #25 (T-061–T-068)
-merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
-(2026-11-09).
+Next: **T-004** (You, Clerk Restricted sign-up), then triage the code-review bugs **T-049–T-054**
+(negotiation flow), then production testing with sign-up closed: **T-044** full flow, **T-007**
+email, **T-008** crons, **T-009** data hygiene. Then **T-010** opens sign-up. Design leftovers
+(T-073–T-076) fit in between; T-070 waits on Nir. The beta plan with estimates is in the
+"FormalizeIt Beta Roadmap" artifact (2026-11-09).
 
 ## Now (in progress)
 
@@ -85,9 +82,6 @@ triage them before or alongside T-044.
 
 ### Design refresh (T-058, in order; spec: [Ink & Seal](superpowers/specs/2026-11-15-ink-and-seal-design-system.md))
 
-- ☐ **T-069** [low] [Claude] Docs sync: rewrite `.claude/skills/stitch-design.md`, CLAUDE.md
-  design section, Hallmark stamp in `globals.css`, Formi knowledge if routes/labels changed, memory;
-  remove old tokens once nothing uses them; publish the system in Claude's Design System type.
 - ☐ **T-070** [high] [Both] Decide whether the seal / evidence summary is printed on the signed PDF
   (Nir: a seal can read as certification). UI-only until decided.
 - ☐ **T-073** [normal] [Claude] Fill preview: highlight the filled-in variables in the preview iframe
@@ -95,6 +89,13 @@ triage them before or alongside T-044.
 - ☐ **T-074** [low] [Claude] Seal: ring text is cramped at 96px and below; tune letter spacing / size
   so "Executed · FormalizeIt · v1.0" reads cleanly. Also show the seal + evidence block on the
   executed-NDA view once the client receives recorded evidence (T-065 shipped without it).
+- ☐ **T-075** [normal] [Claude] Finish Ink & Seal: migrate the last old-style spots (`rounded-2xl` /
+  `border-gray-100` in fill, mydrafts, templates, Formi avatar, field-tooltip, legal-disclaimer;
+  legacy `Input`/`inputClasses`), then make `shape="crisp"` the default for `Button` and
+  `StatusPill` and drop the prop; re-run `/hallmark audit` and refresh the stamp in `globals.css`.
+  Screenshots before/after via the smoke e2e.
+- ☐ **T-076** [low] [Claude] Publish the Ink & Seal system in Claude's Design System artifact type
+  (split out of T-069) so decks/designs can use it.
 
 ## Waiting on you
 
@@ -191,6 +192,10 @@ triage them before or alongside T-044.
   webhooks/Zapier, public API, advanced analytics, trust/network-effects repositioning.
 
 ## Done (most recent first; keep about 30, git has the rest)
+
+- ☑ **T-069** [low] Design docs synced to Ink & Seal: skill file, CLAUDE.md, Hallmark stamp, Formi
+  (dashboard tabs), memory; dead tokens and two unused fonts removed. Leftovers in T-075, artifact
+  publish in T-076 (2026-11-17, PR #PRNUM).
 
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).

@@ -1,4 +1,4 @@
-/* Hallmark · redesign: polish · built: the project · genre: modern-minimal · system: Calm Precision (brand kept: teal, navy, amber, Plus Jakarta Sans) · audited 2026-11-14 */
+/* Hallmark · redesign: polish · built: the project · genre: modern-minimal · system: Ink & Seal (was Calm Precision; brand kept: teal, ink, amber; Schibsted Grotesk + Geist Mono) · audited 2026-11-14, before Ink & Seal; re-audit in T-075 */
 /* critique: reveals hid 55% of the landing text with scripting off; tracked-caps eyebrows on every section; no focus ring, active or disabled state site-wide. Fixed here and in the components. */
 /* waive 49a: FAQ accordion questions are full sentences; wrapping at 320px is the readable choice */
 /* waive 39b: accordion triggers are 60px rows, sized for the question text, not buttons */
@@ -7,7 +7,7 @@
 /* waive 44d: legal pages (compliance, security, standard NDA, changelog) are long documents; one continuous column is the shape */
 /* waive 3: the three step cards pair the icon with the step number; that row is the step marker, not decoration */
 /* waive 25: the about-page demo captions are 12px UI labels inside illustrations, not running prose */
-/* waive 74: Tailwind gray/teal/amber classes are the Calm Precision brand palette (CLAUDE.md), kept by request */
+/* waive 74: Tailwind gray/teal/amber classes are the Ink & Seal brand palette (CLAUDE.md), kept by request */
 @import "tailwindcss";
 
 :root {
@@ -24,26 +24,15 @@
   --animate-spotlight: spotlight 2s ease forwards;
 
   /*
-    Calm-precision palette — every color has exactly one job:
-    ink      = headings, nav, primary text (teal-tinted near-black)
-    gray-500 = body/secondary text
-    primary  = teal-800, CTAs and links ONLY (teal-50 for soft tints)
-    accent-brand = amber, "action needed" moments ONLY
+    Ink & Seal palette (.claude/skills/stitch-design.md): every color has exactly one job.
+    ink       = headings, primary text (teal-tinted near-black)
+    muted-ink = secondary text
+    primary   = teal-800, CTAs, links and focus ONLY (tint / teal-50 for soft highlights)
+    amber (Tailwind) = "needs you" moments ONLY
   */
   --color-ink: #0d1f1e;
   --color-primary: #115e59;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f9fafb;
-  --color-secondary-foreground: #0d1f1e;
-  --color-muted: #f3f4f6;
-  --color-muted-foreground: #6b7280;
-  --color-accent: #f3f4f6;
-  --color-accent-foreground: #0d1f1e;
-  --color-accent-brand: #f59e0b;
-  --color-card: #ffffff;
-  --color-card-foreground: #0d1f1e;
   --color-border: #e5e7eb;
-  --color-input: #e5e7eb;
   --color-ring: #0f766e;
   /* Form-field edge: 3:1 against white (WCAG 1.4.11) */
   --color-field-edge: #8b929e;
@@ -62,7 +51,7 @@
   --shadow-float: 0 8px 30px rgb(16 24 40 / 0.08);
   --shadow-lift: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
 
-  /* Ink & Seal (Calm colors) foundations. Additive; pages adopt them in later tickets. */
+  /* Ink & Seal surfaces, radii and faces */
   --color-ground: #f6f8f8;
   --color-line: #e3e9e8;
   --color-muted-ink: #5b6b69;
@@ -289,31 +278,6 @@ p {
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
-}
-
-/* 
-  Navy & Teal Theme Variables 
-  These should be used via Tailwind arbitrary values or configured in tailwind.config.ts
-  For now, we'll add utility classes for them if needed, or just use them as CSS variables.
-*/
-:root {
-  /* Navy Palette */
-  --navy-900: #0f172a;
-  /* Slate 900 */
-  --navy-800: #1e293b;
-  /* Slate 800 */
-  --navy-700: #334155;
-  /* Slate 700 */
-
-  /* Teal Palette */
-  --teal-50: #f0fdfa;
-  --teal-100: #ccfbf1;
-  --teal-600: #0d9488;
-  --teal-700: #0f766e;
-
-  /* Brand (mapped to teal for Glow component) */
-  --brand: 174 84% 32%;
-  --brand-foreground: 173 80% 51%;
 }
 
 /* Animation Utilities */
