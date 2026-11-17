@@ -13,7 +13,7 @@ Owner: [Claude] [You] [Both]
 
 Work rules adopted (T-001, PR #19): one branch per ticket. Design refresh PRs #23–#25 merged
 (2026-11-15). Waiting for your "merge": T-059 (hydration errors, PR #26) and T-069 (design docs
-sync, PR #PRNUM).
+sync, PR #27).
 
 Next: **T-004** (You, Clerk Restricted sign-up), then triage the code-review bugs **T-049–T-054**
 (negotiation flow), then production testing with sign-up closed: **T-044** full flow, **T-007**
@@ -195,7 +195,7 @@ triage them before or alongside T-044.
 
 - ☑ **T-069** [low] Design docs synced to Ink & Seal: skill file, CLAUDE.md, Hallmark stamp, Formi
   (dashboard tabs), memory; dead tokens and two unused fonts removed. Leftovers in T-075, artifact
-  publish in T-076 (2026-11-17, PR #PRNUM).
+  publish in T-076 (2026-11-17, PR #27).
 
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
