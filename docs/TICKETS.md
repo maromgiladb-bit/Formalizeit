@@ -9,19 +9,15 @@ Owner: [Claude] [You] [Both]
 
 **Next ID: T-075**
 
-## Resume here (updated 2026-11-15)
+## Resume here (updated 2026-11-17)
 
-Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
-landed the e2e suite (T-002) and the design audit (T-003).
+Work rules adopted (T-001, PR #19): one branch per ticket. Design refresh PRs #23–#25 merged
+(2026-11-15). T-059 (hydration errors) fixed in PR #PRNUM, waiting for your "merge".
 
-T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
-`main` (T-059).
-
-Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
+Next: **T-004** (You, Clerk Restricted sign-up), **T-069** (design docs sync), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
 **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene. Then **T-010**
-opens sign-up. Design refresh (T-058): spec PR #23, foundations PR #24 and the page rollout PR #25 (T-061–T-068)
-merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
+opens sign-up. T-070 waits on Nir. The beta plan with estimates is in the "FormalizeIt Beta Roadmap" artifact
 (2026-11-09).
 
 ## Now (in progress)
@@ -33,11 +29,6 @@ merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir.
 
 ## Next (launch path, in order)
 
-- ☐ **T-059** [normal] [Claude] React hydration error #418 (server/client HTML mismatch) on `/faq`,
-  `/help`, `/privacy`, `/settings/billing`, on `main` and live. Found by the smoke e2e run on
-  the T-048 branch (2026-11-15). Possibly from the design audit (PR #19, which merged without its
-  high-tier e2e run), not yet confirmed. First step: `E2E_DEV=1` on those pages for the full
-  message naming the mismatched element.
 - ☐ **T-004** [high] [You] Production Clerk: Restrictions → Sign-up mode **Restricted** while
   sign-up is closed (our gate only hides our pages). [README](launch/README.md#launch-status-2026-11-14)
 - ☐ **T-044** [high] [Both] Full flow on production with your existing account: send → fill →
@@ -191,6 +182,10 @@ triage them before or alongside T-044.
   webhooks/Zapier, public API, advanced analytics, trust/network-effects repositioning.
 
 ## Done (most recent first; keep about 30, git has the rest)
+
+- ☑ **T-059** [normal] Intermittent React #418 hydration errors (about 1 load in 20 in production,
+  never in dev): Next's router re-rendered the page mid-hydration with no Suspense boundary to
+  retry in. Fixed with a `<Suspense>` around the page in the root layout (2026-11-17, PR #PRNUM).
 
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
