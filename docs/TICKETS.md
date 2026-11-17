@@ -17,8 +17,8 @@ landed the e2e suite (T-002) and the design audit (T-003).
 T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
 `main` (T-059).
 
-First: **T-077** (Next.js security patch, 32 advisories incl. critical RCE and middleware bypass;
-merge before anything else ships).
+First: merge **PR #28** (T-077, Next.js security patch: 32 advisories incl. critical RCE and
+middleware bypass) before anything else ships.
 
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
@@ -33,9 +33,6 @@ merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir.
   top app bar, same nav links, compact-list dashboard). Spec + rollout tickets T-060–T-070 below.
   [Spec](superpowers/specs/2026-11-15-ink-and-seal-design-system.md) ·
   [Mockup](design/ink-and-seal/mockup.html)
-- ◑ **T-077** [high] [Claude] Next.js security patch: `next` 15.5.9 → 15.5.29 and `sharp` forced to
-  ≥0.35.5 via `overrides` (32 GitHub advisories on 15.5.9, incl. CVE-2026-96889 image-optimizer RCE,
-  App Router middleware bypasses, Server Actions DoS; 0 on 15.5.29). `eslint-config-next` matched.
 
 ## Next (launch path, in order)
 
@@ -206,6 +203,7 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
 - ☑ **T-063** [normal] Fill wizard restyle + compact disclaimer; variable highlight split to T-073 (2026-11-15, PR #25).
