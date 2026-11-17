@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono, Plus_Jakarta_Sans, Schibsted_Grotesk } from 'next/font/google'
 import ToolbarSwitcher from '@/components/ToolbarSwitcher'
@@ -85,7 +86,11 @@ export default async function RootLayout({
           <FormiProvider>
             <ToolbarSwitcher />
             <div className="flex-1">
-              {children}
+              {/* T-059: a boundary here lets React retry hydration of just the page when Next's
+                  router re-renders it mid-hydration (still-streaming page data). Without it, about
+                  1 load in 20 hit React error #418 in production. The server still sends the full
+                  page; the fallback is never shown on a normal load. */}
+              <Suspense fallback={null}>{children}</Suspense>
             </div>
             <FooterWrapper />
           </FormiProvider>
