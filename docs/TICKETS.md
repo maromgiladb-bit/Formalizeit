@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-075**
+**Next ID: T-079**
 
 ## Resume here (updated 2026-11-15)
 
@@ -16,6 +16,9 @@ landed the e2e suite (T-002) and the design audit (T-003).
 
 T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
 `main` (T-059).
+
+First: **T-077** (Next.js security patch, 32 advisories incl. critical RCE and middleware bypass;
+merge before anything else ships).
 
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
@@ -30,6 +33,9 @@ merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir.
   top app bar, same nav links, compact-list dashboard). Spec + rollout tickets T-060–T-070 below.
   [Spec](superpowers/specs/2026-11-15-ink-and-seal-design-system.md) ·
   [Mockup](design/ink-and-seal/mockup.html)
+- ◑ **T-077** [high] [Claude] Next.js security patch: `next` 15.5.9 → 15.5.29 and `sharp` forced to
+  ≥0.35.5 via `overrides` (32 GitHub advisories on 15.5.9, incl. CVE-2026-96889 image-optimizer RCE,
+  App Router middleware bypasses, Server Actions DoS; 0 on 15.5.29). `eslint-config-next` matched.
 
 ## Next (launch path, in order)
 
@@ -117,6 +123,14 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-078** [normal] [Claude] Upgrade Next.js 15 → 16 after sign-up opens (T-010), so 15.x end of
+  life doesn't force a rushed migration. Assessed 2026-11-17, about half a day to a day: move the
+  `webpack` alias in `next.config.ts` (keeps Puppeteer/Chromium out of the client bundle) to
+  `turbopack.resolveAlias` or build with `--webpack`; rename `middleware.ts` → `proxy.ts` (Clerk);
+  drop `.eslintrc.json` for flat config + `eslint-config-next@16`; `@clerk/nextjs` → ≥6.39 (allows
+  Next 16; no Clerk 7 needed); check image defaults. Async `params`/`cookies()` already done.
+  Test signed-PDF generation and the full sign flow end to end (Turbopack bundling of chromium).
+  Guide: nextjs.org/docs/app/guides/upgrading/version-16.
 - ☐ **T-072** [low] [Claude] Stop parallel sessions from taking the same ticket ID (happened
   2026-11-15: two sessions both took T-058, and the design refresh's ticket block overlapped
   T-059 until it renumbered to T-058 and T-060–T-071). Cause: each session reads Next ID from its own
