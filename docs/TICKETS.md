@@ -7,9 +7,13 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-079**
+**Next ID: T-095**
 
-## Resume here (updated 2026-11-15)
+## Resume here (updated 2026-11-21)
+
+OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
+(legal ones T-080–T-083 belong before sign-up opens) and 3 open decisions T-091–T-093. Source:
+[docs/import/onenote-2026-06-formalizeit.md](import/onenote-2026-06-formalizeit.md).
 
 Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
 landed the e2e suite (T-002) and the design audit (T-003).
@@ -57,6 +61,43 @@ merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir.
   file/line; page views appear in Vercel Analytics. [0.8](launch/phase-0-external-setup.md)
 - ☐ **T-010** [high] [Both] Open sign-up: `NEXT_PUBLIC_PRIVATE_BETA=off`, redeploy, Clerk sign-up
   mode back to Public, run 4.6 checks. [Go-live switches](launch/README.md#go-live-switches-in-this-order)
+
+### From the OneNote review (T-079, 2026-11-21; source: [OneNote import](import/onenote-2026-06-formalizeit.md))
+
+Legal ones first (T-080–T-083, before T-010 opens sign-up); the rest can follow launch.
+
+- ☐ **T-080** [high] [Both] Website Disclaimer page (`/disclaimer`) from the OneNote draft (page 5),
+  linked in the footer and nav with the other legal pages. Also add what no legal page says today:
+  no attorney-client relationship; no liability for data breaches and third-party service failures;
+  users are responsible for their chosen governing law (incl. mandatory local law); "legal
+  validity" in the no-warranty list. The 12-month liability cap is already in Terms. Counsel review
+  via T-025; update Formi's knowledge.
+- ☐ **T-081** [high] [Both] Show the "not a law firm / not legal advice" line in the site footer and
+  on sign-up (today only on the fill, receiver-fill and receiver-sign pages).
+- ☐ **T-082** [high] [Both] Click-to-accept: "I understand FormalizeIt does not provide legal advice
+  and I am responsible for deciding whether the NDA suits my use", at sign-up and before the
+  first NDA is sent; save timestamp + document version per acceptance. Accept-terms today covers
+  only Terms + Privacy. Waits on Nir's "Accept terms: where and what".
+- ☐ **T-083** [high] [Claude] Save the signer's browser (user agent) in the signature evidence, next
+  to email, IP, timestamp, version and hash (`sign` + `sign-public` routes); show it on the
+  e-signature consent page if listed there.
+- ☐ **T-084** [normal] [Both] Receiver "Decline" button on the public review/sign pages: ends the
+  NDA, notifies the sender, stops reminders. Today the receiver can only suggest changes or let
+  the link expire. Decide wording first.
+- ☐ **T-085** [normal] [Both] Hard expiry: an unsigned NDA closes 30 days after it was first sent,
+  even though each round renews the 2-week link (`SIGN_LINK_TTL_MS`). Resend/renew must still
+  work after expiry. Confirm the 30 days.
+- ☐ **T-086** [normal] [Claude] "Send the standard NDA to my legal advisor" share action from the
+  dashboard (and onboarding), linking to the public `/standard-nda` page.
+- ☐ **T-087** [low] [Claude] FAQ: add "Do I need legal advice?", "Why only mutual?" and "What if I
+  need changes?" (OneNote page 3); update Formi's knowledge.
+- ☐ **T-088** [low] [Claude] Hint on the open clause (`additional_terms`): for real exceptions only,
+  most NDAs leave it empty.
+- ☐ **T-089** [normal] [Claude] Email users when the standard NDA gets a new version (today only
+  the in-app prompt + changelog page); check the Governance Policy promises the same.
+- ☐ **T-090** [normal] [Claude] Database review: every table and column against what the audit
+  trail, evidence and retention need; list unused columns and missing indexes. Report first, any
+  migration is its own high ticket.
 
 ### Bugs to triage (from `/code-review` of the branch, 2026-11-15)
 
@@ -177,6 +218,8 @@ triage them before or alongside T-044.
   `/viewpdf`, `DEV` plan in billing UI.
 - ☐ **T-033** [low] [Claude] Purge test data on development: E2E user/company/NDAs and
   `claude-verify+clerk_test@example.com` / "Claude Verify".
+- ☐ **T-094** [low] [You] Clarify two OneNote to-dos before they become work: "add 'More' on the
+  shrunk toolbar" and "invite new members suggestions" (which screen, what behavior).
 
 ## Open decisions
 
@@ -187,6 +230,17 @@ triage them before or alongside T-044.
   hero? Rethink the stock SaaS section order?
 - ☐ **T-035** [You] Run the e2e suite in CI (needs dev Clerk keys + dev DB as GitHub secrets) or
   keep it local?
+- ☐ **T-091** [normal] [Both] Optional clause fields: step 3 of the fill page shows IP ownership,
+  non-solicitation and exclusivity inputs, but the NDA template has no place for them, so what a
+  user types there never reaches the NDA or the PDF. Strategy says one open clause. Suggested:
+  remove the three inputs, keep `additional_terms`.
+- ☐ **T-092** [You] Notice information (Nir: "TBD if same as contact"): today clause 11 (Notices)
+  uses each party's address, phone and email from the contact fields. Keep that, or add separate
+  notice fields?
+- ☐ **T-093** [Both] NDA sent by a team member: Party A emails (receiver's changes, ready to sign)
+  go to the Party A email typed in the form, often the company signer, not to the teammate who
+  sent it. Suggested: round updates also go to the sender; "ready to sign" goes to the signer;
+  warn at send time if the Party A signatory isn't a member with the signer toggle on.
 - ☐ Exports: `origin/claude/ecstatic-gauss-yhmjky` adds the NDA v1.0 PDF to `exports/`. Keep it
   out of git (suggested) or merge? (cleanup after T-001)
 
@@ -202,6 +256,9 @@ triage them before or alongside T-044.
   webhooks/Zapier, public API, advanced analytics, trust/network-effects repositioning.
 
 ## Done (most recent first; keep about 30, git has the rest)
+
+- ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
+  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-094 (2026-11-21).
 
 - ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
