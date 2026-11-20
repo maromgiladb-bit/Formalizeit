@@ -258,7 +258,7 @@ triage them before or alongside T-044.
 ## Done (most recent first; keep about 30, git has the rest)
 
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
-  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-094 (2026-11-21).
+  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-094 (2026-11-21, PR #29).
 
 - ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
