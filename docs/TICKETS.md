@@ -12,8 +12,9 @@ Owner: [Claude] [You] [Both]
 ## Resume here (updated 2026-11-21)
 
 OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
-(legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years). Nir
-reviews the NDA fields 2026-11-22 (T-091, T-092, T-095). T-093 waits: ask Gilad first. Source:
+(legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years, must
+be fixed before T-010; years-or-months decided when picked up). Nir reviews the NDA fields
+2026-11-22 (T-091, T-092). T-093 waits: ask Gilad first. Source:
 [docs/import/onenote-2026-06-formalizeit.md](import/onenote-2026-06-formalizeit.md).
 
 Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
@@ -60,6 +61,12 @@ merge in that order; then **T-069** (docs sync) right after. T-070 waits on Nir.
   [phase-1](launch/phase-1-negotiation.md)
 - ☐ **T-046** [low] [Both] Monitoring acceptance: one test error shows in Sentry with readable
   file/line; page views appear in Vercel Analytics. [0.8](launch/phase-0-external-setup.md)
+- ☐ **T-095** [high] [Both] **Must be fixed before T-010 (going public).** The NDA term is entered
+  in months but the NDA prints whole years (`Math.floor(term_months / 12)`): 18 months signs as
+  "1 (one) years", 6 months as 0 or a blank. Fix by using one unit end to end: **years only**
+  (form asks years, NDA text unchanged) or **months only** (NDA wording changes to months, so a
+  new template version + changelog entry, Nir checks). Choose years or months when the ticket is
+  picked up; ask Gilad (and Nir) then. Found 2026-11-21 while checking fields for T-091.
 - ☐ **T-010** [high] [Both] Open sign-up: `NEXT_PUBLIC_PRIVATE_BETA=off`, redeploy, Clerk sign-up
   mode back to Public, run 4.6 checks. [Go-live switches](launch/README.md#go-live-switches-in-this-order)
 
@@ -96,10 +103,6 @@ Legal ones first (T-080–T-083, before T-010 opens sign-up); the rest can follo
   most NDAs leave it empty.
 - ☐ **T-089** [normal] [Claude] Email users when the standard NDA gets a new version (today only
   the in-app prompt + changelog page); check the Governance Policy promises the same.
-- ☐ **T-095** [high] [Both] Term is entered in months but the NDA prints whole years
-  (`Math.floor(term_months / 12)`): 18 months signs as "1 (one) years", 6 months as 0 or a blank.
-  Fix: ask for the term in years, or allow only multiples of 12; NDA legal text unchanged. Found
-  2026-11-21 while checking fields for T-091; show Nir with T-091.
 - ☐ **T-090** [normal] [Claude] Database review: every table and column against what the audit
   trail, evidence and retention need; list unused columns and missing indexes. Report first, any
   migration is its own high ticket.
