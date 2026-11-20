@@ -274,7 +274,7 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
-- ☑ **T-096** [low] Vercel recovery codes regenerated (the old ones were lost) (2026-11-21, PR #PRNUM).
+- ☑ **T-096** [low] Vercel recovery codes regenerated (the old ones were lost) (2026-11-21, PR #31).
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
   saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
 
