@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-075**
+**Next ID: T-079**
 
 ## Resume here (updated 2026-11-15)
 
@@ -16,6 +16,9 @@ landed the e2e suite (T-002) and the design audit (T-003).
 
 T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
 `main` (T-059).
+
+First: merge **PR #28** (T-077, Next.js security patch: 32 advisories incl. critical RCE and
+middleware bypass) before anything else ships.
 
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
@@ -117,6 +120,14 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-078** [normal] [Claude] Upgrade Next.js 15 → 16 after sign-up opens (T-010), so 15.x end of
+  life doesn't force a rushed migration. Assessed 2026-11-17, about half a day to a day: move the
+  `webpack` alias in `next.config.ts` (keeps Puppeteer/Chromium out of the client bundle) to
+  `turbopack.resolveAlias` or build with `--webpack`; rename `middleware.ts` → `proxy.ts` (Clerk);
+  drop `.eslintrc.json` for flat config + `eslint-config-next@16`; `@clerk/nextjs` → ≥6.39 (allows
+  Next 16; no Clerk 7 needed); check image defaults. Async `params`/`cookies()` already done.
+  Test signed-PDF generation and the full sign flow end to end (Turbopack bundling of chromium).
+  Guide: nextjs.org/docs/app/guides/upgrading/version-16.
 - ☐ **T-072** [low] [Claude] Stop parallel sessions from taking the same ticket ID (happened
   2026-11-15: two sessions both took T-058, and the design refresh's ticket block overlapped
   T-059 until it renumbered to T-058 and T-060–T-071). Cause: each session reads Next ID from its own
@@ -192,6 +203,7 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
 - ☑ **T-063** [normal] Fill wizard restyle + compact disclaimer; variable highlight split to T-073 (2026-11-15, PR #25).
