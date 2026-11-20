@@ -7,12 +7,13 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-095**
+**Next ID: T-096**
 
 ## Resume here (updated 2026-11-21)
 
 OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
-(legal ones T-080–T-083 belong before sign-up opens) and 3 open decisions T-091–T-093. Source:
+(legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years). Nir
+reviews the NDA fields 2026-11-22 (T-091, T-092, T-095). T-093 waits: ask Gilad first. Source:
 [docs/import/onenote-2026-06-formalizeit.md](import/onenote-2026-06-formalizeit.md).
 
 Work rules adopted (T-001, PR #19, 2026-11-15): one branch per ticket from here on. PR #19 also
@@ -95,6 +96,10 @@ Legal ones first (T-080–T-083, before T-010 opens sign-up); the rest can follo
   most NDAs leave it empty.
 - ☐ **T-089** [normal] [Claude] Email users when the standard NDA gets a new version (today only
   the in-app prompt + changelog page); check the Governance Policy promises the same.
+- ☐ **T-095** [high] [Both] Term is entered in months but the NDA prints whole years
+  (`Math.floor(term_months / 12)`): 18 months signs as "1 (one) years", 6 months as 0 or a blank.
+  Fix: ask for the term in years, or allow only multiples of 12; NDA legal text unchanged. Found
+  2026-11-21 while checking fields for T-091; show Nir with T-091.
 - ☐ **T-090** [normal] [Claude] Database review: every table and column against what the audit
   trail, evidence and retention need; list unused columns and missing indexes. Report first, any
   migration is its own high ticket.
@@ -220,6 +225,14 @@ triage them before or alongside T-044.
   `claude-verify+clerk_test@example.com` / "Claude Verify".
 - ☐ **T-094** [low] [You] Clarify two OneNote to-dos before they become work: "add 'More' on the
   shrunk toolbar" and "invite new members suggestions" (which screen, what behavior).
+- ☐ **T-093** [high] [Both] Emails for an NDA sent by a team member. **Before starting: ask Gilad
+  the question below, don't assume an answer; he wants to see how things go first and consult
+  Nir.** Today Party A emails (receiver suggested changes, ready to sign) go to the Party A email
+  typed in the form, often the company signer, not to the teammate who sent the NDA.
+  Question to ask: "When a teammate sends an NDA, should (a) round updates go to the teammate who
+  sent it with the signer copied, (b) 'ready to sign' go only to the signer, and (c) the send step
+  warn if the Party A signatory isn't a team member with the signer toggle on? Or something
+  else?" Touches the negotiation emails; after T-049–T-054.
 
 ## Open decisions
 
@@ -230,17 +243,14 @@ triage them before or alongside T-044.
   hero? Rethink the stock SaaS section order?
 - ☐ **T-035** [You] Run the e2e suite in CI (needs dev Clerk keys + dev DB as GitHub secrets) or
   keep it local?
-- ☐ **T-091** [normal] [Both] Optional clause fields: step 3 of the fill page shows IP ownership,
-  non-solicitation and exclusivity inputs, but the NDA template has no place for them, so what a
-  user types there never reaches the NDA or the PDF. Strategy says one open clause. Suggested:
-  remove the three inputs, keep `additional_terms`.
-- ☐ **T-092** [You] Notice information (Nir: "TBD if same as contact"): today clause 11 (Notices)
-  uses each party's address, phone and email from the contact fields. Keep that, or add separate
-  notice fields?
-- ☐ **T-093** [Both] NDA sent by a team member: Party A emails (receiver's changes, ready to sign)
-  go to the Party A email typed in the form, often the company signer, not to the teammate who
-  sent it. Suggested: round updates also go to the sender; "ready to sign" goes to the signer;
-  warn at send time if the Party A signatory isn't a member with the signer toggle on.
+- ☐ **T-091** [normal] [Both] Fill-page fields the NDA never uses (checked 2026-11-21; Nir reviews
+  2026-11-22, decide after). Step 3 shows IP ownership, non-solicitation and exclusivity inputs,
+  and step 2 a required "Confidentiality period (months)", but the NDA template has no place for
+  any of them, so what a user types never reaches the NDA or the PDF. Strategy says one open
+  clause. Suggested: remove all four inputs, keep `additional_terms`. Every other field is used.
+- ☐ **T-092** [You] Notice information (Nir: "TBD if same as contact"): clause 11 (Notices) uses
+  each party's address, phone and email from the contact fields. Decided 2026-11-21: keep it that
+  way (no separate notice fields); Nir to confirm, then close.
 - ☐ Exports: `origin/claude/ecstatic-gauss-yhmjky` adds the NDA v1.0 PDF to `exports/`. Keep it
   out of git (suggested) or merge? (cleanup after T-001)
 
@@ -258,7 +268,7 @@ triage them before or alongside T-044.
 ## Done (most recent first; keep about 30, git has the rest)
 
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
-  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-094 (2026-11-21, PR #29).
+  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
 
 - ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
