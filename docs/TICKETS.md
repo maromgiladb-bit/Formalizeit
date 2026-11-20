@@ -149,10 +149,6 @@ triage them before or alongside T-044.
 
 ## Waiting on you
 
-- ☐ **T-096** [low] [You] Vercel recovery codes are lost (not in Bitwarden; found 2026-11-21 when a
-  production redeploy asked for re-verification and only the passkey worked). Vercel → Account
-  Settings → Authentication → regenerate recovery codes, save them in Bitwarden. Without them, losing
-  the passkey device locks you out of Vercel.
 - ☐ **T-019** [high] [You] Turn on Clerk legal acceptance (Terms/Privacy URLs, require at sign-up).
   [phase-0](launch/phase-0-external-setup.md#clerk-require-terms--privacy-acceptance-at-sign-up-added-2026-10-23)
 - ☐ **T-020** [normal] [You] Set `REMINDER_LINK_SECRET` in Vercel Production + Preview.
@@ -278,6 +274,7 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-096** [low] Vercel recovery codes regenerated (the old ones were lost) (2026-11-21, PR #PRNUM).
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
   saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
 
