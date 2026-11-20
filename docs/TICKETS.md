@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-096**
+**Next ID: T-098**
 
 ## Resume here (updated 2026-11-21)
 
@@ -23,8 +23,7 @@ landed the e2e suite (T-002) and the design audit (T-003).
 T-048 (open redirect) fixed in PR #20, waiting for your "merge". Smoke e2e found hydration errors on
 `main` (T-059).
 
-First: merge **PR #28** (T-077, Next.js security patch: 32 advisories incl. critical RCE and
-middleware bypass) before anything else ships.
+T-077 (Next.js security patch, PR #28) is live in production since 2026-11-21 and checked.
 
 Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
 the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up closed:
@@ -150,6 +149,10 @@ triage them before or alongside T-044.
 
 ## Waiting on you
 
+- ☐ **T-096** [low] [You] Vercel recovery codes are lost (not in Bitwarden; found 2026-11-21 when a
+  production redeploy asked for re-verification and only the passkey worked). Vercel → Account
+  Settings → Authentication → regenerate recovery codes, save them in Bitwarden. Without them, losing
+  the passkey device locks you out of Vercel.
 - ☐ **T-019** [high] [You] Turn on Clerk legal acceptance (Terms/Privacy URLs, require at sign-up).
   [phase-0](launch/phase-0-external-setup.md#clerk-require-terms--privacy-acceptance-at-sign-up-added-2026-10-23)
 - ☐ **T-020** [normal] [You] Set `REMINDER_LINK_SECRET` in Vercel Production + Preview.
@@ -169,6 +172,11 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-097** [low] [Claude] Self-host the fonts (`next/font/local`) so builds don't depend on Google
+  Fonts. On 2026-11-20 the production build of PR #28 crashed in `next/font/google`'s loader
+  (`Cannot read properties of null (reading '1')`, a font URL with no file extension in Google's
+  CSS); an identical rebuild passed. Fonts: Geist, Geist Mono, Plus Jakarta Sans, Schibsted
+  Grotesk (`src/app/layout.tsx`), Great Vibes (`SignNDAPublicClient.tsx`).
 - ☐ **T-078** [normal] [Claude] Upgrade Next.js 15 → 16 after sign-up opens (T-010), so 15.x end of
   life doesn't force a rushed migration. Assessed 2026-11-17, about half a day to a day: move the
   `webpack` alias in `next.config.ts` (keeps Puppeteer/Chromium out of the client bundle) to
