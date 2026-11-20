@@ -7,19 +7,26 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-077**
+**Next ID: T-098**
 
-## Resume here (updated 2026-11-17)
+## Resume here (updated 2026-11-21)
 
-Work rules adopted (T-001, PR #19): one branch per ticket. Design refresh PRs #23–#25 merged
-(2026-11-15). Waiting for your "merge": T-059 (hydration errors, PR #26) and T-069 (design docs
-sync, PR #27).
+OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
+(legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years, must
+be fixed before T-010; years-or-months decided when picked up). Nir reviews the NDA fields
+2026-11-22 (T-091, T-092). T-093 waits: ask Gilad first. Source:
+[docs/import/onenote-2026-06-formalizeit.md](import/onenote-2026-06-formalizeit.md).
 
-Next: **T-004** (You, Clerk Restricted sign-up), then triage the code-review bugs **T-049–T-054**
-(negotiation flow), then production testing with sign-up closed: **T-044** full flow, **T-007**
-email, **T-008** crons, **T-009** data hygiene. Then **T-010** opens sign-up. Design leftovers
-(T-073–T-076) fit in between; T-070 waits on Nir. The beta plan with estimates is in the
-"FormalizeIt Beta Roadmap" artifact (2026-11-09).
+Design refresh PRs #23–#25 merged (2026-11-15); T-069 docs sync (PR #27) merged 2026-11-21.
+T-077 (Next.js security patch, PR #28) is live in production since 2026-11-21 and checked.
+Waiting for your "merge": T-059 (hydration errors, PR #26).
+
+Next: **T-004** (You, Clerk Restricted sign-up), **T-059** (hydration errors), then triage
+the code-review bugs **T-049–T-054** (negotiation flow), then production testing with sign-up
+closed: **T-044** full flow, **T-007** email, **T-008** crons, **T-009** data hygiene, and
+**T-095** (term fix). Then **T-010** opens sign-up. Design leftovers (T-073–T-076) fit in
+between; T-070 waits on Nir. The beta plan with estimates is in the "FormalizeIt Beta Roadmap"
+artifact (2026-11-09).
 
 ## Now (in progress)
 
@@ -49,8 +56,51 @@ email, **T-008** crons, **T-009** data hygiene. Then **T-010** opens sign-up. De
   [phase-1](launch/phase-1-negotiation.md)
 - ☐ **T-046** [low] [Both] Monitoring acceptance: one test error shows in Sentry with readable
   file/line; page views appear in Vercel Analytics. [0.8](launch/phase-0-external-setup.md)
+- ☐ **T-095** [high] [Both] **Must be fixed before T-010 (going public).** The NDA term is entered
+  in months but the NDA prints whole years (`Math.floor(term_months / 12)`): 18 months signs as
+  "1 (one) years", 6 months as 0 or a blank. Fix by using one unit end to end: **years only**
+  (form asks years, NDA text unchanged) or **months only** (NDA wording changes to months, so a
+  new template version + changelog entry, Nir checks). Choose years or months when the ticket is
+  picked up; ask Gilad (and Nir) then. Found 2026-11-21 while checking fields for T-091.
 - ☐ **T-010** [high] [Both] Open sign-up: `NEXT_PUBLIC_PRIVATE_BETA=off`, redeploy, Clerk sign-up
   mode back to Public, run 4.6 checks. [Go-live switches](launch/README.md#go-live-switches-in-this-order)
+
+### From the OneNote review (T-079, 2026-11-21; source: [OneNote import](import/onenote-2026-06-formalizeit.md))
+
+Legal ones first (T-080–T-083, before T-010 opens sign-up); the rest can follow launch.
+
+- ☐ **T-080** [high] [Both] Website Disclaimer page (`/disclaimer`) from the OneNote draft (page 5),
+  linked in the footer and nav with the other legal pages. Also add what no legal page says today:
+  no attorney-client relationship; no liability for data breaches and third-party service failures;
+  users are responsible for their chosen governing law (incl. mandatory local law); "legal
+  validity" in the no-warranty list. The 12-month liability cap is already in Terms. Counsel review
+  via T-025; update Formi's knowledge.
+- ☐ **T-081** [high] [Both] Show the "not a law firm / not legal advice" line in the site footer and
+  on sign-up (today only on the fill, receiver-fill and receiver-sign pages).
+- ☐ **T-082** [high] [Both] Click-to-accept: "I understand FormalizeIt does not provide legal advice
+  and I am responsible for deciding whether the NDA suits my use", at sign-up and before the
+  first NDA is sent; save timestamp + document version per acceptance. Accept-terms today covers
+  only Terms + Privacy. Waits on Nir's "Accept terms: where and what".
+- ☐ **T-083** [high] [Claude] Save the signer's browser (user agent) in the signature evidence, next
+  to email, IP, timestamp, version and hash (`sign` + `sign-public` routes); show it on the
+  e-signature consent page if listed there.
+- ☐ **T-084** [normal] [Both] Receiver "Decline" button on the public review/sign pages: ends the
+  NDA, notifies the sender, stops reminders. Today the receiver can only suggest changes or let
+  the link expire. Decide wording first.
+- ☐ **T-085** [normal] [Both] Hard expiry: an unsigned NDA closes 30 days after it was first sent,
+  even though each round renews the 2-week link (`SIGN_LINK_TTL_MS`). Resend/renew must still
+  work after expiry. Confirm the 30 days.
+- ☐ **T-086** [normal] [Claude] "Send the standard NDA to my legal advisor" share action from the
+  dashboard (and onboarding), linking to the public `/standard-nda` page.
+- ☐ **T-087** [low] [Claude] FAQ: add "Do I need legal advice?", "Why only mutual?" and "What if I
+  need changes?" (OneNote page 3); update Formi's knowledge.
+- ☐ **T-088** [low] [Claude] Hint on the open clause (`additional_terms`): for real exceptions only,
+  most NDAs leave it empty.
+- ☐ **T-089** [normal] [Claude] Email users when the standard NDA gets a new version (today only
+  the in-app prompt + changelog page); check the Governance Policy promises the same.
+- ☐ **T-090** [normal] [Claude] Database review: every table and column against what the audit
+  trail, evidence and retention need; list unused columns and missing indexes. Report first, any
+  migration is its own high ticket.
 
 ### Bugs to triage (from `/code-review` of the branch, 2026-11-15)
 
@@ -99,6 +149,10 @@ triage them before or alongside T-044.
 
 ## Waiting on you
 
+- ☐ **T-096** [low] [You] Vercel recovery codes are lost (not in Bitwarden; found 2026-11-21 when a
+  production redeploy asked for re-verification and only the passkey worked). Vercel → Account
+  Settings → Authentication → regenerate recovery codes, save them in Bitwarden. Without them, losing
+  the passkey device locks you out of Vercel.
 - ☐ **T-019** [high] [You] Turn on Clerk legal acceptance (Terms/Privacy URLs, require at sign-up).
   [phase-0](launch/phase-0-external-setup.md#clerk-require-terms--privacy-acceptance-at-sign-up-added-2026-10-23)
 - ☐ **T-020** [normal] [You] Set `REMINDER_LINK_SECRET` in Vercel Production + Preview.
@@ -118,6 +172,19 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-097** [low] [Claude] Self-host the fonts (`next/font/local`) so builds don't depend on Google
+  Fonts. On 2026-11-20 the production build of PR #28 crashed in `next/font/google`'s loader
+  (`Cannot read properties of null (reading '1')`, a font URL with no file extension in Google's
+  CSS); an identical rebuild passed. Fonts: Geist, Geist Mono, Plus Jakarta Sans, Schibsted
+  Grotesk (`src/app/layout.tsx`), Great Vibes (`SignNDAPublicClient.tsx`).
+- ☐ **T-078** [normal] [Claude] Upgrade Next.js 15 → 16 after sign-up opens (T-010), so 15.x end of
+  life doesn't force a rushed migration. Assessed 2026-11-17, about half a day to a day: move the
+  `webpack` alias in `next.config.ts` (keeps Puppeteer/Chromium out of the client bundle) to
+  `turbopack.resolveAlias` or build with `--webpack`; rename `middleware.ts` → `proxy.ts` (Clerk);
+  drop `.eslintrc.json` for flat config + `eslint-config-next@16`; `@clerk/nextjs` → ≥6.39 (allows
+  Next 16; no Clerk 7 needed); check image defaults. Async `params`/`cookies()` already done.
+  Test signed-PDF generation and the full sign flow end to end (Turbopack bundling of chromium).
+  Guide: nextjs.org/docs/app/guides/upgrading/version-16.
 - ☐ **T-072** [low] [Claude] Stop parallel sessions from taking the same ticket ID (happened
   2026-11-15: two sessions both took T-058, and the design refresh's ticket block overlapped
   T-059 until it renumbered to T-058 and T-060–T-071). Cause: each session reads Next ID from its own
@@ -167,6 +234,16 @@ triage them before or alongside T-044.
   `/viewpdf`, `DEV` plan in billing UI.
 - ☐ **T-033** [low] [Claude] Purge test data on development: E2E user/company/NDAs and
   `claude-verify+clerk_test@example.com` / "Claude Verify".
+- ☐ **T-094** [low] [You] Clarify two OneNote to-dos before they become work: "add 'More' on the
+  shrunk toolbar" and "invite new members suggestions" (which screen, what behavior).
+- ☐ **T-093** [high] [Both] Emails for an NDA sent by a team member. **Before starting: ask Gilad
+  the question below, don't assume an answer; he wants to see how things go first and consult
+  Nir.** Today Party A emails (receiver suggested changes, ready to sign) go to the Party A email
+  typed in the form, often the company signer, not to the teammate who sent the NDA.
+  Question to ask: "When a teammate sends an NDA, should (a) round updates go to the teammate who
+  sent it with the signer copied, (b) 'ready to sign' go only to the signer, and (c) the send step
+  warn if the Party A signatory isn't a team member with the signer toggle on? Or something
+  else?" Touches the negotiation emails; after T-049–T-054.
 
 ## Open decisions
 
@@ -177,6 +254,14 @@ triage them before or alongside T-044.
   hero? Rethink the stock SaaS section order?
 - ☐ **T-035** [You] Run the e2e suite in CI (needs dev Clerk keys + dev DB as GitHub secrets) or
   keep it local?
+- ☐ **T-091** [normal] [Both] Fill-page fields the NDA never uses (checked 2026-11-21; Nir reviews
+  2026-11-22, decide after). Step 3 shows IP ownership, non-solicitation and exclusivity inputs,
+  and step 2 a required "Confidentiality period (months)", but the NDA template has no place for
+  any of them, so what a user types never reaches the NDA or the PDF. Strategy says one open
+  clause. Suggested: remove all four inputs, keep `additional_terms`. Every other field is used.
+- ☐ **T-092** [You] Notice information (Nir: "TBD if same as contact"): clause 11 (Notices) uses
+  each party's address, phone and email from the contact fields. Decided 2026-11-21: keep it that
+  way (no separate notice fields); Nir to confirm, then close.
 - ☐ Exports: `origin/claude/ecstatic-gauss-yhmjky` adds the NDA v1.0 PDF to `exports/`. Keep it
   out of git (suggested) or merge? (cleanup after T-001)
 
@@ -193,10 +278,13 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
+  saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
+
+- ☑ **T-077** [high] Next.js 15.5.9 → 15.5.29 + `sharp` override ≥0.35.5: clears 32 advisories incl. CVE-2026-96889 image-optimizer RCE and middleware bypasses (2026-11-17, PR #28).
 - ☑ **T-069** [low] Design docs synced to Ink & Seal: skill file, CLAUDE.md, Hallmark stamp, Formi
   (dashboard tabs), memory; dead tokens and two unused fonts removed. Leftovers in T-075, artifact
   publish in T-076 (2026-11-17, PR #27).
-
 - ☑ **T-061** [normal] App shell: top bar restyled, same links, Schibsted Grotesk site-wide, no marketing footer on app pages (2026-11-15, PR #25).
 - ☑ **T-062** [normal] Home + marketing pages, hero sheet whose blanks fill in (2026-11-15, PR #25).
 - ☑ **T-063** [normal] Fill wizard restyle + compact disclaimer; variable highlight split to T-073 (2026-11-15, PR #25).
