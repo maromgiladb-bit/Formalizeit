@@ -1,6 +1,6 @@
 # Ink & Seal (Calm colors): design system and rollout
 
-**Ticket:** T-058 · **Decided:** 2026-11-15 by Gilad · **Status:** spec agreed, rollout not started
+**Ticket:** T-058 · **Decided:** 2026-11-15 by Gilad · **Status:** rolled out (PRs #24, #25), docs synced (T-069); leftovers in T-075
 **Reference mockup:** [`docs/design/ink-and-seal/mockup.html`](../../design/ink-and-seal/mockup.html)
 (open in a browser; Replay buttons rerun the motion). Shared brief: `docs/design/ink-and-seal/brief.md`.
 Earlier option: `docs/design/ink-and-seal/reference-calm-precision-2.html`.

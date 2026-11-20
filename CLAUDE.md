@@ -38,16 +38,15 @@ The site is at an **advanced stage**. Most of the core product flow already exis
 
 ## Design System
 
-**All UI work must follow the Calm Precision design system.** Read `.claude/skills/stitch-design.md` at the start of every UI task before writing or editing any component, page, or layout.
+**All UI work must follow the Ink & Seal design system** (replaced Calm Precision, Nov 2026, T-058). Read `.claude/skills/stitch-design.md` at the start of every UI task before writing or editing any component, page, or layout. Spec: `docs/superpowers/specs/2026-11-15-ink-and-seal-design-system.md`; live reference: `/dev/design-system` (dev only).
 
 Key rules to always apply:
-- Color discipline: teal-800 for CTAs/links ONLY, amber exclusively for "action needed" moments, no blue/purple/green/yellow utility colors
-- Primary buttons: use `@/components/ui/button` (never hand-roll; never teal-600)
-- No eyebrows above headings; labels are sentence case, untracked, never `uppercase` (panel title `text-sm font-semibold text-gray-700`, form label `text-xs font-semibold text-gray-500`) — changed Nov 2026 per the Hallmark audit
-- Cards: `bg-white border border-gray-100 rounded-2xl shadow-card`
-- Alternate section backgrounds: `bg-gray-50`
-- Body text: `text-ink` headings (not gray-900), `text-gray-500` descriptions
-- Status badges: `@/components/ui/status-pill` (neutral/progress/action/done tones)
+- Color discipline: teal-800 (`--color-primary`) for CTAs/links/focus ONLY, amber exclusively for "needs you" moments, solid teal for done; no blue/purple/green/yellow utility colors
+- Surfaces: `bg-ground` backgrounds, white sheets, 1px `border-line` rules, `text-muted-ink` secondary text; radius `rounded-control` (6px) for controls, `rounded-sheet` (8px) for sheets/panels; no new `rounded-2xl`
+- Type: Schibsted Grotesk (UI, default `font-sans`), Geist Mono for evidence/data (dates, hashes, versions, counters); the NDA document keeps Noto Serif and is never restyled
+- Primitives in `@/components/ui`: `Button` and `StatusPill` with `shape="crisp"`, `inputClassesCrisp`, `Sheet`, `EvidenceLine`/`EvidenceBlock`, `Seal` (UI only until T-070), `ShareSheet`, `LegalDisclaimer variant="compact"`; never hand-roll a button, never teal-600
+- No eyebrows above headings; labels are sentence case, untracked, never `uppercase`
+- Status badges: `@/components/ui/status-pill` (neutral/progress/action/done tones), labels from `getWorkflowStatusInfo()`
 - Scroll animations: `@/components/ui/reveal` only (visible by default, hidden only when scripted); no framer `initial` opacity-0 on page content; respect prefers-reduced-motion
 - Never `transition-all`; never animate width/height/top/left; decorative icons `aria-hidden`, icon-only buttons `aria-label`; no emoji icons; gray text on white is `text-gray-500` or darker, smallest text 12px
 - Hallmark (`/hallmark audit`) is the design checker: its stamp and waivers sit at the top of `src/app/globals.css`; records in `.hallmark/` (git-ignored)
@@ -276,7 +275,7 @@ When working on new features, check what already exists before adding new files 
 
 ## Brand and tone (relevant for any copy/UI text)
 
-- Colors: **teal**, **dark navy**, and **amber** (accent/highlight — Tailwind amber-500 `#f59e0b`)
+- Colors: **teal**, **ink** (teal-tinted near-black `#0d1f1e`), and **amber** (only for "needs you" — Tailwind amber-500 `#f59e0b`)
 - Tone: friendly, direct, and energetic — zero friction, zero jargon, zero delay
 
 ### #1 message — Time saving. Easy. Accessible. NDA in minutes.
