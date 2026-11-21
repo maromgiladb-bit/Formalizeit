@@ -11,6 +11,8 @@ Owner: [Claude] [You] [Both]
 
 ## Resume here (updated 2026-11-21)
 
+Landing redesign (T-098, PR #32) waits for your "merge"; it replaces `/` and redirects `/about`.
+
 OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
 (legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years, must
 be fixed before T-010; years-or-months decided when picked up). Nir reviews the NDA fields
@@ -287,6 +289,11 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-098** [normal] Landing redesign: signed-out home and `/about` merged into one page (option A
+  "living document" of three; `/about` redirects to `/#how-it-works`; nav, footer, sitemap, Formi
+  updated). Follow-ups T-099, T-100 (2026-11-21, PR #32).
+  [Copy](superpowers/specs/2026-11-21-landing-copy.md) ·
+  [Research](superpowers/specs/2026-11-21-landing-research.md)
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
   saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
 
