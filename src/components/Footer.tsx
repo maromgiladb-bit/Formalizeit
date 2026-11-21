@@ -16,7 +16,6 @@ const columns = [
 	{
 		heading: "Company",
 		links: [
-			{ name: "About", href: "/about" },
 			{ name: "Contact", href: "/contact" },
 			{ name: "FAQ", href: "/faq" },
 			{ name: "Help", href: "/help" },
@@ -93,9 +92,6 @@ export default function Footer() {
 						<div className="flex items-center gap-6">
 							<Link href="/contact" className="text-sm text-muted-ink hover:text-ink transition-colors">
 								Contact
-							</Link>
-							<Link href="/about" className="text-sm text-muted-ink hover:text-ink transition-colors">
-								About
 							</Link>
 						</div>
 					</div>

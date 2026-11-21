@@ -7,7 +7,7 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-098**
+**Next ID: T-101**
 
 ## Resume here (updated 2026-11-21)
 
@@ -172,6 +172,15 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-099** [low] [Claude] Ink & Seal spec drift from the landing redesign (T-098 review,
+  2026-11-21): the landing motion kit (`src/components/landing/motion`) is a second scroll-reveal
+  mechanism beside `Reveal`, and the landing uses display sizes up to ~116px (spec says 56–72).
+  Either fold the kit into `Reveal` or amend the spec and `stitch-design.md` to allow both on
+  marketing pages. Also prune kit parts only the dropped options used (`WallDim`, `Counter`,
+  `Clock`, the DocumentScene `wall` variant).
+- ☐ **T-100** [normal] [Claude] Header layout shift: the shared page header shifts content ~64px
+  after load (CLS 0.044 on the new landing, 0.112 on the old `/`). Found in the T-098 review,
+  2026-11-21; it lives in `FloatingNavShell`, not the landing.
 - ☐ **T-097** [low] [Claude] Self-host the fonts (`next/font/local`) so builds don't depend on Google
   Fonts. On 2026-11-20 the production build of PR #28 crashed in `next/font/google`'s loader
   (`Cannot read properties of null (reading '1')`, a font URL with no file extension in Google's
