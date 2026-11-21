@@ -83,12 +83,12 @@ function ProblemSection() {
     <section className="border-b border-line bg-white py-24 lg:py-32">
       <div ref={ref} className={`${WRAP} grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20`}>
         <div className="min-w-0">
-          <LineReveal className={H2} lines={['A new NDA.', 'A new review.', 'Every deal.']} />
+          <LineReveal className={H2} lines={['No need to spend', 'hours on NDAs.']} />
           <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-ink">
-            Each NDA arrives as a fresh document, so someone reads it all again, even when the text barely changes.
+            Today every NDA is a new document to read line by line, even when it says almost the same thing.
           </p>
           <p className="mt-10 border-l-2 border-teal-800 pl-4 text-lg font-semibold text-ink">
-            With FormalizeIt: one standard NDA. Review it once, then fill in only the deal.
+            With FormalizeIt you review the standard NDA once. After that, you only read what matters: the parties, dates and terms.
           </p>
         </div>
         <div className="min-w-0">

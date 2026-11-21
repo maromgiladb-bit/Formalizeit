@@ -36,9 +36,9 @@ Why FAQ 1, 6, 9, 12: 1 = how the receiver gets it (biggest worry: spam, accounts
 ### 2. The problem
 (Revised 2026-11-21 by the founder: the platform still has back-and-forth; the win is that the
 standard is reviewed once, not every deal. Don't claim "no redlines" or "no back-and-forth".)
-- H2: A new NDA. A new review. Every deal.
-- Sub: Each NDA arrives as a fresh document, so someone reads it all again, even when the text barely changes.
-- Callout: With FormalizeIt: one standard NDA. Review it once, then fill in only the deal.
+- H2: No need to spend hours on NDAs.
+- Sub: Today every NDA is a new document to read line by line, even when it says almost the same thing.
+- Callout: With FormalizeIt you review the standard NDA once. After that, you only read what matters: the parties, dates and terms.
 - Old way items (struck through on scroll): "their_NDA_v1.docx" / "read it all again" / "send it to legal" / "waiting on legal review" / "still not signed..."
 - Visual alt: "Each new NDA read again from scratch and sent to legal, while it waits unsigned."
 
