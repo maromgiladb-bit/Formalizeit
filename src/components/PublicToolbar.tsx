@@ -18,7 +18,7 @@ interface PublicToolbarProps {
 // `core` links stay visible when the bar shrinks into the floating pill.
 const links = [
   { name: 'Home', href: '/', core: false },
-  { name: 'About', href: '/about', core: true },
+  { name: 'How it works', href: '/#how-it-works', core: true },
   { name: 'Pricing', href: '/#pricing', core: true },
   { name: 'Contact', href: '/contact', core: false },
   { name: 'FAQ', href: '/faq', core: true },

@@ -37,7 +37,6 @@ export default function PrivateToolbar() {
   const router = useRouter()
 
   const secondaryLinks = [
-    { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'FAQ', href: '/faq' },
     { name: 'Help', href: '/help' },

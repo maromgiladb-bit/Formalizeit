@@ -56,7 +56,7 @@ export default function SupportPage() {
 
 					{/* Documentation */}
 					<Link
-						href="/about"
+						href="/help"
 						className="bg-white rounded-sheet border border-line p-8 hover:border-teal-700 transition-colors"
 					>
 						<div className="w-12 h-12 bg-ground border border-line rounded-control flex items-center justify-center mb-4">

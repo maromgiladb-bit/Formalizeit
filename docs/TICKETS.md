@@ -7,9 +7,11 @@ CLAUDE.md → "Work rules (this repo)". Long detail stays in `docs/launch/` phas
 Legend: ☐ open · ◑ in progress · ☑ done · ⊘ deferred · Tiers: [low] [normal] [high] ·
 Owner: [Claude] [You] [Both]
 
-**Next ID: T-098**
+**Next ID: T-101**
 
 ## Resume here (updated 2026-11-21)
+
+Landing redesign (T-098, PR #32) waits for your "merge"; it replaces `/` and redirects `/about`.
 
 OneNote notes imported and compared with the product (T-079): 11 gaps are now T-080–T-090
 (legal ones T-080–T-083 belong before sign-up opens), plus T-095 (term months vs years, must
@@ -172,6 +174,15 @@ triage them before or alongside T-044.
 
 ## Later (post-launch / post-MVP)
 
+- ☐ **T-099** [low] [Claude] Ink & Seal spec drift from the landing redesign (T-098 review,
+  2026-11-21): the landing motion kit (`src/components/landing/motion`) is a second scroll-reveal
+  mechanism beside `Reveal`, and the landing uses display sizes up to ~116px (spec says 56–72).
+  Either fold the kit into `Reveal` or amend the spec and `stitch-design.md` to allow both on
+  marketing pages. Also prune kit parts only the dropped options used (`WallDim`, `Counter`,
+  `Clock`, the DocumentScene `wall` variant).
+- ☐ **T-100** [normal] [Claude] Header layout shift: the shared page header shifts content ~64px
+  after load (CLS 0.044 on the new landing, 0.112 on the old `/`). Found in the T-098 review,
+  2026-11-21; it lives in `FloatingNavShell`, not the landing.
 - ☐ **T-097** [low] [Claude] Self-host the fonts (`next/font/local`) so builds don't depend on Google
   Fonts. On 2026-11-20 the production build of PR #28 crashed in `next/font/google`'s loader
   (`Cannot read properties of null (reading '1')`, a font URL with no file extension in Google's
@@ -278,6 +289,11 @@ triage them before or alongside T-044.
 
 ## Done (most recent first; keep about 30, git has the rest)
 
+- ☑ **T-098** [normal] Landing redesign: signed-out home and `/about` merged into one page (option A
+  "living document" of three; `/about` redirects to `/#how-it-works`; nav, footer, sitemap, Formi
+  updated). Follow-ups T-099, T-100 (2026-11-21, PR #32).
+  [Copy](superpowers/specs/2026-11-21-landing-copy.md) ·
+  [Research](superpowers/specs/2026-11-21-landing-research.md)
 - ☑ **T-079** [low] OneNote notebook (strategy, messages, Q&A, legal, disclaimer, decisions, to-dos)
   saved to `docs/import/` and compared with the product; gaps filed as T-080–T-095 (2026-11-21, PR #29).
 
