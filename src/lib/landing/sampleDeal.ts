@@ -136,11 +136,11 @@ export const FAN_OUT_DEALS = [
 
 /** The old way, in order (storytelling, never a stat). `fromRight` alternates the thread sides. */
 export const OLD_WAY_ITEMS = [
-  { label: 'NDA_final_v1.docx', fromRight: false },
-  { label: 'redline v3 attached', fromRight: true },
-  { label: 'just one small change...', fromRight: false },
+  { label: 'their_NDA_v1.docx', fromRight: false },
+  { label: 'read it all again', fromRight: true },
+  { label: 'send it to legal', fromRight: false },
   { label: 'waiting on legal review', fromRight: true },
-  { label: '11 days later...', fromRight: false },
+  { label: 'still not signed...', fromRight: false },
 ] as const;
 
 /** Team members for the roles scene (initials avatars only). */

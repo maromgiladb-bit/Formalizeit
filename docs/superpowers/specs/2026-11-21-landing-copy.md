@@ -34,16 +34,13 @@ Why FAQ 1, 6, 9, 12: 1 = how the receiver gets it (biggest worry: spam, accounts
 - Badge on doc: "Legal text locked" (existing)
 
 ### 2. The problem
-- H2: Same NDA. Same back-and-forth. Every deal.
-- Sub: The legal text barely changes, yet each NDA restarts the same review loop.
-- Old way card title: The old way
-- Old way items (existing, keep order): "NDA_final_v1.docx" / "redline v3 attached" / "just one small change..." / "waiting on legal review" / "11 days later..."
-- New way card title: With FormalizeIt
-- New way body: "Fill in the deal. Send the link. Signed."
-- New way microcopy: "Minutes per NDA. No redlines."
-- Visual alt: "Left: a chain of emailed NDA drafts stretching over days. Right: one NDA going from draft to signed."
-- Aria label for the comparison group: "The old way compared with FormalizeIt"
-- Note: "11 days later..." is storytelling, not a stat. Never present it as an average.
+(Revised 2026-11-21 by the founder: the platform still has back-and-forth; the win is that the
+standard is reviewed once, not every deal. Don't claim "no redlines" or "no back-and-forth".)
+- H2: A new NDA. A new review. Every deal.
+- Sub: Each NDA arrives as a fresh document, so someone reads it all again, even when the text barely changes.
+- Callout: With FormalizeIt: one standard NDA. Review it once, then fill in only the deal.
+- Old way items (struck through on scroll): "their_NDA_v1.docx" / "read it all again" / "send it to legal" / "waiting on legal review" / "still not signed..."
+- Visual alt: "Each new NDA read again from scratch and sent to legal, while it waits unsigned."
 
 ### 3. The idea
 - H2: One standard NDA. Fill in only what's different.

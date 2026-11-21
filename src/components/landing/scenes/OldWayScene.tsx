@@ -21,7 +21,7 @@ export function OldWayScene({ step = OLD_WAY_ITEMS.length, autoplay = false, siz
   const struck = clamp(Math.round(useAutoplayStep(step, OLD_WAY_ITEMS.length, autoplay, 600)), 0, OLD_WAY_ITEMS.length);
 
   return (
-    <SceneFrame className={className} label={label ?? 'A chain of emailed NDA drafts stretching over days.'}>
+    <SceneFrame className={className} label={label ?? 'Each new NDA read again from scratch and sent to legal, while it waits unsigned.'}>
       <ul className={lg ? 'space-y-2.5 lg:space-y-4' : 'space-y-2.5'}>
         {OLD_WAY_ITEMS.map((item, i) => {
           const isStruck = i < struck;

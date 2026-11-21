@@ -83,12 +83,12 @@ function ProblemSection() {
     <section className="border-b border-line bg-white py-24 lg:py-32">
       <div ref={ref} className={`${WRAP} grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20`}>
         <div className="min-w-0">
-          <LineReveal className={H2} lines={['Same NDA.', <span key="b" className="whitespace-nowrap">Same back-and-forth.</span>, 'Every deal.']} />
+          <LineReveal className={H2} lines={['A new NDA.', 'A new review.', 'Every deal.']} />
           <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-ink">
-            The legal text barely changes, yet each NDA restarts the same review loop.
+            Each NDA arrives as a fresh document, so someone reads it all again, even when the text barely changes.
           </p>
           <p className="mt-10 border-l-2 border-teal-800 pl-4 text-lg font-semibold text-ink">
-            With FormalizeIt: fill in the deal, send the link, signed.
+            With FormalizeIt: one standard NDA. Review it once, then fill in only the deal.
           </p>
         </div>
         <div className="min-w-0">
