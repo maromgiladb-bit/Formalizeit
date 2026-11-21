@@ -860,7 +860,7 @@ export default function FillNDAPublicClient({
                     Back to Homepage
                 </Link>
                 <Link
-                    href="/"
+                    href="/#how-it-works"
                     className="w-full inline-flex items-center justify-center px-6 py-3 bg-white text-teal-800 border border-line rounded-control font-display font-semibold hover:bg-gray-50 transition-colors"
                 >
                     Learn more about FormalizeIt

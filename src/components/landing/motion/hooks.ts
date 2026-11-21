@@ -16,9 +16,11 @@ export function prefersReducedMotion(): boolean {
 
 /** True once the CSS failsafe has already revealed this element (hydration was late). */
 export function failsafeFired(el: HTMLElement): boolean {
-  if (typeof el.getAnimations !== 'function') return performance.now() > FAILSAFE_MS - 150;
+  // No animations API: rely on the CSS failsafe alone (performance.now() counts from page load,
+  // so it would wrongly read "fired" after a client-side navigation).
+  if (typeof el.getAnimations !== 'function') return false;
   return el.getAnimations({ subtree: true }).some((a) => {
-    if (!(a instanceof CSSAnimation) || a.animationName !== 'lm-failsafe') return false;
+    if (!('animationName' in a) || (a as CSSAnimation).animationName !== 'lm-failsafe') return false;
     const t = a.currentTime;
     return a.playState === 'finished' || (typeof t === 'number' && t >= FAILSAFE_MS);
   });

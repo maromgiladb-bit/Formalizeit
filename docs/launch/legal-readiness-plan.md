@@ -61,8 +61,11 @@ wording, tax, and receiver-facing disclosures.
 8. **Contradictions and bugs from the site audit:** settings copy says signed NDAs are kept 30 days
    while Privacy says 5 years; last-administrator deletion bug (tracker H4); `sign-public` logs
    recipient emails and signing links, so remove them.
-9. **Overclaims:** "100% audit-trailed" (`src/app/page.tsx:305`), "Secure by default", "that review
-   holds forever" (`src/app/about/page.tsx:28`), Pro "Full audit trail", "legally ready" in taglines
+9. **Overclaims:** "100% audit-trailed" and "that review holds forever" (both were on the old home
+   and About pages, gone since the landing redesign, T-098; review the new landing claims instead,
+   e.g. "Same text, every deal" and "Fair to both sides" in
+   `src/components/landing/sections/LandingPage.tsx`), "Secure by default", Pro "Full audit trail",
+   "legally ready" in taglines
    (keep the brand line "NDA in minutes", soften the sufficiency claims), NDA Governance's
    version-acknowledgement claim for receivers.
 10. **Missing pages:** accessibility statement (Israel IS 5568; also add a skip link), sub-processor
